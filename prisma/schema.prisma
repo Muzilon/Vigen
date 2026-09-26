@@ -1,0 +1,493 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plano {
+  BASICO
+  PROFISSIONAL
+  ENTERPRISE
+}
+
+enum Modulo {
+  RNC
+  PLANO_ACAO
+  INSPECAO
+  AUDITORIA
+  DOCUMENTOS
+}
+
+enum PapelUsuario {
+  ADMIN
+  GESTOR_SGI
+  INSPETOR
+  COLABORADOR
+}
+
+enum Permissao {
+  RNC_ABRIR
+  RNC_TRATAR
+  RNC_VERIFICAR_EFICACIA
+  RNC_SOLICITAR_CANCELAMENTO
+  RNC_APROVAR_CANCELAMENTO
+  RNC_VER_RESTRITAS
+  PLANO_GERENCIAR
+  ADMIN_CONFIG
+  VER_TODAS_OBRAS
+}
+
+enum EscopoObras {
+  TODAS
+  SELECIONADAS
+}
+
+enum TipoRnc {
+  QUALIDADE
+  MEIO_AMBIENTE
+  SSO
+}
+
+enum OrigemRnc {
+  AUDITORIA_INTERNA
+  INSPECAO
+  RECLAMACAO_CLIENTE
+  AUTO_IDENTIFICADA
+  AUDITORIA_EXTERNA
+}
+
+enum Gravidade {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum MetodoCausaRaiz {
+  CINCO_PORQUES
+  ISHIKAWA
+  OUTRO
+}
+
+enum StatusRnc {
+  ABERTO
+  EM_ANALISE
+  PLANO_EM_EXECUCAO
+  EM_VERIFICACAO
+  ENCERRADO
+  REABERTO
+  CANCELADO
+}
+
+enum ResultadoVerificacao {
+  EFICAZ
+  INEFICAZ
+}
+
+enum StatusSolicitacaoCancelamento {
+  PENDENTE
+  APROVADA
+  REJEITADA
+}
+
+enum OrigemPlanoAcao {
+  RNC
+  INSPECAO
+  AUDITORIA
+  MANUAL
+}
+
+enum StatusItemAcao {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum TipoEntidadeAnexo {
+  RNC
+  RNC_DADOS_SENSIVEIS
+  VERIFICACAO_EFICACIA
+  PLANO_ACAO
+  ITEM_ACAO
+}
+
+enum TipoSequencia {
+  RNC
+}
+
+model Empresa {
+  id              String   @id @default(uuid()) @db.Uuid
+  nome            String
+  cnpj            String?  @unique
+  segmento        String?
+  plano           Plano    @default(BASICO)
+  modulosAtivos   Modulo[] @default([RNC, PLANO_ACAO]) @map("modulos_ativos")
+  diasAlertaPrazo Int      @default(3) @map("dias_alerta_prazo")
+  fusoHorario     String   @default("America/Sao_Paulo") @map("fuso_horario")
+  config          Json     @default("{}")
+  ativo           Boolean  @default(true)
+  criadoEm        DateTime @default(now()) @map("criado_em")
+  atualizadoEm    DateTime @updatedAt @map("atualizado_em")
+
+  obras                    ObraUnidade[]
+  setores                  Setor[]
+  perfis                   Perfil[]
+  usuarios                 Usuario[]
+  acessosObra              UsuarioAcessoObra[]
+  contadores               ContadorSequencial[]
+  rncs                     Rnc[]
+  rncDadosSensiveis        RncDadosSensiveis[]
+  verificacoes             VerificacaoEficacia[]
+  historicosStatus         HistoricoStatusRnc[]
+  solicitacoesCancelamento SolicitacaoCancelamento[]
+  planosAcao               PlanoAcao[]
+  itensAcao                ItemAcao[]
+  anexos                   Anexo[]
+
+  @@map("empresa")
+}
+
+model ObraUnidade {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String
+  codigo       String?
+  endereco     String?
+  segmento     String?
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  acessos UsuarioAcessoObra[]
+  rncs    Rnc[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@map("obra_unidade")
+}
+
+model Setor {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuarios Usuario[]
+  rncs     Rnc[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@map("setor")
+}
+
+model Perfil {
+  id           String      @id @default(uuid()) @db.Uuid
+  empresaId    String      @map("empresa_id") @db.Uuid
+  nome         String
+  descricao    String?
+  permissoes   Permissao[]
+  sistema      Boolean     @default(false)
+  criadoEm     DateTime    @default(now()) @map("criado_em")
+  atualizadoEm DateTime    @updatedAt @map("atualizado_em")
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuarios Usuario[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@map("perfil")
+}
+
+model Usuario {
+  id           String       @id @default(uuid()) @db.Uuid
+  empresaId    String       @map("empresa_id") @db.Uuid
+  nome         String
+  email        String       @unique
+  senhaHash    String       @map("senha_hash")
+  papel        PapelUsuario @default(COLABORADOR)
+  perfilId     String?      @map("perfil_id") @db.Uuid
+  setorId      String?      @map("setor_id") @db.Uuid
+  escopoObras  EscopoObras  @default(SELECIONADAS) @map("escopo_obras")
+  tokenVersao  Int          @default(0) @map("token_versao")
+  ativo        Boolean      @default(true)
+  ultimoLogin  DateTime?    @map("ultimo_login")
+  criadoEm     DateTime     @default(now()) @map("criado_em")
+  atualizadoEm DateTime     @updatedAt @map("atualizado_em")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  perfil  Perfil? @relation(fields: [empresaId, perfilId], references: [empresaId, id], onDelete: Restrict)
+  setor   Setor?  @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
+
+  acessosObra              UsuarioAcessoObra[]
+  rncsAbertas              Rnc[]                     @relation("RncAbertoPor")
+  rncsResponsavel          Rnc[]                     @relation("RncResponsavel")
+  verificacoes             VerificacaoEficacia[]     @relation("VerificacaoVerificador")
+  historicosStatus         HistoricoStatusRnc[]      @relation("HistoricoUsuario")
+  cancelamentosSolicitados SolicitacaoCancelamento[] @relation("CancelamentoSolicitante")
+  cancelamentosDecididos   SolicitacaoCancelamento[] @relation("CancelamentoAprovador")
+  planosCriados            PlanoAcao[]               @relation("PlanoCriadoPor")
+  itensResponsavel         ItemAcao[]                @relation("ItemQuem")
+  anexosEnviados           Anexo[]                   @relation("AnexoEnviadoPor")
+  anexosExcluidos          Anexo[]                   @relation("AnexoExcluidoPor")
+
+  @@unique([empresaId, id])
+  @@index([empresaId, ativo])
+  @@map("usuario")
+}
+
+model UsuarioAcessoObra {
+  empresaId String   @map("empresa_id") @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  obraId    String   @map("obra_id") @db.Uuid
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  empresa Empresa     @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuario Usuario     @relation(fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Cascade)
+  obra    ObraUnidade @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+
+  @@id([empresaId, usuarioId, obraId])
+  @@index([empresaId, obraId])
+  @@map("usuario_acesso_obra")
+}
+
+model ContadorSequencial {
+  empresaId   String        @map("empresa_id") @db.Uuid
+  tipo        TipoSequencia
+  ano         Int
+  ultimoValor Int           @default(0) @map("ultimo_valor")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+
+  @@id([empresaId, tipo, ano])
+  @@map("contador_sequencial")
+}
+
+model Rnc {
+  id                      String           @id @default(uuid()) @db.Uuid
+  empresaId               String           @map("empresa_id") @db.Uuid
+  ano                     Int
+  sequencia               Int
+  codigo                  String
+  tipo                    TipoRnc
+  origem                  OrigemRnc
+  gravidade               Gravidade
+  titulo                  String
+  descricao               String
+  dataAbertura            DateTime         @default(now()) @map("data_abertura")
+  obraId                  String           @map("obra_id") @db.Uuid
+  setorId                 String?          @map("setor_id") @db.Uuid
+  processoArea            String?          @map("processo_area")
+  abertoPorId             String           @map("aberto_por_id") @db.Uuid
+  responsavelId           String?          @map("responsavel_id") @db.Uuid
+  causaRaiz               String?          @map("causa_raiz")
+  metodoCausaRaiz         MetodoCausaRaiz? @map("metodo_causa_raiz")
+  analiseCausa            Json?            @map("analise_causa")
+  status                  StatusRnc        @default(ABERTO)
+  dataVerificacaoEficacia DateTime?        @map("data_verificacao_eficacia") @db.Date
+  eficaz                  Boolean?
+  restrita                Boolean          @default(false)
+  contemDadosPessoais     Boolean          @default(false) @map("contem_dados_pessoais")
+  planoAcaoId             String?          @map("plano_acao_id") @db.Uuid
+  versao                  Int              @default(0)
+  encerradoEm             DateTime?        @map("encerrado_em")
+  canceladoEm             DateTime?        @map("cancelado_em")
+  criadoEm                DateTime         @default(now()) @map("criado_em")
+  atualizadoEm            DateTime         @updatedAt @map("atualizado_em")
+
+  empresa     Empresa     @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra        ObraUnidade @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  setor       Setor?      @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
+  abertoPor   Usuario     @relation("RncAbertoPor", fields: [empresaId, abertoPorId], references: [empresaId, id], onDelete: Restrict)
+  responsavel Usuario?    @relation("RncResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao   PlanoAcao?  @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+
+  dadosSensiveis           RncDadosSensiveis?
+  verificacoes             VerificacaoEficacia[]
+  historicoStatus          HistoricoStatusRnc[]
+  solicitacoesCancelamento SolicitacaoCancelamento[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano, sequencia])
+  @@unique([empresaId, codigo])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, status])
+  @@index([empresaId, obraId, status])
+  @@index([empresaId, responsavelId, status])
+  @@index([empresaId, restrita])
+  @@map("rnc")
+}
+
+/// Dados pessoais (LGPD). Colunas em texto (fase 1) + ciphertext (fase 2).
+model RncDadosSensiveis {
+  id                 String   @id @default(uuid()) @db.Uuid
+  empresaId          String   @map("empresa_id") @db.Uuid
+  rncId              String   @map("rnc_id") @db.Uuid
+  nomeEnvolvido      String?  @map("nome_envolvido")
+  documentoEnvolvido String?  @map("documento_envolvido")
+  funcaoEnvolvido    String?  @map("funcao_envolvido")
+  relato             String?
+  lesaoDescricao     String?  @map("lesao_descricao")
+  dadosCifrados      Bytes?   @map("dados_cifrados")
+  iv                 Bytes?
+  chaveId            String?  @map("chave_id")
+  chaveVersao        Int?     @map("chave_versao")
+  nomeHashBusca      String?  @map("nome_hash_busca")
+  criadoEm           DateTime @default(now()) @map("criado_em")
+  atualizadoEm       DateTime @updatedAt @map("atualizado_em")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  rnc     Rnc     @relation(fields: [empresaId, rncId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, rncId])
+  @@map("rnc_dados_sensiveis")
+}
+
+model VerificacaoEficacia {
+  id            String               @id @default(uuid()) @db.Uuid
+  empresaId     String               @map("empresa_id") @db.Uuid
+  rncId         String               @map("rnc_id") @db.Uuid
+  tentativa     Int
+  resultado     ResultadoVerificacao
+  comentario    String
+  verificadorId String               @map("verificador_id") @db.Uuid
+  verificadoEm  DateTime             @default(now()) @map("verificado_em")
+
+  empresa     Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  rnc         Rnc     @relation(fields: [empresaId, rncId], references: [empresaId, id], onDelete: Restrict)
+  verificador Usuario @relation("VerificacaoVerificador", fields: [empresaId, verificadorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, rncId, tentativa])
+  @@map("verificacao_eficacia")
+}
+
+/// Append-only.
+model HistoricoStatusRnc {
+  id             String     @id @default(uuid()) @db.Uuid
+  empresaId      String     @map("empresa_id") @db.Uuid
+  rncId          String     @map("rnc_id") @db.Uuid
+  statusAnterior StatusRnc? @map("status_anterior")
+  statusNovo     StatusRnc  @map("status_novo")
+  usuarioId      String     @map("usuario_id") @db.Uuid
+  motivo         String?
+  metadados      Json?
+  criadoEm       DateTime   @default(now()) @map("criado_em")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  rnc     Rnc     @relation(fields: [empresaId, rncId], references: [empresaId, id], onDelete: Restrict)
+  usuario Usuario @relation("HistoricoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, rncId, criadoEm])
+  @@map("historico_status_rnc")
+}
+
+model SolicitacaoCancelamento {
+  id                     String                        @id @default(uuid()) @db.Uuid
+  empresaId              String                        @map("empresa_id") @db.Uuid
+  rncId                  String                        @map("rnc_id") @db.Uuid
+  solicitanteId          String                        @map("solicitante_id") @db.Uuid
+  motivo                 String
+  statusRncNaSolicitacao StatusRnc                     @map("status_rnc_na_solicitacao")
+  status                 StatusSolicitacaoCancelamento @default(PENDENTE)
+  aprovadorId            String?                       @map("aprovador_id") @db.Uuid
+  decididoEm             DateTime?                     @map("decidido_em")
+  comentarioDecisao      String?                       @map("comentario_decisao")
+  criadoEm               DateTime                      @default(now()) @map("criado_em")
+
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  rnc         Rnc      @relation(fields: [empresaId, rncId], references: [empresaId, id], onDelete: Restrict)
+  solicitante Usuario  @relation("CancelamentoSolicitante", fields: [empresaId, solicitanteId], references: [empresaId, id], onDelete: Restrict)
+  aprovador   Usuario? @relation("CancelamentoAprovador", fields: [empresaId, aprovadorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, status])
+  @@index([empresaId, rncId])
+  @@map("solicitacao_cancelamento")
+}
+
+model PlanoAcao {
+  id           String          @id @default(uuid()) @db.Uuid
+  empresaId    String          @map("empresa_id") @db.Uuid
+  origemTipo   OrigemPlanoAcao @map("origem_tipo")
+  origemId     String?         @map("origem_id") @db.Uuid
+  titulo       String
+  criadoPorId  String          @map("criado_por_id") @db.Uuid
+  criadoEm     DateTime        @default(now()) @map("criado_em")
+  atualizadoEm DateTime        @updatedAt @map("atualizado_em")
+
+  empresa   Empresa    @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  criadoPor Usuario    @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  rnc       Rnc?
+  itens     ItemAcao[]
+
+  @@unique([empresaId, id])
+  @@index([empresaId, origemTipo, origemId])
+  @@map("plano_acao")
+}
+
+model ItemAcao {
+  id                 String         @id @default(uuid()) @db.Uuid
+  empresaId          String         @map("empresa_id") @db.Uuid
+  planoAcaoId        String         @map("plano_acao_id") @db.Uuid
+  ordem              Int            @default(0)
+  ciclo              Int            @default(1)
+  oQue               String         @map("o_que")
+  porQue             String?        @map("por_que")
+  onde               String?
+  quemId             String         @map("quem_id") @db.Uuid
+  quando             DateTime       @db.Date
+  como               String?
+  quanto             Decimal?       @db.Decimal(14, 2)
+  status             StatusItemAcao @default(PENDENTE)
+  evidenciaConclusao String?        @map("evidencia_conclusao")
+  dataConclusao      DateTime?      @map("data_conclusao")
+  alertaEnviadoEm    DateTime?      @map("alerta_enviado_em")
+  atrasoNotificadoEm DateTime?      @map("atraso_notificado_em")
+  criadoEm           DateTime       @default(now()) @map("criado_em")
+  atualizadoEm       DateTime       @updatedAt @map("atualizado_em")
+
+  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  planoAcao PlanoAcao @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  quem      Usuario   @relation("ItemQuem", fields: [empresaId, quemId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, planoAcaoId])
+  @@index([empresaId, quemId, status])
+  @@index([empresaId, status, quando])
+  @@map("item_acao")
+}
+
+model Anexo {
+  id                 String            @id @default(uuid()) @db.Uuid
+  empresaId          String            @map("empresa_id") @db.Uuid
+  entidadeTipo       TipoEntidadeAnexo @map("entidade_tipo")
+  entidadeId         String            @map("entidade_id") @db.Uuid
+  nomeArquivo        String            @map("nome_arquivo")
+  mimeType           String            @map("mime_type")
+  tamanhoBytes       Int               @map("tamanho_bytes")
+  chaveArmazenamento String            @map("chave_armazenamento")
+  url                String?
+  sensivel           Boolean           @default(false)
+  enviadoPorId       String            @map("enviado_por_id") @db.Uuid
+  excluidoEm         DateTime?         @map("excluido_em")
+  excluidoPorId      String?           @map("excluido_por_id") @db.Uuid
+  criadoEm           DateTime          @default(now()) @map("criado_em")
+
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  enviadoPor  Usuario  @relation("AnexoEnviadoPor", fields: [empresaId, enviadoPorId], references: [empresaId, id], onDelete: Restrict)
+  excluidoPor Usuario? @relation("AnexoExcluidoPor", fields: [empresaId, excluidoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, entidadeTipo, entidadeId])
+  @@map("anexo")
+}

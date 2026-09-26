@@ -1,0 +1,37 @@
+import type { PapelUsuario, Permissao } from "@prisma/client";
+
+export const TODAS_PERMISSOES = [
+  "RNC_ABRIR",
+  "RNC_TRATAR",
+  "RNC_VERIFICAR_EFICACIA",
+  "RNC_SOLICITAR_CANCELAMENTO",
+  "RNC_APROVAR_CANCELAMENTO",
+  "RNC_VER_RESTRITAS",
+  "PLANO_GERENCIAR",
+  "ADMIN_CONFIG",
+  "VER_TODAS_OBRAS",
+] as const satisfies readonly Permissao[];
+
+export const PERMISSOES_POR_PAPEL: Record<PapelUsuario, readonly Permissao[]> = {
+  ADMIN: TODAS_PERMISSOES,
+  GESTOR_SGI: [
+    "RNC_ABRIR",
+    "RNC_TRATAR",
+    "RNC_VERIFICAR_EFICACIA",
+    "RNC_SOLICITAR_CANCELAMENTO",
+    "PLANO_GERENCIAR",
+    "VER_TODAS_OBRAS",
+    "RNC_VER_RESTRITAS",
+  ],
+  INSPETOR: ["RNC_ABRIR", "RNC_TRATAR", "RNC_SOLICITAR_CANCELAMENTO"],
+  COLABORADOR: ["RNC_ABRIR"],
+};
+
+/** ADMIN = todas; demais = padrão do papel ∪ permissões do perfil. */
+export function permissoesEfetivas(
+  papel: PapelUsuario,
+  perfilPermissoes: readonly Permissao[] = [],
+): Permissao[] {
+  if (papel === "ADMIN") return [...TODAS_PERMISSOES];
+  return [...new Set([...PERMISSOES_POR_PAPEL[papel], ...perfilPermissoes])];
+}
