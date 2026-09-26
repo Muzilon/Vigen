@@ -310,3 +310,53 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 - **Seed**: tipos PR/IT/FO/POL/MAN, 8 documentos (publicados, em revisão, em aprovação, aprovado, rascunho, obsoleto)
   com PDFs reais; POL-001 exige ciência com ciências parciais. **Testes**: `tests/documentos.test.ts` e
   `npm run test:documentos` (16 casos).
+
+## P5 — Inspeções entregue (2026-09-26)
+
+- **Schema** (migração `20260927100000_inspecoes_auditorias`, compartilhada com Auditorias): `ModeloChecklist` (nome único,
+  `TipoChecklist`, `notaMinima`, ativo, versão), `ItemModeloChecklist` (ordem, pergunta, `TipoRespostaChecklist`
+  C/NC/NA · SIM/NÃO · NOTA 1–5 · TEXTO, `obrigatorioFoto`, ajuda; remoção = inativação), `Inspecao` (código
+  `INSP-NNN-AA` via `proximaSequencia` com novo `TipoSequencia.INSPECAO`, obra obrigatória = escopo, setor/processo
+  opcionais, inspetor, data, status EM_ANDAMENTO/CONCLUIDA/CANCELADA, `percentualConformidade` gravado ao concluir,
+  `planoAcaoId`), `RespostaInspecao` (criada vazia ao iniciar com **snapshot** da pergunta — editar o modelo não altera
+  inspeções já iniciadas; `geradaRncId`/`geradoItemAcaoId` únicos). Permissões `INSPECAO_GERENCIAR` (modelos, qualquer
+  inspeção) e `INSPECAO_REALIZAR` (papel INSPETOR passou a ter por padrão). Anexo `RESPOSTA_INSPECAO`; Interação/Notificação
+  `INSPECAO`.
+- **Regras** (`src/lib/inspecoes/regras.ts`, puro): SIM = conforme / NÃO = não conforme (pergunta no positivo); nota abaixo
+  de `notaMinima` = NC; TEXTO é informativo. % conformidade = C/(C+NC), N/A e texto fora. Concluir exige todas respondidas
+  (texto opcional) e foto em cada **NC** de item com `obrigatorioFoto` (decisão: foto obrigatória só como evidência da NC).
+- **Valor central**: resposta NC → "Abrir RNC" (`abrirRncDaResposta`: `criarRncNaTransacao` — extraído de `criarRnc` —
+  com origem INSPECAO, obra/setor/processo da inspeção, título/descrição da pergunta + comentário, e as fotos copiadas como
+  anexos RNC apontando o mesmo arquivo; vínculo gravado na mesma transação) ou "Criar apenas item de ação" (um plano
+  origem INSPECAO por inspeção, criado no 1º item via `criarPlanoNaTransacao`; seguintes via novo
+  `adicionarItemNaTransacao`). Resposta que gerou RNC/item não pode deixar de ser NC. Pode gerar após concluída.
+- **Acesso**: leitura = módulo + obra no escopo; executar/cancelar = inspetor (com REALIZAR) ou GERENCIAR. Fotos imutáveis
+  após conclusão.
+- **Telas**: `/inspecoes` (cartões, filtros obra/modelo/status/data, indicadores), `/inspecoes/nova`,
+  `/inspecoes/[id]` (**decisão**: lista com resposta inline, um cartão por pergunta com segmentado de toque ≥44px, comentário
+  e fotos, salvar por pergunta — mais rápido no celular que "uma por vez"; resumo final com % e RNCs/itens gerados),
+  `/inspecoes/modelos` e `/inspecoes/modelos/[id]` (perguntas ↑↓, editar, remover). Menu (Qualidade), card no dashboard
+  (conformidade média 12 meses, em andamento/abertas há >7 dias, RNCs/itens gerados, média por modelo). Periodicidade de
+  inspeções não implementada (opcional).
+- **Seed**: 3 modelos (Segurança de Obra 8 itens, 5S 7, Ambiental 6) e 5 inspeções via serviço (2 geram RNC real com foto,
+  1 gera item de ação, 1 em andamento pelo inspetor de campo).
+- **Testes**: `tests/inspecoes.test.ts` e `npm run test:inspecoes` (6 casos).
+
+## P5 — Auditorias entregue (2026-09-26) — P5 completo
+
+- **Schema**: `ProgramaAuditoria` (ano único, objetivo), `Auditoria` (`AUD-NNN-AA`, `TipoSequencia.AUDITORIA`; programa,
+  tipo INTERNA/EXTERNA_CERTIFICACAO, norma, escopo, processo e obra opcionais — sem obra = empresa toda —, auditor líder,
+  equipe, período, status PLANEJADA/EM_EXECUCAO/CONCLUIDA/CANCELADA, conclusão, versão), `ItemAuditoria` (requisito,
+  pergunta, ordem), `Constatacao` (item opcional, tipo NC/OBS/OM/PF, descrição, evidência, `geradaRncId` — CHECK só NC).
+  Permissões `AUDITORIA_GERENCIAR` (planejar/editar/cancelar/programa) e `AUDITORIA_REALIZAR` (auditor líder executa).
+  Anexo `CONSTATACAO_AUDITORIA`, Interação/Notificação `AUDITORIA`, notificação `AUDITORIA_ATRIBUIDA` ao auditor líder.
+- **Regras**: máquina de status em `src/lib/auditorias/regras.ts`; plano editável planejada/execução; constatações só em
+  execução; RNC em execução ou concluída; cancelar bloqueado se já gerou RNC. RNC da NC: origem AUDITORIA_INTERNA ou
+  AUDITORIA_EXTERNA (enum existente), tipo sugerido pela norma (45001→SSO, 14001→MA), descrição com requisito + evidência,
+  anexos da constatação viram evidências; auditoria sem obra exige escolher a obra.
+- **Telas**: `/auditorias` (filtros status/tipo/ano/obra, NC·Obs·OM·PF e RNCs), `/auditorias/nova` (itens iniciais "requisito |
+  pergunta" por linha), `/auditorias/[id]` (plano ↑↓, constatações com evidências, abrir RNC, concluir/cancelar,
+  comentários), `/auditorias/programa`. Menu e card no dashboard (NC por auditoria).
+- **Seed**: programa 2026, AUD-001 interna concluída (5 itens, 4 constatações, NC → RNC real com evidência) e AUD-002
+  externa planejada.
+- **Testes**: `tests/auditorias.test.ts` e `npm run test:auditorias` (7 casos).
