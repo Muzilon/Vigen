@@ -7,8 +7,8 @@ export function EnvoltorioTabela({ children }: { children: ReactNode }) {
 }
 
 /** <table> com layout fixo — cada página define a largura das colunas via <colgroup>. */
-export function Tabela({ children }: { children: ReactNode }) {
-  return <table className={styles.tabela}>{children}</table>;
+export function Tabela({ children, className }: { children: ReactNode; className?: string }) {
+  return <table className={`${styles.tabela} ${className ?? ""}`}>{children}</table>;
 }
 
 export function LinhaCabecalhoTabela({ children }: { children: ReactNode }) {

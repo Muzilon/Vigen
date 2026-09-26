@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import type { ResultadoAcao } from "@/components/form-acao";
+import type { ResultadoAcao } from "@/paginas/html/componentes/form-acao";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { ErroPermissao } from "@/lib/tenant";
 

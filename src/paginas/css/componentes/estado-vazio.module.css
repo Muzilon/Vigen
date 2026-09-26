@@ -3,6 +3,9 @@
    01. Estado vazio — mensagem central em listas/tabelas sem dados
    ========================================================== */
 
+/* ==========================================================
+   01. ESTADO VAZIO
+   ========================================================== */
 .estadoVazio {
   padding: 40px 12px;
   text-align: center;

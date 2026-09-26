@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { ItemAcoes } from "@/components/item-acoes";
+import { ItemAcoes } from "@/paginas/html/componentes/item-acoes";
 import { linkPlano, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";

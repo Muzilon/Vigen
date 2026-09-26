@@ -11,7 +11,7 @@ import {
   salvarPreferenciasAcao,
   salvarSetorAcao,
 } from "@/app/(app)/configuracoes/actions";
-import { FormAcao } from "@/components/form-acao";
+import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { dadosAdministracao, MIN_SENHA, PAPEIS } from "@/lib/admin/servico";
 import { getAtor } from "@/lib/ator-servidor";
 import { MAX_DIAS_ALERTA } from "@/lib/notificacoes/preferencias";

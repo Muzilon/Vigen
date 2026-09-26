@@ -4,7 +4,7 @@ import styles from "@/paginas/css/componentes/badge-status-item.module.css";
 
 /**
  * Badges de status de item 5W2H e de status geral de plano de ação (Direção A "Campo").
- * Substituem o Badge Tailwind + COR_STATUS_ITEM/COR_STATUS_PLANO nas páginas migradas.
+ * Tokens de cor de src/paginas/css/base.css (sem hex solto).
  */
 const CLASSE_STATUS: Record<StatusEfetivoItem | StatusGeralPlano, string> = {
   SEM_ITENS: styles.semItens,

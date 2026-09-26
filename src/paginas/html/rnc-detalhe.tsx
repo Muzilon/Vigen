@@ -4,14 +4,12 @@ import type { StatusRnc } from "@prisma/client";
 import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, formatarDataHora, hojeNoFuso, paraDataDb } from "@/lib/datas";
-import { statusEfetivoItem, statusGeralPlano, type StatusEfetivoItem, type StatusGeralPlano } from "@/lib/plano-acao/status";
+import { statusEfetivoItem, statusGeralPlano } from "@/lib/plano-acao/status";
 import { avaliarTransicao, cicloAtual, STATUS_FINAIS } from "@/lib/rnc/estados";
 import {
   ROTULO_GRAVIDADE,
   ROTULO_METODO,
   ROTULO_ORIGEM,
-  ROTULO_STATUS_ITEM,
-  ROTULO_STATUS_PLANO,
   ROTULO_STATUS_RNC,
   ROTULO_TIPO,
   SEIS_M,
@@ -39,6 +37,7 @@ import { Cartao } from "@/paginas/html/componentes/cartao";
 import { Alerta } from "@/paginas/html/componentes/alerta";
 import { LinkBotao } from "@/paginas/html/componentes/botao";
 import { BadgeGravidade, BadgeStatusRnc, type GravidadeBadge, type StatusRncBadge } from "@/paginas/html/componentes/badge";
+import { BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/badge-status-item";
 import { CausaForm } from "@/paginas/html/rnc-detalhe-causa";
 import styles from "@/paginas/css/rnc-detalhe.module.css";
 
@@ -70,16 +69,7 @@ const ETAPAS: readonly [StatusRnc, string][] = [
   ["ENCERRADO", "Encerrado"],
 ];
 
-/** Etiquetas neutras/semânticas (status de item, plano, verificação e cancelamento). */
-const CLASSE_ETIQUETA: Record<StatusEfetivoItem | StatusGeralPlano, string> = {
-  SEM_ITENS: styles.etiquetaNeutra,
-  PENDENTE: styles.etiquetaNeutra,
-  EM_ANDAMENTO: styles.etiquetaInfo,
-  CONCLUIDO: styles.etiquetaSucesso,
-  CANCELADO: styles.etiquetaApagada,
-  ATRASADO: styles.etiquetaPerigo,
-};
-
+/** Etiquetas neutras/semânticas locais (tipo, ciclo, verificação e cancelamento). Status de item/plano usa BadgeStatusItem/BadgeStatusPlano. */
 function Etiqueta({ classe, children }: { classe: string; children: React.ReactNode }) {
   return <span className={`${styles.etiqueta} ${classe}`}>{children}</span>;
 }
@@ -359,7 +349,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                     acoes={
                       rnc.planoAcao && (() => {
                         const s = statusGeralPlano(itensCiclo, hoje);
-                        return <Etiqueta classe={CLASSE_ETIQUETA[s]}>{ROTULO_STATUS_PLANO[s]}</Etiqueta>;
+                        return <BadgeStatusPlano status={s} />;
                       })()
                     }
                   >
@@ -379,7 +369,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                         <div className={styles.cabecalhoCiclo}>
                           <span className={styles.seloCiclo}>Ciclo {c}</span>
                           {!atual && <span className={styles.textoFraco}>anterior</span>}
-                          {sPlano && <Etiqueta classe={CLASSE_ETIQUETA[sPlano]}>{ROTULO_STATUS_PLANO[sPlano]}</Etiqueta>}
+                          {sPlano && <BadgeStatusPlano status={sPlano} />}
                           <span className={styles.espacador} />
                           {validos.length > 0 && (
                             <>
@@ -429,7 +419,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                       <td className={`${styles.tdMono} ${st === "ATRASADO" ? styles.dataAtrasada : ""}`}>{formatarData(i.quando)}</td>
                                       <td className={styles.tdSecundario}>{i.como ?? "—"}</td>
                                       <td className={`${styles.tdMono} ${styles.tdDireita}`}>{i.quanto ? moeda(Number(i.quanto)) : "—"}</td>
-                                      <td><Etiqueta classe={CLASSE_ETIQUETA[st]}>{st === "ATRASADO" && <IconeRelogio />}{ROTULO_STATUS_ITEM[st]}</Etiqueta></td>
+                                      <td><BadgeStatusItem status={st} /></td>
                                       <td className={styles.colAcoes}>
                                         {atual ? (
                                           <ItemAcoes
@@ -514,7 +504,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                 </span>
                               </div>
                               <div className={styles.linhaAcaoCiclo}>
-                                <Etiqueta classe={CLASSE_ETIQUETA[st]}>{ROTULO_STATUS_ITEM[st]}</Etiqueta>
+                                <BadgeStatusItem status={st} />
                                 {i.evidenciaConclusao && <span className={styles.evidencia}>{i.evidenciaConclusao}</span>}
                               </div>
                             </li>
@@ -821,15 +811,6 @@ function IconeCadeado() {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
-  );
-}
-
-function IconeRelogio() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
     </svg>
   );
 }

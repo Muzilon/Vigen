@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import type { ResultadoAcao } from "@/components/form-acao";
+import type { ResultadoAcao } from "@/paginas/html/componentes/form-acao";
 import { getAtor } from "@/lib/ator-servidor";
 import { linkPlano } from "@/lib/plano-acao/acesso";
 import * as plano from "@/lib/plano-acao/servico";

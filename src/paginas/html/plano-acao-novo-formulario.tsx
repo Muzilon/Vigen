@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { criarPlanoManualAcao } from "@/app/(app)/plano-acao/actions";
-import { linhaVazia, Tabela5W2H, type Linha5W2H } from "@/components/tabela-5w2h";
+import { linhaVazia, Tabela5W2H, type Linha5W2H } from "@/paginas/html/componentes/tabela-5w2h";
 import { Alerta } from "@/paginas/html/componentes/alerta";
 import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
 import { Entrada, Rotulo } from "@/paginas/html/componentes/campo-formulario";

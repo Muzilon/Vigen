@@ -56,8 +56,13 @@
 /* ==========================================================
    03. COLUNAS DA TABELA
    ========================================================== */
+/* Layout fixo: sem largura mínima a coluna Título (flexível) some no
+   celular; abaixo disso o envoltório rola na horizontal. */
+.tabelaRncs {
+  min-width: 1120px;
+}
 .colCodigo {
-  width: 120px;
+  width: 130px;
 }
 .colTipo {
   width: 130px;
@@ -116,6 +121,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* Código + cadeado de restrita: nunca quebra a linha do código */
+.celulaCodigo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .linkCodigo,

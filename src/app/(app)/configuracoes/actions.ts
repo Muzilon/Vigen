@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { ResultadoAcao } from "@/components/form-acao";
+import type { ResultadoAcao } from "@/paginas/html/componentes/form-acao";
 import * as adm from "@/lib/admin/servico";
 import type { Ator } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { adicionarItensPlanoAcao } from "@/app/(app)/plano-acao/actions";
-import { EnviarAnexos, GaleriaAnexos } from "@/components/anexos";
-import { ItemAcoes } from "@/components/item-acoes";
-import { ItensForm } from "@/components/tabela-5w2h";
+import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
+import { ItemAcoes } from "@/paginas/html/componentes/item-acoes";
+import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, formatarDataHora } from "@/lib/datas";

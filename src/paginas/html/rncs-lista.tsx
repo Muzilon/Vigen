@@ -110,7 +110,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
       </form>
 
       <EnvoltorioTabela>
-        <Tabela>
+        <Tabela className={styles.tabelaRncs}>
           <colgroup>
             <col className={styles.colCodigo} />
             <col />
@@ -139,7 +139,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
               return (
                 <LinhaTabela key={r.id}>
                   <Td variante="mono">
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span className={styles.celulaCodigo}>
                       <Link href={`/rncs/${r.id}`} className={styles.linkCodigo}>{r.codigo}</Link>
                       {r.restrita && <IconeRestrita />}
                     </span>

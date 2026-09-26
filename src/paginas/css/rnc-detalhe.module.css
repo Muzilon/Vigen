@@ -321,6 +321,8 @@
 
 /* ==========================================================
    06. ETIQUETAS
+   Só etiquetas locais (tipo, ciclo, eficácia, cancelamento). Status de
+   item/plano usa o componente compartilhado BadgeStatusItem/BadgeStatusPlano.
    ========================================================== */
 .etiqueta {
   display: inline-flex;
@@ -337,10 +339,6 @@
 .etiquetaNeutra {
   background: var(--cor-contador-fundo);
   color: var(--cor-texto);
-}
-.etiquetaInfo {
-  background: var(--cor-status-aberto-fundo);
-  color: var(--cor-status-aberto-texto);
 }
 .etiquetaSucesso {
   background: var(--cor-status-encerrado-fundo);

@@ -7,6 +7,7 @@
    05. Rodapé da sidebar (usuário + sair)
    06. Cabeçalho do app (sticky, trilha, busca, sino)
    07. Área de conteúdo — isolada, nunca acima do cabeçalho/sidebar
+   08. Responsivo — até 900px a sidebar vira barra superior
    ========================================================== */
 
 /* ==========================================================
@@ -48,12 +49,13 @@
   align-items: center;
   gap: 10px;
   padding: 4px 8px 18px 8px;
+  color: var(--cor-acento-claro); /* traço do ícone (currentColor) */
 }
 .logoTexto {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #ffffff;
+  color: var(--cor-sidebar-texto-ativo);
 }
 
 .seletorEmpresa {
@@ -73,13 +75,13 @@
   width: 28px;
   height: 28px;
   border-radius: var(--raio-padrao);
-  background: #3a4549;
+  background: var(--cor-sidebar-elevado);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--cor-sidebar-texto-ativo);
 }
 .textoEmpresa {
   flex: 1;
@@ -116,7 +118,7 @@
   height: 38px;
   padding: 0 12px;
   border-radius: var(--raio-padrao);
-  color: #d3d0c9;
+  color: var(--cor-sidebar-texto-item);
   text-decoration: none;
   font-size: 14px;
 }
@@ -163,8 +165,8 @@
   font-family: var(--fonte-mono);
 }
 .contadorItemNav {
-  background: #3a4549;
-  color: #ffffff;
+  background: var(--cor-sidebar-elevado);
+  color: var(--cor-sidebar-texto-ativo);
 }
 .contadorItemNavAtivo {
   background: var(--cor-acento-claro);
@@ -185,7 +187,7 @@
   height: 38px;
   padding: 0 12px;
   border-radius: var(--raio-padrao);
-  color: #d3d0c9;
+  color: var(--cor-sidebar-texto-item);
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 10px;
@@ -225,7 +227,7 @@
 .nomeUsuario {
   font-size: 13px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--cor-sidebar-texto-ativo);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -323,7 +325,7 @@
   height: 18px;
   border-radius: var(--raio-pill);
   background: var(--cor-acento);
-  color: #ffffff;
+  color: var(--cor-acento-texto);
   font-size: 10px;
   font-weight: 600;
   display: inline-flex;
@@ -344,4 +346,88 @@
   isolation: isolate;
   z-index: var(--z-conteudo);
   padding: var(--espaco-6);
+}
+
+/* ==========================================================
+   08. RESPONSIVO
+   Até 900px a sidebar vira uma barra horizontal no topo (logo +
+   menu com rolagem lateral + sair) que rola junto com a página;
+   o cabeçalho do app continua sticky e acima do conteúdo.
+   ========================================================== */
+@media (max-width: 900px) {
+  .casca {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    overflow: visible;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--espaco-2);
+    padding: var(--espaco-2) var(--espaco-3);
+  }
+
+  .logo {
+    padding: 0 var(--espaco-1);
+  }
+  .logoTexto,
+  .seletorEmpresa,
+  .espacador,
+  .textoUsuario,
+  .avatarUsuario {
+    display: none;
+  }
+
+  .navLateral {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .itemNav {
+    flex: none;
+    height: 36px;
+    gap: var(--espaco-2);
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  /* Item ativo: barra de acento embaixo em vez de à esquerda */
+  .itemNavAtivo {
+    box-shadow: inset 0 -3px 0 var(--cor-acento-claro);
+  }
+  .rotuloItemNav {
+    flex: none;
+  }
+
+  .rodapeUsuario {
+    border-top: 0;
+    padding: 0;
+  }
+
+  .cabecalho {
+    padding: 0 var(--espaco-4);
+    gap: var(--espaco-3);
+  }
+  .trilha > * {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .buscaGlobal {
+    width: 220px;
+  }
+
+  .conteudo {
+    padding: var(--espaco-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .buscaGlobal {
+    display: none;
+  }
 }

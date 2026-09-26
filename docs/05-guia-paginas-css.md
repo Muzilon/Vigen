@@ -38,7 +38,6 @@ src/paginas/
       tabela.tsx                  # EnvoltorioTabela / Tabela / Th / Td / Linha*
       nav-lateral.tsx             # NavLateral (client — menu da sidebar, item ativo)
       trilha.tsx                  # Trilha (client — breadcrumb do cabeçalho)
-      legado-ui.tsx               # Badge/Cabecalho/Cartao/Campo/cls do ui.tsx antigo (Tailwind)
       form-acao.tsx               # FormAcao / RetornoAcao (client — server action + feedback)
       campo-arquivos.tsx          # CampoArquivos (client — upload múltiplo com prévia)
       anexos.tsx                  # GaleriaAnexos / EnviarAnexos
@@ -129,8 +128,15 @@ componente/página.
 As fontes IBM Plex Sans/Mono são carregadas via `next/font/google` em
 `src/app/layout.tsx` (variáveis `--font-ibm-plex-sans` / `--font-ibm-plex-mono`),
 e `base.css` as expõe como `--fonte-ui` / `--fonte-mono`. Uma página migrada
-aplica a classe `fonteIbmPlex` no seu elemento raiz para herdar a fonte; páginas
-ainda não migradas continuam com a fonte Geist/Tailwind de `globals.css`.
+aplica a classe `fonteIbmPlex` no seu elemento raiz (reforça a fonte em
+controles de formulário); o `body` também já usa `--fonte-ui`.
+
+O Tailwind foi **removido** do projeto (sem `globals.css`, sem
+`postcss.config.mjs`, sem dependências). O reset que o "preflight" do
+Tailwind fazia agora vive em `base.css`, seção 08, dentro de
+`@layer reset` — qualquer regra de `.module.css` (sem layer) sempre vence.
+Não use classes utilitárias em `className`: toda classe vem de um
+`.module.css`.
 
 ## 5. Escala de z-index (`base.css`, seção 07)
 
@@ -154,10 +160,11 @@ modais e toasts (`--z-modal`, `--z-toast`) devem ficar acima do cabeçalho.
 
 ## 6. Componentes compartilhados — o que usar e quando
 
-- **Badges**: `BadgeStatusRnc`, `BadgeGravidade`, `BadgeAtrasado` (novos,
-  tokens de `base.css`). Para páginas ainda não migradas, o `Badge` antigo
-  (Tailwind, recebe `cor` como classe pronta) continua em
-  `src/components/ui.tsx` → reexporta de `paginas/html/componentes/legado-ui.tsx`.
+- **Badges**: `BadgeStatusRnc`, `BadgeGravidade`, `BadgeAtrasado`
+  (`badge.tsx`) e `BadgeStatusItem`, `BadgeStatusPlano`, `BadgeOrigem`
+  (`badge-status-item.tsx`) — tokens de `base.css`. Status de item 5W2H e de
+  plano **sempre** pelo `BadgeStatusItem`/`BadgeStatusPlano`, nunca com
+  classes locais da página.
 - **Botões**: `Botao` (button) / `LinkBotao` (Link), variantes `primario`
   (padrão), `secundario`, `perigo`, `texto`.
 - **Campos de formulário**: `Rotulo` (label, com `oculto` para rótulo só de
@@ -173,25 +180,13 @@ modais e toasts (`--z-modal`, `--z-toast`) devem ficar acima do cabeçalho.
 
 Todos em `src/paginas/html/componentes/`.
 
-## 7. Sobre `src/components/ui.tsx` e outros compartilhados (`anexos.tsx`,
-`tabela-5w2h.tsx`, `interacoes.tsx`, `item-acoes.tsx`, `campo-arquivos.tsx`,
-`form-acao.tsx`, `atualizar-contadores.tsx`)
+## 7. `src/components/`
 
-`src/components/ui.tsx` foi transformado num **shim de reexport**: a
-implementação real (Tailwind, inalterada) está em
-`src/paginas/html/componentes/legado-ui.tsx`. Isso evita quebrar as 18+
-páginas que ainda não migraram e ainda importam de `@/components/ui`. Ao
-migrar uma dessas páginas, troque a importação para os componentes novos
-(`@/paginas/html/componentes/badge`, `.../botao`, etc.) em vez de
-`@/components/ui`.
-
-Os demais (`anexos.tsx`, `tabela-5w2h.tsx`, `interacoes.tsx`, `item-acoes.tsx`,
-`campo-arquivos.tsx`, `form-acao.tsx`) **foram migrados** para
-`src/paginas/html/componentes/<nome>.tsx` + `src/paginas/css/componentes/<nome>.module.css`.
-Os arquivos em `src/components/` viraram shims de reexport (mesmos nomes
-exportados), então importações antigas continuam funcionando; código novo deve
-importar de `@/paginas/html/componentes/<nome>`. `atualizar-contadores.tsx` não
-tem markup e continua em `src/components/`.
+Os antigos `ui.tsx` (Tailwind) e os shims de reexport (`anexos`,
+`tabela-5w2h`, `interacoes`, `item-acoes`, `campo-arquivos`, `form-acao`)
+foram **removidos**; importe sempre de `@/paginas/html/componentes/<nome>`.
+Só `atualizar-contadores.tsx` continua em `src/components/` (não tem markup,
+só efeito).
 
 `FormAcao` ganhou as props `variante` (`primario`/`secundario`/`perigo`/`texto`,
 mesmo visual do `Botao`) e `tamanho` (`normal`/`pequeno`). Sem `variante`, uma
@@ -255,11 +250,14 @@ mensagens de erro/aviso/sucesso.
   (+ `rnc-nova-formulario.tsx`, ex-`form-nova.tsx`)
 - Componentes compartilhados `anexos`, `tabela-5w2h`, `interacoes`,
   `item-acoes`, `campo-arquivos`, `form-acao` → `paginas/html/componentes/`
-  (shims em `src/components/`, ver seção 7)
+  (os shims em `src/components/` foram removidos, ver seção 7)
 
-**Ainda não migrado:** nenhuma página. `src/components/ui.tsx`
-(`legado-ui.tsx`) continua existindo só como shim; o Tailwind pode sair
-quando nada mais importar `cls`/`Badge` legados.
+**Ainda não migrado:** nenhuma página. Limpeza final: Tailwind removido
+(dependências, PostCSS, `globals.css`, `legado-ui.tsx`, `COR_*` de
+`lib/rnc/rotulos.ts`), reset próprio em `base.css` (seção 08), detalhe da
+RNC usando `BadgeStatusItem`/`BadgeStatusPlano` e `layout-app.module.css`
+com seção 08 "Responsivo" (até 900px a sidebar vira barra superior com menu
+rolável; o cabeçalho continua sticky).
 
 ## 10. Pendências conhecidas
 
@@ -327,4 +325,4 @@ quando nada mais importar `cls`/`Badge` legados.
 - Tokens `--cor-destaque-escuro`/`-texto` (base.css, seção 02) foram criados
   para o tom escuro usado no conteúdo (stepper, selo de ciclo, segmentados),
   em vez de reaproveitar os tokens de sidebar.
-- O Tailwind continua no projeto enquanto `legado-ui.tsx` existir.
+- A busca global do cabeçalho é só visual (sem rota de busca); some abaixo de 640px.

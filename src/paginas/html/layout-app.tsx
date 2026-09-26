@@ -96,7 +96,7 @@ export function LayoutApp({
 
 function IconeLogo() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z" />
       <path d="m8.5 9 3.5 6.5L15.5 9" />
     </svg>

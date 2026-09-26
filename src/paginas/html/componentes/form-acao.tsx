@@ -21,8 +21,8 @@ const CLASSE_VARIANTE: Record<VarianteBotao, string> = {
  *
  * Aparência do botão:
  * - `variante` (+ `tamanho`) usa o Botao da Direção A; `classeBotao` entra como classe extra.
- * - Sem `variante`, `classeBotao` é usada sozinha (compatibilidade com páginas ainda em
- *   Tailwind que passam `cls.btn`/`cls.btnSec`). Sem nenhum dos dois, vale "primario".
+ * - Sem `variante`, `classeBotao` é usada sozinha (a página estiliza o botão pelo próprio
+ *   .module.css, ex.: `composes` de botao.module.css). Sem nenhum dos dois, vale "primario".
  */
 export function FormAcao({
   acao,

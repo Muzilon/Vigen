@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EnviarAnexos, GaleriaAnexos } from "@/components/anexos";
-import { Interacoes } from "@/components/interacoes";
-import { ItemAcoes } from "@/components/item-acoes";
+import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
+import { Interacoes } from "@/paginas/html/componentes/interacoes";
+import { ItemAcoes } from "@/paginas/html/componentes/item-acoes";
 import { listarAnexos, podeEnviarAnexo } from "@/lib/anexos/servico";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";

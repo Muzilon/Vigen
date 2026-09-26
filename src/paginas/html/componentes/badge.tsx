@@ -4,7 +4,6 @@ import styles from "@/paginas/css/componentes/badge.module.css";
 /**
  * Badges de status/gravidade da Direção A "Campo". Usam os tokens de cor de
  * src/paginas/css/base.css (seções 03 e 04) — nunca hex solto aqui.
- * Para páginas ainda não migradas, ver o Badge (Tailwind) em src/components/ui.tsx.
  */
 
 export type StatusRncBadge =
