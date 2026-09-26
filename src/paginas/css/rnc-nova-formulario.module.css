@@ -1,0 +1,479 @@
+/* ==========================================================
+   ÍNDICE
+   01. Formulário e cartão — superfície única com seções divididas
+   02. Seção numerada — coluna de título (150px) + campos
+   03. Campos — rótulo, entrada, select, textarea, obrigatório
+   04. Grades — classificação, "onde e quem", dados sensíveis
+   05. Tipo — controle segmentado (radio visual)
+   06. Gravidade — cartões com ponto de cor
+   07. Privacidade — interruptor LGPD, restrita, bloco sensível
+   08. Rodapé fixo — Cancelar / Abrir RNC
+   09. Celular (≤ 640px) — alvo de toque 44–52px, fonte 16px
+   ========================================================== */
+
+/* ==========================================================
+   01. FORMULÁRIO E CARTÃO
+   ========================================================== */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+
+/* ==========================================================
+   02. SEÇÃO NUMERADA
+   ========================================================== */
+.secao {
+  margin: 0;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  padding: var(--espaco-3) 18px;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: var(--espaco-5);
+}
+
+.secaoFinal {
+  border-bottom: 0;
+  padding-bottom: 14px;
+}
+
+/* A legenda real fica só para leitor de tela; o título visual está em .cabecalhoSecao */
+.legendaOculta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.numeroSecao {
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--cor-acento);
+}
+
+.tituloSecao {
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.descricaoSecao {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.camposSecao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* ==========================================================
+   03. CAMPOS
+   ========================================================== */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.obrigatorio {
+  color: var(--cor-perigo-texto);
+}
+
+.entrada {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13.5px;
+  color: var(--cor-texto);
+}
+textarea.entrada {
+  padding: 7px 10px;
+  line-height: 1.4;
+  resize: vertical;
+}
+select.entrada {
+  padding: 0 8px;
+}
+.entrada:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+.entradaMono {
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+}
+
+/* ==========================================================
+   04. GRADES
+   ========================================================== */
+.gradeClassificacao {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: var(--espaco-3);
+}
+
+.gradeDupla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px var(--espaco-3);
+}
+
+.gradeSensiveis {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--espaco-3);
+}
+
+/* Radio real invisível, mas focável (o foco acende a opção via :focus-within) */
+.radioOculto {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+
+/* ==========================================================
+   05. TIPO — CONTROLE SEGMENTADO
+   Opção marcada em fundo escuro (mesma cor da sidebar).
+   ========================================================== */
+.segmentado {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  height: 34px;
+  padding: 2px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo);
+}
+
+.opcaoSegmentada {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--cor-texto);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.opcaoSegmentada:hover {
+  background: var(--cor-superficie);
+}
+.opcaoSegmentada:focus-within {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+}
+.opcaoSegmentada:has(input:checked) {
+  background: var(--cor-destaque-escuro);
+  color: var(--cor-destaque-escuro-texto);
+  font-weight: 500;
+}
+
+/* ==========================================================
+   06. GRAVIDADE — CARTÕES
+   Cada variante define --cor-grav (ponto/borda) e --cor-grav-fundo
+   (fundo quando marcada) a partir dos tokens de gravidade.
+   ========================================================== */
+.gradeGravidade {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--espaco-2);
+}
+
+.opcaoGravidade {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+.opcaoGravidade:hover {
+  border-color: var(--cor-grav);
+}
+.opcaoGravidade:focus-within {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+}
+/* Marcada: borda 1.5px na cor da gravidade (padding compensa) */
+.opcaoGravidade:has(input:checked) {
+  border: 1.5px solid var(--cor-grav);
+  padding: 0 9.5px;
+  background: var(--cor-grav-fundo);
+  color: var(--cor-grav);
+  font-weight: 600;
+}
+
+.pontoGravidade {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-grav);
+}
+
+.gravidadeBaixa {
+  --cor-grav: var(--cor-gravidade-baixa-texto);
+  --cor-grav-fundo: var(--cor-gravidade-baixa-fundo);
+}
+.gravidadeMedia {
+  --cor-grav: var(--cor-gravidade-media-texto);
+  --cor-grav-fundo: var(--cor-gravidade-media-fundo);
+}
+.gravidadeAlta {
+  --cor-grav: var(--cor-gravidade-alta-texto);
+  --cor-grav-fundo: var(--cor-gravidade-alta-fundo);
+}
+/* Crítica: fundo do token é sólido; quando marcada usa o fundo claro de perigo */
+.gravidadeCritica {
+  --cor-grav: var(--cor-gravidade-critica-fundo);
+  --cor-grav-fundo: var(--cor-perigo-fundo);
+}
+.gravidadeCritica .pontoGravidade {
+  border-radius: 2px; /* quadrado: diferencia a crítica sem depender só da cor */
+}
+
+/* ==========================================================
+   07. PRIVACIDADE
+   ========================================================== */
+.linhaInterruptor {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  cursor: pointer;
+}
+
+/* Checkbox nativo com aparência de interruptor (role="switch") */
+.interruptor {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 22px;
+  margin: 0;
+  border-radius: var(--raio-pill);
+  background: var(--cor-borda-tracejada);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.interruptor::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-superficie);
+  transition: left 0.15s;
+}
+.interruptor:checked {
+  background: var(--cor-acento);
+}
+.interruptor:checked::after {
+  left: 21px;
+}
+.interruptor:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 2px;
+}
+
+.rotuloInterruptor {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.linhaCaixa {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  font-size: 13.5px;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.caixa {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--cor-acento);
+}
+
+.notaRestrita {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  padding: var(--espaco-2) 10px;
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+
+.blocoSensivel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--espaco-3);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-aviso-fundo);
+  border: 1px solid var(--cor-aviso-borda);
+}
+
+.tituloSensivel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-acento-hover);
+}
+
+/* ==========================================================
+   08. RODAPÉ FIXO
+   sticky no fim da viewport enquanto o formulário rola; fica
+   abaixo do cabeçalho do app (z-index de conteúdo).
+   ========================================================== */
+.rodape {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-conteudo);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: var(--espaco-3) 0;
+  background: var(--cor-fundo);
+  border-top: 1px solid var(--cor-borda);
+}
+
+a.botaoCancelar,
+button.botaoAbrir {
+  height: 38px;
+}
+
+button.botaoAbrir {
+  padding: 0 20px;
+}
+
+/* ==========================================================
+   09. CELULAR
+   ========================================================== */
+@media (max-width: 640px) {
+  .secao {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espaco-2);
+    padding: var(--espaco-4);
+  }
+  .descricaoSecao {
+    display: none;
+  }
+
+  .rotulo,
+  .rotuloInterruptor {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .entrada {
+    min-height: 48px;
+    padding: 0 14px;
+    font-size: 16px; /* evita zoom automático do iOS ao focar */
+  }
+  textarea.entrada {
+    padding: 10px 14px;
+  }
+  .entradaMono {
+    font-size: 16px;
+  }
+
+  .gradeClassificacao,
+  .gradeDupla,
+  .gradeSensiveis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Tipo: 3 botões independentes de 44px */
+  .segmentado {
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    gap: var(--espaco-2);
+  }
+  .opcaoSegmentada {
+    height: 44px;
+    border: 1px solid var(--cor-borda-forte);
+    border-radius: var(--raio-padrao);
+    background: var(--cor-superficie);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .opcaoGravidade {
+    justify-content: center;
+    height: 44px;
+    padding: 0 4px;
+    font-size: 14px;
+  }
+  .opcaoGravidade:has(input:checked) {
+    border-width: 2px;
+    padding: 0 3px;
+  }
+  .pontoGravidade {
+    display: none;
+  }
+
+  .rodape {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    padding: var(--espaco-3) 0 var(--espaco-4);
+  }
+  a.botaoCancelar {
+    height: 44px;
+  }
+  button.botaoAbrir {
+    height: 52px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}

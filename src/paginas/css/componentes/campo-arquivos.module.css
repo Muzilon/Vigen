@@ -1,0 +1,156 @@
+/* ==========================================================
+   ÍNDICE
+   01. Campo — rótulo e texto de ajuda
+   02. Área de soltar — label tracejada que abre o seletor
+   03. Pré-visualização dos arquivos escolhidos
+   04. Erro de tamanho (aviso no cliente; validação real é no servidor)
+   05. Celular — alvo de toque maior
+   ========================================================== */
+
+/* ==========================================================
+   01. CAMPO
+   ========================================================== */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.ajuda {
+  margin: 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   02. ÁREA DE SOLTAR
+   O input real fica visualmente oculto; o foco dele acende a borda
+   da label via :focus-within (acessível por teclado).
+   ========================================================== */
+.areaSoltar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: var(--espaco-2) var(--espaco-3);
+  border: 1.5px dashed var(--cor-borda-tracejada);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo-sutil);
+  color: var(--cor-texto-secundario);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+}
+.areaSoltar:hover {
+  border-color: var(--cor-acento);
+}
+.areaSoltar:focus-within {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+.chamada {
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+.contagem {
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+}
+
+.entradaOculta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ==========================================================
+   03. PRÉ-VISUALIZAÇÃO
+   ========================================================== */
+.previas {
+  list-style: none;
+  margin: var(--espaco-1) 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+}
+
+.previa {
+  width: 88px;
+  text-align: center;
+}
+
+.miniatura,
+.miniaturaDocumento {
+  width: 88px;
+  height: 64px;
+  border-radius: 4px;
+  border: 1px solid var(--cor-borda);
+}
+
+.miniatura {
+  display: block;
+  object-fit: cover;
+}
+
+.miniaturaDocumento {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cor-contador-fundo);
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--cor-texto-secundario);
+}
+
+.nomeArquivo {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tamanho {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 10.5px;
+  color: var(--cor-texto-fraco);
+}
+
+/* ==========================================================
+   04. ERRO DE TAMANHO
+   ========================================================== */
+.erroTamanho {
+  margin: 0;
+  font-size: 12px;
+  color: var(--cor-perigo-texto);
+}
+
+/* ==========================================================
+   05. CELULAR
+   ========================================================== */
+@media (max-width: 640px) {
+  .areaSoltar {
+    min-height: 72px;
+    font-size: 14px;
+  }
+}

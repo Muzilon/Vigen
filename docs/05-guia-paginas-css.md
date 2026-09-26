@@ -39,7 +39,18 @@ src/paginas/
       nav-lateral.tsx             # NavLateral (client — menu da sidebar, item ativo)
       trilha.tsx                  # Trilha (client — breadcrumb do cabeçalho)
       legado-ui.tsx               # Badge/Cabecalho/Cartao/Campo/cls do ui.tsx antigo (Tailwind)
+      form-acao.tsx               # FormAcao / RetornoAcao (client — server action + feedback)
+      campo-arquivos.tsx          # CampoArquivos (client — upload múltiplo com prévia)
+      anexos.tsx                  # GaleriaAnexos / EnviarAnexos
+      interacoes.tsx              # Interacoes (thread da entidade, server)
+      item-acoes.tsx              # ItemAcoes (Iniciar/Concluir/Editar/Cancelar item 5W2H)
+      tabela-5w2h.tsx             # Tabela5W2H / ItensForm (client)
+    rnc-detalhe.tsx               # detalhe da RNC (+ rnc-detalhe-causa.tsx, client)
+    rnc-nova.tsx                  # nova RNC (+ rnc-nova-formulario.tsx, client)
 ```
+
+(Cada `.tsx` acima tem o `.module.css` de mesmo nome em `paginas/css/` ou
+`paginas/css/componentes/`.)
 
 Os arquivos em `src/app/**/page.tsx` e `layout.tsx` viram **cascas finas**: só
 importam o componente de `paginas/html` e o renderizam, repassando `params`/
@@ -101,6 +112,7 @@ truncado).
 |---|---|---|
 | Sidebar | `--cor-sidebar-fundo`, `--cor-sidebar-texto`, `--cor-sidebar-item-ativo-fundo` | só dentro de `layout-app.module.css` |
 | Acento | `--cor-acento` (#B45309), `--cor-acento-hover`, `--cor-acento-claro` | botões primários, item ativo, ícones de destaque |
+| Destaque escuro | `--cor-destaque-escuro`, `--cor-destaque-escuro-texto` | etapa concluída do stepper, selo "Ciclo N", opção marcada de segmentados (fora da sidebar) |
 | Superfície | `--cor-fundo`, `--cor-fundo-sutil`, `--cor-superficie` | fundo de página / cabeçalho de tabela / cartões |
 | Borda | `--cor-borda`, `--cor-borda-forte`, `--cor-borda-sutil` | cartões, inputs, linhas de tabela |
 | Texto | `--cor-texto`, `--cor-texto-secundario`, `--cor-texto-fraco` | hierarquia de texto |
@@ -173,9 +185,20 @@ migrar uma dessas páginas, troque a importação para os componentes novos
 (`@/paginas/html/componentes/badge`, `.../botao`, etc.) em vez de
 `@/components/ui`.
 
-Os demais componentes citados acima (`anexos.tsx`, `tabela-5w2h.tsx`, etc.)
-**ainda não foram migrados** nesta etapa — continuam em `src/components/` com
-Tailwind, e devem seguir o checklist abaixo quando for a vez deles.
+Os demais (`anexos.tsx`, `tabela-5w2h.tsx`, `interacoes.tsx`, `item-acoes.tsx`,
+`campo-arquivos.tsx`, `form-acao.tsx`) **foram migrados** para
+`src/paginas/html/componentes/<nome>.tsx` + `src/paginas/css/componentes/<nome>.module.css`.
+Os arquivos em `src/components/` viraram shims de reexport (mesmos nomes
+exportados), então importações antigas continuam funcionando; código novo deve
+importar de `@/paginas/html/componentes/<nome>`. `atualizar-contadores.tsx` não
+tem markup e continua em `src/components/`.
+
+`FormAcao` ganhou as props `variante` (`primario`/`secundario`/`perigo`/`texto`,
+mesmo visual do `Botao`) e `tamanho` (`normal`/`pequeno`). Sem `variante`, uma
+`classeBotao` recebida é usada sozinha (compatível com quem ainda passa classes
+próprias); com `variante`, `classeBotao` entra como classe extra. Para
+formulários com `useActionState` próprio, `RetornoAcao` renderiza as mesmas
+mensagens de erro/aviso/sucesso.
 
 ## 8. Checklist para migrar uma página
 
@@ -223,14 +246,20 @@ Tailwind, e devem seguir o checklist abaixo quando for a vez deles.
   (todas as abas; actions continuam em `src/app/(app)/configuracoes/actions.ts`;
   botões do `FormAcao` via `composes` de `componentes/botao.module.css`)
 - `src/components/atualizar-contadores.tsx` não tem markup (só efeito) — nada a migrar
+- Detalhe da RNC — `src/app/(app)/rncs/[id]/page.tsx` → `paginas/html/rnc-detalhe.tsx`
+  (+ `rnc-detalhe-causa.tsx`, ex-`causa-form.tsx`; o antigo `itens-form.tsx` foi
+  removido — a página usa `ItensForm` de `componentes/tabela-5w2h` com
+  `adicionarItensAcao`)
+- Nova RNC (responsiva, `NovaRnc.dc.html` + `Mobile-NovaRnc.dc.html`) —
+  `src/app/(app)/rncs/nova/page.tsx` → `paginas/html/rnc-nova.tsx`
+  (+ `rnc-nova-formulario.tsx`, ex-`form-nova.tsx`)
+- Componentes compartilhados `anexos`, `tabela-5w2h`, `interacoes`,
+  `item-acoes`, `campo-arquivos`, `form-acao` → `paginas/html/componentes/`
+  (shims em `src/components/`, ver seção 7)
 
-**Ainda não migradas (continuam em Tailwind, usando `src/components/ui.tsx` /
-`@/components/*`):**
-- `src/app/(app)/rncs/[id]/page.tsx` (+ `causa-form.tsx`)
-- `src/app/(app)/rncs/nova/page.tsx` (+ `form-nova.tsx`)
-- Componentes compartilhados: `src/components/anexos.tsx`, `tabela-5w2h.tsx`,
-  `interacoes.tsx`, `item-acoes.tsx`, `campo-arquivos.tsx`, `form-acao.tsx`,
-  `atualizar-contadores.tsx`
+**Ainda não migrado:** nenhuma página. `src/components/ui.tsx`
+(`legado-ui.tsx`) continua existindo só como shim; o Tailwind pode sair
+quando nada mais importar `cls`/`Badge` legados.
 
 ## 10. Pendências conhecidas
 
@@ -273,5 +302,29 @@ Tailwind, e devem seguir o checklist abaixo quando for a vez deles.
   usam o componente compartilhado `Interacoes`). O agrupamento por prazo
   (Atrasados / Próximos 7 dias / Depois / Concluídos-cancelados) e o chip
   "vence em N dias" são só derivados de `status` + `quando` já existentes.
-- O Tailwind continua no projeto (não pode ser removido) até que as páginas
-  da seção 9 acima também migrem.
+- Detalhe da RNC (`A-Detalhe.dc.html`, `Verificacao.dc.html`): elementos
+  **sem lastro** e não implementados — botão "⋯ Mais ações"; "Iniciado em" do
+  ciclo; "Prazo do plano" e "Atualizada em … por …" nos detalhes; contador de
+  mensagens na aba Interações (exigiria query extra); anexos por item na coluna
+  de ações da verificação (só são carregados na aba Plano); link "Encaminhar
+  para <pessoa>" na nota de verificador (não existe reatribuição de
+  verificação). Mantidos do código, fora do mockup: aba Cancelamento, coluna
+  "Ações" do 5W2H (`ItemAcoes`), ciclos anteriores esmaecidos. Derivados sem
+  regra nova: stepper (a partir de `status` + `historicoStatus`; REABERTO volta à
+  etapa 1, CANCELADO marca a etapa onde parou), "N dia(s) em aberto",
+  progresso "x de y concluído(s)" e custo total por ciclo, botão "Solicitar
+  cancelamento" no cabeçalho (só um link para a aba já existente). O painel
+  lateral "Detalhes" agora aparece em todas as abas; "Anexos" da RNC continua só
+  no Resumo (onde a lista é carregada).
+- Nova RNC (`NovaRnc.dc.html`, `Mobile-NovaRnc.dc.html`): sem lastro e não
+  implementados — selo "Leva menos de 2 minutos", "Rascunho salvo às…",
+  descrições das gravidades ("Sem impacto relevante"…) e "O responsável é
+  avisado e pode reatribuir" (critérios/comportamentos não definidos no
+  código), botão "Tirar foto"/contador "2 de 6" e remoção individual de foto
+  (o upload é um `<input type="file" multiple>`), "Pré-selecionada pela sua
+  última obra" (só há pré-seleção quando o usuário tem uma única obra) e a
+  frase sobre quem vê RNC restrita (mantido o texto real do código).
+- Tokens `--cor-destaque-escuro`/`-texto` (base.css, seção 02) foram criados
+  para o tom escuro usado no conteúdo (stepper, selo de ciclo, segmentados),
+  em vez de reaproveitar os tokens de sidebar.
+- O Tailwind continua no projeto enquanto `legado-ui.tsx` existir.

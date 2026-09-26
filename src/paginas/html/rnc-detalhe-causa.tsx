@@ -1,13 +1,16 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { cls } from "@/components/ui";
 import { ROTULO_METODO, SEIS_M } from "@/lib/rnc/rotulos";
-import { salvarCausaAcao } from "../actions";
+import { salvarCausaAcao } from "@/app/(app)/rncs/actions";
+import { RetornoAcao } from "@/paginas/html/componentes/form-acao";
+import { Botao } from "@/paginas/html/componentes/botao";
+import styles from "@/paginas/css/rnc-detalhe-causa.module.css";
 
 type Metodo = keyof typeof ROTULO_METODO;
 type Analise = { porques?: string[]; ishikawa?: Record<string, string>; texto?: string };
 
+/** Formulário da análise de causa raiz (5 Porquês / Ishikawa 6M / texto livre) — aba "Causa raiz" do detalhe. */
 export function CausaForm(props: {
   rncId: string;
   versao: number;
@@ -25,19 +28,20 @@ export function CausaForm(props: {
     metodo === "CINCO_PORQUES" ? { porques } : metodo === "ISHIKAWA" ? { ishikawa } : { texto };
 
   return (
-    <form action={acao} className="space-y-4">
+    <form action={acao} className={styles.formulario}>
       <input type="hidden" name="id" value={props.rncId} />
       <input type="hidden" name="versao" value={props.versao} />
       <input type="hidden" name="metodo" value={metodo} />
       <input type="hidden" name="analise" value={JSON.stringify(analise)} />
 
-      <div className="inline-flex rounded-md border border-slate-300 bg-slate-50 p-0.5">
+      <div role="group" aria-label="Método de análise" className={styles.seletorMetodo}>
         {(Object.keys(ROTULO_METODO) as Metodo[]).map((m) => (
           <button
             key={m}
             type="button"
+            aria-pressed={metodo === m}
             onClick={() => setMetodo(m)}
-            className={`rounded px-3 py-1 text-sm ${metodo === m ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-600"}`}
+            className={`${styles.opcaoMetodo} ${metodo === m ? styles.opcaoMetodoAtiva : ""}`}
           >
             {ROTULO_METODO[m]}
           </button>
@@ -45,30 +49,32 @@ export function CausaForm(props: {
       </div>
 
       {metodo === "CINCO_PORQUES" && (
-        <div className="space-y-2">
+        <ol className={styles.listaPorques}>
           {porques.map((p, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="w-24 shrink-0 text-xs font-medium text-slate-500">{i + 1}º Por quê?</span>
+            <li key={i} className={styles.linhaPorque}>
+              <label htmlFor={`porque-${i}`} className={styles.rotuloPorque}>{i + 1}º Por quê?</label>
               <input
+                id={`porque-${i}`}
                 value={p}
                 onChange={(e) => setPorques(porques.map((x, j) => (j === i ? e.target.value : x)))}
-                className={cls.input}
+                className={styles.entrada}
               />
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
       )}
 
       {metodo === "ISHIKAWA" && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className={styles.gradeIshikawa}>
           {SEIS_M.map(([k, r]) => (
-            <div key={k}>
-              <label className={cls.label}>{r}</label>
+            <div key={k} className={styles.campo}>
+              <label htmlFor={`ishikawa-${k}`} className={styles.rotulo}>{r}</label>
               <textarea
+                id={`ishikawa-${k}`}
                 rows={2}
                 value={ishikawa[k] ?? ""}
                 onChange={(e) => setIshikawa({ ...ishikawa, [k]: e.target.value })}
-                className={cls.input}
+                className={styles.entrada}
               />
             </div>
           ))}
@@ -76,20 +82,23 @@ export function CausaForm(props: {
       )}
 
       {metodo === "OUTRO" && (
-        <div>
-          <label className={cls.label}>Análise</label>
-          <textarea rows={4} value={texto} onChange={(e) => setTexto(e.target.value)} className={cls.input} />
+        <div className={styles.campo}>
+          <label htmlFor="analise-texto" className={styles.rotulo}>Análise</label>
+          <textarea id="analise-texto" rows={4} value={texto} onChange={(e) => setTexto(e.target.value)} className={styles.entrada} />
         </div>
       )}
 
-      <div>
-        <label className={cls.label} htmlFor="causaRaiz">Causa raiz (conclusão) *</label>
-        <textarea id="causaRaiz" name="causaRaiz" rows={2} required defaultValue={props.causaRaiz ?? ""} className={cls.input} />
+      <div className={`${styles.campo} ${styles.campoConclusao}`}>
+        <label className={styles.rotulo} htmlFor="causaRaiz">
+          Causa raiz (conclusão) <span className={styles.obrigatorio}>*</span>
+        </label>
+        <textarea id="causaRaiz" name="causaRaiz" rows={2} required defaultValue={props.causaRaiz ?? ""} className={styles.entrada} />
       </div>
 
-      {res?.erro && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{res.erro}</p>}
-      {res?.ok && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{res.ok}</p>}
-      <button type="submit" disabled={pendente} className={cls.btn}>{pendente ? "Salvando..." : "Salvar causa raiz"}</button>
+      <RetornoAcao res={res ? { erro: res.erro, ok: res.ok } : null} />
+      <div>
+        <Botao type="submit" disabled={pendente}>{pendente ? "Salvando..." : "Salvar causa raiz"}</Botao>
+      </div>
     </form>
   );
 }

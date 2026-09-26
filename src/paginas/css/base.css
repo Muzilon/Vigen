@@ -49,6 +49,11 @@
   --cor-texto-secundario: #5c5850;
   --cor-texto-fraco: #a8a49c;
 
+  /* Destaque escuro no conteúdo (etapa concluída do stepper, selo "Ciclo N",
+     opção marcada de controles segmentados) — mesmo tom da sidebar */
+  --cor-destaque-escuro: #1e2528;
+  --cor-destaque-escuro-texto: #ffffff;
+
   /* Perigo / atraso */
   --cor-perigo-texto: #9f1239;
   --cor-perigo-fundo: #ffe4e6;

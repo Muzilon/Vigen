@@ -1,0 +1,1264 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical e utilitários de texto
+   02. Cabeçalho — código, selos, título, metadados e ações
+   03. Stepper do ciclo de vida (Aberto → Encerrado)
+   04. Corpo — coluna principal + painel lateral (288px)
+   05. Abas — navegação entre seções da RNC
+   06. Etiquetas — status de item/plano/verificação/cancelamento
+   07. Resumo — descrição e dados sensíveis (LGPD)
+   08. Causa raiz — leitura (quando não editável)
+   09. Plano de ação — painel por ciclo, tabela 5W2H, rodapé de custo
+   10. Verificação de eficácia — contexto + "A causa foi eliminada?"
+   11. Histórico — linha do tempo
+   12. Cancelamento — solicitação, decisão e tabela
+   13. Painel lateral — detalhes, responsável e anexos
+   14. Formulários da página — rótulos, textarea, select
+   15. Responsivo — tablet (≤ 1100px) e celular (≤ 640px)
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mono {
+  font-family: var(--fonte-mono);
+}
+
+.textoFraco {
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.vazio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.textoLongo {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--cor-texto);
+}
+
+.textoCorpo {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--cor-texto);
+}
+
+.espacador {
+  flex: 1;
+  min-width: 0;
+}
+
+.pilha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   02. CABEÇALHO
+   ========================================================== */
+.cabecalho {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-4);
+}
+
+.blocoTitulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.voltar {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.voltar:hover {
+  color: var(--cor-texto);
+}
+
+.linhaSelos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.codigo {
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto-secundario);
+}
+
+.titulo {
+  margin: 6px 0 4px 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.acoesCabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  padding-top: 22px; /* alinha os botões com a linha dos selos, abaixo de "← RNCs" */
+}
+
+/* Cada transição é um <form> (FormAcao): o retorno aparece sob o botão */
+.formTransicao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 320px;
+}
+
+/* ==========================================================
+   03. STEPPER DO CICLO DE VIDA
+   Etapa feita = marcador escuro com check; atual = âmbar com halo;
+   futura = contorno tracejado. Conector preenchido até a atual.
+   ========================================================== */
+.stepper {
+  list-style: none;
+  margin: 0;
+  padding: var(--espaco-3) var(--espaco-5);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.etapa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.marcadorEtapa {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--raio-pill);
+  border: 1.5px solid var(--cor-borda-tracejada);
+  color: var(--cor-texto-secundario);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+}
+
+.textoEtapa {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.rotuloEtapa {
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dataEtapa {
+  font-size: 11.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.conectorEtapa {
+  flex: 1;
+  min-width: 12px;
+  height: 2px;
+  margin-right: 10px;
+  background: var(--cor-borda);
+}
+
+.etapaFeita .marcadorEtapa {
+  border-color: var(--cor-destaque-escuro);
+  background: var(--cor-destaque-escuro);
+  color: var(--cor-destaque-escuro-texto);
+}
+.etapaFeita .rotuloEtapa {
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+.etapaFeita .conectorEtapa {
+  background: var(--cor-destaque-escuro);
+}
+
+.etapaAtual .marcadorEtapa {
+  border-color: var(--cor-acento);
+  background: var(--cor-acento);
+  color: var(--cor-acento-texto);
+  box-shadow: 0 0 0 4px var(--cor-status-plano-execucao-fundo);
+  font-weight: 500;
+}
+.etapaAtual .rotuloEtapa {
+  color: var(--cor-acento);
+  font-weight: 600;
+}
+
+/* RNC cancelada: a etapa onde parou fica cinza com "✕" */
+.etapaCancelada .marcadorEtapa {
+  border-color: var(--cor-status-cancelado-texto);
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+  box-shadow: none;
+}
+.etapaCancelada .rotuloEtapa {
+  color: var(--cor-status-cancelado-texto);
+}
+
+/* ==========================================================
+   04. CORPO
+   ========================================================== */
+.corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: var(--espaco-5);
+  align-items: start;
+}
+
+.colunaPrincipal {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.painelAba {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   05. ABAS
+   ========================================================== */
+.abas {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--cor-borda);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.aba {
+  flex: none;
+  height: 40px;
+  padding: 0 var(--espaco-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+.aba:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: -2px;
+}
+
+.abaAtiva {
+  font-weight: 600;
+  color: var(--cor-texto);
+  box-shadow: inset 0 -2px 0 var(--cor-acento);
+}
+
+.contadorAba {
+  font-family: var(--fonte-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-acento-hover);
+}
+
+.pontoPendente {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-acento-claro);
+}
+
+/* ==========================================================
+   06. ETIQUETAS
+   ========================================================== */
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--raio-pill);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.etiquetaNeutra {
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+}
+.etiquetaInfo {
+  background: var(--cor-status-aberto-fundo);
+  color: var(--cor-status-aberto-texto);
+}
+.etiquetaSucesso {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}
+.etiquetaApagada {
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+}
+.etiquetaPerigo {
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+}
+.etiquetaAviso {
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-status-plano-execucao-texto);
+}
+
+/* ==========================================================
+   07. RESUMO
+   ========================================================== */
+.tituloComIcone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Cartão de dados pessoais: faixa âmbar à esquerda sinaliza acesso restrito */
+.cartaoSensivel {
+  box-shadow: inset 3px 0 0 var(--cor-acento-claro);
+}
+
+.gradeSensiveis {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+
+.campoLargo {
+  grid-column: 1 / -1;
+}
+
+.rotuloDado {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.valorDado {
+  margin: 2px 0 0 0;
+  font-size: 13.5px;
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.subsecao {
+  margin-top: var(--espaco-4);
+  padding-top: var(--espaco-3);
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+
+.tituloSubsecao {
+  margin: 0 0 var(--espaco-2) 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   08. CAUSA RAIZ (LEITURA)
+   ========================================================== */
+.listaCampos {
+  margin: 0;
+}
+
+.listaPorques {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+
+.gradeIshikawa {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+
+.destaqueCausa {
+  padding: var(--espaco-3) var(--espaco-4);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+}
+
+.rotuloDestaque {
+  display: block;
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cor-texto-secundario);
+}
+
+.textoCausa {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--cor-texto);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================================
+   09. PLANO DE AÇÃO
+   ========================================================== */
+.painelCiclo {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+}
+
+/* Ciclos anteriores (após verificação ineficaz): somente leitura, esmaecidos */
+.cicloAnterior {
+  opacity: 0.72;
+}
+
+.cabecalhoCiclo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+  padding: var(--espaco-3) 14px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.seloCiclo {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--raio-padrao);
+  background: var(--cor-destaque-escuro);
+  color: var(--cor-destaque-escuro-texto);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.progressoTexto {
+  font-size: 13px;
+  color: var(--cor-texto);
+}
+
+.barraProgresso {
+  display: inline-block;
+  width: 120px;
+  height: 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-borda-sutil);
+  overflow: hidden;
+}
+
+.preenchimentoProgresso {
+  display: block;
+  height: 100%;
+  background: var(--cor-status-encerrado-texto);
+}
+
+a.botaoCompacto {
+  height: 32px;
+  padding: 0 var(--espaco-3);
+  font-size: 13px;
+}
+
+.vazioCiclo {
+  padding: var(--espaco-4) 14px;
+}
+
+.rolagemTabela {
+  overflow-x: auto;
+}
+
+.tabelaPlano,
+.tabelaSimples {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.tabelaPlano th,
+.tabelaSimples th {
+  height: 32px;
+  padding: 0 var(--espaco-2);
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-fundo-sutil);
+  border-bottom: 1px solid var(--cor-borda);
+  white-space: nowrap;
+}
+
+.tabelaPlano td,
+.tabelaSimples td {
+  padding: 10px var(--espaco-2);
+  vertical-align: top;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  color: var(--cor-texto);
+}
+
+/* Primeira/última coluna com respiro igual ao cabeçalho do painel */
+.tabelaPlano th:first-child,
+.tabelaPlano td:first-child {
+  padding-left: 14px;
+}
+.tabelaPlano th:last-child,
+.tabelaPlano td:last-child {
+  padding-right: 14px;
+}
+
+.tabelaSimples {
+  font-size: 13px;
+}
+
+.tabelaPlano .thDireita {
+  text-align: right;
+}
+
+.colOQue {
+  min-width: 200px;
+  font-weight: 500;
+}
+
+.colAcoes {
+  min-width: 150px;
+}
+
+/* Variantes de célula: prefixadas pela tabela para vencer a cor padrão do td */
+.tabelaPlano .tdSecundario,
+.tabelaSimples .tdSecundario {
+  color: var(--cor-texto-secundario);
+  min-width: 110px;
+}
+
+.tdSemQuebra {
+  white-space: nowrap;
+}
+
+.tdMono {
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.tdDireita {
+  text-align: right;
+}
+
+.tabelaPlano .dataAtrasada {
+  color: var(--cor-atrasado-texto);
+}
+
+.linkItem {
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linkItem:hover {
+  color: var(--cor-acento);
+  text-decoration: underline;
+}
+
+.evidencia {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--cor-status-encerrado-texto);
+  overflow-wrap: anywhere;
+}
+
+.linkAnexoItem {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--cor-acento);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.linkAnexoItem:hover {
+  text-decoration: underline;
+}
+
+.rodapeCiclo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+  padding: 10px 14px;
+  background: var(--cor-fundo-sutil);
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.iconeInfo {
+  flex: none;
+}
+
+.valorCusto {
+  font-family: var(--fonte-mono);
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+/* Âncora do "+ Adicionar item": não esconde o cartão sob o cabeçalho sticky */
+.ancora {
+  scroll-margin-top: 72px;
+}
+
+/* ==========================================================
+   10. VERIFICAÇÃO DE EFICÁCIA
+   Contexto à esquerda; decisão à direita com a pergunta grande
+   "A causa foi eliminada?" (ver Verificacao.dc.html).
+   ========================================================== */
+.gradeVerificacao {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--espaco-4);
+  align-items: start;
+}
+.gradeVerificacaoUnica {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cartaoCausa {
+  padding: var(--espaco-4) 18px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+
+.contagemConcluidas {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cor-status-encerrado-texto);
+}
+
+.listaAcoesCiclo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.acaoCiclo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+}
+.acaoCiclo + .acaoCiclo {
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+.acaoCiclo:first-child {
+  padding-top: 0;
+}
+
+.linhaAcaoCiclo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px var(--espaco-3);
+}
+
+.tituloAcaoCiclo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.tituloAcaoCiclo:hover {
+  color: var(--cor-acento);
+  text-decoration: underline;
+}
+
+.metaAcaoCiclo {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+}
+
+.linkRodape {
+  margin: var(--espaco-3) 0 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--cor-borda-sutil);
+  font-size: 13px;
+}
+.linkRodape a {
+  color: var(--cor-acento);
+  font-weight: 500;
+  text-decoration: none;
+}
+.linkRodape a:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+
+.listaVerificacoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+.verificacao {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.iconeResultado {
+  margin-top: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--raio-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+.resultadoEficaz {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}
+.resultadoIneficaz {
+  background: var(--cor-status-reaberto-fundo);
+  color: var(--cor-status-reaberto-texto);
+}
+
+.corpoVerificacao {
+  min-width: 0;
+}
+
+.cabecalhoVerificacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.tentativa {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.comentario {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cor-texto-secundario);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.anexosVerificacao {
+  margin-top: var(--espaco-2);
+}
+
+/* --- Painel de decisão --- */
+.painelDecisao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  padding: 22px var(--espaco-6);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+
+.seloTentativa {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-status-em-verificacao-fundo);
+  color: var(--cor-status-em-verificacao-texto);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.formDecisao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+.grupoDecisao {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.perguntaDecisao {
+  padding: 0;
+  margin-bottom: var(--espaco-3);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cor-texto);
+}
+
+.opcoesDecisao {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+
+.opcaoDecisao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--espaco-4);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  cursor: pointer;
+}
+.opcaoDecisao:hover {
+  border-color: var(--cor-texto-fraco);
+}
+.opcaoDecisao:focus-within {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+}
+
+/* Opção marcada: borda de 2px na cor do resultado (margem compensa 1px extra) */
+.opcaoEficaz:has(input:checked) {
+  border: 2px solid var(--cor-status-encerrado-texto);
+  background: var(--cor-status-encerrado-fundo);
+  padding: 15px;
+}
+.opcaoIneficaz:has(input:checked) {
+  border: 2px solid var(--cor-status-reaberto-texto);
+  background: var(--cor-status-reaberto-fundo);
+  padding: 15px;
+}
+
+.linhaOpcao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.radioDecisao {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: none;
+}
+.opcaoEficaz .radioDecisao {
+  accent-color: var(--cor-status-encerrado-texto);
+}
+.opcaoIneficaz .radioDecisao {
+  accent-color: var(--cor-status-reaberto-texto);
+}
+
+.descricaoOpcao {
+  padding-left: 28px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.notaVerificador {
+  margin: 0;
+  padding: 10px var(--espaco-3);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-aviso-fundo);
+  border: 1px solid var(--cor-aviso-borda);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--cor-texto);
+}
+
+button.botaoRegistrar {
+  width: 100%;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ==========================================================
+   11. HISTÓRICO
+   ========================================================== */
+.linhaTempo {
+  list-style: none;
+  margin: 0 0 0 6px;
+  padding: 0;
+  border-left: 2px solid var(--cor-borda);
+}
+
+.eventoTempo {
+  position: relative;
+  padding: 0 0 var(--espaco-4) var(--espaco-5);
+}
+.eventoTempo:last-child {
+  padding-bottom: 0;
+}
+
+.pontoTempo {
+  position: absolute;
+  left: -7px; /* centraliza o ponto de 12px sobre a borda de 2px */
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-acento);
+  border: 2px solid var(--cor-superficie);
+}
+
+.linhaEvento {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--espaco-2);
+  font-size: 13px;
+}
+
+.nomeEvento {
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.motivoEvento {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================================
+   12. CANCELAMENTO
+   ========================================================== */
+.cartaoPendente {
+  box-shadow: inset 3px 0 0 var(--cor-acento-claro);
+}
+
+.motivoPendente {
+  margin-top: 4px;
+  color: var(--cor-texto-secundario);
+}
+
+.observacao {
+  margin: var(--espaco-3) 0 0 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.decisoesCancelamento {
+  margin-top: var(--espaco-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-4);
+}
+
+.formDecisaoCancelamento {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+}
+.formDecisaoCancelamento > p {
+  flex-basis: 100%;
+}
+
+.entradaComentario {
+  width: 224px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13.5px;
+  color: var(--cor-texto);
+}
+.entradaComentario:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+.formEmPilha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+}
+.formEmPilha > textarea,
+.formEmPilha > p {
+  align-self: stretch;
+}
+
+/* ==========================================================
+   13. PAINEL LATERAL
+   ========================================================== */
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.listaDetalhes {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  row-gap: var(--espaco-2);
+  column-gap: 10px;
+  font-size: 13px;
+}
+.listaDetalhes dt {
+  color: var(--cor-texto-secundario);
+}
+.listaDetalhes dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--cor-texto);
+}
+
+.pessoa {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.avatar {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+  font-size: 9.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.avatarResponsavel {
+  background: var(--cor-status-plano-execucao-fundo);
+}
+
+.formResponsavel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  margin-top: var(--espaco-4);
+  padding-top: var(--espaco-3);
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+.formResponsavel > select,
+.formResponsavel > p {
+  align-self: stretch;
+}
+
+.contagemTitulo {
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   14. FORMULÁRIOS DA PÁGINA
+   ========================================================== */
+.campoFormulario {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rotuloCampo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.obrigatorio {
+  color: var(--cor-perigo-texto);
+}
+
+.areaTexto {
+  width: 100%;
+  padding: 10px var(--espaco-3);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cor-texto);
+  resize: vertical;
+}
+
+.selecao {
+  width: 100%;
+  height: 34px;
+  padding: 0 var(--espaco-2);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  color: var(--cor-texto);
+}
+
+.areaTexto:focus,
+.selecao:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+/* ==========================================================
+   15. RESPONSIVO
+   ========================================================== */
+@media (max-width: 1100px) {
+  /* Painel lateral desce para baixo da coluna principal */
+  .corpo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gradeVerificacao {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cabecalho {
+    flex-direction: column;
+    gap: var(--espaco-3);
+  }
+  .acoesCabecalho {
+    padding-top: 0;
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .formTransicao {
+    align-items: stretch;
+    max-width: none;
+    flex: 1;
+  }
+  .titulo {
+    font-size: 19px;
+  }
+
+  /* Stepper vira lista vertical compacta */
+  .stepper {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espaco-2);
+    padding: var(--espaco-3);
+  }
+  .conectorEtapa {
+    display: none;
+  }
+
+  .gradeSensiveis,
+  .gradeIshikawa {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .opcoesDecisao {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .painelDecisao {
+    padding: var(--espaco-4);
+  }
+  .perguntaDecisao {
+    font-size: 20px;
+  }
+
+  .barraProgresso {
+    width: 80px;
+  }
+
+  .entradaComentario {
+    width: 100%;
+  }
+  .formDecisaoCancelamento {
+    width: 100%;
+  }
+
+  .areaTexto,
+  .selecao,
+  .entradaComentario {
+    font-size: 16px; /* evita zoom automático do iOS ao focar */
+  }
+}

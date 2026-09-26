@@ -1,0 +1,49 @@
+/* ==========================================================
+   ÍNDICE
+   01. Botão pequeno — variante compacta (ações por linha de tabela)
+   02. Retorno da action — base comum às mensagens
+   03. Variantes de retorno (erro / aviso / sucesso)
+   ========================================================== */
+
+/* ==========================================================
+   01. BOTÃO PEQUENO
+   Complementa .botao de botao.module.css (seletor com elemento para
+   vencer .botao independentemente da ordem de carga).
+   ========================================================== */
+button.botaoPequeno {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+/* ==========================================================
+   02. RETORNO DA ACTION
+   ========================================================== */
+.retorno {
+  margin: var(--espaco-2) 0 0 0;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio-padrao);
+  border: 1px solid transparent;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   03. VARIANTES DE RETORNO
+   Sucesso reaproveita o par verde do status "Encerrado".
+   ========================================================== */
+.erro {
+  background: var(--cor-perigo-fundo);
+  border-color: var(--cor-perigo-texto);
+}
+
+.aviso {
+  background: var(--cor-aviso-fundo);
+  border-color: var(--cor-aviso-borda);
+}
+
+.sucesso {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}

@@ -1,0 +1,107 @@
+/* ==========================================================
+   ÍNDICE
+   01. Grupo de ações — botões lado a lado, quebrando linha
+   02. Botão-resumo (<summary>) que abre os painéis Concluir/Editar
+   03. Painel expandido — formulário dentro da célula da tabela
+   04. Campos do painel (rótulo + input/select/textarea)
+   05. Sem ação disponível ("—")
+   ========================================================== */
+
+/* ==========================================================
+   01. GRUPO DE AÇÕES
+   ========================================================== */
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* ==========================================================
+   02. BOTÃO-RESUMO
+   Compõe .botao/.primario|.secundario (botao.module.css) no JSX;
+   aqui só reduz o tamanho e esconde o marcador nativo do <details>.
+   ========================================================== */
+summary.resumo {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  list-style: none;
+  cursor: pointer;
+}
+summary.resumo::-webkit-details-marker {
+  display: none;
+}
+summary.resumo:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+}
+
+/* ==========================================================
+   03. PAINEL EXPANDIDO
+   Fica no fluxo (não flutua): a tabela tem overflow e cortaria
+   um painel posicionado de forma absoluta.
+   ========================================================== */
+.painelDetalhes {
+  flex-basis: auto;
+}
+.painelDetalhes[open] {
+  flex-basis: 100%;
+}
+
+.painel {
+  margin-top: var(--espaco-2);
+  width: 300px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  padding: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+}
+.painel > div,
+.painel > p {
+  align-self: stretch;
+}
+
+/* ==========================================================
+   04. CAMPOS DO PAINEL
+   ========================================================== */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rotulo {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.entrada {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px var(--espaco-2);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  color: var(--cor-texto);
+}
+.entrada:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+/* ==========================================================
+   05. SEM AÇÃO
+   ========================================================== */
+.semAcao {
+  font-size: 12px;
+  color: var(--cor-texto-fraco);
+}

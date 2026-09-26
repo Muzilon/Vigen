@@ -1,0 +1,160 @@
+/* ==========================================================
+   ÍNDICE
+   01. Formulário — espaçamento vertical
+   02. Seletor de método (controle segmentado)
+   03. 5 Porquês — lista numerada
+   04. Ishikawa (6M) — grade de textos
+   05. Campos genéricos (rótulo + entrada) e conclusão
+   06. Celular
+   ========================================================== */
+
+/* ==========================================================
+   01. FORMULÁRIO
+   ========================================================== */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+/* ==========================================================
+   02. SELETOR DE MÉTODO
+   Mesmo padrão do seletor "Tipo" da Nova RNC: trilho claro,
+   opção ativa em fundo escuro (cor da sidebar).
+   ========================================================== */
+.seletorMetodo {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo);
+}
+
+.opcaoMetodo {
+  height: 30px;
+  padding: 0 var(--espaco-3);
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+.opcaoMetodo:hover {
+  background: var(--cor-superficie);
+}
+.opcaoMetodo:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+}
+
+.opcaoMetodoAtiva,
+.opcaoMetodoAtiva:hover {
+  background: var(--cor-destaque-escuro);
+  color: var(--cor-destaque-escuro-texto);
+  font-weight: 500;
+}
+
+/* ==========================================================
+   03. 5 PORQUÊS
+   ========================================================== */
+.listaPorques {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+
+.linhaPorque {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.rotuloPorque {
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cor-acento);
+}
+
+/* ==========================================================
+   04. ISHIKAWA (6M)
+   ========================================================== */
+.gradeIshikawa {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+
+/* ==========================================================
+   05. CAMPOS E CONCLUSÃO
+   ========================================================== */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.obrigatorio {
+  color: var(--cor-perigo-texto);
+}
+
+.entrada {
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--cor-texto);
+}
+.entrada:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+/* A conclusão é o dado que segue para o plano: destaque com fundo sutil */
+.campoConclusao {
+  padding: var(--espaco-3);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+}
+
+/* ==========================================================
+   06. CELULAR
+   ========================================================== */
+@media (max-width: 640px) {
+  .seletorMetodo {
+    align-self: stretch;
+  }
+  .opcaoMetodo {
+    flex: 1;
+    height: 40px;
+  }
+  .linhaPorque {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .gradeIshikawa {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .entrada {
+    font-size: 16px; /* evita zoom automático do iOS ao focar */
+  }
+}

@@ -1,0 +1,175 @@
+/* ==========================================================
+   ÍNDICE
+   01. Lista de mensagens e estado vazio
+   02. Mensagem — avatar, cabeçalho (autor/destinatário/data) e texto
+   03. Selo "nova" (mensagem recebida ainda não lida)
+   04. Formulário de envio (texto + destinatário + botão)
+   ========================================================== */
+
+/* ==========================================================
+   01. LISTA
+   ========================================================== */
+.vazio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+
+/* ==========================================================
+   02. MENSAGEM
+   A mensagem do próprio usuário ganha fundo sutil + borda âmbar
+   à esquerda, para ler a conversa de relance.
+   ========================================================== */
+.mensagem {
+  display: flex;
+  gap: 10px;
+  padding: 10px var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+}
+
+.mensagemPropria {
+  background: var(--cor-fundo-sutil);
+  box-shadow: inset 3px 0 0 var(--cor-acento-claro);
+}
+
+.avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cabecalhoMensagem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.autor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.data {
+  font-family: var(--fonte-mono);
+  font-size: 11.5px;
+}
+
+.texto {
+  margin: 4px 0 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   03. SELO "NOVA"
+   ========================================================== */
+.seloNova {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-status-plano-execucao-texto);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ==========================================================
+   04. FORMULÁRIO DE ENVIO
+   ========================================================== */
+.formulario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+  margin-top: var(--espaco-4);
+  padding-top: var(--espaco-4);
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+/* Mensagens de retorno da action ocupam a linha toda */
+.formulario > p {
+  flex-basis: 100%;
+}
+
+.rotuloOculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.areaTexto {
+  flex-basis: 100%;
+  width: 100%;
+  padding: var(--espaco-2) 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cor-texto);
+  resize: vertical;
+}
+.areaTexto:focus,
+.selecao:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+.linhaDestinatario {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  min-width: 0;
+}
+
+.rotuloDestinatario {
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.selecao {
+  height: 34px;
+  max-width: 100%;
+  padding: 0 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  color: var(--cor-texto);
+}
