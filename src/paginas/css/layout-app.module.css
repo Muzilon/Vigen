@@ -305,40 +305,6 @@
   font-weight: 500;
 }
 
-.botaoSino {
-  position: relative;
-  width: 36px;
-  height: 36px;
-  flex: none;
-  border: 1px solid var(--cor-borda);
-  background: var(--cor-superficie);
-  border-radius: var(--raio-padrao);
-  color: var(--cor-texto);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.botaoSino:hover {
-  background: var(--cor-fundo-sutil);
-}
-.contadorSino {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  min-width: 18px;
-  height: 18px;
-  border-radius: var(--raio-pill);
-  background: var(--cor-acento);
-  color: var(--cor-acento-texto);
-  font-size: 10px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--fonte-mono);
-}
-
 /* ==========================================================
    07. ÁREA DE CONTEÚDO
    isolation: isolate + z-index baixo: qualquer mídia futura

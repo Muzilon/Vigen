@@ -1,0 +1,293 @@
+/* ==========================================================
+   painel-notificacoes.module.css
+   Sino do cabeçalho + painel flutuante (popover) de notificações.
+   Componente: src/paginas/html/componentes/painel-notificacoes.tsx
+   ========================================================== */
+
+/* ==========================================================
+   01. ANIMAÇÃO — AJUSTE AQUI
+   Entrada: fade + leve deslize/escala a partir do sino.
+   --painel-anim-duracao     tempo da entrada
+   --painel-anim-curva       easing
+   --painel-anim-deslocamento deslize vertical inicial (negativo = de cima)
+   --painel-anim-escala      escala inicial
+   prefers-reduced-motion: sem deslize/escala (só aparece).
+   ========================================================== */
+.ancora {
+  --painel-anim-duracao: 160ms;
+  --painel-anim-curva: cubic-bezier(0.16, 1, 0.3, 1); /* ease-out */
+  --painel-anim-deslocamento: -6px;
+  --painel-anim-escala: 0.97;
+}
+
+@keyframes painelEntrada {
+  from {
+    opacity: 0;
+    transform: translateY(var(--painel-anim-deslocamento)) scale(var(--painel-anim-escala));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.painel[data-aberto] {
+  transform-origin: top right; /* cresce a partir do sino */
+  animation: painelEntrada var(--painel-anim-duracao) var(--painel-anim-curva) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .painel[data-aberto] {
+    animation: none;
+  }
+}
+
+/* ==========================================================
+   02. ÂNCORA E BOTÃO DO SINO
+   ========================================================== */
+.ancora {
+  position: relative;
+  flex: none;
+}
+
+.botaoSino {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
+  border-radius: var(--raio-padrao);
+  color: var(--cor-texto);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.botaoSino:hover,
+.botaoSino[aria-expanded="true"] {
+  background: var(--cor-fundo-sutil);
+}
+.contadorSino {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: var(--raio-pill);
+  background: var(--cor-acento);
+  color: var(--cor-acento-texto);
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fonte-mono);
+}
+
+/* ==========================================================
+   03. PAINEL (camada --z-popover, acima do cabeçalho/conteúdo)
+   ========================================================== */
+.painel {
+  position: absolute;
+  top: calc(100% + var(--espaco-2));
+  right: 0;
+  z-index: var(--z-popover);
+  width: 380px;
+  max-height: min(520px, calc(100vh - 80px));
+  display: flex;
+  flex-direction: column;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  box-shadow: 0 12px 32px rgb(28 27 25 / 0.14), 0 2px 6px rgb(28 27 25 / 0.08);
+  outline: none;
+}
+.painel[hidden] {
+  display: none;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  padding: var(--espaco-3) var(--espaco-4) var(--espaco-2);
+}
+.titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+.linkAcao {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cor-acento);
+  cursor: pointer;
+  text-decoration: none;
+}
+.linkAcao:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+.linkAcao:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ==========================================================
+   04. FILTRO TODAS / NÃO LIDAS
+   ========================================================== */
+.filtro {
+  display: flex;
+  gap: var(--espaco-1);
+  padding: 0 var(--espaco-4) var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+.aba {
+  border: 1px solid transparent;
+  background: none;
+  border-radius: var(--raio-pill);
+  padding: 3px 10px;
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+}
+.aba:hover {
+  background: var(--cor-fundo-sutil);
+}
+.aba[aria-pressed="true"] {
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+/* ==========================================================
+   05. LISTA
+   ========================================================== */
+.corpoLista {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.corpoLista[aria-busy="true"] {
+  opacity: 0.7;
+}
+.vazio {
+  padding: var(--espaco-6) var(--espaco-4);
+  text-align: center;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  padding: var(--espaco-3) var(--espaco-4);
+  border: 0;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--cor-texto);
+}
+.item:hover,
+.item:focus-visible {
+  background: var(--cor-fundo-sutil);
+}
+.icone {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto-secundario);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.itemNaoLido .icone {
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-acento);
+}
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tituloItem {
+  font-size: 13px;
+  font-weight: 500;
+}
+.itemNaoLido .tituloItem {
+  font-weight: 600;
+}
+.textoItem {
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tempo {
+  font-size: 11.5px;
+  color: var(--cor-texto-fraco);
+}
+.ponto {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-acento);
+}
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ==========================================================
+   06. RODAPÉ
+   ========================================================== */
+.rodape {
+  padding: var(--espaco-2) var(--espaco-4);
+  border-top: 1px solid var(--cor-borda-sutil);
+  text-align: center;
+}
+
+/* ==========================================================
+   07. CELULAR (≤640px): largura da tela, logo abaixo do cabeçalho
+   A âncora deixa de ser o containing block; o painel passa a se
+   posicionar pelo cabeçalho (sticky), ocupando a largura toda.
+   ========================================================== */
+@media (max-width: 640px) {
+  .ancora {
+    position: static;
+  }
+  .painel {
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: auto;
+    max-height: 70vh;
+    border-radius: 0 0 var(--raio-padrao) var(--raio-padrao);
+    border-left: 0;
+    border-right: 0;
+  }
+  .painel[data-aberto] {
+    transform-origin: top center;
+  }
+}

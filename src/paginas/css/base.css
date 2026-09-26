@@ -144,7 +144,7 @@
 /* ==========================================================
    07. ESCALA DE Z-INDEX
    Ordem (do mais baixo para o mais alto):
-     conteúdo (mídia/imagens/vídeos/cards) < sidebar/cabeçalho < dropdown < modal < toast
+     conteúdo (mídia/imagens/vídeos/cards) < sidebar/cabeçalho < dropdown < popover < modal < toast
    O cabeçalho e a sidebar ficam SEMPRE acima de qualquer conteúdo
    (a área de conteúdo usa isolation: isolate + z-index baixo para
    nunca criar um stacking context que vaze acima deles).
@@ -154,6 +154,7 @@
   --z-cabecalho: 10;
   --z-sidebar: 10;
   --z-dropdown: 20;
+  --z-popover: 25;   /* painéis flutuantes ancorados (ex.: notificações do sino) */
   --z-modal: 30;
   --z-toast: 40;
 }

@@ -145,6 +145,7 @@ Não use classes utilitárias em `className`: toda classe vem de um
 --z-cabecalho: 10  (cabeçalho sticky do app)
 --z-sidebar:   10  (sidebar sticky)
 --z-dropdown:  20
+--z-popover:   25  (painéis flutuantes ancorados, ex.: notificações do sino)
 --z-modal:     30
 --z-toast:     40
 ```
@@ -156,7 +157,10 @@ Regra fixa: **o cabeçalho e a sidebar ficam sempre acima de qualquer conteúdo*
 var(--z-conteudo)` — isso garante que qualquer `img`/`video`/`iframe` futuro
 dentro dela nunca crie um stacking context que vaze acima do cabeçalho, mesmo
 que alguém coloque um `z-index` alto num card de conteúdo por engano. Só
-modais e toasts (`--z-modal`, `--z-toast`) devem ficar acima do cabeçalho.
+popovers, modais e toasts (`--z-popover`, `--z-modal`, `--z-toast`) devem ficar
+acima do cabeçalho. Observação: um popover renderizado *dentro* do cabeçalho
+(como o do sino) já herda o stacking context do cabeçalho; o `--z-popover`
+ordena-o em relação aos demais filhos do cabeçalho e a futuros popovers fora dele.
 
 ## 6. Componentes compartilhados — o que usar e quando
 
@@ -177,6 +181,31 @@ modais e toasts (`--z-modal`, `--z-toast`) devem ficar acima do cabeçalho.
   `LinhaTabela`, `Td` (variantes `padrao`/`secundario`/`truncado`/`mono`).
 - **Estado vazio**: `EstadoVazio`.
 - **Alerta**: `Alerta` (variantes `erro`/`aviso`).
+- **Painel de notificações**: `PainelNotificacoes`
+  (`painel-notificacoes.tsx` + `componentes/painel-notificacoes.module.css`)
+  — componente client que substitui o link do sino no cabeçalho
+  (`layout-app.tsx`). Clicar no sino abre um popover ancorado (camada
+  `--z-popover`) com título, filtro Todas/Não lidas, últimas 20 notificações
+  (ícone por tipo, título, texto curto, tempo relativo, ponto de não lida),
+  "Marcar todas como lidas" e "Ver todas" (`/notificacoes`, página mantida).
+  Os dados vêm da server action `listarPainelAcao` (em
+  `app/(app)/notificacoes/actions.ts`), chamada ao abrir e ao trocar o filtro;
+  ela usa `listarNotificacoes` (só do próprio usuário) e devolve apenas os
+  campos exibidos. Clicar num item envia `abrirNotificacaoAcao` (marca lida +
+  redirect só para caminho interno); o contador do sino atualiza via
+  `revalidatePath` / `router.refresh()`. Acessibilidade: sino com
+  `aria-haspopup="dialog"`, `aria-expanded`, `aria-controls`; painel
+  `role="dialog"` com `aria-label`; foco vai para o painel ao abrir e volta ao
+  sino ao fechar (Esc); fecha também com clique fora e ao navegar. Celular
+  (≤640px): `.ancora` vira `position: static` e o painel se ancora no cabeçalho
+  (sticky) — `top: 100%`, largura total,
+  `max-height: 70vh` com rolagem interna.
+  **Animação** (seção 01 do CSS, variáveis em `.ancora`):
+  `--painel-anim-duracao` (160ms), `--painel-anim-curva` (ease-out),
+  `--painel-anim-deslocamento` (-6px) e `--painel-anim-escala` (0.97) — fade +
+  deslize/escala a partir do sino (`transform-origin: top right`). Com
+  `prefers-reduced-motion: reduce` a animação é desligada. Só a entrada é
+  animada (o painel usa `hidden` ao fechar).
 
 Todos em `src/paginas/html/componentes/`.
 
