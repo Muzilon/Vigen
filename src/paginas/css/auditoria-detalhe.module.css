@@ -1,0 +1,113 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Indicadores de constatações
+   03. Grade de duas colunas
+   04. Plano (itens)
+   05. Constatações
+   06. Formulários e dados
+   07. Status e tipos
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-4); min-width: 0; }
+.trilha { font-size: 13px; }
+.trilha a { color: var(--cor-texto-secundario); text-decoration: none; }
+.cabecalho { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--espaco-3); flex-wrap: wrap; }
+.codigo { margin: 0; font-family: var(--fonte-mono); font-size: 13px; font-weight: 700; color: var(--cor-texto-secundario); }
+.titulo { margin: 2px 0 var(--espaco-2); font-size: 22px; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0; font-size: 13px; color: var(--cor-texto-secundario); }
+.acoesCabecalho { display: flex; gap: var(--espaco-2); }
+
+/* ==========================================================
+   02. INDICADORES
+   ========================================================== */
+.resumo { display: flex; flex-wrap: wrap; gap: var(--espaco-3); }
+.indicador {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--raio-pill);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.indicador strong { color: var(--cor-texto); font-size: 15px; }
+.indicadorNc { background: var(--cor-atrasado-fundo); border-color: transparent; color: var(--cor-atrasado-texto); }
+.indicadorNc strong { color: var(--cor-atrasado-texto); }
+
+/* ==========================================================
+   03. GRADE
+   ========================================================== */
+.grade { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--espaco-4); align-items: start; }
+@media (max-width: 1000px) { .grade { grid-template-columns: minmax(0, 1fr); } }
+.coluna { display: flex; flex-direction: column; gap: var(--espaco-4); min-width: 0; }
+
+/* ==========================================================
+   04. PLANO
+   ========================================================== */
+.itens { list-style: none; margin: 0 0 var(--espaco-3); padding: 0; }
+.item { padding: var(--espaco-2) 0; border-bottom: 1px solid var(--cor-borda-sutil); }
+.linhaItem { display: flex; align-items: flex-start; gap: var(--espaco-3); flex-wrap: wrap; }
+.ordem { font-family: var(--fonte-mono); font-weight: 700; color: var(--cor-texto-secundario); min-width: 22px; }
+.textoItem { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.botoes { display: flex; gap: 2px; }
+.sub { font-size: 12px; color: var(--cor-texto-secundario); margin: 0; }
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-secundario); }
+.subtitulo { font-size: 14px; margin: var(--espaco-4) 0 var(--espaco-2); }
+
+/* ==========================================================
+   05. CONSTATAÇÕES
+   ========================================================== */
+.constatacoes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--espaco-3); }
+.constatacao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-left: 4px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.constatacaoNc { border-left-color: var(--cor-atrasado-texto); }
+.texto { margin: 0; font-size: 13.5px; white-space: pre-line; }
+.gerado { margin: 0; font-size: 13px; }
+
+/* ==========================================================
+   06. FORMULÁRIOS E DADOS
+   ========================================================== */
+.detalhes { font-size: 13px; }
+.detalhes summary { cursor: pointer; color: var(--cor-acento); font-weight: 600; margin: 4px 0; }
+.form { display: flex; flex-direction: column; gap: var(--espaco-2); margin-top: var(--espaco-2); }
+.linhaCampos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--espaco-2); }
+.campo { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.entrada {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 9px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+.dados { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: var(--espaco-2) var(--espaco-3); margin: 0; font-size: 13px; }
+.dados dt { color: var(--cor-texto-secundario); }
+.dados dd { margin: 0; white-space: pre-line; }
+
+/* ==========================================================
+   07. STATUS E TIPOS
+   ========================================================== */
+.status, .tipo { padding: 2px 8px; border-radius: var(--raio-pill); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.status_PLANEJADA { background: var(--cor-status-aberto-fundo); color: var(--cor-status-aberto-texto); }
+.status_EM_EXECUCAO { background: var(--cor-status-em-analise-fundo); color: var(--cor-status-em-analise-texto); }
+.status_CONCLUIDA { background: var(--cor-status-encerrado-fundo); color: var(--cor-status-encerrado-texto); }
+.status_CANCELADA { background: var(--cor-status-cancelado-fundo); color: var(--cor-status-cancelado-texto); }
+.tipo_NAO_CONFORMIDADE { background: var(--cor-atrasado-fundo); color: var(--cor-atrasado-texto); }
+.tipo_OBSERVACAO { background: var(--cor-aviso-fundo); color: var(--cor-texto); }
+.tipo_OPORTUNIDADE_MELHORIA { background: var(--cor-status-em-analise-fundo); color: var(--cor-status-em-analise-texto); }
+.tipo_PONTO_FORTE { background: var(--cor-status-encerrado-fundo); color: var(--cor-status-encerrado-texto); }

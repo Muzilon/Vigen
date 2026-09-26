@@ -7,6 +7,7 @@ import { avaliarPS, codigoHira } from "../src/lib/hira/regras";
 import { avaliar } from "../src/lib/riscos/regras";
 import { semearDocumentos } from "./seed-documentos";
 import { semearInspecoes } from "./seed-inspecoes";
+import { semearAuditorias } from "./seed-auditorias";
 
 const prisma = new PrismaClient();
 
@@ -142,6 +143,7 @@ async function main() {
   await semearLaia(e);
   await semearDocumentos(prisma, e);
   await semearInspecoes(prisma, e);
+  await semearAuditorias(prisma, e);
 
   // ---- Demo (para testar isolamento) ----
   // Sem override: fica só com o default do schema (RNC + PLANO_ACAO) — testa o gating

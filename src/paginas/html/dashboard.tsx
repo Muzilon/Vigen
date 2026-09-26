@@ -10,6 +10,7 @@ import { resumoHira } from "@/lib/hira/servico";
 import { resumoLaia } from "@/lib/laia/servico";
 import { resumoDocumentos } from "@/lib/documentos/servico";
 import { resumoInspecoes } from "@/lib/inspecoes/servico";
+import { resumoAuditorias } from "@/lib/auditorias/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -34,7 +35,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -49,6 +50,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoLaia(a),
     resumoDocumentos(a),
     resumoInspecoes(a),
+    resumoAuditorias(a),
   ]);
   const k = ind.kpis;
 
@@ -153,6 +155,24 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
           {inspecoes.porModelo.length > 0 && (
             <ul className={styles.listaSimples}>
               {inspecoes.porModelo.map((m) => <li key={m.nome}><span>{m.nome}</span><strong>{m.media}%</strong><small>{m.n} inspeção(ões)</small></li>)}
+            </ul>
+          )}
+        </Painel>
+      )}
+
+      {auditorias && (
+        <Painel titulo="Auditorias — não conformidades por auditoria" subtitulo={`Em execução e concluídas mais recentes · ${auditorias.planejadas} planejada(s)`}>
+          {auditorias.auditorias.length === 0 ? (
+            <p className={styles.subtituloPainel}>Nenhuma auditoria executada.</p>
+          ) : (
+            <ul className={styles.listaSimples}>
+              {auditorias.auditorias.map((x) => (
+                <li key={x.id}>
+                  <Link href={`/auditorias/${x.id}`}>{x.codigo} · {x.norma}</Link>
+                  <strong>{x.NAO_CONFORMIDADE} NC</strong>
+                  <small>{x.OBSERVACAO} obs · {x.OPORTUNIDADE_MELHORIA} OM · {x.rncs} RNC</small>
+                </li>
+              ))}
             </ul>
           )}
         </Painel>
