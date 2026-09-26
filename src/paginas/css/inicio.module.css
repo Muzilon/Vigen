@@ -1,0 +1,189 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — largura máxima e espaçamento vertical
+   02. Indicadores — cartões clicáveis com contagem (mono)
+   03. Painel de mensagens — cabeçalho do painel e link "Ver todas"
+   04. Lista de mensagens — avatar, autor, data e texto truncado
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 1024px;
+}
+
+/* ==========================================================
+   02. INDICADORES
+   ========================================================== */
+.gradeIndicadores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+@media (max-width: 640px) {
+  .gradeIndicadores {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-1);
+  padding: 14px var(--espaco-4);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.indicador:hover {
+  border-color: var(--cor-borda-forte);
+  background: var(--cor-fundo-sutil);
+}
+.indicador:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+}
+
+.rotuloIndicador {
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.valorIndicador {
+  font-family: var(--fonte-mono);
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+/* Cor do número só quando > 0; zerado fica esmaecido */
+.valorInformativo {
+  color: var(--cor-status-aberto-texto);
+}
+.valorAlerta {
+  color: var(--cor-atrasado-texto);
+}
+.valorAcento {
+  color: var(--cor-acento);
+}
+.valorZerado {
+  color: var(--cor-texto-fraco);
+}
+
+/* ==========================================================
+   03. PAINEL DE MENSAGENS
+   ========================================================== */
+.painelMensagens {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+}
+
+.cabecalhoPainel {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  padding: 14px var(--espaco-4);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.tituloPainel {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.linkPainel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-acento);
+  text-decoration: none;
+}
+.linkPainel:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+
+.semMensagens {
+  margin: 0;
+  padding: var(--espaco-4);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   04. LISTA DE MENSAGENS
+   ========================================================== */
+.listaMensagens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.listaMensagens > li + li {
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+
+.mensagem {
+  display: flex;
+  gap: 10px;
+  padding: var(--espaco-3) var(--espaco-4);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.mensagem:hover {
+  background: var(--cor-fundo-sutil);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* min-width: 0 permite o ellipsis do texto dentro do flex */
+.corpoMensagem {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.linhaAutor {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.autor {
+  font-weight: 600;
+}
+
+.dataMensagem {
+  font-family: var(--fonte-mono);
+  font-size: 11.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.textoMensagem {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

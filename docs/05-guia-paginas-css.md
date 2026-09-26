@@ -206,21 +206,28 @@ Tailwind, e devem seguir o checklist abaixo quando for a vez deles.
 - Layout da área logada — `src/app/(app)/layout.tsx` → `paginas/html/layout-app.tsx`
 - Lista de RNCs — `src/app/(app)/rncs/page.tsx` → `paginas/html/rncs-lista.tsx`
 - Login — `src/app/login/page.tsx` → `paginas/html/login.tsx` (+ `login-formulario.tsx`)
+- Plano de Ação (lista unificada, agrupada por prazo) — `src/app/(app)/plano-acao/page.tsx` → `paginas/html/plano-acao-lista.tsx`
+- Item de ação (responsivo, estilo `Mobile-Item.dc.html`) — `plano-acao/[id]/page.tsx` → `paginas/html/plano-acao-item.tsx`
+- Novo plano avulso — `plano-acao/novo/page.tsx` → `paginas/html/plano-acao-novo.tsx` (+ `plano-acao-novo-formulario.tsx`)
+- Detalhe do plano avulso — `plano-acao/planos/[id]/page.tsx` → `paginas/html/plano-acao-plano.tsx` (+ `plano-acao-plano-editar.tsx`)
+- Badges de status de item/plano — `paginas/html/componentes/badge-status-item.tsx` (`BadgeStatusItem`, `BadgeStatusPlano`, `BadgeOrigem`)
 - `base.css` com tokens + fontes IBM Plex Sans/Mono (`src/app/layout.tsx`)
+- Início — `src/app/(app)/page.tsx` → `paginas/html/inicio.tsx`
+- Dashboard — `src/app/(app)/dashboard/page.tsx` → `paginas/html/dashboard.tsx`;
+  `dashboard/graficos.tsx` → `paginas/html/dashboard-graficos.tsx` (cores via
+  classes de `dashboard-graficos.module.css`, só tokens de `base.css`)
+- Mensagens — `src/app/(app)/mensagens/page.tsx` → `paginas/html/mensagens.tsx`
+- Notificações — `src/app/(app)/notificacoes/page.tsx` → `paginas/html/notificacoes.tsx`
+  (actions continuam em `src/app/(app)/notificacoes/actions.ts`)
+- Administração — `src/app/(app)/configuracoes/page.tsx` → `paginas/html/configuracoes.tsx`
+  (todas as abas; actions continuam em `src/app/(app)/configuracoes/actions.ts`;
+  botões do `FormAcao` via `composes` de `componentes/botao.module.css`)
+- `src/components/atualizar-contadores.tsx` não tem markup (só efeito) — nada a migrar
 
 **Ainda não migradas (continuam em Tailwind, usando `src/components/ui.tsx` /
 `@/components/*`):**
-- `src/app/(app)/page.tsx` (Início)
-- `src/app/(app)/dashboard/page.tsx` (+ `graficos.tsx`)
 - `src/app/(app)/rncs/[id]/page.tsx` (+ `causa-form.tsx`)
 - `src/app/(app)/rncs/nova/page.tsx` (+ `form-nova.tsx`)
-- `src/app/(app)/plano-acao/page.tsx`
-- `src/app/(app)/plano-acao/[id]/page.tsx`
-- `src/app/(app)/plano-acao/novo/page.tsx` (+ `form-novo.tsx`)
-- `src/app/(app)/plano-acao/planos/[id]/page.tsx` (+ `editar-form.tsx`)
-- `src/app/(app)/mensagens/page.tsx`
-- `src/app/(app)/notificacoes/page.tsx`
-- `src/app/(app)/configuracoes/page.tsx`
 - Componentes compartilhados: `src/components/anexos.tsx`, `tabela-5w2h.tsx`,
   `interacoes.tsx`, `item-acoes.tsx`, `campo-arquivos.tsx`, `form-acao.tsx`,
   `atualizar-contadores.tsx`
@@ -235,5 +242,36 @@ Tailwind, e devem seguir o checklist abaixo quando for a vez deles.
 - O mockup de login mostra "Manter conectado", "Esqueci minha senha" e links
   de rodapé (privacidade/termos) sem funcionalidade correspondente no app hoje;
   foram omitidos para não sugerir recursos que não existem.
+- Mockup `Inicio.dc.html` sem lastro no código (não implementado): saudação por
+  horário ("Bom dia") e frase-resumo com data, botão "Nova RNC", cartões
+  "Vencem nesta semana" e "RNCs aguardando você", painel "Minhas pendências"
+  (atrasados / nesta semana / próximos), lista "RNCs aguardando você" com
+  botões de ação rápida (Verificar, Assumir análise, Registrar causa) e o
+  código da RNC em cada mensagem (a query `listarNaoLidas` não traz o código).
+  A página mantém os 3 indicadores e as mensagens não lidas que já existiam.
+- Mockup `A-Dashboard.dc.html` sem lastro no código (não implementado):
+  seletor de período pré-definido ("Últimos 12 meses"…) — o app usa De/Até;
+  botão "Exportar"; "atualizado hoje às…"; sublinhas dos KPIs com quebra por
+  status, comparação com período anterior, meta interna e "x de y"; nota
+  "SSO concentra…"; barra empilhada de gravidade; tabela de responsáveis com
+  RNCs/itens em aberto e % no prazo (os indicadores só trazem a contagem de
+  atrasados por responsável). O KPI "Canceladas" e o filtro de setor, que
+  existem no código mas não no mockup, foram mantidos.
+- Mensagens, Notificações e Administração não têm mockup próprio; seguem os
+  mesmos tokens/padrões (painel branco com borda, abas com sublinhado âmbar).
+- As mensagens de retorno do `FormAcao` (erro/aviso/sucesso) são do
+  componente compartilhado `src/components/form-acao.tsx`, migrado à parte.
+- Plano de Ação (`PlanoAcao.dc.html`, `PlanoManual.dc.html`, `Mobile-Item.dc.html`):
+  elementos do mockup **sem lastro** no código e por isso não implementados —
+  busca "Buscar em O quê", filtro de origem (Todas/RNC/Manual/**Inspeção** — não
+  existe origem inspeção), coluna "Obra" (a query não traz o nome da obra),
+  contadores nas abas "Meus itens"/"Todos" (exigiriam queries extras), opção
+  "Próximos 30 dias", truncamento "Mostrando 4 de 7 · ver todos" por grupo,
+  menu "⋯" por linha (as ações continuam no `ItemAcoes` compartilhado),
+  "Rascunho salvo automaticamente" no novo plano, "item 1 de 3" / "Mais opções"
+  e compositor fixo de mensagem no rodapé do item em celular (as interações
+  usam o componente compartilhado `Interacoes`). O agrupamento por prazo
+  (Atrasados / Próximos 7 dias / Depois / Concluídos-cancelados) e o chip
+  "vence em N dias" são só derivados de `status` + `quando` já existentes.
 - O Tailwind continua no projeto (não pode ser removido) até que as páginas
   da seção 9 acima também migrem.

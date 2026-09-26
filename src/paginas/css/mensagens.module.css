@@ -1,0 +1,106 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — largura máxima e espaçamento vertical
+   02. Painel — superfície que envolve a lista
+   03. Mensagem — linha clicável (avatar, autor, origem/data, texto)
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 768px;
+}
+
+/* ==========================================================
+   02. PAINEL
+   ========================================================== */
+.painel {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lista > li + li {
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+
+/* ==========================================================
+   03. MENSAGEM
+   ========================================================== */
+.mensagem {
+  display: flex;
+  gap: 10px;
+  padding: var(--espaco-3) var(--espaco-4);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.mensagem:hover {
+  background: var(--cor-fundo-sutil);
+}
+.mensagem:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: -2px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.corpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.linhaAutor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--espaco-2);
+  font-size: 13px;
+}
+
+.autor {
+  font-weight: 600;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.data {
+  font-family: var(--fonte-mono);
+  font-size: 11.5px;
+}
+
+/* Até 2 linhas de prévia, como no layout anterior (line-clamp-2) */
+.texto {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--cor-texto);
+}

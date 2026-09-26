@@ -1,0 +1,360 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — largura máxima e espaçamento vertical
+   02. Abas — navegação entre seções da administração
+   03. Botões dos formulários (FormAcao recebe classe pronta)
+   04. Layout de formulário — pilhas, grade de campos, forms em linha
+   05. Campos — larguras específicas de inputs/selects
+   06. Opções — checkboxes, fieldsets, legendas e textos de ajuda
+   07. Usuários — lista expansível (details/summary) e edição
+   08. Etiquetas — papel, perfil, inativo, "Você", sistema
+   09. Perfis — título do cartão e botão de exclusão
+   10. Obras e setores — lista de registros editáveis
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 1024px;
+}
+
+.secoesAba {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-5);
+}
+
+.abaEstreita {
+  max-width: 672px;
+}
+
+.explicacao {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   02. ABAS
+   ========================================================== */
+.abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-1);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+/* margin-bottom: -1px sobrepõe a borda da aba ativa à borda da barra */
+.aba {
+  margin-bottom: -1px;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-bottom: 2px solid transparent;
+  font-size: 13.5px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+.abaAtiva {
+  border-bottom-color: var(--cor-acento);
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+/* ==========================================================
+   03. BOTÕES DOS FORMULÁRIOS
+   FormAcao (src/components/form-acao.tsx) só aceita uma string de
+   classe; aqui reaproveitamos as variantes do componente Botao.
+   ========================================================== */
+.botaoPrimario {
+  composes: botao primario from "./componentes/botao.module.css";
+}
+.botaoSecundario {
+  composes: botao secundario from "./componentes/botao.module.css";
+}
+.botaoPerigo {
+  composes: botao perigo from "./componentes/botao.module.css";
+}
+
+/* ==========================================================
+   04. LAYOUT DE FORMULÁRIO
+   ========================================================== */
+.pilha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+}
+.pilha > * {
+  align-self: stretch;
+}
+/* O botão de submit do FormAcao não deve esticar na pilha */
+.pilha > button {
+  align-self: flex-start;
+}
+
+.pilhaLarga {
+  composes: pilha;
+  gap: var(--espaco-4);
+}
+
+.gradeCampos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-3);
+}
+@media (min-width: 640px) {
+  .gradeCampos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .linhaInteira {
+    grid-column: span 2;
+  }
+}
+
+/* Campos lado a lado (obras, setores, redefinir senha) */
+.formEmLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+}
+
+/* ==========================================================
+   05. CAMPOS
+   Seletores com elemento para vencer a largura 100% de
+   campo-formulario.module.css independentemente da ordem de carga.
+   ========================================================== */
+select.selecaoFormulario {
+  width: 100%;
+  height: 36px;
+  font-size: 14px;
+}
+
+.campoSenha {
+  max-width: 320px;
+}
+
+input.entradaSenha {
+  width: 192px;
+}
+input.entradaNomeObra {
+  width: 224px;
+}
+input.entradaCodigo {
+  width: 112px;
+}
+input.entradaEndereco {
+  width: 256px;
+}
+input.entradaNomeSetor {
+  width: 256px;
+}
+
+/* ==========================================================
+   06. OPÇÕES
+   ========================================================== */
+.grupoOpcoes {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.legenda {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.opcoesEmLinha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-1) var(--espaco-4);
+}
+
+.opcoesEmGrade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-1);
+}
+@media (min-width: 640px) {
+  .opcoesEmGrade {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--cor-texto);
+}
+.opcao input,
+.opcaoEmLinha input,
+.opcaoDescrita input {
+  accent-color: var(--cor-acento);
+}
+
+/* Checkbox "Ativa/Ativo" alinhado verticalmente aos inputs de 36px */
+.opcaoEmLinha {
+  composes: opcao;
+  height: 36px;
+}
+
+.opcaoDescrita {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  font-size: 13.5px;
+  color: var(--cor-texto);
+}
+.opcaoDescrita input {
+  margin-top: 3px;
+}
+
+.ajuda {
+  margin: var(--espaco-1) 0 0 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.ajudaOpcao {
+  display: block;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   07. USUÁRIOS
+   ========================================================== */
+.listaUsuarios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.itemUsuario {
+  padding: var(--espaco-3) 0;
+}
+.itemUsuario + .itemUsuario {
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+.itemUsuario:first-child {
+  padding-top: 0;
+}
+.itemUsuario:last-child {
+  padding-bottom: 0;
+}
+
+.resumoUsuario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.nomeUsuario {
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.emailUsuario {
+  color: var(--cor-texto-secundario);
+}
+
+.obrasUsuario {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.edicaoUsuario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  margin-top: var(--espaco-3);
+  padding: var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo-sutil);
+}
+
+.acoesUsuario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--espaco-6);
+  padding-top: var(--espaco-3);
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+
+/* ==========================================================
+   08. ETIQUETAS
+   ========================================================== */
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--raio-pill);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.etiquetaNeutra {
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+}
+.etiquetaPerfil {
+  background: var(--cor-status-aberto-fundo);
+  color: var(--cor-status-aberto-texto);
+}
+.etiquetaInativo {
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-perigo-texto);
+}
+.etiquetaVoce {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}
+
+/* ==========================================================
+   09. PERFIS
+   ========================================================== */
+.tituloPerfil {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.contagemPerfil {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+
+.botaoExcluirPerfil {
+  margin-top: var(--espaco-3);
+}
+
+/* ==========================================================
+   10. OBRAS E SETORES
+   ========================================================== */
+.listaRegistros {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}

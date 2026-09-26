@@ -1,0 +1,164 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — largura máxima e espaçamento vertical
+   02. Abas — filtro "Todas" / "Não lidas"
+   03. Painel e lista
+   04. Notificação — ponto de não lida, etiqueta, data, título, corpo
+   05. Ação "Marcar como lida" e texto só para leitor de tela
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 768px;
+}
+
+/* ==========================================================
+   02. ABAS
+   ========================================================== */
+.abas {
+  display: flex;
+  gap: var(--espaco-1);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+/* margin-bottom: -1px sobrepõe a borda da aba ativa à borda da barra */
+.aba {
+  margin-bottom: -1px;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+.abaAtiva {
+  border-bottom-color: var(--cor-acento);
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+/* ==========================================================
+   03. PAINEL E LISTA
+   ========================================================== */
+.painel {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lista > li + li {
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+
+/* ==========================================================
+   04. NOTIFICAÇÃO
+   ========================================================== */
+.notificacao {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  padding: var(--espaco-3) var(--espaco-4);
+}
+.naoLida {
+  background: var(--cor-aviso-fundo);
+}
+
+.ponto {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--raio-pill);
+  background: transparent;
+}
+.pontoAtivo {
+  background: var(--cor-acento);
+}
+
+.corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.etiqueta {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+}
+
+.data {
+  font-family: var(--fonte-mono);
+  font-size: 11.5px;
+}
+
+.titulo {
+  margin-top: var(--espaco-1);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-size: 13.5px;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+}
+.titulo:hover {
+  text-decoration: underline;
+}
+.tituloNaoLida {
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+.texto {
+  margin: 2px 0 0 0;
+  white-space: pre-line;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   05. AÇÃO E ACESSIBILIDADE
+   ========================================================== */
+.marcarLida {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+}
+.marcarLida:hover {
+  color: var(--cor-acento);
+}
+
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}

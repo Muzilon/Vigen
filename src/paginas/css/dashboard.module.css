@@ -1,0 +1,156 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical entre blocos
+   02. Filtros — período (De/Até), obra, tipo, setor e ações
+   03. KPIs — grade de indicadores com número em fonte mono
+   04. Painéis de gráfico — superfície, título e subtítulo
+   05. Grades de painéis — 3 colunas (tipo/gravidade/obra) e 2 colunas
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+/* ==========================================================
+   02. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+}
+
+.selecaoFiltro {
+  min-width: 150px;
+  height: 36px;
+}
+
+.acoesFiltro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-1);
+}
+
+.linkLimpar {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.linkLimpar:hover {
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   03. KPIs
+   ========================================================== */
+.gradeKpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+@media (max-width: 1280px) {
+  .gradeKpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .gradeKpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.kpi {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 14px var(--espaco-4);
+}
+
+.tituloKpi {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.valorKpi {
+  margin: 6px 0 0 0;
+  font-family: var(--fonte-mono);
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--cor-texto);
+}
+.valorKpiAlerta {
+  color: var(--cor-atrasado-texto);
+}
+
+.dicaKpi {
+  margin: 6px 0 0 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   04. PAINÉIS DE GRÁFICO
+   ========================================================== */
+.painel {
+  min-width: 0;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 14px var(--espaco-4);
+}
+
+.tituloPainel {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.subtituloPainel {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+.corpoPainel {
+  margin-top: var(--espaco-4);
+}
+
+/* ==========================================================
+   05. GRADES DE PAINÉIS
+   ========================================================== */
+.gradeTres,
+.gradeDuas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-4);
+}
+@media (min-width: 1024px) {
+  .gradeTres {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .gradeDuas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

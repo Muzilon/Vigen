@@ -1,0 +1,142 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { z } from "zod";
+import { getAtor } from "@/lib/ator-servidor";
+import { formatarData } from "@/lib/datas";
+import { enumUrl, uuidUrl } from "@/lib/filtros-url";
+import { carregarIndicadores } from "@/lib/indicadores/servico";
+import { ROTULO_TIPO } from "@/lib/rnc/rotulos";
+import { Botao } from "@/paginas/html/componentes/botao";
+import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
+import { Entrada, Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
+import { Barras, GraficoMensal } from "@/paginas/html/dashboard-graficos";
+import styles from "@/paginas/css/dashboard.module.css";
+
+const dataUrl = z
+  .preprocess((v) => (Array.isArray(v) ? v[0] : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional())
+  .catch(undefined)
+  .transform((v) => v ?? "");
+
+const esquema = z.object({
+  inicio: dataUrl,
+  fim: dataUrl,
+  obra: uuidUrl,
+  tipo: enumUrl(["QUALIDADE", "MEIO_AMBIENTE", "SSO"]),
+  setor: uuidUrl,
+});
+
+/** Dashboard de indicadores (ver A-Dashboard.dc.html, Direção A "Campo"). */
+export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
+  const f = esquema.parse(await searchParams);
+  const a = await getAtor();
+  const [{ indicadores: ind, periodo }, obras, setores] = await Promise.all([
+    carregarIndicadores(a, {
+      inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
+    }),
+    a.db.obraUnidade.findMany({
+      where: { ativo: true, ...(a.obrasPermitidas === null ? {} : { id: { in: [...a.obrasPermitidas] } }) },
+      orderBy: { nome: "asc" },
+      select: { id: true, nome: true },
+    }),
+    a.db.setor.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+  ]);
+  const k = ind.kpis;
+
+  return (
+    <div className={`${styles.pagina} fonteIbmPlex`}>
+      <CabecalhoPagina titulo="Dashboard" subtitulo={`Indicadores de ${formatarData(periodo.inicio)} a ${formatarData(periodo.fim)}`} />
+
+      <form className={styles.barraFiltros} method="get">
+        <div className={styles.campoFiltro}>
+          <Rotulo htmlFor="inicio">De</Rotulo>
+          <Entrada id="inicio" name="inicio" type="date" defaultValue={periodo.inicio} />
+        </div>
+        <div className={styles.campoFiltro}>
+          <Rotulo htmlFor="fim">Até</Rotulo>
+          <Entrada id="fim" name="fim" type="date" defaultValue={periodo.fim} />
+        </div>
+        <div className={styles.campoFiltro}>
+          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Selecao id="obra" name="obra" defaultValue={f.obra} className={styles.selecaoFiltro}>
+            <option value="">Todas</option>
+            {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
+          </Selecao>
+        </div>
+        <div className={styles.campoFiltro}>
+          <Rotulo htmlFor="tipo">Tipo</Rotulo>
+          <Selecao id="tipo" name="tipo" defaultValue={f.tipo} className={styles.selecaoFiltro}>
+            <option value="">Todos</option>
+            {Object.entries(ROTULO_TIPO).map(([v, r]) => <option key={v} value={v}>{r}</option>)}
+          </Selecao>
+        </div>
+        <div className={styles.campoFiltro}>
+          <Rotulo htmlFor="setor">Setor</Rotulo>
+          <Selecao id="setor" name="setor" defaultValue={f.setor} className={styles.selecaoFiltro}>
+            <option value="">Todos</option>
+            {setores.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
+          </Selecao>
+        </div>
+        <div className={styles.acoesFiltro}>
+          <Botao type="submit" variante="secundario">Aplicar</Botao>
+          <Link href="/dashboard" className={styles.linkLimpar}>Limpar</Link>
+        </div>
+      </form>
+
+      <div className={styles.gradeKpis}>
+        <Kpi titulo="RNCs em aberto" valor={k.abertas} dica="Estoque atual (qualquer data de abertura)" />
+        <Kpi titulo="Encerradas" valor={k.encerradasPeriodo} dica="No período" />
+        <Kpi titulo="Canceladas" valor={k.canceladasPeriodo} dica="No período" />
+        <Kpi titulo="Itens atrasados" valor={k.itensAtrasados} dica="Situação atual" alerta={k.itensAtrasados > 0} />
+        <Kpi
+          titulo="Tempo médio de fechamento"
+          valor={k.tempoMedioFechamentoDias === null ? "—" : `${k.tempoMedioFechamentoDias.toLocaleString("pt-BR")} d`}
+          dica="Encerradas no período"
+        />
+        <Kpi
+          titulo="Eficácia na 1ª verificação"
+          valor={k.eficaciaPrimeiraVerificacaoPct === null ? "—" : `${k.eficaciaPrimeiraVerificacaoPct.toLocaleString("pt-BR")}%`}
+          dica="% de RNCs aprovadas já na 1ª verificação (no período)"
+        />
+      </div>
+
+      <Painel titulo="RNCs registradas x encerradas por mês">
+        <GraficoMensal dados={ind.porMes} />
+      </Painel>
+
+      <div className={styles.gradeTres}>
+        <Painel titulo="Por tipo" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porTipo} /></Painel>
+        <Painel titulo="Por gravidade" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porGravidade} paleta="gravidade" /></Painel>
+        <Painel titulo="Por obra" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porObra.slice(0, 10)} /></Painel>
+      </div>
+
+      <div className={styles.gradeDuas}>
+        <Painel titulo="Itens de ação por status">
+          <Barras dados={ind.itensPorStatus} paleta="status" vazio="Nenhum item de ação." />
+        </Painel>
+        <Painel titulo="Responsáveis com mais itens atrasados">
+          <Barras dados={ind.topAtrasados} paleta="alerta" vazio="Nenhum item atrasado. Bom trabalho!" />
+        </Painel>
+      </div>
+    </div>
+  );
+}
+
+function Painel({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children: ReactNode }) {
+  return (
+    <section className={styles.painel}>
+      <h2 className={styles.tituloPainel}>{titulo}</h2>
+      {subtitulo && <p className={styles.subtituloPainel}>{subtitulo}</p>}
+      <div className={styles.corpoPainel}>{children}</div>
+    </section>
+  );
+}
+
+function Kpi({ titulo, valor, dica, alerta }: { titulo: string; valor: number | string; dica: string; alerta?: boolean }) {
+  return (
+    <div className={styles.kpi}>
+      <p className={styles.tituloKpi}>{titulo}</p>
+      <p className={`${styles.valorKpi} ${alerta ? styles.valorKpiAlerta : ""}`}>{valor}</p>
+      <p className={styles.dicaKpi}>{dica}</p>
+    </div>
+  );
+}
