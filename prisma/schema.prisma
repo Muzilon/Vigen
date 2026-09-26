@@ -66,6 +66,8 @@ enum Permissao {
   SWOT_GERENCIAR
   HIRA_GERENCIAR
   LAIA_GERENCIAR
+  DOCUMENTO_ELABORAR
+  DOCUMENTO_GERENCIAR
 }
 
 enum EscopoObras {
@@ -148,6 +150,7 @@ enum TipoEntidadeAnexo {
   RISCO_OPORTUNIDADE
   HIRA
   LAIA
+  DOCUMENTO_VERSAO
 }
 
 enum TipoEntidadeInteracao {
@@ -157,6 +160,7 @@ enum TipoEntidadeInteracao {
   RISCO_OPORTUNIDADE
   HIRA
   LAIA
+  DOCUMENTO
 }
 
 enum TipoNotificacao {
@@ -172,6 +176,9 @@ enum TipoNotificacao {
   APROVACAO_PENDENTE
   APROVACAO_DECIDIDA
   REAVALIACAO_PROXIMA
+  DOCUMENTO_PUBLICADO
+  CIENCIA_PENDENTE
+  REVISAO_DOCUMENTO_PROXIMA
 }
 
 enum TipoEntidadeNotificacao {
@@ -182,6 +189,7 @@ enum TipoEntidadeNotificacao {
   RISCO_OPORTUNIDADE
   HIRA
   LAIA
+  DOCUMENTO
 }
 
 enum StatusEmailNotificacao {
@@ -346,6 +354,7 @@ enum QuadranteSwot {
 
 enum TipoSequencia {
   RNC
+  DOCUMENTO
 }
 
 model Empresa {
@@ -396,6 +405,12 @@ model Empresa {
   linhasLaia               LinhaLaia[]
   historicosLaia           HistoricoLinhaLaia[]
   historicosHira           HistoricoLinhaHira[]
+  tiposDocumento           TipoDocumentoEmpresa[]
+  documentos               Documento[]
+  versoesDocumento         VersaoDocumento[]
+  publicacoesDocumento     PublicacaoDocumento[]
+  cienciasDocumento        CienciaDocumento[]
+  historicosDocumento      HistoricoDocumento[]
 
   @@map("empresa")
 }
@@ -419,6 +434,7 @@ model ObraUnidade {
   riscosOportunidades RiscoOportunidade[]
   linhasHira          LinhaHira[]
   linhasLaia          LinhaLaia[]
+  documentos          Documento[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -433,9 +449,10 @@ model Setor {
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
-  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  usuarios Usuario[]
-  rncs     Rnc[]
+  empresa    Empresa     @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuarios   Usuario[]
+  rncs       Rnc[]
+  documentos Documento[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -510,6 +527,13 @@ model Usuario {
   laiaResponsavel           LinhaLaia[]                  @relation("LaiaResponsavel")
   laiaCriadas               LinhaLaia[]                  @relation("LaiaCriadoPor")
   historicosLaia            HistoricoLinhaLaia[]         @relation("HistoricoLaiaUsuario")
+  documentosResponsavel     Documento[]                  @relation("DocumentoResponsavel")
+  documentosCriados         Documento[]                  @relation("DocumentoCriadoPor")
+  versoesDocElaboradas      VersaoDocumento[]            @relation("VersaoDocElaborador")
+  versoesDocPublicadas      VersaoDocumento[]            @relation("VersaoDocPublicadoPor")
+  publicacoesDocumento      PublicacaoDocumento[]        @relation("PublicacaoDocPublicadoPor")
+  cienciasDocumento         CienciaDocumento[]           @relation("CienciaDocUsuario")
+  historicosDocumento       HistoricoDocumento[]         @relation("HistoricoDocUsuario")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -535,11 +559,13 @@ model ContadorSequencial {
   empresaId   String        @map("empresa_id") @db.Uuid
   tipo        TipoSequencia
   ano         Int
+  /// Subdivisão do contador (ex.: DOCUMENTO por tipo de documento = id do tipo). "" = sem subtipo (RNC).
+  subtipo     String        @default("")
   ultimoValor Int           @default(0) @map("ultimo_valor")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
 
-  @@id([empresaId, tipo, ano])
+  @@id([empresaId, tipo, ano, subtipo])
   @@map("contador_sequencial")
 }
 
@@ -767,9 +793,10 @@ model Anexo {
   excluidoPorId      String?           @map("excluido_por_id") @db.Uuid
   criadoEm           DateTime          @default(now()) @map("criado_em")
 
-  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  enviadoPor  Usuario  @relation("AnexoEnviadoPor", fields: [empresaId, enviadoPorId], references: [empresaId, id], onDelete: Restrict)
-  excluidoPor Usuario? @relation("AnexoExcluidoPor", fields: [empresaId, excluidoPorId], references: [empresaId, id], onDelete: Restrict)
+  empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  enviadoPor       Usuario           @relation("AnexoEnviadoPor", fields: [empresaId, enviadoPorId], references: [empresaId, id], onDelete: Restrict)
+  excluidoPor      Usuario?          @relation("AnexoExcluidoPor", fields: [empresaId, excluidoPorId], references: [empresaId, id], onDelete: Restrict)
+  versoesDocumento VersaoDocumento[]
 
   @@unique([empresaId, id])
   @@index([empresaId, entidadeTipo, entidadeId])
@@ -899,10 +926,11 @@ model FluxoAprovacao {
   criadoEm      DateTime               @default(now()) @map("criado_em")
   concluidoEm   DateTime?              @map("concluido_em")
 
-  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  solicitante Usuario              @relation("FluxoSolicitante", fields: [empresaId, solicitanteId], references: [empresaId, id], onDelete: Restrict)
-  etapas      EtapaAprovacao[]
-  historico   HistoricoAprovacao[]
+  empresa          Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  solicitante      Usuario              @relation("FluxoSolicitante", fields: [empresaId, solicitanteId], references: [empresaId, id], onDelete: Restrict)
+  etapas           EtapaAprovacao[]
+  historico        HistoricoAprovacao[]
+  versoesDocumento VersaoDocumento[]
 
   @@unique([empresaId, id])
   @@index([empresaId, entidadeTipo, entidadeId])
@@ -985,6 +1013,7 @@ model Processo {
   riscos            RiscoOportunidade[]
   linhasHira        LinhaHira[]
   linhasLaia        LinhaLaia[]
+  documentos        Documento[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -1355,4 +1384,217 @@ model TentativaLogin {
   @@index([email, criadoEm])
   @@index([ip, criadoEm])
   @@map("tentativa_login")
+}
+
+// ============================================================== P4 — Tramitação de Documentos (ISO 9001 7.5)
+
+/// Ciclo do documento (reflete a revisão em trabalho; a revisão vigente fica em versaoVigenteId):
+/// ELABORACAO → EM_REVISAO (revisores assinando) → EM_APROVACAO (aprovadores) → APROVADO (pronto p/ publicar)
+/// → PUBLICADO. OBSOLETO (retirado de uso) e CANCELADO (nunca publicado) são finais.
+enum StatusDocumento {
+  ELABORACAO
+  EM_REVISAO
+  EM_APROVACAO
+  APROVADO
+  PUBLICADO
+  OBSOLETO
+  CANCELADO
+}
+
+/// Revisão de um documento. PUBLICADA/OBSOLETA são imutáveis (trigger; só PUBLICADA → OBSOLETA).
+/// Rejeição no fluxo devolve a revisão para RASCUNHO.
+enum StatusVersaoDocumento {
+  RASCUNHO
+  EM_APROVACAO
+  APROVADA
+  PUBLICADA
+  OBSOLETA
+  CANCELADA
+}
+
+enum AcaoHistoricoDocumento {
+  CRIACAO
+  ALTERACAO_DADOS
+  NOVA_REVISAO
+  ARQUIVO_SUBSTITUIDO
+  ENVIO_APROVACAO
+  REVISADO
+  APROVACAO
+  REJEICAO
+  CANCELAMENTO_APROVACAO
+  PUBLICACAO
+  OBSOLESCENCIA
+  CANCELAMENTO
+  REVISAO_PLANILHA
+}
+
+/// Tipos de documento configuráveis por empresa (PR, IT, FO, POL, MAN...). A sigla compõe o código.
+model TipoDocumentoEmpresa {
+  id                        String   @id @default(uuid()) @db.Uuid
+  empresaId                 String   @map("empresa_id") @db.Uuid
+  nome                      String
+  sigla                     String
+  periodicidadeRevisaoMeses Int      @default(24) @map("periodicidade_revisao_meses")
+  ativo                     Boolean  @default(true)
+  criadoEm                  DateTime @default(now()) @map("criado_em")
+  atualizadoEm              DateTime @updatedAt @map("atualizado_em")
+
+  empresa    Empresa     @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  documentos Documento[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, sigla])
+  @@unique([empresaId, nome])
+  @@map("tipo_documento_empresa")
+}
+
+/// Documento controlado. Código = sigla do tipo + sequência por tipo (ContadorSequencial DOCUMENTO,
+/// subtipo = id do tipo). chavePlanilha: documento-planilha de HIRA/LAIA (integração, decisão 5).
+model Documento {
+  id                        String          @id @default(uuid()) @db.Uuid
+  empresaId                 String          @map("empresa_id") @db.Uuid
+  tipoId                    String          @map("tipo_id") @db.Uuid
+  sequencia                 Int
+  codigo                    String
+  titulo                    String
+  descricao                 String?
+  processoId                String?         @map("processo_id") @db.Uuid
+  obraId                    String?         @map("obra_id") @db.Uuid
+  setorId                   String?         @map("setor_id") @db.Uuid
+  responsavelId             String          @map("responsavel_id") @db.Uuid
+  status                    StatusDocumento @default(ELABORACAO)
+  versaoVigenteId           String?         @map("versao_vigente_id") @db.Uuid
+  periodicidadeRevisaoMeses Int             @map("periodicidade_revisao_meses")
+  proximaRevisaoEm          DateTime?       @map("proxima_revisao_em") @db.Date
+  chavePlanilha             String?         @map("chave_planilha")
+  versao                    Int             @default(0)
+  criadoPorId               String          @map("criado_por_id") @db.Uuid
+  criadoEm                  DateTime        @default(now()) @map("criado_em")
+  atualizadoEm              DateTime        @updatedAt @map("atualizado_em")
+
+  empresa       Empresa               @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  tipo          TipoDocumentoEmpresa  @relation(fields: [empresaId, tipoId], references: [empresaId, id], onDelete: Restrict)
+  processo      Processo?             @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  obra          ObraUnidade?          @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  setor         Setor?                @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
+  responsavel   Usuario               @relation("DocumentoResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor     Usuario               @relation("DocumentoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  versaoVigente VersaoDocumento?      @relation("DocumentoVersaoVigente", fields: [empresaId, versaoVigenteId], references: [empresaId, id], onDelete: Restrict)
+  versoes       VersaoDocumento[]     @relation("DocumentoVersoes")
+  publicacoes   PublicacaoDocumento[]
+  historico     HistoricoDocumento[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, codigo])
+  @@unique([empresaId, tipoId, sequencia])
+  @@unique([empresaId, versaoVigenteId])
+  @@unique([empresaId, chavePlanilha])
+  @@index([empresaId, status])
+  @@index([empresaId, processoId])
+  @@index([empresaId, proximaRevisaoEm])
+  @@map("documento")
+}
+
+/// Revisão (00, 01, ...). Arquivo via Anexo DOCUMENTO_VERSAO; revisão de planilha HIRA/LAIA guarda o
+/// snapshot em `conteudo`. Imutável depois de publicada (trigger).
+model VersaoDocumento {
+  id               String                @id @default(uuid()) @db.Uuid
+  empresaId        String                @map("empresa_id") @db.Uuid
+  documentoId      String                @map("documento_id") @db.Uuid
+  numero           Int
+  motivo           String
+  status           StatusVersaoDocumento @default(RASCUNHO)
+  elaboradorId     String                @map("elaborador_id") @db.Uuid
+  anexoId          String?               @map("anexo_id") @db.Uuid
+  conteudo         Json?
+  fluxoAprovacaoId String?               @map("fluxo_aprovacao_id") @db.Uuid
+  aprovadoEm       DateTime?             @map("aprovado_em")
+  publicadoEm      DateTime?             @map("publicado_em")
+  publicadoPorId   String?               @map("publicado_por_id") @db.Uuid
+  obsoletoEm       DateTime?             @map("obsoleto_em")
+  criadoEm         DateTime              @default(now()) @map("criado_em")
+
+  empresa        Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  documento      Documento            @relation("DocumentoVersoes", fields: [empresaId, documentoId], references: [empresaId, id], onDelete: Restrict)
+  elaborador     Usuario              @relation("VersaoDocElaborador", fields: [empresaId, elaboradorId], references: [empresaId, id], onDelete: Restrict)
+  publicadoPor   Usuario?             @relation("VersaoDocPublicadoPor", fields: [empresaId, publicadoPorId], references: [empresaId, id], onDelete: Restrict)
+  anexo          Anexo?               @relation(fields: [empresaId, anexoId], references: [empresaId, id], onDelete: Restrict)
+  fluxoAprovacao FluxoAprovacao?      @relation(fields: [empresaId, fluxoAprovacaoId], references: [empresaId, id], onDelete: Restrict)
+  vigenteDe      Documento?           @relation("DocumentoVersaoVigente")
+  publicacao     PublicacaoDocumento?
+  ciencias       CienciaDocumento[]
+  historico      HistoricoDocumento[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, documentoId, numero])
+  @@index([empresaId, status])
+  @@map("versao_documento")
+}
+
+/// Publicação de uma revisão: público (todos ou listas de setores/obras/perfis/usuários — união),
+/// se notifica e se exige ciência ("li e estou ciente"). Append-only (trigger).
+model PublicacaoDocumento {
+  id             String   @id @default(uuid()) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  documentoId    String   @map("documento_id") @db.Uuid
+  versaoId       String   @map("versao_id") @db.Uuid
+  publicoTodos   Boolean  @default(false) @map("publico_todos")
+  setorIds       String[] @map("setor_ids") @db.Uuid
+  obraIds        String[] @map("obra_ids") @db.Uuid
+  perfilIds      String[] @map("perfil_ids") @db.Uuid
+  usuarioIds     String[] @map("usuario_ids") @db.Uuid
+  notificar      Boolean  @default(true)
+  exigirCiencia  Boolean  @default(false) @map("exigir_ciencia")
+  publicadoPorId String   @map("publicado_por_id") @db.Uuid
+  publicadoEm    DateTime @default(now()) @map("publicado_em")
+
+  empresa      Empresa         @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  documento    Documento       @relation(fields: [empresaId, documentoId], references: [empresaId, id], onDelete: Restrict)
+  versao       VersaoDocumento @relation(fields: [empresaId, versaoId], references: [empresaId, id], onDelete: Restrict)
+  publicadoPor Usuario         @relation("PublicacaoDocPublicadoPor", fields: [empresaId, publicadoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, versaoId])
+  @@index([empresaId, documentoId])
+  @@map("publicacao_documento")
+}
+
+/// Ciência ("li e estou ciente") de um usuário numa revisão publicada. Append-only (trigger).
+model CienciaDocumento {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  versaoId     String   @map("versao_id") @db.Uuid
+  usuarioId    String   @map("usuario_id") @db.Uuid
+  confirmadoEm DateTime @default(now()) @map("confirmado_em")
+
+  empresa Empresa         @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  versao  VersaoDocumento @relation(fields: [empresaId, versaoId], references: [empresaId, id], onDelete: Restrict)
+  usuario Usuario         @relation("CienciaDocUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, versaoId, usuarioId])
+  @@index([empresaId, usuarioId])
+  @@map("ciencia_documento")
+}
+
+/// Histórico append-only do documento (trigger bloqueia UPDATE/DELETE).
+model HistoricoDocumento {
+  id          String                 @id @default(uuid()) @db.Uuid
+  empresaId   String                 @map("empresa_id") @db.Uuid
+  documentoId String                 @map("documento_id") @db.Uuid
+  versaoId    String?                @map("versao_id") @db.Uuid
+  acao        AcaoHistoricoDocumento
+  observacao  String?
+  dados       Json?
+  usuarioId   String                 @map("usuario_id") @db.Uuid
+  criadoEm    DateTime               @default(now()) @map("criado_em")
+
+  empresa   Empresa          @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  documento Documento        @relation(fields: [empresaId, documentoId], references: [empresaId, id], onDelete: Restrict)
+  versao    VersaoDocumento? @relation(fields: [empresaId, versaoId], references: [empresaId, id], onDelete: Restrict)
+  usuario   Usuario          @relation("HistoricoDocUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, documentoId, criadoEm])
+  @@map("historico_documento")
 }

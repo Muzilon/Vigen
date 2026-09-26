@@ -11,18 +11,23 @@ interface ExecutorRaw {
 }
 
 /**
- * Próximo valor do contador (atômico: INSERT ... ON CONFLICT DO UPDATE ... RETURNING).
+ * Próximo valor de um ContadorSequencial (atômico: INSERT ... ON CONFLICT DO UPDATE ... RETURNING).
+ * `subtipo` subdivide o contador (ex.: DOCUMENTO por tipo de documento); "" = sem subdivisão.
  * SQL cru não passa pela extension de tenant — empresaId é passado explicitamente.
  * Chamar dentro de $transaction: o lock de linha é mantido até o commit.
  */
-export async function proximaSequenciaRnc(tx: ExecutorRaw, empresaId: string, ano: number): Promise<number> {
+export async function proximaSequencia(tx: ExecutorRaw, empresaId: string, tipo: "RNC" | "DOCUMENTO", ano: number, subtipo = ""): Promise<number> {
   const linhas = await tx.$queryRaw<{ ultimo_valor: number }[]>`
-    INSERT INTO contador_sequencial (empresa_id, tipo, ano, ultimo_valor)
-    VALUES (${empresaId}::uuid, 'RNC'::"TipoSequencia", ${ano}, 1)
-    ON CONFLICT (empresa_id, tipo, ano)
+    INSERT INTO contador_sequencial (empresa_id, tipo, ano, subtipo, ultimo_valor)
+    VALUES (${empresaId}::uuid, ${tipo}::"TipoSequencia", ${ano}, ${subtipo}, 1)
+    ON CONFLICT (empresa_id, tipo, ano, subtipo)
     DO UPDATE SET ultimo_valor = contador_sequencial.ultimo_valor + 1
     RETURNING ultimo_valor`;
   const v = linhas[0]?.ultimo_valor;
-  if (!v) throw new Error("Falha ao gerar numeração da RNC");
+  if (!v) throw new Error(`Falha ao gerar numeração (${tipo})`);
   return Number(v);
+}
+
+export function proximaSequenciaRnc(tx: ExecutorRaw, empresaId: string, ano: number): Promise<number> {
+  return proximaSequencia(tx, empresaId, "RNC", ano);
 }
