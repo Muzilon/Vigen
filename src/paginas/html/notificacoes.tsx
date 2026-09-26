@@ -25,6 +25,7 @@ const ROTULO: Record<TipoNotificacao, string> = {
   DOCUMENTO_PUBLICADO: "Documento publicado",
   CIENCIA_PENDENTE: "Ciência pendente",
   REVISAO_DOCUMENTO_PROXIMA: "Revisão de documento",
+  AUDITORIA_ATRIBUIDA: "Auditoria atribuída",
 };
 
 export default async function Notificacoes({ searchParams }: PageProps<"/notificacoes">) {

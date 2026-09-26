@@ -1,0 +1,73 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página e trilha
+   02. Tabela de modelos
+   03. Formulário de novo modelo
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA E TRILHA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+.trilha { font-size: 13px; }
+.trilha a { color: var(--cor-texto-secundario); text-decoration: none; }
+
+/* ==========================================================
+   02. TABELA DE MODELOS
+   ========================================================== */
+.quadro {
+  overflow-x: auto;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabela th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-fundo-sutil);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--cor-borda-forte);
+  white-space: nowrap;
+}
+.tabela td { padding: 9px 10px; border-bottom: 1px solid var(--cor-borda-sutil); }
+.link { color: var(--cor-texto); font-weight: 600; }
+.inativo td { color: var(--cor-texto-fraco); }
+
+/* ==========================================================
+   03. FORMULÁRIO
+   ========================================================== */
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-3);
+  align-items: end;
+}
+.campo, .campoLargo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+.campoLargo { grid-column: 1 / -1; }
+.entrada {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 9px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .formulario { grid-template-columns: minmax(0, 1fr); }
+}

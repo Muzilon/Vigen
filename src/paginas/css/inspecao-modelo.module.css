@@ -1,0 +1,72 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Lista de perguntas (reordenável)
+   03. Formulários
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 920px;
+  min-width: 0;
+}
+.trilha { font-size: 13px; }
+.trilha a { color: var(--cor-texto-secundario); text-decoration: none; }
+.cabecalho { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--espaco-3); flex-wrap: wrap; }
+.titulo { margin: 0 0 4px; font-size: 22px; }
+.meta { font-size: 12.5px; color: var(--cor-texto-secundario); margin: 0; }
+.aviso { margin: 0; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-secundario); }
+.subtitulo { font-size: 14px; margin: var(--espaco-4) 0 var(--espaco-2); }
+
+/* ==========================================================
+   02. LISTA DE PERGUNTAS
+   ========================================================== */
+.itens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.item { padding: var(--espaco-2) 0; border-bottom: 1px solid var(--cor-borda-sutil); }
+.linhaItem { display: flex; align-items: flex-start; gap: var(--espaco-3); }
+.ordem { font-family: var(--fonte-mono); font-weight: 700; color: var(--cor-texto-secundario); min-width: 22px; }
+.textoItem { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+.botoesOrdem { display: flex; gap: 2px; }
+.editar { font-size: 12.5px; margin: 4px 0 0 34px; }
+.editar summary { cursor: pointer; color: var(--cor-acento); }
+.remover { margin-top: var(--espaco-2); }
+
+/* ==========================================================
+   03. FORMULÁRIOS
+   ========================================================== */
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-2) var(--espaco-3);
+  align-items: end;
+  margin-top: var(--espaco-2);
+}
+.campo, .campoLargo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+.campoLargo { grid-column: 1 / -1; }
+.marcador { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; padding-bottom: 8px; }
+.entrada {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 9px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .formulario { grid-template-columns: minmax(0, 1fr); }
+  .editar { margin-left: 0; }
+}

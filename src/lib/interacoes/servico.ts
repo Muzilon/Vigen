@@ -7,6 +7,8 @@ import { filtroObras } from "@/lib/escopo-obras";
 import { moduloHiraAtivo } from "@/lib/hira/servico";
 import { moduloLaiaAtivo } from "@/lib/laia/servico";
 import { acessoDocumento } from "@/lib/documentos/acesso";
+import { moduloInspecoesAtivo } from "@/lib/inspecoes/acesso";
+import { filtroObraAuditoria, moduloAuditoriasAtivo } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
@@ -65,6 +67,20 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     if (!l) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = l.responsavelId ?? l.criadoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
+  }
+  if (t.tipo === "INSPECAO") {
+    // Inspeções: usuários com o módulo e a obra no escopo; fala com o inspetor.
+    if (!(await moduloInspecoesAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const i = await a.db.inspecao.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroObras(a)] }, select: { inspetorId: true } });
+    if (!i) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    return { destinatarioPadrao: i.inspetorId !== a.usuarioId ? i.inspetorId : null };
+  }
+  if (t.tipo === "AUDITORIA") {
+    // Auditorias: usuários com o módulo e escopo (sem obra = todos); fala com o auditor líder.
+    if (!(await moduloAuditoriasAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const au = await a.db.auditoria.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroObraAuditoria(a)] }, select: { auditorLiderId: true } });
+    if (!au) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    return { destinatarioPadrao: au.auditorLiderId !== a.usuarioId ? au.auditorLiderId : null };
   }
   if (t.tipo === "DOCUMENTO") {
     // Documentos: comentários para quem tem acesso completo (lista mestra, responsável, signatários); fala com o responsável.
@@ -193,5 +209,7 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "HIRA") return `/hira/${t.entidadeId}`;
   if (t.entidadeTipo === "LAIA") return `/laia/${t.entidadeId}`;
   if (t.entidadeTipo === "DOCUMENTO") return `/documentos/${t.entidadeId}`;
+  if (t.entidadeTipo === "INSPECAO") return `/inspecoes/${t.entidadeId}`;
+  if (t.entidadeTipo === "AUDITORIA") return `/auditorias/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

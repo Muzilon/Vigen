@@ -1,5 +1,11 @@
 import { ErroNegocio } from "@/lib/erros";
 
+/** PREFIXO-001-26 (INSP, AUD...). */
+export function formatarCodigoAnual(prefixo: string, sequencia: number, ano: number): string {
+  if (!Number.isInteger(sequencia) || sequencia < 1) throw new ErroNegocio("Sequência inválida");
+  return `${prefixo}-${String(sequencia).padStart(3, "0")}-${String(ano % 100).padStart(2, "0")}`;
+}
+
 /** RNC-001-26 */
 export function formatarCodigoRnc(sequencia: number, ano: number): string {
   if (!Number.isInteger(sequencia) || sequencia < 1) throw new ErroNegocio("Sequência inválida");
@@ -16,7 +22,7 @@ interface ExecutorRaw {
  * SQL cru não passa pela extension de tenant — empresaId é passado explicitamente.
  * Chamar dentro de $transaction: o lock de linha é mantido até o commit.
  */
-export async function proximaSequencia(tx: ExecutorRaw, empresaId: string, tipo: "RNC" | "DOCUMENTO", ano: number, subtipo = ""): Promise<number> {
+export async function proximaSequencia(tx: ExecutorRaw, empresaId: string, tipo: "RNC" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA", ano: number, subtipo = ""): Promise<number> {
   const linhas = await tx.$queryRaw<{ ultimo_valor: number }[]>`
     INSERT INTO contador_sequencial (empresa_id, tipo, ano, subtipo, ultimo_valor)
     VALUES (${empresaId}::uuid, ${tipo}::"TipoSequencia", ${ano}, ${subtipo}, 1)

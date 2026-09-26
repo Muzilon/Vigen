@@ -1,0 +1,137 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página
+   02. Indicadores
+   03. Filtros
+   04. Lista em cartões (responsiva — uso em campo/celular)
+   05. Status
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   02. INDICADORES
+   ========================================================== */
+.resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3);
+}
+.indicador {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--raio-pill);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.indicador strong { color: var(--cor-texto); font-size: 15px; }
+
+/* ==========================================================
+   03. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.acoesFiltro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin-left: auto;
+}
+.linkLimpar { font-size: 13px; color: var(--cor-texto-secundario); }
+
+/* ==========================================================
+   04. LISTA EM CARTÕES
+   ========================================================== */
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--espaco-3);
+}
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.cartao:hover { border-color: var(--cor-borda-forte); }
+.linkCartao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--espaco-3) var(--espaco-4);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+.codigo {
+  font-family: var(--fonte-mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+.nome { margin: 0; font-weight: 600; font-size: 15px; }
+.meta { margin: 0; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.numeros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+.percentual { font-size: 20px; font-weight: 700; color: var(--cor-texto); }
+.percentual small { font-size: 12px; font-weight: 400; color: var(--cor-texto-secundario); }
+.nc { color: var(--cor-atrasado-texto); font-weight: 600; }
+
+/* ==========================================================
+   05. STATUS
+   ========================================================== */
+.status {
+  padding: 2px 8px;
+  border-radius: var(--raio-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status_EM_ANDAMENTO { background: var(--cor-status-em-analise-fundo); color: var(--cor-status-em-analise-texto); }
+.status_CONCLUIDA { background: var(--cor-status-encerrado-fundo); color: var(--cor-status-encerrado-texto); }
+.status_CANCELADA { background: var(--cor-status-cancelado-fundo); color: var(--cor-status-cancelado-texto); }
+
+@media (max-width: 640px) {
+  .campoFiltro { min-width: 0; flex: 1 1 45%; }
+  .acoesFiltro { margin-left: 0; }
+  .lista { grid-template-columns: minmax(0, 1fr); }
+}

@@ -73,6 +73,10 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   LAIA_GERENCIAR: "Gerenciar LAIA (aspectos e impactos)",
   DOCUMENTO_ELABORAR: "Elaborar documentos (lista mestra, revisões)",
   DOCUMENTO_GERENCIAR: "Gerenciar documentos (tipos, publicar, obsoletar)",
+  INSPECAO_GERENCIAR: "Gerenciar inspeções (modelos de checklist, qualquer inspeção)",
+  INSPECAO_REALIZAR: "Realizar inspeções de campo",
+  AUDITORIA_GERENCIAR: "Planejar auditorias (programa, auditorias, cancelar)",
+  AUDITORIA_REALIZAR: "Executar auditorias como auditor líder",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };

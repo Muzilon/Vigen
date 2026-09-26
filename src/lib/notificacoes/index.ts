@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA";
   entidadeId: string;
 };
 
@@ -49,6 +49,14 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       const l = await db.linhaLaia.findFirst({ where: { id: evento.entidadeId }, select: { numero: true } });
       onde = l ? `a linha LAIA A-${String(l.numero).padStart(3, "0")}` : "uma linha LAIA";
       link = `/laia/${evento.entidadeId}`;
+    } else if (evento.entidadeTipo === "INSPECAO") {
+      const i = await db.inspecao.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
+      onde = i ? `a inspeção ${i.codigo}` : "uma inspeção";
+      link = `/inspecoes/${evento.entidadeId}`;
+    } else if (evento.entidadeTipo === "AUDITORIA") {
+      const au = await db.auditoria.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
+      onde = au ? `a auditoria ${au.codigo}` : "uma auditoria";
+      link = `/auditorias/${evento.entidadeId}`;
     } else if (evento.entidadeTipo === "DOCUMENTO") {
       const d = await db.documento.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
       onde = d ? `o documento ${d.codigo}` : "um documento";

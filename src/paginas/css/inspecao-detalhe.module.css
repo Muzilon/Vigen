@@ -1,0 +1,237 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Progresso
+   03. Resumo final
+   04. Perguntas (cartões — execução em campo)
+   05. Resposta: segmentado de opções (alvos de toque ≥ 44px)
+   06. Ações da não conformidade (RNC / item de ação)
+   07. Campos de formulário
+   08. Status e classes da resposta
+   09. Responsivo
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 920px;
+  min-width: 0;
+}
+.trilha { font-size: 13px; }
+.trilha a { color: var(--cor-texto-secundario); text-decoration: none; }
+.cabecalho { display: flex; flex-direction: column; gap: var(--espaco-2); }
+.codigo {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cor-texto-secundario);
+}
+.titulo { margin: 0; font-size: 22px; }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   02. PROGRESSO
+   ========================================================== */
+.progresso {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.progresso strong { color: var(--cor-texto); }
+.barra {
+  height: 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+  overflow: hidden;
+}
+.barra span { display: block; height: 100%; background: var(--cor-acento); }
+
+/* ==========================================================
+   03. RESUMO FINAL
+   ========================================================== */
+.resumo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--espaco-5, 24px); }
+.numeroGrande {
+  display: flex;
+  flex-direction: column;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+.numeroGrande small { font-size: 12px; font-weight: 400; color: var(--cor-texto-secundario); margin-top: 4px; }
+.contagens {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+.contagens dt { color: var(--cor-texto-secundario); }
+.contagens dd { margin: 0; font-weight: 600; }
+.observacoes { white-space: pre-line; font-size: 13px; margin: var(--espaco-3) 0 0; }
+.subtitulo { font-size: 14px; margin: var(--espaco-4) 0 var(--espaco-2); }
+.gerados { margin: 0; padding-left: 18px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+.texto { font-size: 13px; margin: var(--espaco-2) 0 0; }
+.vazio { font-size: 13px; color: var(--cor-texto-secundario); margin: 0; }
+
+/* ==========================================================
+   04. PERGUNTAS
+   ========================================================== */
+.perguntas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+.pergunta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-left: 4px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3) var(--espaco-4);
+  scroll-margin-top: 80px;
+}
+.perguntaNc { border-left-color: var(--cor-atrasado-texto); }
+.cabecalhoPergunta { display: flex; gap: var(--espaco-3); align-items: flex-start; }
+.numeroPergunta {
+  font-family: var(--fonte-mono);
+  font-weight: 700;
+  color: var(--cor-texto-secundario);
+  min-width: 22px;
+}
+.textoPergunta { flex: 1; min-width: 0; }
+.enunciado { margin: 0; font-size: 15px; font-weight: 600; }
+.ajuda { margin: 2px 0 0; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.comentario { margin: 0; font-size: 13px; white-space: pre-line; }
+.formResposta { display: flex; flex-direction: column; gap: var(--espaco-2); }
+
+/* ==========================================================
+   05. SEGMENTADO
+   ========================================================== */
+.segmentado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.segmentado label { flex: 1 1 0; min-width: 48px; cursor: pointer; }
+.segmentado input { position: absolute; opacity: 0; pointer-events: none; }
+.segmentado span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--cor-superficie);
+  text-align: center;
+}
+.segmentado input:focus-visible + span { outline: 2px solid var(--cor-acento); outline-offset: 2px; }
+.segmentado input:checked + span { background: var(--cor-destaque-escuro); color: var(--cor-destaque-escuro-texto); border-color: var(--cor-destaque-escuro); }
+.opcaoRuim input:checked + span { background: var(--cor-atrasado-fundo); color: var(--cor-atrasado-texto); border-color: var(--cor-atrasado-texto); }
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================
+   06. AÇÕES DA NÃO CONFORMIDADE
+   ========================================================== */
+.acoesNc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  padding-top: var(--espaco-2);
+  border-top: 1px dashed var(--cor-borda);
+}
+.detalhes { font-size: 13px; }
+.detalhes summary {
+  cursor: pointer;
+  color: var(--cor-acento);
+  font-weight: 600;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+.gerado { margin: 0; font-size: 13px; }
+.formNc, .formFinal { display: flex; flex-direction: column; gap: var(--espaco-2); margin-top: var(--espaco-2); }
+.linhaCampos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--espaco-2); }
+
+/* ==========================================================
+   07. CAMPOS
+   ========================================================== */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+.entrada, .area {
+  font: inherit;
+  font-size: 14px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+.area { resize: vertical; }
+
+/* ==========================================================
+   08. STATUS E CLASSES
+   ========================================================== */
+.status, .classe {
+  padding: 2px 8px;
+  border-radius: var(--raio-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status_EM_ANDAMENTO { background: var(--cor-status-em-analise-fundo); color: var(--cor-status-em-analise-texto); }
+.status_CONCLUIDA { background: var(--cor-status-encerrado-fundo); color: var(--cor-status-encerrado-texto); }
+.status_CANCELADA { background: var(--cor-status-cancelado-fundo); color: var(--cor-status-cancelado-texto); }
+.classe_CONFORME { background: var(--cor-status-encerrado-fundo); color: var(--cor-status-encerrado-texto); }
+.classe_NAO_CONFORME { background: var(--cor-atrasado-fundo); color: var(--cor-atrasado-texto); }
+.classe_NAO_APLICAVEL, .classe_INFORMATIVA { background: var(--cor-fundo-sutil); color: var(--cor-texto-secundario); }
+.classe_PENDENTE { background: var(--cor-aviso-fundo); color: var(--cor-texto); border: 1px solid var(--cor-aviso-borda); }
+
+/* ==========================================================
+   09. RESPONSIVO
+   ========================================================== */
+@media (max-width: 640px) {
+  .pergunta { padding: var(--espaco-3); }
+  .cabecalhoPergunta { flex-wrap: wrap; }
+  .classe { margin-left: 34px; }
+}

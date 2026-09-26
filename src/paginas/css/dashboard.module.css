@@ -6,6 +6,7 @@
    04. Painéis de gráfico — superfície, título e subtítulo
    05. Grades de painéis — 3 colunas (tipo/gravidade/obra) e 2 colunas
    06. Documentos — KPI clicável
+   07. Inspeções / Auditorias — lista simples
    ========================================================== */
 
 /* ==========================================================
@@ -165,3 +166,26 @@
   text-decoration: none;
 }
 .linkKpi:hover > * { border-color: var(--cor-borda-forte); }
+
+/* ==========================================================
+   07. INSPEÇÕES / AUDITORIAS — LISTA SIMPLES (nome · valor · detalhe)
+   ========================================================== */
+.listaSimples {
+  list-style: none;
+  margin: var(--espaco-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.listaSimples li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--espaco-3);
+  align-items: baseline;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+.listaSimples small { color: var(--cor-texto-secundario); }
+.listaSimples a { color: var(--cor-texto); }

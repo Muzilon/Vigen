@@ -1,5 +1,5 @@
 import { Prisma, type Gravidade, type MetodoCausaRaiz, type OrigemRnc, type StatusRnc, type TipoRnc } from "@prisma/client";
-import { atorTem, fusoDaEmpresa, type Ator, type Tx } from "@/lib/ator";
+import { atorTem, type Ator, type Tx } from "@/lib/ator";
 import { anoNoFuso } from "@/lib/datas";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { avaliarTransicao, cicloAtual, STATUS_FINAIS, type AcaoRnc } from "@/lib/rnc/estados";
@@ -175,18 +175,30 @@ export interface DadosNovaRnc {
 }
 
 export async function criarRnc(a: Ator, d: DadosNovaRnc) {
+  const criada = await a.db.$transaction((tx) => criarRncNaTransacao(tx, a, d));
+  if (criada.responsavelId) await notificarRncAtribuida(a, criada.id);
+  return criada;
+}
+
+/**
+ * Abre a RNC na transação do chamador (ex.: a partir de uma resposta de inspeção ou de uma
+ * constatação de auditoria, que gravam o vínculo na mesma transação). Mesmas regras de criarRnc;
+ * não notifica — após o commit, chame notificarRncAtribuida(a, rnc.id) se houver responsável.
+ */
+export async function criarRncNaTransacao(tx: Tx, a: Ator, d: DadosNovaRnc) {
   if (!atorTem(a, "RNC_ABRIR")) throw new ErroNegocio("Sem permissão para abrir RNC.");
   if (a.obrasPermitidas !== null && !a.obrasPermitidas.includes(d.obraId)) {
     throw new ErroNegocio("Obra/unidade não permitida.");
   }
-  const obra = await a.db.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true } });
+  const obra = await tx.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true } });
   if (!obra) throw new ErroNegocio("Obra/unidade inválida.");
-  const ano = anoNoFuso(await fusoDaEmpresa(a));
+  const emp = await tx.empresa.findFirst({ where: { id: a.empresaId }, select: { fusoHorario: true } });
+  const ano = anoNoFuso(emp?.fusoHorario ?? "America/Sao_Paulo");
   const contemDadosPessoais = !!d.contemDadosPessoais;
   const restrita = !!d.restrita || (d.tipo === "SSO" && contemDadosPessoais);
-  if (d.responsavelId) await validarNovoResponsavel(a.db, d.responsavelId, { obraId: d.obraId, restrita });
+  if (d.responsavelId) await validarNovoResponsavel(tx, d.responsavelId, { obraId: d.obraId, restrita });
 
-  const criada = await a.db.$transaction(async (tx) => {
+  {
     const sequencia = await proximaSequenciaRnc(tx, a.empresaId, ano);
     const rnc = await tx.rnc.create({
       data: {
@@ -225,9 +237,7 @@ export async function criarRnc(a: Ator, d: DadosNovaRnc) {
       });
     }
     return rnc;
-  });
-  if (criada.responsavelId) await notificarRncAtribuida(a, criada.id);
-  return criada;
+  }
 }
 
 // ---------------------------------------------------------------- tratativa

@@ -6,6 +6,7 @@ import { codigoLaia, pontuarLaia } from "../src/lib/laia/regras";
 import { avaliarPS, codigoHira } from "../src/lib/hira/regras";
 import { avaliar } from "../src/lib/riscos/regras";
 import { semearDocumentos } from "./seed-documentos";
+import { semearInspecoes } from "./seed-inspecoes";
 
 const prisma = new PrismaClient();
 
@@ -69,10 +70,10 @@ async function main() {
     {
       nome: "Qualidade",
       descricao: "Equipe de Qualidade",
-      permissoes: ["RNC_VERIFICAR_EFICACIA", "RNC_APROVAR_CANCELAMENTO", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "PROCESSO_GERENCIAR", "RISCO_GERENCIAR", "RISCO_TRATAR", "SWOT_GERENCIAR", "DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR"],
+      permissoes: ["RNC_VERIFICAR_EFICACIA", "RNC_APROVAR_CANCELAMENTO", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "PROCESSO_GERENCIAR", "RISCO_GERENCIAR", "RISCO_TRATAR", "SWOT_GERENCIAR", "DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR", "INSPECAO_GERENCIAR", "INSPECAO_REALIZAR", "AUDITORIA_GERENCIAR", "AUDITORIA_REALIZAR"],
     },
-    { nome: "Segurança", descricao: "Equipe de SSO", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "RISCO_TRATAR", "HIRA_GERENCIAR", "DOCUMENTO_ELABORAR"] },
-    { nome: "Meio Ambiente", descricao: "Equipe de Meio Ambiente", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "LAIA_GERENCIAR"] },
+    { nome: "Segurança", descricao: "Equipe de SSO", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "RISCO_TRATAR", "HIRA_GERENCIAR", "DOCUMENTO_ELABORAR", "INSPECAO_GERENCIAR", "INSPECAO_REALIZAR"] },
+    { nome: "Meio Ambiente", descricao: "Equipe de Meio Ambiente", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "LAIA_GERENCIAR", "INSPECAO_REALIZAR"] },
   ];
   const perfis: Record<string, { id: string }> = {};
   for (const p of perfisSemente) {
@@ -140,6 +141,7 @@ async function main() {
   await semearHira(e);
   await semearLaia(e);
   await semearDocumentos(prisma, e);
+  await semearInspecoes(prisma, e);
 
   // ---- Demo (para testar isolamento) ----
   // Sem override: fica só com o default do schema (RNC + PLANO_ACAO) — testa o gating

@@ -270,7 +270,7 @@ export async function criarPlanoNaTransacao(
   tx: Tx,
   a: Ator,
   d: DadosPlanoManual,
-  origem: { tipo: "MANUAL" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA"; id: string | null },
+  origem: { tipo: "MANUAL" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "INSPECAO" | "AUDITORIA"; id: string | null },
 ) {
   const cab = cabecalhoPlano(d);
   validarQuantidadeItens(d.itens);
@@ -328,6 +328,21 @@ export async function adicionarItensPlanoManual(a: Ator, planoId: string, itens:
   });
   await notificarItensAtribuidos(a, r, "criado");
   return { itemIds: r };
+}
+
+/**
+ * Acrescenta um item a um plano SEM RNC de outra origem (ex.: inspeção) na transação do chamador.
+ * Não checa permissão de gestão do plano (quem chama decide) nem notifica. Trava o plano pela versão.
+ */
+export async function adicionarItemNaTransacao(tx: Tx, a: Ator, planoId: string, item: DadosItem) {
+  const dados = dadosItem(item);
+  const plano = await tx.planoAcao.findFirst({ where: { id: planoId, rnc: { is: null } }, include: { itens: { select: { ordem: true } } } });
+  if (!plano) throw new ErroNegocio("Plano de ação não encontrado.");
+  await validarQuemPlanoManual(tx, [dados.quemId], plano.obraId);
+  await travarPlano(tx, plano);
+  const base = Math.max(0, ...plano.itens.map((i) => i.ordem));
+  const criado = await tx.itemAcao.create({ data: { ...dados, empresaId: a.empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: base + 1 }, select: { id: true } });
+  return criado.id;
 }
 
 /**

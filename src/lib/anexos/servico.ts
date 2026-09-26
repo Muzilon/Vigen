@@ -8,6 +8,8 @@ import { moduloHiraAtivo, podeTratarHira } from "@/lib/hira/servico";
 import { moduloLaiaAtivo, podeTratarLaia } from "@/lib/laia/servico";
 import { podeLerVersao } from "@/lib/documentos/acesso";
 import { filtroObras } from "@/lib/escopo-obras";
+import { moduloInspecoesAtivo, podeExecutarInspecao } from "@/lib/inspecoes/acesso";
+import { filtroObraAuditoria, moduloAuditoriasAtivo, podeExecutarAuditoria } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
@@ -124,6 +126,45 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       // Envio/troca só pelo serviço de documentos; nunca excluído pela tela de anexos (controle de versão).
       const v = await podeLerVersao(a, alvo.entidadeId);
       return { podeLer: v.ler, podeEnviar: false, podeGerir: false, rncId: null, rncFinal: false, imutavel: "O arquivo de uma revisão de documento não pode ser excluído (use nova revisão ou troque o arquivo do rascunho)." };
+    }
+    case "RESPOSTA_INSPECAO": {
+      // Foto de resposta de inspeção: leitura com o módulo e a obra no escopo; envio pelo inspetor/gestor
+      // com a inspeção em andamento; após concluída, as fotos ficam imutáveis (evidência).
+      if (!(await moduloInspecoesAtivo(a))) return NEGADO;
+      const r = await a.db.respostaInspecao.findFirst({
+        where: { id: alvo.entidadeId, inspecao: filtroObras(a) },
+        select: { inspecao: { select: { inspetorId: true, status: true } } },
+      });
+      if (!r) return NEGADO;
+      const g = podeExecutarInspecao(a, r.inspecao);
+      const aberta = r.inspecao.status === "EM_ANDAMENTO";
+      return {
+        podeLer: true,
+        podeEnviar: g && aberta,
+        podeGerir: g,
+        rncId: null,
+        rncFinal: false,
+        imutavel: aberta ? undefined : "Fotos de inspeção concluída ou cancelada não podem ser excluídas.",
+      };
+    }
+    case "CONSTATACAO_AUDITORIA": {
+      // Evidência de constatação: leitura com o módulo e escopo; envio pelo auditor líder/gestor com a auditoria em execução.
+      if (!(await moduloAuditoriasAtivo(a))) return NEGADO;
+      const c = await a.db.constatacao.findFirst({
+        where: { id: alvo.entidadeId, auditoria: filtroObraAuditoria(a) },
+        select: { auditoria: { select: { auditorLiderId: true, status: true } } },
+      });
+      if (!c) return NEGADO;
+      const g = podeExecutarAuditoria(a, c.auditoria);
+      const aberta = c.auditoria.status === "EM_EXECUCAO";
+      return {
+        podeLer: true,
+        podeEnviar: g && aberta,
+        podeGerir: g,
+        rncId: null,
+        rncFinal: false,
+        imutavel: aberta ? undefined : "Evidências de auditoria concluída ou cancelada não podem ser excluídas.",
+      };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({

@@ -9,6 +9,7 @@ import { ROTULO_TIPO } from "@/lib/rnc/rotulos";
 import { resumoHira } from "@/lib/hira/servico";
 import { resumoLaia } from "@/lib/laia/servico";
 import { resumoDocumentos } from "@/lib/documentos/servico";
+import { resumoInspecoes } from "@/lib/inspecoes/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -33,7 +34,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -47,6 +48,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoHira(a),
     resumoLaia(a),
     resumoDocumentos(a),
+    resumoInspecoes(a),
   ]);
   const k = ind.kpis;
 
@@ -134,6 +136,25 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
               </Link>
             )}
           </div>
+        </Painel>
+      )}
+
+      {inspecoes && (
+        <Painel titulo="Inspeções / checklists" subtitulo="Últimos 12 meses, obras do seu escopo">
+          <div className={styles.gradeKpis}>
+            <Link href="/inspecoes?status=CONCLUIDA" className={styles.linkKpi}>
+              <Kpi titulo="Conformidade média" valor={inspecoes.mediaConformidade === null ? "—" : `${inspecoes.mediaConformidade}%`} dica={`${inspecoes.concluidas} inspeção(ões) concluída(s)`} />
+            </Link>
+            <Link href="/inspecoes?status=EM_ANDAMENTO" className={styles.linkKpi}>
+              <Kpi titulo="Em andamento" valor={inspecoes.emAndamento} dica={`${inspecoes.paradas} aberta(s) há mais de 7 dias`} alerta={inspecoes.paradas > 0} />
+            </Link>
+            <Kpi titulo="RNCs geradas" valor={inspecoes.rncsGeradas} dica={`${inspecoes.itensGerados} item(ns) de ação direto`} />
+          </div>
+          {inspecoes.porModelo.length > 0 && (
+            <ul className={styles.listaSimples}>
+              {inspecoes.porModelo.map((m) => <li key={m.nome}><span>{m.nome}</span><strong>{m.media}%</strong><small>{m.n} inspeção(ões)</small></li>)}
+            </ul>
+          )}
         </Painel>
       )}
 

@@ -53,6 +53,8 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
             <Link href={`/riscos/${plano.origemId}`}><BadgeOrigem>Risco/oportunidade</BadgeOrigem></Link>
           ) : plano.origemTipo === "HIRA" && plano.origemId ? (
             <Link href={`/hira/${plano.origemId}`}><BadgeOrigem>HIRA (SST)</BadgeOrigem></Link>
+          ) : plano.origemTipo === "INSPECAO" && plano.origemId ? (
+            <Link href={`/inspecoes/${plano.origemId}`}><BadgeOrigem>Inspeção</BadgeOrigem></Link>
           ) : plano.origemTipo === "LAIA" && plano.origemId ? (
             <Link href={`/laia/${plano.origemId}`}><BadgeOrigem>LAIA (meio ambiente)</BadgeOrigem></Link>
           ) : (

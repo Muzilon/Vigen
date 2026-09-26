@@ -31,7 +31,7 @@ export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
   { modulo: "SWOT", href: "/swot", label: "SWOT", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "HIRA", href: "/hira", label: "Perigos e riscos (HIRA)", grupo: GRUPO_MODULO.SEGURANCA, implementado: true },
   { modulo: "LAIA", href: "/laia", label: "Aspectos ambientais", grupo: GRUPO_MODULO.MEIO_AMBIENTE, implementado: true },
-  { modulo: "INSPECOES", href: "/inspecoes", label: "Inspeções / checklists", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
+  { modulo: "INSPECOES", href: "/inspecoes", label: "Inspeções / checklists", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },
   { modulo: "AUDITORIAS", href: "/auditorias", label: "Auditorias internas", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
   { modulo: "DOCUMENTOS", href: "/documentos", label: "Documentos (lista mestra)", grupo: GRUPO_MODULO.QUALIDADE, implementado: true, permissao: ["DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR"] },
   { modulo: "DOCUMENTOS", href: "/documentos/meus", label: "Meus documentos", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },

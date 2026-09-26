@@ -68,6 +68,10 @@ enum Permissao {
   LAIA_GERENCIAR
   DOCUMENTO_ELABORAR
   DOCUMENTO_GERENCIAR
+  INSPECAO_GERENCIAR
+  INSPECAO_REALIZAR
+  AUDITORIA_GERENCIAR
+  AUDITORIA_REALIZAR
 }
 
 enum EscopoObras {
@@ -151,6 +155,8 @@ enum TipoEntidadeAnexo {
   HIRA
   LAIA
   DOCUMENTO_VERSAO
+  RESPOSTA_INSPECAO
+  CONSTATACAO_AUDITORIA
 }
 
 enum TipoEntidadeInteracao {
@@ -161,6 +167,8 @@ enum TipoEntidadeInteracao {
   HIRA
   LAIA
   DOCUMENTO
+  INSPECAO
+  AUDITORIA
 }
 
 enum TipoNotificacao {
@@ -179,6 +187,7 @@ enum TipoNotificacao {
   DOCUMENTO_PUBLICADO
   CIENCIA_PENDENTE
   REVISAO_DOCUMENTO_PROXIMA
+  AUDITORIA_ATRIBUIDA
 }
 
 enum TipoEntidadeNotificacao {
@@ -190,6 +199,8 @@ enum TipoEntidadeNotificacao {
   HIRA
   LAIA
   DOCUMENTO
+  INSPECAO
+  AUDITORIA
 }
 
 enum StatusEmailNotificacao {
@@ -355,6 +366,8 @@ enum QuadranteSwot {
 enum TipoSequencia {
   RNC
   DOCUMENTO
+  INSPECAO
+  AUDITORIA
 }
 
 model Empresa {
@@ -411,6 +424,14 @@ model Empresa {
   publicacoesDocumento     PublicacaoDocumento[]
   cienciasDocumento        CienciaDocumento[]
   historicosDocumento      HistoricoDocumento[]
+  modelosChecklist         ModeloChecklist[]
+  itensModeloChecklist     ItemModeloChecklist[]
+  inspecoes                Inspecao[]
+  respostasInspecao        RespostaInspecao[]
+  programasAuditoria       ProgramaAuditoria[]
+  auditorias               Auditoria[]
+  itensAuditoria           ItemAuditoria[]
+  constatacoes             Constatacao[]
 
   @@map("empresa")
 }
@@ -435,6 +456,8 @@ model ObraUnidade {
   linhasHira          LinhaHira[]
   linhasLaia          LinhaLaia[]
   documentos          Documento[]
+  inspecoes           Inspecao[]
+  auditorias          Auditoria[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -453,6 +476,7 @@ model Setor {
   usuarios   Usuario[]
   rncs       Rnc[]
   documentos Documento[]
+  inspecoes  Inspecao[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -534,6 +558,12 @@ model Usuario {
   publicacoesDocumento      PublicacaoDocumento[]        @relation("PublicacaoDocPublicadoPor")
   cienciasDocumento         CienciaDocumento[]           @relation("CienciaDocUsuario")
   historicosDocumento       HistoricoDocumento[]         @relation("HistoricoDocUsuario")
+  modelosChecklistCriados   ModeloChecklist[]            @relation("ModeloChecklistCriadoPor")
+  inspecoesInspetor         Inspecao[]                   @relation("InspecaoInspetor")
+  programasAuditoriaCriados ProgramaAuditoria[]          @relation("ProgramaAuditoriaCriadoPor")
+  auditoriasLider           Auditoria[]                  @relation("AuditoriaLider")
+  auditoriasCriadas         Auditoria[]                  @relation("AuditoriaCriadoPor")
+  constatacoesCriadas       Constatacao[]                @relation("ConstatacaoCriadoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -612,6 +642,8 @@ model Rnc {
   verificacoes             VerificacaoEficacia[]
   historicoStatus          HistoricoStatusRnc[]
   solicitacoesCancelamento SolicitacaoCancelamento[]
+  respostaInspecao         RespostaInspecao?
+  constatacao              Constatacao?
 
   @@unique([empresaId, id])
   @@unique([empresaId, ano, sequencia])
@@ -738,6 +770,7 @@ model PlanoAcao {
   risco     RiscoOportunidade?
   linhaHira LinhaHira?
   linhaLaia LinhaLaia?
+  inspecao  Inspecao?
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
@@ -766,9 +799,10 @@ model ItemAcao {
   criadoEm           DateTime       @default(now()) @map("criado_em")
   atualizadoEm       DateTime       @updatedAt @map("atualizado_em")
 
-  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  planoAcao PlanoAcao @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
-  quem      Usuario   @relation("ItemQuem", fields: [empresaId, quemId], references: [empresaId, id], onDelete: Restrict)
+  empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  planoAcao        PlanoAcao         @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  quem             Usuario           @relation("ItemQuem", fields: [empresaId, quemId], references: [empresaId, id], onDelete: Restrict)
+  respostaInspecao RespostaInspecao?
 
   @@unique([empresaId, id])
   @@index([empresaId, planoAcaoId])
@@ -1014,6 +1048,8 @@ model Processo {
   linhasHira        LinhaHira[]
   linhasLaia        LinhaLaia[]
   documentos        Documento[]
+  inspecoes         Inspecao[]
+  auditorias        Auditoria[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -1597,4 +1633,287 @@ model HistoricoDocumento {
   @@unique([empresaId, id])
   @@index([empresaId, documentoId, criadoEm])
   @@map("historico_documento")
+}
+
+// ============================================================ P5 — Inspeções / Checklists
+
+enum TipoChecklist {
+  QUALIDADE
+  SSO
+  MEIO_AMBIENTE
+  GERAL
+}
+
+/// Tipo de resposta de um item do checklist.
+/// CONFORME_NAO_CONFORME_NA: C / NC / N/A. SIM_NAO: pergunta formulada no positivo (NÃO = não conforme).
+/// NOTA_1A5: nota abaixo de ModeloChecklist.notaMinima = não conforme. TEXTO: livre, fora do % de conformidade.
+enum TipoRespostaChecklist {
+  CONFORME_NAO_CONFORME_NA
+  SIM_NAO
+  NOTA_1A5
+  TEXTO
+}
+
+enum ValorRespostaInspecao {
+  CONFORME
+  NAO_CONFORME
+  NAO_APLICAVEL
+  SIM
+  NAO
+}
+
+enum StatusInspecao {
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+}
+
+/// Modelo de checklist (INSPECAO_GERENCIAR). Itens inativados continuam nas inspeções já feitas (snapshot na resposta).
+model ModeloChecklist {
+  id           String        @id @default(uuid()) @db.Uuid
+  empresaId    String        @map("empresa_id") @db.Uuid
+  nome         String
+  descricao    String?
+  tipo         TipoChecklist @default(GERAL)
+  /// NOTA_1A5: nota < notaMinima conta como não conforme.
+  notaMinima   Int           @default(3) @map("nota_minima")
+  ativo        Boolean       @default(true)
+  /// Trava otimista.
+  versao       Int           @default(0)
+  criadoPorId  String        @map("criado_por_id") @db.Uuid
+  criadoEm     DateTime      @default(now()) @map("criado_em")
+  atualizadoEm DateTime      @updatedAt @map("atualizado_em")
+
+  empresa   Empresa               @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  criadoPor Usuario               @relation("ModeloChecklistCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  itens     ItemModeloChecklist[]
+  inspecoes Inspecao[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@map("modelo_checklist")
+}
+
+model ItemModeloChecklist {
+  id              String                @id @default(uuid()) @db.Uuid
+  empresaId       String                @map("empresa_id") @db.Uuid
+  modeloId        String                @map("modelo_id") @db.Uuid
+  ordem           Int
+  pergunta        String
+  tipoResposta    TipoRespostaChecklist @map("tipo_resposta")
+  /// Foto exigida quando a resposta for não conforme (evidência da NC).
+  obrigatorioFoto Boolean               @default(false) @map("obrigatorio_foto")
+  /// Critério de aceitação / texto de ajuda.
+  ajuda           String?
+  ativo           Boolean               @default(true)
+  criadoEm        DateTime              @default(now()) @map("criado_em")
+
+  empresa   Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  modelo    ModeloChecklist    @relation(fields: [empresaId, modeloId], references: [empresaId, id], onDelete: Restrict)
+  respostas RespostaInspecao[]
+
+  @@unique([empresaId, id])
+  @@index([empresaId, modeloId, ordem])
+  @@map("item_modelo_checklist")
+}
+
+/// Inspeção de campo (código INSP-NNN-AA). Obra obrigatória = escopo.
+model Inspecao {
+  id                     String         @id @default(uuid()) @db.Uuid
+  empresaId              String         @map("empresa_id") @db.Uuid
+  ano                    Int
+  sequencia              Int
+  codigo                 String
+  modeloId               String         @map("modelo_id") @db.Uuid
+  obraId                 String         @map("obra_id") @db.Uuid
+  setorId                String?        @map("setor_id") @db.Uuid
+  processoId             String?        @map("processo_id") @db.Uuid
+  inspetorId             String         @map("inspetor_id") @db.Uuid
+  dataInspecao           DateTime       @map("data_inspecao") @db.Date
+  status                 StatusInspecao @default(EM_ANDAMENTO)
+  observacoes            String?
+  /// Gravado ao concluir: conformes / (conformes + não conformes), 0–100.
+  percentualConformidade Int?           @map("percentual_conformidade")
+  concluidaEm            DateTime?      @map("concluida_em")
+  /// Plano (origem INSPECAO) que recebe os itens de ação criados a partir das respostas.
+  planoAcaoId            String?        @map("plano_acao_id") @db.Uuid
+  versao                 Int            @default(0)
+  criadoEm               DateTime       @default(now()) @map("criado_em")
+  atualizadoEm           DateTime       @updatedAt @map("atualizado_em")
+
+  empresa   Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  modelo    ModeloChecklist    @relation(fields: [empresaId, modeloId], references: [empresaId, id], onDelete: Restrict)
+  obra      ObraUnidade        @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  setor     Setor?             @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
+  processo  Processo?          @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  inspetor  Usuario            @relation("InspecaoInspetor", fields: [empresaId, inspetorId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao PlanoAcao?         @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  respostas RespostaInspecao[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano, sequencia])
+  @@unique([empresaId, codigo])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, obraId, status])
+  @@index([empresaId, modeloId])
+  @@index([empresaId, dataInspecao])
+  @@map("inspecao")
+}
+
+/// Resposta de um item: criada (vazia) ao iniciar a inspeção, com snapshot da pergunta do modelo.
+model RespostaInspecao {
+  id               String                 @id @default(uuid()) @db.Uuid
+  empresaId        String                 @map("empresa_id") @db.Uuid
+  inspecaoId       String                 @map("inspecao_id") @db.Uuid
+  itemModeloId     String                 @map("item_modelo_id") @db.Uuid
+  ordem            Int
+  pergunta         String
+  tipoResposta     TipoRespostaChecklist  @map("tipo_resposta")
+  obrigatorioFoto  Boolean                @default(false) @map("obrigatorio_foto")
+  ajuda            String?
+  resposta         ValorRespostaInspecao?
+  nota             Int?
+  texto            String?
+  comentario       String?
+  respondidoEm     DateTime?              @map("respondido_em")
+  geradaRncId      String?                @map("gerada_rnc_id") @db.Uuid
+  geradoItemAcaoId String?                @map("gerado_item_acao_id") @db.Uuid
+
+  empresa        Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  inspecao       Inspecao            @relation(fields: [empresaId, inspecaoId], references: [empresaId, id], onDelete: Restrict)
+  itemModelo     ItemModeloChecklist @relation(fields: [empresaId, itemModeloId], references: [empresaId, id], onDelete: Restrict)
+  geradaRnc      Rnc?                @relation(fields: [empresaId, geradaRncId], references: [empresaId, id], onDelete: Restrict)
+  geradoItemAcao ItemAcao?           @relation(fields: [empresaId, geradoItemAcaoId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, inspecaoId, itemModeloId])
+  @@unique([empresaId, geradaRncId])
+  @@unique([empresaId, geradoItemAcaoId])
+  @@index([empresaId, inspecaoId, ordem])
+  @@map("resposta_inspecao")
+}
+
+// ============================================================ P5 — Auditorias internas
+
+enum TipoAuditoria {
+  INTERNA
+  EXTERNA_CERTIFICACAO
+}
+
+enum StatusAuditoria {
+  PLANEJADA
+  EM_EXECUCAO
+  CONCLUIDA
+  CANCELADA
+}
+
+enum TipoConstatacao {
+  NAO_CONFORMIDADE
+  OBSERVACAO
+  OPORTUNIDADE_MELHORIA
+  PONTO_FORTE
+}
+
+/// Programa anual de auditorias (um por ano).
+model ProgramaAuditoria {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  ano          Int
+  objetivo     String
+  criadoPorId  String   @map("criado_por_id") @db.Uuid
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa    Empresa     @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  criadoPor  Usuario     @relation("ProgramaAuditoriaCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  auditorias Auditoria[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano])
+  @@map("programa_auditoria")
+}
+
+/// Auditoria (código AUD-NNN-AA). Obra opcional (sem obra = empresa toda); com obra, entra no escopo por obra.
+model Auditoria {
+  id             String          @id @default(uuid()) @db.Uuid
+  empresaId      String          @map("empresa_id") @db.Uuid
+  ano            Int
+  sequencia      Int
+  codigo         String
+  programaId     String?         @map("programa_id") @db.Uuid
+  tipo           TipoAuditoria   @default(INTERNA)
+  norma          String
+  escopo         String
+  processoId     String?         @map("processo_id") @db.Uuid
+  obraId         String?         @map("obra_id") @db.Uuid
+  auditorLiderId String          @map("auditor_lider_id") @db.Uuid
+  equipe         String?
+  dataInicio     DateTime        @map("data_inicio") @db.Date
+  dataFim        DateTime        @map("data_fim") @db.Date
+  status         StatusAuditoria @default(PLANEJADA)
+  conclusao      String?
+  concluidaEm    DateTime?       @map("concluida_em")
+  versao         Int             @default(0)
+  criadoPorId    String          @map("criado_por_id") @db.Uuid
+  criadoEm       DateTime        @default(now()) @map("criado_em")
+  atualizadoEm   DateTime        @updatedAt @map("atualizado_em")
+
+  empresa      Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  programa     ProgramaAuditoria? @relation(fields: [empresaId, programaId], references: [empresaId, id], onDelete: Restrict)
+  processo     Processo?          @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  obra         ObraUnidade?       @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  auditorLider Usuario            @relation("AuditoriaLider", fields: [empresaId, auditorLiderId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor    Usuario            @relation("AuditoriaCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  itens        ItemAuditoria[]
+  constatacoes Constatacao[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano, sequencia])
+  @@unique([empresaId, codigo])
+  @@index([empresaId, status])
+  @@index([empresaId, programaId])
+  @@map("auditoria")
+}
+
+/// Item do plano de auditoria: requisito/cláusula e pergunta/critério.
+model ItemAuditoria {
+  id          String   @id @default(uuid()) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  auditoriaId String   @map("auditoria_id") @db.Uuid
+  ordem       Int
+  requisito   String
+  pergunta    String?
+  criadoEm    DateTime @default(now()) @map("criado_em")
+
+  empresa      Empresa       @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  auditoria    Auditoria     @relation(fields: [empresaId, auditoriaId], references: [empresaId, id], onDelete: Restrict)
+  constatacoes Constatacao[]
+
+  @@unique([empresaId, id])
+  @@index([empresaId, auditoriaId, ordem])
+  @@map("item_auditoria")
+}
+
+model Constatacao {
+  id              String          @id @default(uuid()) @db.Uuid
+  empresaId       String          @map("empresa_id") @db.Uuid
+  auditoriaId     String          @map("auditoria_id") @db.Uuid
+  itemAuditoriaId String?         @map("item_auditoria_id") @db.Uuid
+  tipo            TipoConstatacao
+  descricao       String
+  evidencia       String?
+  geradaRncId     String?         @map("gerada_rnc_id") @db.Uuid
+  criadoPorId     String          @map("criado_por_id") @db.Uuid
+  criadoEm        DateTime        @default(now()) @map("criado_em")
+
+  empresa       Empresa        @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  auditoria     Auditoria      @relation(fields: [empresaId, auditoriaId], references: [empresaId, id], onDelete: Restrict)
+  itemAuditoria ItemAuditoria? @relation(fields: [empresaId, itemAuditoriaId], references: [empresaId, id], onDelete: Restrict)
+  geradaRnc     Rnc?           @relation(fields: [empresaId, geradaRncId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor     Usuario        @relation("ConstatacaoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, geradaRncId])
+  @@index([empresaId, auditoriaId, tipo])
+  @@map("constatacao")
 }
