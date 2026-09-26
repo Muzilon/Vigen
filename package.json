@@ -20,7 +20,8 @@
     "test:riscos": "tsx scripts/teste-riscos.ts",
     "test:swot": "tsx scripts/teste-swot.ts",
     "test:hira": "tsx scripts/teste-hira.ts",
-    "test:laia": "tsx scripts/teste-laia.ts"
+    "test:laia": "tsx scripts/teste-laia.ts",
+    "test:documentos": "tsx scripts/teste-documentos.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
