@@ -1,4 +1,5 @@
 import { cancelarItemAcao, concluirItemAcao, editarItemAcao, iniciarItemAcao } from "@/app/(app)/rncs/actions";
+import { CampoArquivos } from "@/components/campo-arquivos";
 import { FormAcao } from "@/components/form-acao";
 import { cls } from "@/components/ui";
 import { dataIso } from "@/lib/datas";
@@ -54,7 +55,8 @@ export function ItemAcoes({
             <label className={cls.label}>Data de conclusão</label>
             <input type="date" name="dataConclusao" defaultValue={hoje} required className={cls.input} />
             <label className={cls.label}>Evidência</label>
-            <textarea name="evidencia" rows={3} required className={cls.input} placeholder="Descreva a evidência (anexos em breve)" />
+            <textarea name="evidencia" rows={3} required className={cls.input} placeholder="Descreva a evidência" />
+            <CampoArquivos rotulo="Arquivos de evidência (opcional)" ajuda="Fotos, PDF, DOCX, XLSX ou TXT — até 10 MB cada." />
           </FormAcao>
         </details>
       )}

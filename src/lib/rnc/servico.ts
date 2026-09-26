@@ -299,7 +299,7 @@ export async function verificarEficacia(
   id: string,
   d: { eficaz: boolean; comentario: string },
   versao?: number,
-): Promise<{ aviso: string | null }> {
+): Promise<{ aviso: string | null; verificacaoId: string }> {
   if (!atorTem(a, "RNC_VERIFICAR_EFICACIA")) throw new ErroNegocio("Sem permissão para verificar eficácia.");
   const comentario = d.comentario.trim();
   if (!comentario) throw new ErroNegocio("Comentário da verificação é obrigatório.");
@@ -313,7 +313,7 @@ export async function verificarEficacia(
     const para = checar(rnc, d.eficaz ? "VERIFICAR_EFICAZ" : "VERIFICAR_INEFICAZ");
     const tentativa = rnc.verificacoes.length + 1;
     const resultado = d.eficaz ? "EFICAZ" : "INEFICAZ";
-    await tx.verificacaoEficacia.create({
+    const verificacao = await tx.verificacaoEficacia.create({
       data: { empresaId: a.empresaId, rncId: id, tentativa, resultado, comentario, verificadorId: a.usuarioId },
     });
     const agora = new Date();
@@ -328,7 +328,7 @@ export async function verificarEficacia(
       comentario,
       { tentativa, resultado, verificadorExecutouItens: !!aviso },
     );
-    return { aviso };
+    return { aviso, verificacaoId: verificacao.id };
   });
 }
 

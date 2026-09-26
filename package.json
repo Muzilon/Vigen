@@ -10,10 +10,12 @@
     "db:seed": "prisma db seed",
     "test:isolamento": "tsx scripts/teste-isolamento.ts",
     "test": "vitest run",
-    "test:fluxo-rnc": "tsx scripts/teste-fluxo-rnc.ts"
+    "test:fluxo-rnc": "tsx scripts/teste-fluxo-rnc.ts",
+    "test:anexos": "tsx scripts/teste-anexos.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "next": "16.3.6",
     "next-auth": "^5.0.0-beta.32",

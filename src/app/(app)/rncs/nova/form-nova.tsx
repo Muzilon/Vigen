@@ -1,13 +1,24 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CampoArquivos } from "@/components/campo-arquivos";
 import { cls } from "@/components/ui";
 import { ROTULO_GRAVIDADE, ROTULO_ORIGEM, ROTULO_TIPO } from "@/lib/rnc/rotulos";
 import { criarRncAcao } from "../actions";
 
 type Opcao = { id: string; nome: string };
 
-export function FormNovaRnc({ obras, setores, usuarios }: { obras: Opcao[]; setores: Opcao[]; usuarios: Opcao[] }) {
+export function FormNovaRnc({
+  obras,
+  setores,
+  usuarios,
+  podeSensiveis,
+}: {
+  obras: Opcao[];
+  setores: Opcao[];
+  usuarios: Opcao[];
+  podeSensiveis: boolean;
+}) {
   const [res, acao, pendente] = useActionState(criarRncAcao, null);
   const [tipo, setTipo] = useState("QUALIDADE");
   const [pessoais, setPessoais] = useState(false);
@@ -109,11 +120,20 @@ export function FormNovaRnc({ obras, setores, usuarios }: { obras: Opcao[]; seto
             <label className={cls.label} htmlFor="lesaoDescricao">Descrição da lesão</label>
             <textarea id="lesaoDescricao" name="lesaoDescricao" rows={2} className={cls.input} />
           </div>
+          {podeSensiveis && (
+            <div className="sm:col-span-3">
+              <CampoArquivos
+                nome="arquivosSensiveis"
+                rotulo="Anexos com dados pessoais (acesso restrito)"
+                ajuda="Visíveis apenas para quem tem acesso a dados sensíveis."
+              />
+            </div>
+          )}
         </fieldset>
       )}
 
-      <div className="rounded-md border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-500">
-        Anexos (fotos e documentos) estarão disponíveis em breve.
+      <div className="rounded-md border border-dashed border-slate-300 px-4 py-3">
+        <CampoArquivos rotulo="Anexos (fotos e documentos)" />
       </div>
 
       {res?.erro && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{res.erro}</p>}

@@ -24,7 +24,7 @@ export default async function NovaRnc() {
           Você não tem acesso a nenhuma obra/unidade. Solicite ao administrador.
         </p>
       ) : (
-        <FormNovaRnc obras={obras} setores={setores} usuarios={usuarios} />
+        <FormNovaRnc obras={obras} setores={setores} usuarios={usuarios} podeSensiveis={ctx.permissoes.includes("RNC_VER_RESTRITAS")} />
       )}
     </div>
   );

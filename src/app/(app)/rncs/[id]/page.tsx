@@ -24,6 +24,9 @@ import {
 } from "@/lib/rnc/rotulos";
 import { filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis, verificadorExecutouItens } from "@/lib/rnc/servico";
 import { Interacoes } from "@/components/interacoes";
+import { EnviarAnexos, GaleriaAnexos } from "@/components/anexos";
+import { CampoArquivos } from "@/components/campo-arquivos";
+import { listarAnexos, listarAnexosDe, type AnexoListado } from "@/lib/anexos/servico";
 import {
   assumirAcao,
   decidirCancelamentoAcao,
@@ -50,6 +53,7 @@ const ROTULO_EVENTO: Record<string, string> = {
   CANCELAMENTO_SOLICITADO: "Cancelamento solicitado",
   CANCELAMENTO_REJEITADO: "Cancelamento rejeitado",
   CANCELAMENTO_APROVADO: "Cancelamento aprovado",
+  ANEXO_EXCLUIDO: "Anexo excluído",
 };
 
 export default async function DetalheRnc({ params, searchParams }: PageProps<"/rncs/[id]">) {
@@ -95,6 +99,13 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
   const final = STATUS_FINAIS.includes(rnc.status);
   const editavelPlano = gerenciar && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO");
   const pendente = rnc.solicitacoesCancelamento.find((s) => s.status === "PENDENTE");
+  const sensivelVisivel = rnc.contemDadosPessoais && podeVerDadosSensiveis(a);
+  const [anexosRnc, anexosSensiveis, anexosItens, anexosVerif] = await Promise.all([
+    aba === "resumo" ? listarAnexos(a, { tipo: "RNC", entidadeId: rnc.id }) : [],
+    aba === "resumo" && sensivelVisivel ? listarAnexos(a, { tipo: "RNC_DADOS_SENSIVEIS", entidadeId: rnc.id }) : [],
+    aba === "plano" ? listarAnexosDe(a, "ITEM_ACAO", itens.map((i) => i.id)) : new Map<string, AnexoListado[]>(),
+    aba === "verificacao" ? listarAnexosDe(a, "VERIFICACAO_EFICACIA", rnc.verificacoes.map((v) => v.id)) : new Map<string, AnexoListado[]>(),
+  ]);
 
   const transicao = (acao: typeof assumirAcao, rotulo: string, primario = true) => (
     <FormAcao acao={acao} botao={rotulo} classeBotao={primario ? cls.btn : cls.btnSec}>
@@ -165,10 +176,18 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                 ) : (
                   <p className="text-sm text-slate-500">Conteúdo oculto: você não tem acesso a dados pessoais desta RNC.</p>
                 )}
+                {sensivelVisivel && (
+                  <div className="mt-4 border-t border-slate-100 pt-3">
+                    <h3 className="mb-2 text-xs font-semibold uppercase text-slate-500">Anexos sensíveis</h3>
+                    <GaleriaAnexos anexos={anexosSensiveis} fuso={fuso} vazio="Nenhum anexo sensível." />
+                    {!final && <EnviarAnexos tipo="RNC_DADOS_SENSIVEIS" entidadeId={rnc.id} rotulo="Adicionar anexos sensíveis" />}
+                  </div>
+                )}
               </Cartao>
             )}
-            <Cartao titulo="Anexos">
-              <p className="text-sm text-slate-500">Anexos estarão disponíveis em breve.</p>
+            <Cartao titulo={`Anexos${anexosRnc.length ? ` (${anexosRnc.length})` : ""}`}>
+              <GaleriaAnexos anexos={anexosRnc} fuso={fuso} />
+              {!final && <EnviarAnexos tipo="RNC" entidadeId={rnc.id} />}
             </Cartao>
           </div>
           <Cartao titulo="Detalhes">
@@ -258,6 +277,11 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                             {i.evidenciaConclusao && (
                               <p className="mt-1 text-xs text-emerald-700">Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}</p>
                             )}
+                            {(anexosItens.get(i.id) ?? []).map((x) => (
+                              <a key={x.id} href={`/api/anexos/${x.id}`} className="mt-0.5 block truncate text-xs text-emerald-800 hover:underline">
+                                Anexo: {x.nomeArquivo}
+                              </a>
+                            ))}
                           </td>
                           <td className={cls.td}>{i.porQue ?? "—"}</td>
                           <td className={cls.td}>{i.onde ?? "—"}</td>
@@ -315,6 +339,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                   <label className="flex items-center gap-2"><input type="radio" name="resultado" value="INEFICAZ" /> Não, ineficaz (reabrir)</label>
                 </div>
                 <textarea name="comentario" rows={3} required placeholder="Comentário / evidências da verificação" className={cls.input} />
+                <CampoArquivos rotulo="Evidências da verificação (opcional)" />
               </FormAcao>
             </Cartao>
           )}
@@ -333,6 +358,10 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                       <span className="text-slate-500">{v.verificador.nome} · {formatarDataHora(v.verificadoEm, fuso)}</span>
                     </div>
                     <p className="mt-1 text-slate-700">{v.comentario}</p>
+                    {(anexosVerif.get(v.id)?.length ?? 0) > 0 && (
+                      <div className="mt-2"><GaleriaAnexos anexos={anexosVerif.get(v.id)!} fuso={fuso} /></div>
+                    )}
+                    {v.verificadorId === a.usuarioId && <EnviarAnexos tipo="VERIFICACAO_EFICACIA" entidadeId={v.id} rotulo="Adicionar evidências" />}
                   </li>
                 ))}
               </ul>

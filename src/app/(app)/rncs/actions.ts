@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { ResultadoAcao } from "@/components/form-acao";
 import { getAtor } from "@/lib/ator-servidor";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
+import * as anexos from "@/lib/anexos/servico";
 import * as interacoes from "@/lib/interacoes/servico";
 import * as plano from "@/lib/plano-acao/servico";
 import * as rnc from "@/lib/rnc/servico";
@@ -43,6 +44,12 @@ const uuidOpcional = z
 const versao = z.coerce.number().int().optional();
 const obj = (fd: FormData) => Object.fromEntries(fd.entries());
 
+/** Arquivos (não vazios) de um campo multipart. */
+async function arquivosDe(fd: FormData, campo = "arquivos"): Promise<anexos.ArquivoEnviado[]> {
+  const fs = fd.getAll(campo).filter((v): v is File => v instanceof File && v.size > 0);
+  return Promise.all(fs.map(async (f) => ({ nome: f.name, dados: new Uint8Array(await f.arrayBuffer()) })));
+}
+
 // ---------------------------------------------------------------- nova RNC
 
 const esquemaNova = z.object({
@@ -68,7 +75,13 @@ export async function criarRncAcao(_: ResultadoAcao, fd: FormData): Promise<Resu
   let id = "";
   const r = await executar(async () => {
     const d = esquemaNova.parse(obj(fd));
-    const criada = await rnc.criarRnc(await getAtor(), {
+    const a = await getAtor();
+    // Valida os anexos antes de criar a RNC (tipo/tamanho), para não abrir RNC com upload inválido.
+    const arquivos = await arquivosDe(fd);
+    const sensiveis = d.contemDadosPessoais && rnc.podeVerDadosSensiveis(a) ? await arquivosDe(fd, "arquivosSensiveis") : [];
+    await anexos.validarArquivos(a, arquivos);
+    await anexos.validarArquivos(a, sensiveis);
+    const criada = await rnc.criarRnc(a, {
       ...d,
       restrita: !!d.restrita,
       contemDadosPessoais: !!d.contemDadosPessoais,
@@ -83,6 +96,8 @@ export async function criarRncAcao(_: ResultadoAcao, fd: FormData): Promise<Resu
         : null,
     });
     id = criada.id;
+    await anexos.enviarAnexos(a, { tipo: "RNC", entidadeId: criada.id }, arquivos);
+    await anexos.enviarAnexos(a, { tipo: "RNC_DADOS_SENSIVEIS", entidadeId: criada.id }, sensiveis);
   }, ["/rncs"]);
   if (id) redirect(`/rncs/${id}`);
   return r;
@@ -154,12 +169,16 @@ const esquemaVerificacao = z.object({
 export async function verificarAcao(_: ResultadoAcao, fd: FormData) {
   return executar(async () => {
     const d = esquemaVerificacao.parse(obj(fd));
+    const a = await getAtor();
+    const arquivos = await arquivosDe(fd);
+    await anexos.validarArquivos(a, arquivos);
     const r = await rnc.verificarEficacia(
-      await getAtor(),
+      a,
       d.id,
       { eficaz: d.resultado === "EFICAZ", comentario: d.comentario },
       d.versao,
     );
+    await anexos.enviarAnexos(a, { tipo: "VERIFICACAO_EFICACIA", entidadeId: r.verificacaoId }, arquivos);
     return { ok: d.resultado === "EFICAZ" ? "RNC encerrada." : "RNC reaberta para novo ciclo.", aviso: r.aviso ?? undefined };
   }, [`/rncs/${fd.get("id")}`, "/rncs"]);
 }
@@ -251,7 +270,11 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
         evidencia: z.string().trim().min(3, "Descreva a evidência."),
       })
       .parse(obj(fd));
-    await plano.concluirItem(await getAtor(), d.itemId, d);
+    const a = await getAtor();
+    const arquivos = await arquivosDe(fd);
+    await anexos.validarArquivos(a, arquivos);
+    await plano.concluirItem(a, d.itemId, d);
+    await anexos.enviarAnexos(a, { tipo: "ITEM_ACAO", entidadeId: d.itemId }, arquivos);
     return { ok: "Item concluído." };
   }, [`/rncs/${fd.get("rncId") ?? ""}`]);
 }
@@ -273,4 +296,33 @@ export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
     await interacoes.criarInteracao(await getAtor(), { tipo: entidadeTipo, entidadeId }, d.data.mensagem, d.data.destinatarioId);
     return { ok: "Mensagem enviada." };
   }, [entidadeTipo === "RNC" ? `/rncs/${entidadeId}` : `/plano-acao/${entidadeId}`, "/mensagens"]);
+}
+
+// ---------------------------------------------------------------- anexos
+
+const TIPOS_ANEXO = ["RNC", "RNC_DADOS_SENSIVEIS", "VERIFICACAO_EFICACIA", "PLANO_ACAO", "ITEM_ACAO"] as const;
+
+function revalidarAnexos() {
+  revalidatePath("/rncs/[id]", "page");
+  revalidatePath("/plano-acao/[id]", "page");
+}
+
+export async function enviarAnexosAcao(_: ResultadoAcao, fd: FormData) {
+  return executar(async () => {
+    const d = z.object({ entidadeTipo: z.enum(TIPOS_ANEXO), entidadeId: uuid }).parse(obj(fd));
+    const arquivos = await arquivosDe(fd);
+    if (arquivos.length === 0) return { erro: "Selecione ao menos um arquivo." };
+    const r = await anexos.enviarAnexos(await getAtor(), { tipo: d.entidadeTipo, entidadeId: d.entidadeId }, arquivos);
+    revalidarAnexos();
+    return { ok: `${r.length} arquivo(s) anexado(s).` };
+  });
+}
+
+export async function excluirAnexoAcao(_: ResultadoAcao, fd: FormData) {
+  return executar(async () => {
+    const d = z.object({ anexoId: uuid }).parse(obj(fd));
+    await anexos.excluirAnexo(await getAtor(), d.anexoId);
+    revalidarAnexos();
+    return { ok: "Anexo excluído." };
+  });
 }

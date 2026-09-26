@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EnviarAnexos, GaleriaAnexos } from "@/components/anexos";
 import { Interacoes } from "@/components/interacoes";
+import { listarAnexos, podeEnviarAnexo } from "@/lib/anexos/servico";
 import { ItemAcoes } from "@/components/item-acoes";
 import { Badge, Cabecalho, Campo, Cartao } from "@/components/ui";
 import { fusoDaEmpresa } from "@/lib/ator";
@@ -45,6 +47,8 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
       ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
       : a.permissoes.includes("PLANO_GERENCIAR"));
   const podeExecutar = atual && item.quemId === a.usuarioId && (!rnc || rnc.status === "PLANO_EM_EXECUCAO");
+  const alvoAnexo = { tipo: "ITEM_ACAO" as const, entidadeId: item.id };
+  const [anexos, podeAnexar] = await Promise.all([listarAnexos(a, alvoAnexo), podeEnviarAnexo(a, alvoAnexo)]);
 
   return (
     <div className="max-w-4xl space-y-5">
@@ -92,6 +96,10 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
             podeGerenciar={podeGerenciar}
           />
         </div>
+      </Cartao>
+      <Cartao titulo={`Evidências / anexos${anexos.length ? ` (${anexos.length})` : ""}`}>
+        <GaleriaAnexos anexos={anexos} fuso={fuso} />
+        {podeAnexar && <EnviarAnexos tipo="ITEM_ACAO" entidadeId={item.id} />}
       </Cartao>
       <Interacoes a={a} tipo="ITEM_ACAO" entidadeId={item.id} usuarios={usuarios} fuso={fuso} />
     </div>
