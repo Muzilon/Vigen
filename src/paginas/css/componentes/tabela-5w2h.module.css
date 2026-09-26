@@ -1,20 +1,31 @@
 /* ==========================================================
    ÍNDICE
-   01. Bloco — tabela + botão "+ Linha"
-   02. Tabela editável — rolagem horizontal, cabeçalho e células
-   03. Campos — input/select por coluna (larguras mínimas)
+   01. Bloco — lista de linhas + botão "+ Linha" (container de medida)
+   02. Linha — grade de campos por largura do container
+       (larga: 1 faixa · média: 2 faixas · estreita: empilhada)
+   03. Campos — rótulo + input/select
    04. Botão remover linha
-   05. Formulário (ItensForm) — espaçamento entre tabela e envio
+   05. Formulário (ItensForm) — espaçamento entre itens e envio
    ========================================================== */
 
 /* ==========================================================
    01. BLOCO
+   container-type: o arranjo das linhas depende da largura do
+   cartão onde o componente está (detalhe da RNC ≠ novo plano),
+   não da janela.
    ========================================================== */
 .bloco {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--espaco-2);
+  gap: var(--espaco-3);
+}
+
+.lista {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
 }
 
 button.botaoLinha {
@@ -23,38 +34,85 @@ button.botaoLinha {
 }
 
 /* ==========================================================
-   02. TABELA EDITÁVEL
-   Rolagem horizontal própria: 7 colunas não cabem no celular.
+   02. LINHA
+   Padrão (container médio, < 960px): duas faixas —
+   textos longos em cima (O quê largo, Por quê, Como) e
+   dados compactos embaixo (Onde, Quem, Quando, Quanto).
    ========================================================== */
-.rolagem {
-  align-self: stretch;
-  overflow-x: auto;
+.linha {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 32px;
+  grid-template-areas:
+    "oque oque porque como remover"
+    "onde quem quando quanto .";
+  gap: var(--espaco-2);
+  padding: var(--espaco-3) 0;
+  border-top: 1px dashed var(--cor-borda-forte);
+}
+.linha:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.tabela {
-  min-width: 100%;
-  border-collapse: collapse;
+.areaOQue { grid-area: oque; }
+.areaPorQue { grid-area: porque; }
+.areaOnde { grid-area: onde; }
+.areaQuem { grid-area: quem; }
+.areaQuando { grid-area: quando; }
+.areaComo { grid-area: como; }
+.areaQuanto { grid-area: quanto; }
+
+/* Container largo (novo plano, ≥ 960px): uma faixa só, colunas compactas
+   de largura fixa para Quando/Quanto */
+@container (min-width: 960px) {
+  .linha {
+    grid-template-columns:
+      minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.3fr)
+      140px minmax(0, 1.4fr) 112px 32px;
+    grid-template-areas: "oque porque onde quem quando como quanto remover";
+  }
 }
 
-.th {
-  padding: 0 4px 4px 4px;
-  text-align: left;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--cor-texto-secundario);
-  white-space: nowrap;
-}
-
-.td {
-  padding: 4px;
-  vertical-align: top;
+/* Container estreito (celular): campos empilhados, pares curtos lado a lado */
+@container (max-width: 560px) {
+  .linha {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "oque oque"
+      "porque porque"
+      "como como"
+      "onde quem"
+      "quando quanto"
+      "remover remover";
+  }
 }
 
 /* ==========================================================
    03. CAMPOS
    ========================================================== */
+.campo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rotulo {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.obrigatorio {
+  color: var(--cor-acento);
+}
+
 .entrada {
   width: 100%;
+  min-width: 0;
   height: 34px;
   padding: 0 var(--espaco-2);
   border: 1px solid var(--cor-borda-forte);
@@ -72,32 +130,22 @@ button.botaoLinha {
   color: var(--cor-texto-fraco);
 }
 
-.largo {
-  min-width: 192px;
-}
-.medio {
-  min-width: 128px;
-}
-.curto {
-  min-width: 96px;
-}
-.data {
-  min-width: 136px;
-  font-family: var(--fonte-mono);
-}
-.valor {
-  width: 136px;
-  min-width: 136px;
+.mono {
   font-family: var(--fonte-mono);
 }
 
 /* ==========================================================
    04. BOTÃO REMOVER LINHA
+   Alinhado à base da faixa (mesma altura dos inputs).
    ========================================================== */
 .botaoRemover {
+  grid-area: remover;
+  align-self: end;
+  justify-self: end;
+  width: 32px;
   height: 34px;
-  padding: 0 var(--espaco-2);
   border: 0;
+  border-radius: var(--raio-padrao);
   background: transparent;
   font-size: 14px;
   color: var(--cor-texto-fraco);
@@ -105,6 +153,11 @@ button.botaoLinha {
 }
 .botaoRemover:hover {
   color: var(--cor-perigo-texto);
+  background: var(--cor-perigo-fundo);
+}
+.botaoRemover:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
 }
 
 /* ==========================================================
@@ -114,4 +167,10 @@ button.botaoLinha {
   display: flex;
   flex-direction: column;
   gap: var(--espaco-3);
+}
+
+@media (max-width: 640px) {
+  .entrada {
+    font-size: 16px; /* evita zoom automático do iOS ao focar */
+  }
 }

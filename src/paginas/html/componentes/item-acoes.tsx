@@ -17,6 +17,11 @@ interface ItemParaAcoes {
   quanto: { toString(): string } | null;
 }
 
+/** true quando o ItemAcoes renderiza algum botão (item em aberto e o usuário executa ou gerencia). */
+export function itemTemAcoes(status: string, podeExecutar: boolean, podeGerenciar: boolean) {
+  return (status === "PENDENTE" || status === "EM_ANDAMENTO") && (podeExecutar || podeGerenciar);
+}
+
 /** Ações por item: execução (quem) e gestão (responsável da RNC / PLANO_GERENCIAR). */
 export function ItemAcoes({
   item,
@@ -33,8 +38,7 @@ export function ItemAcoes({
   usuarios: { id: string; nome: string }[];
   hoje: string;
 }) {
-  const aberto = item.status === "PENDENTE" || item.status === "EM_ANDAMENTO";
-  if (!aberto || (!podeExecutar && !podeGerenciar)) return <span className={styles.semAcao}>—</span>;
+  if (!itemTemAcoes(item.status, podeExecutar, podeGerenciar)) return <span className={styles.semAcao}>—</span>;
   const ocultos = (
     <>
       <input type="hidden" name="itemId" value={item.id} />

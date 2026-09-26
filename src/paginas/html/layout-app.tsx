@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import styles from "@/paginas/css/layout-app.module.css";
 import { NavLateral, type ItemMenuLateral } from "@/paginas/html/componentes/nav-lateral";
 import { Trilha } from "@/paginas/html/componentes/trilha";
-import { CampoBusca } from "@/paginas/html/componentes/campo-formulario";
 
 const ROTULO_PAPEL_CURTO: Record<string, string> = {
   ADMIN: "Administrador",
@@ -75,9 +74,6 @@ export function LayoutApp({
       <div className={styles.colunaPrincipal}>
         <header className={styles.cabecalho}>
           <Trilha empresaNome={empresaNome} itens={itensMenu} />
-          <div className={styles.buscaGlobal}>
-            <CampoBusca id="busca-global" type="search" placeholder="Buscar RNC, item ou pessoa" aria-label="Buscar" />
-          </div>
           <Link
             href="/notificacoes"
             aria-label={naoLidas > 0 ? `Notificações: ${naoLidas} não lida(s)` : "Notificações"}

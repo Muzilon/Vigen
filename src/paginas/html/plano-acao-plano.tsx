@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { adicionarItensPlanoAcao } from "@/app/(app)/plano-acao/actions";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
-import { ItemAcoes } from "@/paginas/html/componentes/item-acoes";
+import { ItemAcoes, itemTemAcoes } from "@/paginas/html/componentes/item-acoes";
 import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
@@ -99,63 +99,65 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
           )}
         </h2>
         <EnvoltorioTabela>
-          <div className={styles.rolagemTabela}>
-            <Tabela>
-              <colgroup>
-                <col />
-                <col className={styles.colQuem} />
-                <col className={styles.colQuando} />
-                <col className={styles.colStatus} />
-                <col className={styles.colAcoes} />
-              </colgroup>
-              <thead>
-                <LinhaCabecalhoTabela>
-                  <Th scope="col">O quê</Th>
-                  <Th scope="col">Quem</Th>
-                  <Th scope="col">Quando</Th>
-                  <Th scope="col">Status</Th>
-                  <Th scope="col">Ações</Th>
-                </LinhaCabecalhoTabela>
-              </thead>
-              <tbody>
-                {plano.itens.map((i) => {
-                  const st = statusEfetivoItem(i, plano.hoje);
-                  return (
-                    <LinhaTabela key={i.id}>
-                      <Td className={styles.celulaTopo}>
-                        <Link href={`/plano-acao/${i.id}`} className={styles.linkOQue}>{i.oQue}</Link>
-                        {(i.porQue || i.onde || i.como) && (
-                          <div className={styles.detalheItem}>
-                            {[i.porQue && `Por quê: ${i.porQue}`, i.onde && `Onde: ${i.onde}`, i.como && `Como: ${i.como}`].filter(Boolean).join(" · ")}
-                          </div>
-                        )}
-                        {i.evidenciaConclusao && (
-                          <div className={styles.evidenciaItem}>
-                            Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}
-                          </div>
-                        )}
-                        <Link href={`/plano-acao/${i.id}`} className={styles.linkThread}>Anexos e mensagens →</Link>
-                      </Td>
-                      <Td className={styles.celulaTopo}>{i.quem.nome}</Td>
-                      <Td className={`${styles.celulaTopo} ${styles.numero}`}>{formatarData(i.quando)}</Td>
-                      <Td className={styles.celulaTopo}>
-                        <BadgeStatusItem status={st} />
-                      </Td>
-                      <Td className={styles.celulaTopo}>
+          <Tabela className={styles.tabelaItens}>
+            <colgroup>
+              <col />
+              <col className={styles.colQuem} />
+              <col className={styles.colQuando} />
+              <col className={styles.colStatus} />
+            </colgroup>
+            <thead>
+              <LinhaCabecalhoTabela>
+                <Th scope="col">O quê</Th>
+                <Th scope="col">Quem</Th>
+                <Th scope="col">Quando</Th>
+                <Th scope="col">Status</Th>
+              </LinhaCabecalhoTabela>
+            </thead>
+            {plano.itens.map((i) => {
+              const st = statusEfetivoItem(i, plano.hoje);
+              const podeExecutar = i.quemId === a.usuarioId;
+              return (
+                // Um <tbody> por item: linha de dados + (opcional) linha de ações abaixo
+                <tbody key={i.id} className={styles.grupoItem}>
+                  <LinhaTabela>
+                    <Td data-rotulo="O quê" className={`${styles.celulaTopo} ${styles.celulaOQue}`}>
+                      <Link href={`/plano-acao/${i.id}`} className={styles.linkOQue}>{i.oQue}</Link>
+                      {(i.porQue || i.onde || i.como) && (
+                        <div className={styles.detalheItem}>
+                          {[i.porQue && `Por quê: ${i.porQue}`, i.onde && `Onde: ${i.onde}`, i.como && `Como: ${i.como}`].filter(Boolean).join(" · ")}
+                        </div>
+                      )}
+                      {i.evidenciaConclusao && (
+                        <div className={styles.evidenciaItem}>
+                          Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}
+                        </div>
+                      )}
+                      <Link href={`/plano-acao/${i.id}`} className={styles.linkThread}>Anexos e mensagens →</Link>
+                    </Td>
+                    <Td data-rotulo="Quem" className={styles.celulaTopo}>{i.quem.nome}</Td>
+                    <Td data-rotulo="Quando" className={`${styles.celulaTopo} ${styles.numero}`}>{formatarData(i.quando)}</Td>
+                    <Td data-rotulo="Status" className={styles.celulaTopo}>
+                      <BadgeStatusItem status={st} />
+                    </Td>
+                  </LinhaTabela>
+                  {itemTemAcoes(i.status, podeExecutar, plano.podeGerenciar) && (
+                    <tr className={styles.linhaAcoes}>
+                      <Td colSpan={4} className={styles.celulaAcoes}>
                         <ItemAcoes
                           item={i}
                           hoje={plano.hoje}
                           usuarios={usuariosQuem.some((u) => u.id === i.quemId) ? usuariosQuem : [...usuariosQuem, { id: i.quemId, nome: i.quem.nome }]}
-                          podeExecutar={i.quemId === a.usuarioId}
+                          podeExecutar={podeExecutar}
                           podeGerenciar={plano.podeGerenciar}
                         />
                       </Td>
-                    </LinhaTabela>
-                  );
-                })}
-              </tbody>
-            </Tabela>
-          </div>
+                    </tr>
+                  )}
+                </tbody>
+              );
+            })}
+          </Tabela>
           {plano.itens.length === 0 && <EstadoVazio>Nenhum item.</EstadoVazio>}
         </EnvoltorioTabela>
       </section>

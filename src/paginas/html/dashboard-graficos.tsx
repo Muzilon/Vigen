@@ -29,42 +29,59 @@ export function Vazio({ texto = "Sem dados no período e filtros selecionados." 
 const NOMES_MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const rotuloMes = (m: string) => `${NOMES_MES[Number(m.slice(5, 7)) - 1]}/${m.slice(2, 4)}`;
 
+/**
+ * Barras mensais. O SVG só desenha grade e barras e estica na largura (preserveAspectRatio
+ * "none", traço sem escala); os rótulos dos eixos são HTML fora do SVG, então o tamanho da
+ * fonte é o mesmo do resto da página em qualquer largura (antes o viewBox escalava o texto).
+ */
 export function GraficoMensal({ dados }: { dados: { mes: string; abertas: number; encerradas: number }[] }) {
   if (dados.every((d) => d.abertas === 0 && d.encerradas === 0)) return <Vazio />;
   const max = Math.max(1, ...dados.flatMap((d) => [d.abertas, d.encerradas]));
-  const W = 720, H = 240, ml = 32, mb = 28, mt = 12;
-  const larg = (W - ml) / dados.length;
+  const W = 720, H = 200, mt = 8;
+  const larg = W / dados.length;
   const bw = Math.max(4, Math.min(18, larg / 3));
-  const y = (v: number) => mt + (H - mt - mb) * (1 - v / max);
+  const y = (v: number) => mt + (H - mt) * (1 - v / max);
   const ticks = [0, Math.round(max / 2), max].filter((v, i, a) => a.indexOf(v) === i);
+  const pct = (v: number, total: number) => `${(v / total) * 100}%`;
   return (
     <div>
       <div className={styles.legenda}>
         <Legenda classe={styles.corAbertas} texto="Abertas" />
         <Legenda classe={styles.corEncerradas} texto="Encerradas" />
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className={styles.svgMensal} role="img" aria-label="RNCs abertas e encerradas por mês">
-        {ticks.map((t) => (
-          <g key={t}>
-            <line x1={ml} x2={W} y1={y(t)} y2={y(t)} className={t === 0 ? styles.linhaBase : styles.linhaGrade} />
-            <text x={ml - 6} y={y(t) + 4} textAnchor="end" fontSize="11" className={styles.textoEixo}>{t}</text>
-          </g>
-        ))}
-        {dados.map((d, i) => {
-          const cx = ml + larg * i + larg / 2;
-          return (
-            <g key={d.mes}>
-              <rect x={cx - bw - 1} y={y(d.abertas)} width={bw} height={y(0) - y(d.abertas)} className={styles.corAbertas} rx="2">
-                <title>{`${rotuloMes(d.mes)}: ${d.abertas} abertas`}</title>
-              </rect>
-              <rect x={cx + 1} y={y(d.encerradas)} width={bw} height={y(0) - y(d.encerradas)} className={styles.corEncerradas} rx="2">
-                <title>{`${rotuloMes(d.mes)}: ${d.encerradas} encerradas`}</title>
-              </rect>
-              <text x={cx} y={H - 8} textAnchor="middle" fontSize="11" className={styles.textoMes}>{rotuloMes(d.mes)}</text>
-            </g>
-          );
-        })}
-      </svg>
+      <div className={styles.grafico}>
+        {/* posições dos rótulos derivam dos dados: por isso inline */}
+        <div className={styles.eixoY} aria-hidden="true">
+          {ticks.map((t) => (
+            <span key={t} className={styles.textoEixo} style={{ top: pct(y(t), H) }}>{t}</span>
+          ))}
+        </div>
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className={styles.svgMensal} role="img" aria-label="RNCs abertas e encerradas por mês">
+          {ticks.map((t) => (
+            <line key={t} x1={0} x2={W} y1={y(t)} y2={y(t)} vectorEffect="non-scaling-stroke" className={t === 0 ? styles.linhaBase : styles.linhaGrade} />
+          ))}
+          {dados.map((d, i) => {
+            const cx = larg * i + larg / 2;
+            return (
+              <g key={d.mes}>
+                <rect x={cx - bw - 1} y={y(d.abertas)} width={bw} height={y(0) - y(d.abertas)} className={styles.corAbertas}>
+                  <title>{`${rotuloMes(d.mes)}: ${d.abertas} abertas`}</title>
+                </rect>
+                <rect x={cx + 1} y={y(d.encerradas)} width={bw} height={y(0) - y(d.encerradas)} className={styles.corEncerradas}>
+                  <title>{`${rotuloMes(d.mes)}: ${d.encerradas} encerradas`}</title>
+                </rect>
+              </g>
+            );
+          })}
+        </svg>
+        <div className={styles.eixoX} aria-hidden="true">
+          {dados.map((d, i) => (
+            <span key={d.mes} className={`${styles.textoMes} ${i % 2 === 1 ? styles.textoMesAlternado : ""}`} style={{ left: pct(larg * i + larg / 2, W) }}>
+              {rotuloMes(d.mes)}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

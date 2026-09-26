@@ -256,8 +256,8 @@ mensagens de erro/aviso/sucesso.
 (dependências, PostCSS, `globals.css`, `legado-ui.tsx`, `COR_*` de
 `lib/rnc/rotulos.ts`), reset próprio em `base.css` (seção 08), detalhe da
 RNC usando `BadgeStatusItem`/`BadgeStatusPlano` e `layout-app.module.css`
-com seção 08 "Responsivo" (até 900px a sidebar vira barra superior com menu
-rolável; o cabeçalho continua sticky).
+com seção 08 "Responsivo" (até 900px a sidebar vira barra superior com botão
+"Menu" que abre painel com todos os itens; o cabeçalho continua sticky).
 
 ## 10. Pendências conhecidas
 
@@ -325,4 +325,26 @@ rolável; o cabeçalho continua sticky).
 - Tokens `--cor-destaque-escuro`/`-texto` (base.css, seção 02) foram criados
   para o tom escuro usado no conteúdo (stepper, selo de ciclo, segmentados),
   em vez de reaproveitar os tokens de sidebar.
-- A busca global do cabeçalho é só visual (sem rota de busca); some abaixo de 640px.
+- A busca global do cabeçalho foi **removida** (era só visual, sem rota de
+  busca). O cabeçalho do app tem só trilha + sino. Se uma busca global for
+  especificada, reintroduzir com rota/API própria.
+- Ajustes visuais (5W2H sem rolagem, menu mobile, dashboard, verificação):
+  - 5W2H: `Tabela5W2H` (editável) virou grade de campos com rótulo visível por
+    linha, arranjo por container query (1 faixa ≥ 960px, 2 faixas no cartão do
+    detalhe da RNC, empilhado ≤ 560px) — nunca rola na horizontal. As tabelas de
+    leitura do detalhe da RNC e do plano avulso usam `table-layout: fixed` com
+    larguras em % (textos quebram linha; Quando/Quanto/Status compactas), um
+    `<tbody>` por item e as ações (`ItemAcoes`) numa linha própria abaixo do item
+    (`itemTemAcoes` decide se a linha existe). Até 640px viram cartões
+    empilhados (rótulos via `data-rotulo`). A coluna "Ações" deixou de existir.
+  - Menu ≤ 900px: `NavLateral` (client) tem botão "Menu" (`aria-expanded`,
+    `aria-controls`) que abre o painel sob a barra; fecha ao navegar, com Esc ou
+    clique fora. A sidebar usa `--z-dropdown` nessa faixa para o painel ficar
+    acima do cabeçalho sticky.
+  - Dashboard: rótulos dos eixos do gráfico mensal saíram do SVG (HTML
+    posicionado em %), então têm 11,5px em qualquer largura; o SVG estica com
+    `preserveAspectRatio="none"` e traço sem escala. No celular, meses
+    alternados somem (container query).
+  - Verificação: o código da RNC em "Sim, eficaz" não quebra (`white-space: nowrap`).
+  - Não verificado visualmente: detalhe de plano avulso (`/plano-acao/planos/[id]`)
+    — nenhum plano avulso na base de teste; o CSS segue o mesmo padrão do detalhe da RNC.

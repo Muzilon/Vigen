@@ -4,7 +4,8 @@
    02. Trilha, título e selos (Manual / status / progresso)
    03. Dados do plano — grade rótulo/valor
    04. Edição do cabeçalho (details "Editar título / objetivo")
-   05. Tabela de itens — larguras, rolagem, células
+   05. Tabela de itens — larguras (sem rolagem), linha de ações, células
+   06. Responsivo — celular: itens em cartões empilhados
    ========================================================== */
 
 /* ==========================================================
@@ -134,25 +135,31 @@
   color: var(--cor-texto-secundario);
 }
 
-/* min-width: rolagem horizontal no celular em vez de espremer "O quê" */
-.rolagemTabela {
-  overflow-x: auto;
-}
-.rolagemTabela > table {
-  min-width: 860px;
-}
-
+/* Sem rolagem horizontal: "O quê" fica com o espaço livre e quebra linha;
+   Quem/Quando/Status são compactas. As ações do item ficam numa linha
+   própria logo abaixo (.linhaAcoes); no celular, cartões (ver seção 06). */
 .colQuem {
-  width: 170px;
+  width: 22%;
 }
 .colQuando {
-  width: 120px;
+  width: 112px;
 }
 .colStatus {
-  width: 130px;
+  width: 132px;
 }
-.colAcoes {
-  width: 240px;
+
+.celulaOQue {
+  overflow-wrap: anywhere;
+}
+
+/* Linha de dados + linha de ações formam um bloco (um <tbody> por item) */
+.grupoItem tr:not(:last-child) td {
+  border-bottom: 0;
+}
+.linhaAcoes td.celulaAcoes {
+  height: auto;
+  padding-top: 0;
+  padding-bottom: var(--espaco-3);
 }
 
 /* ItemAcoes abre formulários inline: células alinhadas ao topo */
@@ -193,8 +200,63 @@
   text-decoration: underline;
 }
 
+/* ==========================================================
+   06. RESPONSIVO — celular (≤ 640px)
+   Tabela de itens vira cartões empilhados: cada <tbody> (item +
+   ações) é um bloco; cabeçalho some e cada célula mostra o rótulo
+   (data-rotulo).
+   ========================================================== */
 @media (max-width: 640px) {
   .dados {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tabelaItens,
+  .tabelaItens tbody,
+  .tabelaItens tr,
+  .tabelaItens td {
+    display: block;
+  }
+  .tabelaItens colgroup,
+  .tabelaItens thead {
+    display: none;
+  }
+  .tabelaItens .grupoItem {
+    padding: var(--espaco-3);
+    border-bottom: 1px solid var(--cor-borda-sutil);
+  }
+  .tabelaItens .grupoItem tr:first-child {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espaco-2);
+  }
+  .tabelaItens tr:hover {
+    background: transparent;
+  }
+  .tabelaItens td,
+  .tabelaItens td.celulaTopo,
+  .tabelaItens .linhaAcoes td.celulaAcoes {
+    height: auto;
+    padding: 0;
+    border-bottom: 0;
+  }
+  .tabelaItens td[data-rotulo]::before {
+    content: attr(data-rotulo);
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--fonte-ui);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+  }
+  /* O quê ocupa a largura toda e dispensa rótulo (é o título do cartão) */
+  .tabelaItens td.celulaOQue {
+    grid-column: 1 / -1;
+  }
+  .tabelaItens td.celulaOQue::before {
+    display: none;
+  }
+  .tabelaItens .linhaAcoes td.celulaAcoes {
+    padding-top: var(--espaco-3);
   }
 }

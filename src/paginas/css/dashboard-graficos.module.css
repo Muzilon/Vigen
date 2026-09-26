@@ -2,7 +2,7 @@
    ÍNDICE
    01. Estado vazio dos gráficos
    02. Paleta — classes de cor (SVG fill + fundo HTML) a partir dos tokens
-   03. Gráfico mensal — legenda, SVG, grade e rótulos de eixo
+   03. Gráfico mensal — legenda, SVG (grade + barras) e rótulos de eixo em HTML
    04. Barras horizontais — rótulo, valor, trilho e preenchimento
    ========================================================== */
 
@@ -89,11 +89,19 @@
   border-radius: 2px;
 }
 
+/* Grade: coluna do eixo Y (40px) + área de plotagem; linha de baixo = meses.
+   container-type permite esconder meses alternados quando a área é estreita. */
+.grafico {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: 220px auto;
+}
+
 .svgMensal {
   display: block;
   width: 100%;
-  height: auto;
-  font-family: var(--fonte-mono);
+  height: 100%;
 }
 
 .linhaGrade {
@@ -103,13 +111,41 @@
   stroke: var(--cor-borda-tracejada);
 }
 
+/* Rótulos em HTML (fora do SVG): mesmo tamanho de texto em qualquer largura */
+.eixoY {
+  position: relative;
+}
+.eixoX {
+  grid-column: 2;
+  position: relative;
+  height: 24px;
+}
+
+.textoEixo,
+.textoMes {
+  position: absolute;
+  font-size: 11.5px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--cor-texto-secundario);
+}
+
 .textoEixo {
-  fill: var(--cor-texto-secundario);
+  right: var(--espaco-2);
+  transform: translateY(-50%);
+  font-family: var(--fonte-mono);
 }
 
 .textoMes {
-  fill: var(--cor-texto-secundario);
-  font-family: var(--fonte-ui);
+  top: var(--espaco-2);
+  transform: translateX(-50%);
+}
+
+/* Área estreita (celular): 12 meses não cabem lado a lado — mostra um sim, um não */
+@container (max-width: 640px) {
+  .textoMesAlternado {
+    display: none;
+  }
 }
 
 /* ==========================================================

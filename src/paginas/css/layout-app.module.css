@@ -3,9 +3,9 @@
    01. Casca — grid raiz (sidebar + coluna principal)
    02. Sidebar — fixa, escura, 100vh
    03. Logo e seletor de empresa
-   04. Navegação lateral (itens de menu + contadores)
+   04. Navegação lateral (itens de menu + contadores + botão "Menu")
    05. Rodapé da sidebar (usuário + sair)
-   06. Cabeçalho do app (sticky, trilha, busca, sino)
+   06. Cabeçalho do app (sticky, trilha, sino)
    07. Área de conteúdo — isolada, nunca acima do cabeçalho/sidebar
    08. Responsivo — até 900px a sidebar vira barra superior
    ========================================================== */
@@ -104,7 +104,17 @@
 
 /* ==========================================================
    04. NAVEGAÇÃO LATERAL
+   O botão "Menu" (hambúrguer) só aparece até 900px — ver seção 08.
    ========================================================== */
+.menuPrincipal {
+  display: flex;
+  flex-direction: column;
+}
+
+.botaoMenu {
+  display: none;
+}
+
 .navLateral {
   display: flex;
   flex-direction: column;
@@ -295,11 +305,6 @@
   font-weight: 500;
 }
 
-.buscaGlobal {
-  width: 320px;
-  flex: none;
-}
-
 .botaoSino {
   position: relative;
   width: 36px;
@@ -351,8 +356,10 @@
 /* ==========================================================
    08. RESPONSIVO
    Até 900px a sidebar vira uma barra horizontal no topo (logo +
-   menu com rolagem lateral + sair) que rola junto com a página;
-   o cabeçalho do app continua sticky e acima do conteúdo.
+   botão "Menu" + sair) que rola junto com a página. O menu abre
+   como painel logo abaixo da barra: a sidebar ganha z-dropdown
+   para o painel ficar acima do cabeçalho sticky (que vem depois
+   no DOM). O cabeçalho do app continua sticky e acima do conteúdo.
    ========================================================== */
 @media (max-width: 900px) {
   .casca {
@@ -362,8 +369,9 @@
   .sidebar {
     width: auto;
     height: auto;
-    position: static;
+    position: relative;
     overflow: visible;
+    z-index: var(--z-dropdown);
     flex-direction: row;
     align-items: center;
     gap: var(--espaco-2);
@@ -381,26 +389,60 @@
     display: none;
   }
 
-  .navLateral {
-    flex-direction: row;
+  .menuPrincipal {
     flex: 1;
     min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-direction: row;
+  }
+
+  .botaoMenu {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--espaco-2);
+    max-width: 100%;
+    height: 36px;
+    padding: 0 var(--espaco-3);
+    border: 1px solid var(--cor-sidebar-borda);
+    border-radius: var(--raio-padrao);
+    background: var(--cor-sidebar-fundo-alt);
+    color: var(--cor-sidebar-texto-ativo);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .botaoMenu:hover,
+  .botaoMenu[aria-expanded="true"] {
+    background: var(--cor-sidebar-item-ativo-fundo);
+  }
+  .botaoMenu:focus-visible {
+    outline: 2px solid var(--cor-acento-claro);
+    outline-offset: 1px;
+  }
+  .botaoMenuAtual {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 400;
+    color: var(--cor-sidebar-texto-secundario);
+  }
+
+  /* Painel do menu: recolhido por padrão, abre sob a barra (largura total) */
+  .navLateral {
+    display: none;
+  }
+  .navLateral.navLateralAberta {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: var(--espaco-2) var(--espaco-3) var(--espaco-3);
+    background: var(--cor-sidebar-fundo);
+    border-top: 1px solid var(--cor-sidebar-borda);
+    border-bottom: 1px solid var(--cor-sidebar-borda);
   }
   .itemNav {
-    flex: none;
-    height: 36px;
-    gap: var(--espaco-2);
-    padding: 0 10px;
-    font-size: 13px;
-  }
-  /* Item ativo: barra de acento embaixo em vez de à esquerda */
-  .itemNavAtivo {
-    box-shadow: inset 0 -3px 0 var(--cor-acento-claro);
-  }
-  .rotuloItemNav {
-    flex: none;
+    height: 44px; /* alvo de toque confortável */
   }
 
   .rodapeUsuario {
@@ -417,17 +459,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .buscaGlobal {
-    width: 220px;
-  }
 
   .conteudo {
     padding: var(--espaco-4);
-  }
-}
-
-@media (max-width: 640px) {
-  .buscaGlobal {
-    display: none;
   }
 }

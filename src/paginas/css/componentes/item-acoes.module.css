@@ -2,7 +2,7 @@
    ÍNDICE
    01. Grupo de ações — botões lado a lado, quebrando linha
    02. Botão-resumo (<summary>) que abre os painéis Concluir/Editar
-   03. Painel expandido — formulário dentro da célula da tabela
+   03. Painel expandido — formulário na linha de ações do item
    04. Campos do painel (rótulo + input/select/textarea)
    05. Sem ação disponível ("—")
    ========================================================== */
@@ -39,8 +39,9 @@ summary.resumo:focus-visible {
 
 /* ==========================================================
    03. PAINEL EXPANDIDO
-   Fica no fluxo (não flutua): a tabela tem overflow e cortaria
-   um painel posicionado de forma absoluta.
+   Fica no fluxo (não flutua): a linha de ações abaixo do item
+   (colspan na tabela 5W2H) cresce junto; um painel absoluto seria
+   cortado pelo overflow do cartão.
    ========================================================== */
 .painelDetalhes {
   flex-basis: auto;

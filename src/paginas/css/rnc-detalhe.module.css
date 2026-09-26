@@ -8,13 +8,13 @@
    06. Etiquetas — status de item/plano/verificação/cancelamento
    07. Resumo — descrição e dados sensíveis (LGPD)
    08. Causa raiz — leitura (quando não editável)
-   09. Plano de ação — painel por ciclo, tabela 5W2H, rodapé de custo
+   09. Plano de ação — painel por ciclo, tabela 5W2H (sem rolagem), rodapé de custo
    10. Verificação de eficácia — contexto + "A causa foi eliminada?"
    11. Histórico — linha do tempo
    12. Cancelamento — solicitação, decisão e tabela
    13. Painel lateral — detalhes, responsável e anexos
    14. Formulários da página — rótulos, textarea, select
-   15. Responsivo — tablet (≤ 1100px) e celular (≤ 640px)
+   15. Responsivo — tablet (≤ 1100px) e celular (≤ 640px, 5W2H em cartões)
    ========================================================== */
 
 /* ==========================================================
@@ -577,24 +577,59 @@ a.botaoCompacto {
   text-align: right;
 }
 
+/* Tabela 5W2H do ciclo: layout fixo em % para caber na coluna principal
+   (≈ 840px em 1440) sem rolagem. Textos longos (O quê/Por quê/Onde/Como/
+   Quem) quebram linha; Quando/Quanto/Status são colunas compactas. As
+   ações do item ficam numa linha própria logo abaixo (.linhaAcoes). */
+.tabelaPlano {
+  table-layout: fixed;
+}
+.tabelaPlano td {
+  overflow-wrap: anywhere;
+}
 .colOQue {
-  min-width: 200px;
+  width: 21%;
+}
+.colPorQue,
+.colComo {
+  width: 12.5%;
+}
+.colOnde {
+  width: 9%;
+}
+.colQuem {
+  width: 11%;
+}
+.colQuando {
+  width: 10.5%;
+}
+.colQuanto {
+  width: 10.5%;
+}
+.colStatus {
+  width: 13%;
+}
+
+.celulaOQue {
   font-weight: 500;
 }
 
-.colAcoes {
-  min-width: 150px;
+/* Linha de dados + linha de ações formam um bloco (um <tbody> por item) */
+.grupoItem tr:not(:last-child) td {
+  border-bottom: 0;
+}
+.tabelaPlano .linhaAcoes td {
+  padding-top: 0;
+  padding-bottom: var(--espaco-3);
 }
 
 /* Variantes de célula: prefixadas pela tabela para vencer a cor padrão do td */
 .tabelaPlano .tdSecundario,
 .tabelaSimples .tdSecundario {
   color: var(--cor-texto-secundario);
-  min-width: 110px;
 }
-
-.tdSemQuebra {
-  white-space: nowrap;
+.tabelaSimples .tdSecundario {
+  min-width: 110px;
 }
 
 .tdMono {
@@ -931,6 +966,10 @@ a.botaoCompacto {
   font-size: 13px;
   color: var(--cor-texto-secundario);
 }
+/* Código da RNC nunca quebra no hífen ("RNC-286-26") */
+.codigoSemQuebra {
+  white-space: nowrap;
+}
 
 .notaVerificador {
   margin: 0;
@@ -1245,6 +1284,57 @@ button.botaoRegistrar {
 
   .barraProgresso {
     width: 80px;
+  }
+
+  /* 5W2H em cartões empilhados: cada <tbody> (item + ações) vira um bloco;
+     cabeçalho some e cada célula mostra seu rótulo (data-rotulo) */
+  .tabelaPlano,
+  .tabelaPlano tbody,
+  .tabelaPlano tr,
+  .tabelaPlano td {
+    display: block;
+  }
+  .tabelaPlano colgroup,
+  .tabelaPlano thead {
+    display: none;
+  }
+  .tabelaPlano .grupoItem {
+    padding: var(--espaco-3) 14px;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .tabelaPlano .grupoItem tr:first-child {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espaco-2) var(--espaco-3);
+  }
+  .tabelaPlano td,
+  .tabelaPlano td:first-child,
+  .tabelaPlano td:last-child {
+    padding: 0;
+    border-bottom: 0;
+  }
+  .tabelaPlano td[data-rotulo]::before {
+    content: attr(data-rotulo);
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--fonte-ui);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+  }
+  /* O quê ocupa a largura toda e dispensa rótulo (é o título do cartão) */
+  .tabelaPlano .celulaOQue {
+    grid-column: 1 / -1;
+    font-size: 14px;
+  }
+  .tabelaPlano td.celulaOQue::before {
+    display: none;
+  }
+  .tabelaPlano .tdDireita {
+    text-align: left;
+  }
+  .tabelaPlano .linhaAcoes td {
+    padding: var(--espaco-3) 0 0;
   }
 
   .entradaComentario {

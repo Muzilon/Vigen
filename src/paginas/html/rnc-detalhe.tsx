@@ -28,7 +28,7 @@ import {
   verificarAcao,
 } from "@/app/(app)/rncs/actions";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
-import { ItemAcoes } from "@/paginas/html/componentes/item-acoes";
+import { ItemAcoes, itemTemAcoes } from "@/paginas/html/componentes/item-acoes";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { CampoArquivos } from "@/paginas/html/componentes/campo-arquivos";
@@ -388,58 +388,70 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                         {doCiclo.length === 0 ? (
                           <p className={`${styles.vazio} ${styles.vazioCiclo}`}>Nenhum item neste ciclo.</p>
                         ) : (
-                          <div className={styles.rolagemTabela}>
-                            <table className={styles.tabelaPlano}>
-                              <thead>
-                                <tr>
-                                  {["O quê", "Por quê", "Onde", "Quem", "Quando", "Como", "Quanto", "Status", "Ações"].map((h) => (
-                                    <th key={h} scope="col" className={h === "Quanto" ? styles.thDireita : undefined}>{h}</th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {doCiclo.map((i) => {
-                                  const st = statusEfetivoItem(i, hoje);
-                                  return (
-                                    <tr key={i.id}>
-                                      <td className={styles.colOQue}>
-                                        <Link href={`/plano-acao/${i.id}`} className={styles.linkItem}>{i.oQue}</Link>
-                                        {i.evidenciaConclusao && (
-                                          <p className={styles.evidencia}>Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}</p>
-                                        )}
-                                        {(anexosItens.get(i.id) ?? []).map((x) => (
-                                          <a key={x.id} href={`/api/anexos/${x.id}`} className={styles.linkAnexoItem}>
-                                            Anexo: {x.nomeArquivo}
-                                          </a>
-                                        ))}
-                                      </td>
-                                      <td className={styles.tdSecundario}>{i.porQue ?? "—"}</td>
-                                      <td className={styles.tdSecundario}>{i.onde ?? "—"}</td>
-                                      <td className={styles.tdSemQuebra}>{i.quem.nome}</td>
-                                      <td className={`${styles.tdMono} ${st === "ATRASADO" ? styles.dataAtrasada : ""}`}>{formatarData(i.quando)}</td>
-                                      <td className={styles.tdSecundario}>{i.como ?? "—"}</td>
-                                      <td className={`${styles.tdMono} ${styles.tdDireita}`}>{i.quanto ? moeda(Number(i.quanto)) : "—"}</td>
-                                      <td><BadgeStatusItem status={st} /></td>
-                                      <td className={styles.colAcoes}>
-                                        {atual ? (
-                                          <ItemAcoes
-                                            item={i}
-                                            rncId={rnc.id}
-                                            hoje={hoje}
-                                            usuarios={usuariosObra.some((u) => u.id === i.quemId) ? usuariosObra : [...usuariosObra, { id: i.quemId, nome: i.quem.nome }]}
-                                            podeExecutar={i.quemId === a.usuarioId && rnc.status === "PLANO_EM_EXECUCAO"}
-                                            podeGerenciar={editavelPlano}
-                                          />
-                                        ) : (
-                                          <span className={styles.textoFraco}>—</span>
-                                        )}
+                          <table className={styles.tabelaPlano}>
+                            {/* Larguras em % (table-layout: fixed): cabe na coluna principal sem rolagem */}
+                            <colgroup>
+                              <col className={styles.colOQue} />
+                              <col className={styles.colPorQue} />
+                              <col className={styles.colOnde} />
+                              <col className={styles.colQuem} />
+                              <col className={styles.colQuando} />
+                              <col className={styles.colComo} />
+                              <col className={styles.colQuanto} />
+                              <col className={styles.colStatus} />
+                            </colgroup>
+                            <thead>
+                              <tr>
+                                {["O quê", "Por quê", "Onde", "Quem", "Quando", "Como", "Quanto", "Status"].map((h) => (
+                                  <th key={h} scope="col" className={h === "Quanto" ? styles.thDireita : undefined}>{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            {doCiclo.map((i) => {
+                              const st = statusEfetivoItem(i, hoje);
+                              const podeExecutar = i.quemId === a.usuarioId && rnc.status === "PLANO_EM_EXECUCAO";
+                              const comAcoes = atual && itemTemAcoes(i.status, podeExecutar, editavelPlano);
+                              return (
+                                // Um <tbody> por item: linha de dados + (opcional) linha de ações abaixo, formando um bloco
+                                <tbody key={i.id} className={styles.grupoItem}>
+                                  <tr>
+                                    <td data-rotulo="O quê" className={styles.celulaOQue}>
+                                      <Link href={`/plano-acao/${i.id}`} className={styles.linkItem}>{i.oQue}</Link>
+                                      {i.evidenciaConclusao && (
+                                        <p className={styles.evidencia}>Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}</p>
+                                      )}
+                                      {(anexosItens.get(i.id) ?? []).map((x) => (
+                                        <a key={x.id} href={`/api/anexos/${x.id}`} className={styles.linkAnexoItem}>
+                                          Anexo: {x.nomeArquivo}
+                                        </a>
+                                      ))}
+                                    </td>
+                                    <td data-rotulo="Por quê" className={styles.tdSecundario}>{i.porQue ?? "—"}</td>
+                                    <td data-rotulo="Onde" className={styles.tdSecundario}>{i.onde ?? "—"}</td>
+                                    <td data-rotulo="Quem">{i.quem.nome}</td>
+                                    <td data-rotulo="Quando" className={`${styles.tdMono} ${st === "ATRASADO" ? styles.dataAtrasada : ""}`}>{formatarData(i.quando)}</td>
+                                    <td data-rotulo="Como" className={styles.tdSecundario}>{i.como ?? "—"}</td>
+                                    <td data-rotulo="Quanto" className={`${styles.tdMono} ${styles.tdDireita}`}>{i.quanto ? moeda(Number(i.quanto)) : "—"}</td>
+                                    <td data-rotulo="Status"><BadgeStatusItem status={st} /></td>
+                                  </tr>
+                                  {comAcoes && (
+                                    <tr className={styles.linhaAcoes}>
+                                      <td colSpan={8}>
+                                        <ItemAcoes
+                                          item={i}
+                                          rncId={rnc.id}
+                                          hoje={hoje}
+                                          usuarios={usuariosObra.some((u) => u.id === i.quemId) ? usuariosObra : [...usuariosObra, { id: i.quemId, nome: i.quem.nome }]}
+                                          podeExecutar={podeExecutar}
+                                          podeGerenciar={editavelPlano}
+                                        />
                                       </td>
                                     </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
+                                  )}
+                                </tbody>
+                              );
+                            })}
+                          </table>
                         )}
                         <div className={styles.rodapeCiclo}>
                           {atual && (
@@ -567,7 +579,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                               <input type="radio" name="resultado" value="EFICAZ" required className={styles.radioDecisao} />
                               Sim, eficaz
                             </span>
-                            <span className={styles.descricaoOpcao}>Encerra a {rnc.codigo}</span>
+                            <span className={styles.descricaoOpcao}>Encerra a <span className={styles.codigoSemQuebra}>{rnc.codigo}</span></span>
                           </label>
                           <label className={`${styles.opcaoDecisao} ${styles.opcaoIneficaz}`}>
                             <span className={styles.linhaOpcao}>
