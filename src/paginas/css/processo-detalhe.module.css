@@ -1,0 +1,279 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Grade de duas colunas
+   03. Dados (dl) e formulários
+   04. Indicadores, interações e placeholders
+   05. Versões publicadas
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+.trilha { font-size: 13px; }
+.linkVoltar { color: var(--cor-texto-secundario); text-decoration: none; }
+.linkVoltar:hover { color: var(--cor-texto); }
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+}
+
+.codigo {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cor-texto-secundario);
+}
+
+.titulo {
+  margin: 2px 0 var(--espaco-2);
+  font-size: 22px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.tipoGESTAO,
+.tipoFINALISTICO,
+.tipoAPOIO {
+  padding: 1px 8px;
+  border-radius: var(--raio-pill);
+  font-weight: 600;
+  font-size: 12px;
+}
+.tipoGESTAO { background: #ede9fe; color: #5b21b6; }
+.tipoFINALISTICO { background: #fef3c7; color: #92400e; }
+.tipoAPOIO { background: #ccfbf1; color: #115e59; }
+
+.inativo {
+  color: var(--cor-perigo-texto);
+  font-weight: 600;
+}
+
+/* ==========================================================
+   02. GRADE
+   ========================================================== */
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--espaco-4);
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   03. DADOS E FORMULÁRIOS
+   ========================================================== */
+.dados {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: var(--espaco-2) var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+}
+.dados dt { color: var(--cor-texto-secundario); font-weight: 500; }
+.dados dd { margin: 0; white-space: pre-line; }
+
+.editar { margin-top: var(--espaco-3); font-size: 13px; }
+.editar summary { cursor: pointer; color: var(--cor-acento); font-weight: 500; }
+
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-2) var(--espaco-3);
+  margin-top: var(--espaco-3);
+  align-items: end;
+}
+
+.campo,
+.campoLargo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.campoLargo { grid-column: 1 / -1; }
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  font-size: 13px;
+  color: var(--cor-texto);
+}
+
+.entrada,
+.entradaCurta {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: 4px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+.entrada { flex: 1 1 180px; }
+.entradaCurta { flex: 0 1 130px; }
+
+.formLinha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+  align-items: center;
+  margin-top: var(--espaco-3);
+}
+
+/* ==========================================================
+   04. INDICADORES, INTERAÇÕES E PLACEHOLDERS
+   ========================================================== */
+.vazio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-fraco);
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tabela th {
+  text-align: left;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  border-bottom: 1px solid var(--cor-borda);
+  padding: 4px 6px;
+}
+.tabela td {
+  padding: 6px;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+
+.interacoes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-4);
+}
+
+.subtitulo {
+  margin: 0 0 var(--espaco-2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-texto-secundario);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.listaInteracoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+
+.itemInteracao {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+  font-size: 13px;
+}
+
+.linkProcesso { color: var(--cor-texto); font-weight: 500; }
+
+.descricaoInteracao {
+  margin: 2px 0 0;
+  color: var(--cor-texto-secundario);
+  font-size: 12px;
+}
+
+.placeholders {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.emBreve {
+  margin-left: var(--espaco-2);
+  padding: 0 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  font-size: 11px;
+}
+
+/* ==========================================================
+   05. VERSÕES PUBLICADAS
+   ========================================================== */
+.publicar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  padding-bottom: var(--espaco-3);
+  margin-bottom: var(--espaco-3);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+
+.formPublicar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+  align-items: center;
+}
+
+.versoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+
+.versao { font-size: 13px; }
+.versao summary { cursor: pointer; color: var(--cor-texto-secundario); font-size: 12px; margin: 4px 0; }
+
+.cabecalhoVersao {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+  color: var(--cor-texto-secundario);
+}
+.cabecalhoVersao strong { color: var(--cor-texto); }
+
+.observacao { margin: 4px 0 0; }

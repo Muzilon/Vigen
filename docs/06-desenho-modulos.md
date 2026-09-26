@@ -110,3 +110,42 @@ genérico). **Não** entregue aqui: motor de aprovação multi-assinante e Mapa 
 - **Heatmap genérico**: `src/paginas/html/componentes/heatmap.tsx` +
   `src/paginas/css/componentes/heatmap.module.css` — ver docs/05-guia-paginas-css.md,
   seção 6, para a documentação de uso.
+
+## P1 — Mapa de Processos entregue (2026-09-26)
+
+Com o motor de aprovação (commit anterior) e este módulo, o **P1 está completo**.
+
+- **Schema** (migração `20260926160000_mapa_processos`): `Processo` (código único por
+  empresa, nome, `TipoProcesso` GESTAO/FINALISTICO/APOIO, `ordem` dentro da raia, objetivo,
+  dono, entradas, saídas, fornecedores, clientes, recursos, `versao` = última publicada,
+  `revisao` = trava otimista, `ativo` = exclusão lógica), `IndicadorProcesso`,
+  `InteracaoProcesso` (única por par origem→destino, `CHECK origem <> destino`),
+  `VersaoProcesso` (snapshot JSON **append-only**: trigger bloqueia UPDATE/DELETE). Todas as
+  FKs compostas `(empresa_id, id)`. Permissão `PROCESSO_GERENCIAR` (perfil Qualidade do seed;
+  ADMIN tem todas). `TipoEntidadeAnexo`, `TipoEntidadeInteracao` e `TipoEntidadeNotificacao`
+  ganharam `PROCESSO` (anexos, comentários e notificação de mensagem no detalhe).
+- **Serviço** `src/lib/processos/`: `regras.ts` (puro: normalização, diff de indicadores,
+  reordenação, snapshot, layout do SVG) e `servico.ts` (CRUD, ↑↓ na raia, mover de tipo,
+  inativar/reativar, indicadores, interações, publicar). Leitura exige o módulo contratado;
+  escrita exige módulo + `PROCESSO_GERENCIAR` (o `Ator` não carrega módulos, então o serviço
+  lê `Empresa.modulosAtivos` — vale para scripts/testes também).
+- **Publicação**: direta (`publicarVersao`: snapshot + `versao++` na mesma transação) **ou**
+  via motor de aprovação (`solicitarPublicacao` → fluxo `PROCESSO`/`PUBLICACAO`; o handler em
+  `src/lib/processos/aprovacao.ts` publica em nome do solicitante na transação da última
+  assinatura). **Decisão**: a escolha é por publicação (os dois botões no detalhe); não há
+  ainda uma configuração da empresa que obrigue o fluxo. O handler é registrado por import
+  com efeito colateral — todo ponto de entrada que chama `decidir()` precisa de
+  `import "@/lib/processos/aprovacao"` (as actions de `/processos` e o teste já importam; as
+  actions de `/aprovacoes` devem importar também).
+- **Telas** (padrão `paginas/`): `/processos` com aba **Planilha** (grade por raia, edição
+  inline por linha com Salvar/Cancelar, "+ Adicionar linha", ↑↓, tipo = mover de raia,
+  indicadores um por linha — meta/unidade/periodicidade no detalhe; "Mostrar inativos") e aba
+  **Mapa** (SVG em 3 raias gerado da ordem; Cliente → finalísticos → Cliente; interações como
+  curvas tracejadas; caixas clicáveis). `/processos/[id]`: dados/SIPOC (editar), indicadores,
+  interações (adicionar/remover), versões publicadas (conteúdo congelado), anexos, comentários
+  e placeholders "Riscos / HIRA / LAIA / Documentos vinculados (em breve)".
+- **Menu**: `MAPA_PROCESSOS` implementado (`/processos`, grupo Qualidade). **Seed**: 8
+  processos da Monto (2 gestão, 4 finalísticos, 2 apoio) com indicadores e 9 interações.
+- **Testes**: `tests/processos.test.ts` (regras) e `npm run test:processos` (CRUD, código
+  único, reordenação, interações, permissão, gating Demo, isolamento, versão/snapshot
+  imutável, publicação via aprovação, inativar).

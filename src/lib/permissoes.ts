@@ -8,6 +8,7 @@ export const TODAS_PERMISSOES = [
   "RNC_APROVAR_CANCELAMENTO",
   "RNC_VER_RESTRITAS",
   "PLANO_GERENCIAR",
+  "PROCESSO_GERENCIAR",
   "ADMIN_CONFIG",
   "VER_TODAS_OBRAS",
 ] as const satisfies readonly Permissao[];

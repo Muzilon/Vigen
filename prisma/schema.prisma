@@ -58,6 +58,7 @@ enum Permissao {
   RNC_APROVAR_CANCELAMENTO
   RNC_VER_RESTRITAS
   PLANO_GERENCIAR
+  PROCESSO_GERENCIAR
   ADMIN_CONFIG
   VER_TODAS_OBRAS
 }
@@ -135,11 +136,13 @@ enum TipoEntidadeAnexo {
   VERIFICACAO_EFICACIA
   PLANO_ACAO
   ITEM_ACAO
+  PROCESSO
 }
 
 enum TipoEntidadeInteracao {
   RNC
   ITEM_ACAO
+  PROCESSO
 }
 
 enum TipoNotificacao {
@@ -161,6 +164,7 @@ enum TipoEntidadeNotificacao {
   RNC
   ITEM_ACAO
   FLUXO_APROVACAO
+  PROCESSO
 }
 
 enum StatusEmailNotificacao {
@@ -217,6 +221,13 @@ enum AcaoHistoricoAprovacao {
   CONCLUIDO
 }
 
+/// Tipo do processo no mapa (raias do diagrama: Gestão topo, Finalísticos meio, Apoio embaixo).
+enum TipoProcesso {
+  GESTAO
+  FINALISTICO
+  APOIO
+}
+
 enum TipoSequencia {
   RNC
 }
@@ -256,6 +267,10 @@ model Empresa {
   fluxosAprovacao          FluxoAprovacao[]
   etapasAprovacao          EtapaAprovacao[]
   historicosAprovacao      HistoricoAprovacao[]
+  processos                Processo[]
+  indicadoresProcesso      IndicadorProcesso[]
+  interacoesProcesso       InteracaoProcesso[]
+  versoesProcesso          VersaoProcesso[]
 
   @@map("empresa")
 }
@@ -337,24 +352,26 @@ model Usuario {
   perfil  Perfil? @relation(fields: [empresaId, perfilId], references: [empresaId, id], onDelete: Restrict)
   setor   Setor?  @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
 
-  acessosObra              UsuarioAcessoObra[]
-  rncsAbertas              Rnc[]                     @relation("RncAbertoPor")
-  rncsResponsavel          Rnc[]                     @relation("RncResponsavel")
-  verificacoes             VerificacaoEficacia[]     @relation("VerificacaoVerificador")
-  historicosStatus         HistoricoStatusRnc[]      @relation("HistoricoUsuario")
-  cancelamentosSolicitados SolicitacaoCancelamento[] @relation("CancelamentoSolicitante")
-  cancelamentosDecididos   SolicitacaoCancelamento[] @relation("CancelamentoAprovador")
-  planosCriados            PlanoAcao[]               @relation("PlanoCriadoPor")
-  itensResponsavel         ItemAcao[]                @relation("ItemQuem")
-  anexosEnviados           Anexo[]                   @relation("AnexoEnviadoPor")
-  anexosExcluidos          Anexo[]                   @relation("AnexoExcluidoPor")
-  interacoesAutor          Interacao[]               @relation("InteracaoAutor")
-  interacoesDestinatario   Interacao[]               @relation("InteracaoDestinatario")
-  leiturasInteracao        LeituraInteracao[]
-  notificacoes             Notificacao[]
-  fluxosSolicitados        FluxoAprovacao[]          @relation("FluxoSolicitante")
-  etapasAprovador          EtapaAprovacao[]          @relation("EtapaAprovador")
-  historicosAprovacao      HistoricoAprovacao[]      @relation("HistoricoAprovacaoUsuario")
+  acessosObra               UsuarioAcessoObra[]
+  rncsAbertas               Rnc[]                     @relation("RncAbertoPor")
+  rncsResponsavel           Rnc[]                     @relation("RncResponsavel")
+  verificacoes              VerificacaoEficacia[]     @relation("VerificacaoVerificador")
+  historicosStatus          HistoricoStatusRnc[]      @relation("HistoricoUsuario")
+  cancelamentosSolicitados  SolicitacaoCancelamento[] @relation("CancelamentoSolicitante")
+  cancelamentosDecididos    SolicitacaoCancelamento[] @relation("CancelamentoAprovador")
+  planosCriados             PlanoAcao[]               @relation("PlanoCriadoPor")
+  itensResponsavel          ItemAcao[]                @relation("ItemQuem")
+  anexosEnviados            Anexo[]                   @relation("AnexoEnviadoPor")
+  anexosExcluidos           Anexo[]                   @relation("AnexoExcluidoPor")
+  interacoesAutor           Interacao[]               @relation("InteracaoAutor")
+  interacoesDestinatario    Interacao[]               @relation("InteracaoDestinatario")
+  leiturasInteracao         LeituraInteracao[]
+  notificacoes              Notificacao[]
+  fluxosSolicitados         FluxoAprovacao[]          @relation("FluxoSolicitante")
+  etapasAprovador           EtapaAprovacao[]          @relation("EtapaAprovador")
+  historicosAprovacao       HistoricoAprovacao[]      @relation("HistoricoAprovacaoUsuario")
+  processosDono             Processo[]                @relation("ProcessoDono")
+  versoesProcessoPublicadas VersaoProcesso[]          @relation("VersaoProcessoPublicadoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -796,6 +813,99 @@ model HistoricoAprovacao {
 }
 
 /// Tentativas de login (rate limit por e-mail e IP). Global: e-mail é único no sistema.
+/// Mapa de Processos (ISO 9001 4.4). Código único por empresa; exclusão = inativar (ativo=false).
+/// `versao` = última versão publicada (0 = nunca publicado); `revisao` = trava otimista de edição.
+model Processo {
+  id           String       @id @default(uuid()) @db.Uuid
+  empresaId    String       @map("empresa_id") @db.Uuid
+  codigo       String
+  nome         String
+  tipo         TipoProcesso
+  ordem        Int          @default(0)
+  objetivo     String?
+  donoId       String?      @map("dono_id") @db.Uuid
+  entradas     String?
+  saidas       String?
+  fornecedores String?
+  clientes     String?
+  recursos     String?
+  versao       Int          @default(0)
+  revisao      Int          @default(0)
+  ativo        Boolean      @default(true)
+  criadoEm     DateTime     @default(now()) @map("criado_em")
+  atualizadoEm DateTime     @updatedAt @map("atualizado_em")
+
+  empresa           Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  dono              Usuario?            @relation("ProcessoDono", fields: [empresaId, donoId], references: [empresaId, id], onDelete: Restrict)
+  indicadores       IndicadorProcesso[]
+  interacoesOrigem  InteracaoProcesso[] @relation("InteracaoOrigem")
+  interacoesDestino InteracaoProcesso[] @relation("InteracaoDestino")
+  versoes           VersaoProcesso[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, codigo])
+  @@index([empresaId, tipo, ordem])
+  @@map("processo")
+}
+
+model IndicadorProcesso {
+  id            String   @id @default(uuid()) @db.Uuid
+  empresaId     String   @map("empresa_id") @db.Uuid
+  processoId    String   @map("processo_id") @db.Uuid
+  nome          String
+  meta          String?
+  unidade       String?
+  periodicidade String?
+  ordem         Int      @default(0)
+  criadoEm      DateTime @default(now()) @map("criado_em")
+
+  empresa  Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  processo Processo @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Cascade)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, processoId])
+  @@map("indicador_processo")
+}
+
+/// Seta origem → destino no mapa (única por par; origem ≠ destino via CHECK no SQL).
+model InteracaoProcesso {
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  origemId  String   @map("origem_id") @db.Uuid
+  destinoId String   @map("destino_id") @db.Uuid
+  descricao String?
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  empresa Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  origem  Processo @relation("InteracaoOrigem", fields: [empresaId, origemId], references: [empresaId, id], onDelete: Cascade)
+  destino Processo @relation("InteracaoDestino", fields: [empresaId, destinoId], references: [empresaId, id], onDelete: Cascade)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, origemId, destinoId])
+  @@index([empresaId, destinoId])
+  @@map("interacao_processo")
+}
+
+/// Snapshot publicado (append-only: trigger bloqueia UPDATE/DELETE).
+model VersaoProcesso {
+  id             String   @id @default(uuid()) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  processoId     String   @map("processo_id") @db.Uuid
+  versao         Int
+  snapshot       Json
+  observacao     String?
+  publicadoPorId String   @map("publicado_por_id") @db.Uuid
+  publicadoEm    DateTime @default(now()) @map("publicado_em")
+
+  empresa      Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  processo     Processo @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  publicadoPor Usuario  @relation("VersaoProcessoPublicadoPor", fields: [empresaId, publicadoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, processoId, versao])
+  @@map("versao_processo")
+}
+
 model TentativaLogin {
   id        String   @id @default(uuid()) @db.Uuid
   email     String

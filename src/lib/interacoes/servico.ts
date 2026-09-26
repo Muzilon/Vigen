@@ -3,6 +3,7 @@ import type { Ator } from "@/lib/ator";
 import { ErroNegocio } from "@/lib/erros";
 import { notificar } from "@/lib/notificacoes";
 import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
+import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
 export const MAX_MENSAGEM = 4000;
@@ -25,6 +26,13 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     if (!rnc) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = rnc.responsavelId && rnc.responsavelId !== a.usuarioId ? rnc.responsavelId : rnc.abertoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
+  }
+  if (t.tipo === "PROCESSO") {
+    // Mapa de processos: qualquer usuário da empresa com o módulo contratado; fala com o dono.
+    if (!(await moduloProcessosAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const p = await a.db.processo.findFirst({ where: { id: t.entidadeId }, select: { donoId: true } });
+    if (!p) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    return { destinatarioPadrao: p.donoId && p.donoId !== a.usuarioId ? p.donoId : null };
   }
   const item = await a.db.itemAcao.findFirst({
     where: { AND: [{ id: t.entidadeId }, filtroAcessoItem(a)] },
@@ -140,5 +148,7 @@ export async function listarNaoLidas(a: Ator, take = 20) {
 }
 
 export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId: string }) {
-  return t.entidadeTipo === "RNC" ? `/rncs/${t.entidadeId}?aba=interacoes` : `/plano-acao/${t.entidadeId}`;
+  if (t.entidadeTipo === "RNC") return `/rncs/${t.entidadeId}?aba=interacoes`;
+  if (t.entidadeTipo === "PROCESSO") return `/processos/${t.entidadeId}`;
+  return `/plano-acao/${t.entidadeId}`;
 }

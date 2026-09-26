@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO";
   entidadeId: string;
 };
 
@@ -32,6 +32,10 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       });
       onde = rnc ? `a ${rotuloRnc(rnc)}` : "uma RNC";
       link = `/rncs/${evento.entidadeId}?aba=interacoes`;
+    } else if (evento.entidadeTipo === "PROCESSO") {
+      const p = await db.processo.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true, nome: true } });
+      onde = p ? `o processo ${p.codigo} — ${p.nome}` : "um processo";
+      link = `/processos/${evento.entidadeId}`;
     } else {
       const item = await db.itemAcao.findFirst({
         where: { id: evento.entidadeId },

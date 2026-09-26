@@ -4,6 +4,7 @@ import { getArmazenamento, montarChave } from "@/lib/armazenamento";
 import { ErroNegocio } from "@/lib/erros";
 import { STATUS_FINAIS } from "@/lib/rnc/estados";
 import { podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
 import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
 
@@ -80,6 +81,14 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
         rncId: null,
         rncFinal: finalizada(rnc),
       };
+    }
+    case "PROCESSO": {
+      // Mapa de processos: leitura para a empresa com o módulo; envio/gestão com PROCESSO_GERENCIAR.
+      if (!(await moduloProcessosAtivo(a))) return NEGADO;
+      const p = await a.db.processo.findFirst({ where: { id: alvo.entidadeId }, select: { id: true } });
+      if (!p) return NEGADO;
+      const g = atorTem(a, "PROCESSO_GERENCIAR");
+      return { podeLer: true, podeEnviar: g, podeGerir: g, rncId: null, rncFinal: false };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({

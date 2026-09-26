@@ -25,7 +25,7 @@ export interface ItemMenuRegistro {
 }
 
 export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
-  { modulo: "MAPA_PROCESSOS", href: "/mapa-processos", label: "Mapa de processos", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
+  { modulo: "MAPA_PROCESSOS", href: "/processos", label: "Mapa de processos", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },
   { modulo: "RISCOS_OPORTUNIDADES", href: "/riscos", label: "Riscos e oportunidades", grupo: GRUPO_MODULO.GESTAO, implementado: false },
   { modulo: "SWOT", href: "/swot", label: "SWOT", grupo: GRUPO_MODULO.GESTAO, implementado: false },
   { modulo: "HIRA", href: "/hira", label: "HIRA", grupo: GRUPO_MODULO.SEGURANCA, implementado: false },

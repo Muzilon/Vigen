@@ -1,0 +1,229 @@
+/* ==========================================================
+   ÍNDICE
+   01. Envoltório — rolagem horizontal da grade
+   02. Grade — cabeçalho fixo, larguras das colunas
+   03. Grupos (raias) — faixa de título com marca de cor
+   04. Linhas — leitura, inativa, edição, retorno de erro
+   05. Controles — entradas, setas, botões
+   ========================================================== */
+
+/* ==========================================================
+   01. ENVOLTÓRIO
+   ========================================================== */
+.envoltorio {
+  overflow-x: auto;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+
+/* ==========================================================
+   02. GRADE
+   ========================================================== */
+.planilha {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.planilha thead th {
+  position: sticky;
+  top: 0;
+  background: var(--cor-fundo-sutil);
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  padding: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-forte);
+  white-space: nowrap;
+}
+
+.planilha td {
+  padding: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  border-right: 1px solid var(--cor-borda-sutil);
+  vertical-align: top;
+}
+
+.colOrdem { width: 56px; }
+.colCodigo { width: 90px; }
+.colNome { width: 200px; }
+.colTipo { width: 110px; }
+.colDono { width: 150px; }
+.colAcoes { width: 110px; white-space: nowrap; }
+
+/* ==========================================================
+   03. GRUPOS (RAIAS)
+   ========================================================== */
+.linhaGrupo th {
+  text-align: left;
+  padding: var(--espaco-2) var(--espaco-3);
+  background: var(--cor-fundo);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cor-texto);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.marcaGESTAO,
+.marcaFINALISTICO,
+.marcaAPOIO {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: var(--espaco-2);
+}
+.marcaGESTAO { background: #6d28d9; }
+.marcaFINALISTICO { background: var(--cor-acento); }
+.marcaAPOIO { background: #0f766e; }
+
+.contagem {
+  margin-left: var(--espaco-1);
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+
+.vazio {
+  color: var(--cor-texto-fraco);
+  font-style: italic;
+}
+
+.linhaAdicionar td {
+  padding: var(--espaco-1) var(--espaco-2);
+}
+
+/* ==========================================================
+   04. LINHAS
+   ========================================================== */
+.linha:hover td {
+  background: var(--cor-fundo-sutil);
+}
+
+.linhaInativa td {
+  color: var(--cor-texto-fraco);
+  background: var(--cor-fundo-sutil);
+}
+
+.linhaEdicao td {
+  background: #fffbeb;
+}
+
+.linhaRetorno td {
+  border-right: 0;
+}
+
+.codigo {
+  font-family: var(--fonte-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.linkNome {
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+.selo {
+  margin-left: var(--espaco-1);
+  padding: 0 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  font-size: 11px;
+  color: var(--cor-texto-secundario);
+}
+
+.texto {
+  white-space: pre-line;
+  color: var(--cor-texto-secundario);
+}
+
+.fraco {
+  color: var(--cor-texto-fraco);
+}
+
+.listaIndicadores {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.erro {
+  margin: 0;
+  color: var(--cor-perigo-texto);
+  font-size: 13px;
+}
+
+/* ==========================================================
+   05. CONTROLES
+   ========================================================== */
+.entrada,
+.area {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: 4px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+.area {
+  resize: vertical;
+}
+
+.setas {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.botaoSeta {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+}
+.botaoSeta:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.botaoAcao,
+.botaoSalvar,
+.botaoAdicionar {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 4px;
+}
+.botaoAcao {
+  border: 1px solid var(--cor-borda-forte);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+}
+.botaoSalvar {
+  border: 1px solid var(--cor-acento);
+  background: var(--cor-acento);
+  color: var(--cor-acento-texto);
+}
+.botaoSalvar:hover {
+  background: var(--cor-acento-hover);
+}
+.botaoAdicionar {
+  border: 1px dashed var(--cor-borda-tracejada);
+  background: transparent;
+  color: var(--cor-texto-secundario);
+}
+.botaoAdicionar:hover {
+  color: var(--cor-texto);
+  border-color: var(--cor-acento);
+}

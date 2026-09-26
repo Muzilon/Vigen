@@ -262,7 +262,7 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
 export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
   const d = z
     .object({
-      entidadeTipo: z.enum(["RNC", "ITEM_ACAO"]),
+      entidadeTipo: z.enum(["RNC", "ITEM_ACAO", "PROCESSO"]),
       entidadeId: uuid,
       mensagem: z.string().trim().min(1, "Escreva a mensagem.").max(interacoes.MAX_MENSAGEM, "Mensagem muito longa."),
       destinatarioId: uuidOpcional,
@@ -273,17 +273,18 @@ export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
   return executar(async () => {
     await interacoes.criarInteracao(await getAtor(), { tipo: entidadeTipo, entidadeId }, d.data.mensagem, d.data.destinatarioId);
     return { ok: "Mensagem enviada." };
-  }, [entidadeTipo === "RNC" ? `/rncs/${entidadeId}` : `/plano-acao/${entidadeId}`, "/mensagens"]);
+  }, [interacoes.linkThread({ entidadeTipo, entidadeId }).split("?")[0], "/mensagens"]);
 }
 
 // ---------------------------------------------------------------- anexos
 
-const TIPOS_ANEXO = ["RNC", "RNC_DADOS_SENSIVEIS", "VERIFICACAO_EFICACIA", "PLANO_ACAO", "ITEM_ACAO"] as const;
+const TIPOS_ANEXO = ["RNC", "RNC_DADOS_SENSIVEIS", "VERIFICACAO_EFICACIA", "PLANO_ACAO", "ITEM_ACAO", "PROCESSO"] as const;
 
 function revalidarAnexos() {
   revalidatePath("/rncs/[id]", "page");
   revalidatePath("/plano-acao/[id]", "page");
   revalidatePath("/plano-acao/planos/[id]", "page");
+  revalidatePath("/processos/[id]", "page");
 }
 
 export async function enviarAnexosAcao(_: ResultadoAcao, fd: FormData) {

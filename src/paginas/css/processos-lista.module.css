@@ -1,0 +1,50 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento entre cabeçalho, abas e conteúdo
+   02. Abas — "Planilha" / "Mapa" (links com ?aba=)
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  min-width: 0;
+}
+
+/* ==========================================================
+   02. ABAS
+   ========================================================== */
+.abas {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-1);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.aba,
+.abaAtiva {
+  height: 38px;
+  padding: 0 var(--espaco-3);
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--cor-texto-secundario);
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+.abaAtiva {
+  font-weight: 600;
+  color: var(--cor-texto);
+  box-shadow: inset 0 -2px 0 var(--cor-acento);
+}
+
+.linkInativos {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
