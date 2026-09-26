@@ -1,0 +1,243 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical entre cabeçalho/abas/filtros/tabela
+   02. Abas de escopo — "Meus itens" / "Todos"
+   03. Filtros — selects de status/responsável/prazo
+   04. Tabela — rolagem horizontal e larguras das colunas
+   05. Cabeçalhos de grupo por prazo (Atrasados, Próximos 7 dias...)
+   06. Células — origem, o quê, responsável, prazo, ações
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  height: 100%;
+}
+
+/* ==========================================================
+   02. ABAS DE ESCOPO
+   Links (não role=tab): cada aba é uma URL com ?escopo=.
+   ========================================================== */
+.abas {
+  display: flex;
+  gap: var(--espaco-1);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.aba,
+.abaAtiva {
+  height: 38px;
+  padding: 0 var(--espaco-3);
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--cor-texto-secundario);
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+
+/* Sublinhado âmbar via box-shadow (não desloca a altura da aba) */
+.abaAtiva {
+  font-weight: 600;
+  color: var(--cor-texto);
+  box-shadow: inset 0 -2px 0 var(--cor-acento);
+}
+
+/* ==========================================================
+   03. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.espacador {
+  flex: 1;
+}
+
+.notaAgrupamento {
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   04. TABELA
+   min-width força rolagem horizontal no celular em vez de
+   espremer a coluna "O quê" (que é a única sem largura fixa).
+   ========================================================== */
+.rolagemTabela {
+  overflow-x: auto;
+}
+.rolagemTabela > table {
+  min-width: 980px;
+}
+
+.colOrigem {
+  width: 150px;
+}
+.colQuem {
+  width: 170px;
+}
+.colQuando {
+  width: 140px;
+}
+.colStatus {
+  width: 130px;
+}
+.colAcoes {
+  width: 240px;
+}
+
+/* ==========================================================
+   05. CABEÇALHOS DE GRUPO
+   ========================================================== */
+.grupo,
+.grupoAtrasado {
+  height: 32px;
+  padding: 0 var(--espaco-4);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--cor-fundo-sutil);
+  color: var(--cor-texto);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.grupoAtrasado {
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+}
+
+.tituloGrupo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detalheGrupo {
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   06. CÉLULAS
+   ========================================================== */
+
+/* As ações (ItemAcoes) abrem formulários inline e aumentam a
+   linha: o conteúdo das demais células fica alinhado ao topo. */
+.celulaTopo {
+  vertical-align: top;
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+.linkCodigo {
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cor-acento);
+  text-decoration: none;
+}
+.linkCodigo:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+
+/* Código de RNC que o usuário não pode abrir (visão reduzida B4) */
+.codigoOculto {
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+
+.linkManual {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-decoration: none;
+}
+.rotuloManual {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cor-acento);
+}
+.tituloPlano {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.linkManual:hover .tituloPlano {
+  color: var(--cor-texto);
+  text-decoration: underline;
+}
+
+.linkOQue {
+  font-weight: 500;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linkOQue:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+
+.responsavel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.avatar,
+.avatarEu {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+/* O próprio usuário ganha avatar âmbar — acha "os meus" na aba Todos */
+.avatarEu {
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-acento-hover);
+}
+.nomeResponsavel {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data {
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+}
+.prazo {
+  font-size: 12.5px;
+}
+.prazoAtrasado {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cor-atrasado-texto);
+}
+
+.semAcao {
+  color: var(--cor-texto-fraco);
+}

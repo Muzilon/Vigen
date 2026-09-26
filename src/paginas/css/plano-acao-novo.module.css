@@ -1,0 +1,48 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical
+   02. Trilha, título e subtítulo
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ==========================================================
+   02. TRILHA / TÍTULO
+   ========================================================== */
+.trilha {
+  display: flex;
+  gap: var(--espaco-2);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.linkTrilha {
+  color: var(--cor-acento);
+  text-decoration: none;
+}
+.linkTrilha:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+.trilhaAtual {
+  color: var(--cor-texto);
+}
+
+.titulo {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cor-texto);
+}
+.subtitulo {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}

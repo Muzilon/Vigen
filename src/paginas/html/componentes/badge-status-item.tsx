@@ -1,0 +1,47 @@
+import type { StatusEfetivoItem, StatusGeralPlano } from "@/lib/plano-acao/status";
+import { ROTULO_STATUS_ITEM, ROTULO_STATUS_PLANO } from "@/lib/rnc/rotulos";
+import styles from "@/paginas/css/componentes/badge-status-item.module.css";
+
+/**
+ * Badges de status de item 5W2H e de status geral de plano de ação (Direção A "Campo").
+ * Substituem o Badge Tailwind + COR_STATUS_ITEM/COR_STATUS_PLANO nas páginas migradas.
+ */
+const CLASSE_STATUS: Record<StatusEfetivoItem | StatusGeralPlano, string> = {
+  SEM_ITENS: styles.semItens,
+  PENDENTE: styles.pendente,
+  EM_ANDAMENTO: styles.emAndamento,
+  CONCLUIDO: styles.concluido,
+  CANCELADO: styles.cancelado,
+  ATRASADO: styles.atrasado,
+};
+
+function Conteudo({ status, rotulo }: { status: StatusEfetivoItem | StatusGeralPlano; rotulo: string }) {
+  return (
+    <span className={`${styles.badge} ${CLASSE_STATUS[status]}`}>
+      {status === "ATRASADO" && <IconeRelogio />}
+      {rotulo}
+    </span>
+  );
+}
+
+export function BadgeStatusItem({ status }: { status: StatusEfetivoItem }) {
+  return <Conteudo status={status} rotulo={ROTULO_STATUS_ITEM[status]} />;
+}
+
+export function BadgeStatusPlano({ status }: { status: StatusGeralPlano }) {
+  return <Conteudo status={status} rotulo={ROTULO_STATUS_PLANO[status]} />;
+}
+
+/** Badge neutro de origem (ex.: "Manual" para plano avulso, sem RNC). */
+export function BadgeOrigem({ children }: { children: React.ReactNode }) {
+  return <span className={`${styles.badge} ${styles.origem}`}>{children}</span>;
+}
+
+function IconeRelogio() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}

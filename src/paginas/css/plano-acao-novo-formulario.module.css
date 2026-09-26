@@ -1,0 +1,231 @@
+/* ==========================================================
+   ÍNDICE
+   01. Formulário — espaçamento vertical entre blocos
+   02. Grade do topo — dados do plano (3 colunas) + dica (300px)
+   03. Campos — textarea, select de obra, origem fixa, ajuda
+   04. Dica "Como preencher o 5W2H"
+   05. Seção de itens 5W2H — cabeçalho, contagem, total previsto
+   06. Rodapé — nota de notificação + Cancelar / Criar
+   07. Telas estreitas (≤ 900px) — empilha grade e campos
+   ========================================================== */
+
+/* ==========================================================
+   01. FORMULÁRIO
+   ========================================================== */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ==========================================================
+   02. GRADE DO TOPO
+   ========================================================== */
+.gradeTopo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--espaco-5);
+}
+
+.dadosPlano {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 18px var(--espaco-5);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px var(--espaco-4);
+  align-content: start;
+}
+
+.campoLargo {
+  grid-column: span 2;
+}
+
+/* ==========================================================
+   03. CAMPOS
+   ========================================================== */
+.areaTexto {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-family: var(--fonte-ui);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cor-texto);
+  resize: vertical;
+}
+.areaTexto:focus,
+.selecaoObra:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+.selecaoObra {
+  width: 100%;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-family: var(--fonte-ui);
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+
+.opcional {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+/* Mesmo visual do Rotulo, para um valor que não é campo editável */
+.rotuloEstatico {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.origemFixa {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo);
+  font-size: 14px;
+  color: var(--cor-texto-secundario);
+}
+.origemDetalhe {
+  font-size: 12px;
+}
+
+.ajuda {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   04. DICA 5W2H
+   ========================================================== */
+.dica {
+  background: var(--cor-aviso-fundo);
+  border: 1px solid var(--cor-aviso-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-4) 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tituloDica {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-acento-hover);
+}
+.textoDica {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cor-texto);
+}
+.listaDica {
+  margin: 0;
+  padding-left: var(--espaco-4);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cor-texto-secundario);
+}
+.listaDica b {
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   05. SEÇÃO DE ITENS 5W2H
+   ========================================================== */
+.secaoItens {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.cabecalhoItens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+  padding: 14px var(--espaco-5);
+  border-bottom: 1px solid var(--cor-borda);
+}
+.tituloItens {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+.contagem {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.total {
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.total b {
+  font-family: var(--fonte-mono);
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+.corpoItens {
+  padding: var(--espaco-3) var(--espaco-4);
+}
+
+/* ==========================================================
+   06. RODAPÉ
+   ========================================================== */
+.rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: var(--espaco-4);
+  border-top: 1px solid var(--cor-borda);
+}
+.notaRodape {
+  margin: 0 auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   07. TELAS ESTREITAS (≤ 900px)
+   ========================================================== */
+@media (max-width: 900px) {
+  .gradeTopo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dadosPlano {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .campoLargo {
+    grid-column: auto;
+  }
+}

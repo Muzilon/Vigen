@@ -1,0 +1,200 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical entre blocos
+   02. Trilha, título e selos (Manual / status / progresso)
+   03. Dados do plano — grade rótulo/valor
+   04. Edição do cabeçalho (details "Editar título / objetivo")
+   05. Tabela de itens — larguras, rolagem, células
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ==========================================================
+   02. TRILHA / TÍTULO / SELOS
+   ========================================================== */
+.trilha {
+  display: flex;
+  gap: var(--espaco-2);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.linkTrilha {
+  color: var(--cor-acento);
+  text-decoration: none;
+}
+.linkTrilha:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+.trilhaAtual {
+  color: var(--cor-texto);
+}
+
+.titulo {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.selos {
+  margin-top: var(--espaco-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+.progresso {
+  font-size: 12.5px;
+  color: var(--cor-texto-secundario);
+}
+.numero {
+  font-family: var(--fonte-mono);
+}
+
+/* ==========================================================
+   03. DADOS DO PLANO
+   ========================================================== */
+.dados {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espaco-3) var(--espaco-4);
+}
+.dados dt {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cor-texto-secundario);
+}
+.dados dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+.dadoLargo {
+  grid-column: 1 / -1;
+}
+.textoLivre {
+  white-space: pre-wrap;
+}
+
+/* ==========================================================
+   04. EDIÇÃO DO CABEÇALHO
+   ========================================================== */
+.edicao {
+  margin-top: var(--espaco-4);
+}
+/* summary com aparência de botão secundário pequeno (sem marcador nativo) */
+.resumoEdicao {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cor-texto);
+  cursor: pointer;
+  list-style: none;
+}
+.resumoEdicao::-webkit-details-marker {
+  display: none;
+}
+.resumoEdicao:hover {
+  background: var(--cor-fundo-sutil);
+}
+
+/* ==========================================================
+   05. TABELA DE ITENS
+   ========================================================== */
+.secaoItens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+.tituloSecao {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+.contagem {
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+
+/* min-width: rolagem horizontal no celular em vez de espremer "O quê" */
+.rolagemTabela {
+  overflow-x: auto;
+}
+.rolagemTabela > table {
+  min-width: 860px;
+}
+
+.colQuem {
+  width: 170px;
+}
+.colQuando {
+  width: 120px;
+}
+.colStatus {
+  width: 130px;
+}
+.colAcoes {
+  width: 240px;
+}
+
+/* ItemAcoes abre formulários inline: células alinhadas ao topo */
+.celulaTopo {
+  vertical-align: top;
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+.linkOQue {
+  font-weight: 500;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linkOQue:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+.detalheItem {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+.evidenciaItem {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cor-status-encerrado-texto);
+}
+.linkThread {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--cor-acento);
+  text-decoration: none;
+}
+.linkThread:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .dados {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,59 @@
+/* ==========================================================
+   ÍNDICE
+   01. Badge base — pill compacto (20px) de status de item/plano
+   02. Variantes de status do item 5W2H / status geral do plano
+   03. Variante de origem (neutra, ex.: "Manual")
+   ========================================================== */
+
+/* ==========================================================
+   01. BADGE BASE
+   ========================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--raio-pill);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ==========================================================
+   02. VARIANTES DE STATUS
+   Reaproveita os pares de cor de status de RNC do base.css
+   (mesmo significado visual: cinza = parado, azul = em curso,
+   verde = concluído, vermelho = atrasado).
+   ========================================================== */
+.pendente,
+.semItens {
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+}
+.emAndamento {
+  background: var(--cor-status-aberto-fundo);
+  color: var(--cor-status-aberto-texto);
+}
+.concluido {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}
+/* Cancelado: sem fundo colorido, texto fraco — some visualmente da lista */
+.cancelado {
+  background: var(--cor-fundo);
+  color: var(--cor-texto-secundario);
+  border: 1px solid var(--cor-borda);
+}
+.atrasado {
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+}
+
+/* ==========================================================
+   03. ORIGEM
+   ========================================================== */
+.origem {
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+}

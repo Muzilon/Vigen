@@ -1,0 +1,55 @@
+/* ==========================================================
+   ÍNDICE
+   01. Formulário — painel sob o "Editar título / objetivo"
+   02. Textarea do objetivo
+   03. Mensagem de sucesso
+   ========================================================== */
+
+/* ==========================================================
+   01. FORMULÁRIO
+   ========================================================== */
+.formulario {
+  margin-top: var(--espaco-2);
+  max-width: 672px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  padding: var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-fundo-sutil);
+}
+
+/* ==========================================================
+   02. TEXTAREA
+   ========================================================== */
+.areaTexto {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-family: var(--fonte-ui);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cor-texto);
+  resize: vertical;
+}
+.areaTexto:focus {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
+  border-color: var(--cor-acento);
+}
+
+/* ==========================================================
+   03. SUCESSO
+   ========================================================== */
+.sucesso {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--raio-padrao);
+  font-size: 13px;
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}

@@ -1,0 +1,230 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — coluna única, largura de leitura, responsiva
+   02. Trilha — voltar para o Plano de Ação + origem (RNC/plano)
+   03. Cartão do item — selos de status/prazo, O quê, detalhes 5W2H
+   04. Chip de prazo — "vence em N dias" / "atrasado há N dias"
+   05. Evidência de conclusão
+   06. Ações do item (componente compartilhado ItemAcoes)
+   07. Cartão de anexos
+   08. Celular (≤ 640px) — alvos de toque maiores, estilo Mobile-Item
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  max-width: 760px;
+}
+
+/* ==========================================================
+   02. TRILHA
+   ========================================================== */
+.trilha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.linkVoltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.linkVoltar:hover {
+  color: var(--cor-texto);
+}
+
+.linkCodigo,
+.linkPlano {
+  color: var(--cor-acento);
+  text-decoration: none;
+}
+.linkCodigo {
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.linkCodigo:hover,
+.linkPlano:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+
+/* Código de RNC que o usuário não pode abrir (visão reduzida B4) */
+.codigoOculto {
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+}
+
+/* ==========================================================
+   03. CARTÃO DO ITEM
+   ========================================================== */
+.cartaoItem {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 14px var(--espaco-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+
+.linhaSelos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+}
+
+.rotuloOQue {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-texto-secundario);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.titulo {
+  margin: 2px 0 0;
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+/* Lista rótulo/valor em duas colunas (rótulo estreito à esquerda) */
+.detalhes {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: var(--espaco-2) 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.detalhes dt {
+  color: var(--cor-texto-secundario);
+}
+.detalhes dd {
+  margin: 0;
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.data {
+  font-family: var(--fonte-mono);
+}
+
+/* ==========================================================
+   04. CHIP DE PRAZO
+   ========================================================== */
+.chipPrazo,
+.chipPrazoProximo,
+.chipPrazoAtrasado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--raio-pill);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--cor-fundo);
+  color: var(--cor-texto-secundario);
+}
+.chipPrazoProximo {
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-acento-hover);
+}
+.chipPrazoAtrasado {
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+}
+
+/* ==========================================================
+   05. EVIDÊNCIA DE CONCLUSÃO
+   ========================================================== */
+.evidencia {
+  border-top: 1px solid var(--cor-borda-sutil);
+  padding-top: var(--espaco-3);
+}
+.rotuloEvidencia {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-status-encerrado-texto);
+}
+.textoEvidencia {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   06. AÇÕES DO ITEM
+   ========================================================== */
+.acoes {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3) var(--espaco-4);
+}
+
+/* ==========================================================
+   07. CARTÃO DE ANEXOS
+   ========================================================== */
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3) var(--espaco-4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cabecalhoCartao {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.tituloCartao {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+.contagem {
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   08. CELULAR (≤ 640px)
+   Estilo Mobile-Item.dc.html: título maior, texto 15px e
+   botões de ação com altura mínima de toque (44px).
+   ========================================================== */
+@media (max-width: 640px) {
+  .pagina {
+    max-width: none;
+  }
+  .titulo {
+    font-size: 19px;
+  }
+  .detalhes {
+    grid-template-columns: 64px minmax(0, 1fr);
+    font-size: 15px;
+  }
+  .acoes :where(button, summary) {
+    min-height: 44px;
+  }
+}
