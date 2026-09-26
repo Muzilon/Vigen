@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ResultadoAcao } from "@/paginas/html/componentes/form-acao";
 import * as adm from "@/lib/admin/servico";
+import { salvarConfigAprovacao } from "@/lib/aprovacao/config-modulo";
 import type { Ator } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { ErroNegocio } from "@/lib/erros";
@@ -173,5 +174,17 @@ export async function excluirConfiguracaoEscalaAcao(_: ResultadoAcao, fd: FormDa
   return admin(async (a) => {
     await adm.excluirConfiguracaoEscala(a, idDe(fd));
     return "Configuração de escala excluída (volta a usar o padrão).";
+  });
+}
+
+// ---------------------------------------------------------------- aprovação de HIRA/LAIA (decisão 5)
+
+export async function salvarConfigAprovacaoAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    const modulo = txt(fd, "modulo");
+    if (modulo !== "hira" && modulo !== "laia") throw new ErroNegocio("Módulo inválido.");
+    const modo = txt(fd, "modo") === "PARALELO" ? "PARALELO" : "SEQUENCIAL";
+    await salvarConfigAprovacao(a, modulo, { exigir: fd.get("exigir") === "on", aprovadorIds: fd.getAll("aprovadorIds").map(String), modo });
+    return "Fluxo de aprovação atualizado.";
   });
 }

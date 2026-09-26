@@ -32,7 +32,7 @@ function ehUnicoViolado(e: unknown) {
 
 async function registrarHistorico(
   tx: Tx,
-  a: Ator,
+  a: Pick<Ator, "empresaId" | "usuarioId">,
   fluxoId: string,
   acao: "SOLICITADO" | "APROVADO" | "REJEITADO" | "CANCELADO" | "CONCLUIDO",
   extra: { etapaId?: string | null; comentario?: string | null; metadados?: Prisma.InputJsonValue } = {},
@@ -62,41 +62,53 @@ async function travarFluxo(tx: Tx, f: { id: string; versao: number }, data: Pris
 // ---------------------------------------------------------------- escrita
 
 export async function solicitarAprovacao(a: Ator, d: DadosSolicitacao): Promise<{ id: string }> {
-  if (!obterHandlerAprovacao(d.entidadeTipo)) throw new ErroNegocio(`Tipo de entidade sem fluxo de aprovação: ${d.entidadeTipo}.`);
-  const resumo = d.resumo.trim();
-  if (!resumo) throw new ErroNegocio("Informe um resumo da alteração.");
-  if (resumo.length > MAX_RESUMO) throw new ErroNegocio(`Resumo com no máximo ${MAX_RESUMO} caracteres.`);
-  const ativos = await a.db.usuario.findMany({ where: { id: { in: d.aprovadorIds }, ativo: true }, select: { id: true } });
-  validarAprovadores(a.usuarioId, d.aprovadorIds, new Set(ativos.map((u) => u.id)));
-
   let fluxo: { id: string };
   try {
-    fluxo = await a.db.$transaction(async (tx) => {
-      const f = await tx.fluxoAprovacao.create({
-        data: {
-          empresaId: a.empresaId,
-          entidadeTipo: d.entidadeTipo,
-          entidadeId: d.entidadeId,
-          tipoAlteracao: d.tipoAlteracao,
-          modo: d.modo,
-          solicitanteId: a.usuarioId,
-          payload: d.payload ?? {},
-          resumo,
-        },
-        select: { id: true },
-      });
-      await tx.etapaAprovacao.createMany({
-        data: montarEtapas(d.modo, d.aprovadorIds).map((e) => ({ ...e, empresaId: a.empresaId, fluxoId: f.id })),
-      });
-      await registrarHistorico(tx, a, f.id, "SOLICITADO", { metadados: { modo: d.modo, aprovadorIds: d.aprovadorIds } });
-      return f;
-    });
+    fluxo = await a.db.$transaction((tx) => criarFluxoNaTransacao(tx, a, d));
   } catch (e) {
     if (ehUnicoViolado(e)) throw new ErroNegocio("Já existe uma aprovação pendente para este registro.");
     throw e;
   }
   await notificarPendentes(a, fluxo.id);
   return fluxo;
+}
+
+/**
+ * Cria o fluxo na transação do chamador (ex.: HIRA/LAIA criam a linha PENDENTE_APROVACAO e o
+ * fluxo de INCLUSAO atomicamente). Após o commit, chame notificarFluxoCriado(a, id).
+ */
+export async function criarFluxoNaTransacao(tx: Tx, a: Pick<Ator, "empresaId" | "usuarioId">, d: DadosSolicitacao): Promise<{ id: string }> {
+  if (!obterHandlerAprovacao(d.entidadeTipo)) throw new ErroNegocio(`Tipo de entidade sem fluxo de aprovação: ${d.entidadeTipo}.`);
+  const resumo = d.resumo.trim();
+  if (!resumo) throw new ErroNegocio("Informe um resumo da alteração.");
+  if (resumo.length > MAX_RESUMO) throw new ErroNegocio(`Resumo com no máximo ${MAX_RESUMO} caracteres.`);
+  const ativos = await tx.usuario.findMany({ where: { id: { in: d.aprovadorIds }, ativo: true }, select: { id: true } });
+  validarAprovadores(a.usuarioId, d.aprovadorIds, new Set(ativos.map((u) => u.id)));
+  const pendentes = await tx.fluxoAprovacao.count({ where: { entidadeTipo: d.entidadeTipo, entidadeId: d.entidadeId, status: "PENDENTE" } });
+  if (pendentes > 0) throw new ErroNegocio("Já existe uma aprovação pendente para este registro.");
+  const f = await tx.fluxoAprovacao.create({
+    data: {
+      empresaId: a.empresaId,
+      entidadeTipo: d.entidadeTipo,
+      entidadeId: d.entidadeId,
+      tipoAlteracao: d.tipoAlteracao,
+      modo: d.modo,
+      solicitanteId: a.usuarioId,
+      payload: d.payload ?? {},
+      resumo,
+    },
+    select: { id: true },
+  });
+  await tx.etapaAprovacao.createMany({
+    data: montarEtapas(d.modo, d.aprovadorIds).map((e) => ({ ...e, empresaId: a.empresaId, fluxoId: f.id })),
+  });
+  await registrarHistorico(tx, a, f.id, "SOLICITADO", { metadados: { modo: d.modo, aprovadorIds: d.aprovadorIds } });
+  return f;
+}
+
+/** Notifica os aprovadores de um fluxo criado com criarFluxoNaTransacao (após o commit). */
+export function notificarFluxoCriado(a: Ator, fluxoId: string) {
+  return notificarPendentes(a, fluxoId);
 }
 
 export interface DadosDecisao {
@@ -155,6 +167,8 @@ export async function cancelar(a: Ator, fluxoId: string, motivo?: string | null,
     await travarFluxo(tx, fluxo, { status: "CANCELADO", concluidoEm: new Date() });
     await tx.etapaAprovacao.updateMany({ where: { fluxoId, status: { in: ["PENDENTE", "AGUARDANDO"] } }, data: { status: "IGNORADA" } });
     await registrarHistorico(tx, a, fluxoId, "CANCELADO", { comentario: m });
+    const h = obterHandlerAprovacao(fluxo.entidadeTipo);
+    if (h?.aoCancelar) await h.aoCancelar(tx, { ...fluxo, status: "CANCELADO", concluidoEm: new Date(), versao: fluxo.versao + 1 }, a);
   });
 }
 

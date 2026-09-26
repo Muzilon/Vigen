@@ -3,6 +3,8 @@ import type { Ator } from "@/lib/ator";
 import { ErroNegocio } from "@/lib/erros";
 import { notificar } from "@/lib/notificacoes";
 import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
+import { filtroObras } from "@/lib/escopo-obras";
+import { moduloHiraAtivo } from "@/lib/hira/servico";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
@@ -44,6 +46,14 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     });
     if (!r) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = r.responsavelId ?? r.criadoPorId;
+    return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
+  }
+  if (t.tipo === "HIRA") {
+    // HIRA: usuários com o módulo e a obra no escopo; fala com o responsável da linha.
+    if (!(await moduloHiraAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const l = await a.db.linhaHira.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroObras(a)] }, select: { responsavelId: true, criadoPorId: true } });
+    if (!l) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const padrao = l.responsavelId ?? l.criadoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
   }
   const item = await a.db.itemAcao.findFirst({
@@ -163,5 +173,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "RNC") return `/rncs/${t.entidadeId}?aba=interacoes`;
   if (t.entidadeTipo === "PROCESSO") return `/processos/${t.entidadeId}`;
   if (t.entidadeTipo === "RISCO_OPORTUNIDADE") return `/riscos/${t.entidadeId}`;
+  if (t.entidadeTipo === "HIRA") return `/hira/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

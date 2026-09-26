@@ -59,8 +59,6 @@ export async function getDb(): Promise<DbTenant> {
   return dbPorEmpresa(ctx.empresaId);
 }
 
-/** Filtro de obra para modelos com obraId (ex.: Rnc). */
-export function filtroObras(ctx: Pick<Contexto, "obrasPermitidas">): { obraId?: { in: string[] } } {
-  return ctx.obrasPermitidas === null ? {} : { obraId: { in: ctx.obrasPermitidas } };
-}
 
+/** Filtro de obra para modelos com obraId (ex.: Rnc, HIRA, LAIA) — implementação pura em escopo-obras.ts. */
+export { filtroObras } from "@/lib/escopo-obras";

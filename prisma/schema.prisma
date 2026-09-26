@@ -64,6 +64,8 @@ enum Permissao {
   RISCO_GERENCIAR
   RISCO_TRATAR
   SWOT_GERENCIAR
+  HIRA_GERENCIAR
+  LAIA_GERENCIAR
 }
 
 enum EscopoObras {
@@ -125,6 +127,7 @@ enum OrigemPlanoAcao {
   AUDITORIA
   MANUAL
   RISCO_OPORTUNIDADE
+  HIRA
 }
 
 enum StatusItemAcao {
@@ -142,6 +145,7 @@ enum TipoEntidadeAnexo {
   ITEM_ACAO
   PROCESSO
   RISCO_OPORTUNIDADE
+  HIRA
 }
 
 enum TipoEntidadeInteracao {
@@ -149,6 +153,7 @@ enum TipoEntidadeInteracao {
   ITEM_ACAO
   PROCESSO
   RISCO_OPORTUNIDADE
+  HIRA
 }
 
 enum TipoNotificacao {
@@ -172,6 +177,7 @@ enum TipoEntidadeNotificacao {
   FLUXO_APROVACAO
   PROCESSO
   RISCO_OPORTUNIDADE
+  HIRA
 }
 
 enum StatusEmailNotificacao {
@@ -279,6 +285,41 @@ enum AcaoHistoricoRisco {
   EXCLUSAO
 }
 
+/// Condição/situação operacional (HIRA e LAIA).
+enum CondicaoOperacional {
+  NORMAL
+  ANORMAL
+  EMERGENCIA
+}
+
+/// Hierarquia de controle (ISO 45001 8.1.2).
+enum HierarquiaControle {
+  ELIMINACAO
+  SUBSTITUICAO
+  ENGENHARIA
+  ADMINISTRATIVO
+  EPI
+}
+
+/// Situação de uma linha de planilha com fluxo de aprovação (HIRA/LAIA).
+enum StatusLinhaSgi {
+  PENDENTE_APROVACAO
+  VIGENTE
+  REJEITADA
+  INATIVA
+}
+
+enum AcaoHistoricoSgi {
+  INCLUSAO
+  ALTERACAO
+  EXCLUSAO
+  REAVALIACAO
+  REVISAO_GERAL
+  PLANO
+  APROVACAO
+  REJEICAO
+}
+
 enum QuadranteSwot {
   FORCA
   FRAQUEZA
@@ -334,6 +375,8 @@ model Empresa {
   ciclosSwot               CicloSwot[]
   itensSwot                ItemSwot[]
   partesInteressadas       ParteInteressada[]
+  linhasHira               LinhaHira[]
+  historicosHira           HistoricoLinhaHira[]
 
   @@map("empresa")
 }
@@ -355,6 +398,7 @@ model ObraUnidade {
   planos              PlanoAcao[]
   configuracoesEscala ConfiguracaoEscala[]
   riscosOportunidades RiscoOportunidade[]
+  linhasHira          LinhaHira[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -440,6 +484,9 @@ model Usuario {
   riscosCriados             RiscoOportunidade[]          @relation("RiscoCriadoPor")
   historicosRisco           HistoricoRiscoOportunidade[] @relation("HistoricoRiscoUsuario")
   ciclosSwotCriados         CicloSwot[]                  @relation("CicloSwotCriadoPor")
+  hiraResponsavel           LinhaHira[]                  @relation("HiraResponsavel")
+  hiraCriadas               LinhaHira[]                  @relation("HiraCriadoPor")
+  historicosHira            HistoricoLinhaHira[]         @relation("HistoricoHiraUsuario")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -640,6 +687,7 @@ model PlanoAcao {
   rnc       Rnc?
   itens     ItemAcao[]
   risco     RiscoOportunidade?
+  linhaHira LinhaHira?
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
@@ -911,6 +959,7 @@ model Processo {
   interacoesDestino InteracaoProcesso[] @relation("InteracaoDestino")
   versoes           VersaoProcesso[]
   riscos            RiscoOportunidade[]
+  linhasHira        LinhaHira[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -1117,6 +1166,83 @@ model ParteInteressada {
   @@unique([empresaId, id])
   @@index([empresaId, cicloId])
   @@map("parte_interessada")
+}
+
+/// HIRA — identificação de perigos e avaliação de riscos de SST (ISO 45001). Uma linha por
+/// perigo/atividade, sempre de uma obra (escopo). Nível = P × S pela ConfiguracaoEscala HIRA
+/// (obra → empresa → padrão). Inclusão/alteração/exclusão podem exigir aprovação (Empresa.config).
+model LinhaHira {
+  id                    String              @id @default(uuid()) @db.Uuid
+  empresaId             String              @map("empresa_id") @db.Uuid
+  numero                Int
+  obraId                String              @map("obra_id") @db.Uuid
+  setor                 String
+  processoId            String?             @map("processo_id") @db.Uuid
+  atividade             String
+  rotineira             Boolean             @default(true)
+  perigo                String
+  risco                 String
+  condicao              CondicaoOperacional @default(NORMAL)
+  controlesExistentes   String?             @map("controles_existentes")
+  hierarquiaControle    HierarquiaControle? @map("hierarquia_controle")
+  controlesPropostos    String?             @map("controles_propostos")
+  probabilidade         Int
+  severidade            Int
+  score                 Int
+  faixa                 FaixaNivel
+  probabilidadeResidual Int?                @map("probabilidade_residual")
+  severidadeResidual    Int?                @map("severidade_residual")
+  scoreResidual         Int?                @map("score_residual")
+  faixaResidual         FaixaNivel?         @map("faixa_residual")
+  requisitoLegal        String?             @map("requisito_legal")
+  responsavelId         String?             @map("responsavel_id") @db.Uuid
+  planoAcaoId           String?             @map("plano_acao_id") @db.Uuid
+  modoReavaliacao       ModoReavaliacao     @default(ITEM) @map("modo_reavaliacao")
+  periodicidadeMeses    Int                 @default(12) @map("periodicidade_meses")
+  proximaReavaliacaoEm  DateTime?           @map("proxima_reavaliacao_em") @db.Date
+  ultimaReavaliacaoEm   DateTime?           @map("ultima_reavaliacao_em")
+  status                StatusLinhaSgi      @default(VIGENTE)
+  versao                Int                 @default(0)
+  criadoPorId           String              @map("criado_por_id") @db.Uuid
+  criadoEm              DateTime            @default(now()) @map("criado_em")
+  atualizadoEm          DateTime            @updatedAt @map("atualizado_em")
+
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra        ObraUnidade          @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  processo    Processo?            @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  responsavel Usuario?             @relation("HiraResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor   Usuario              @relation("HiraCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao   PlanoAcao?           @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  historico   HistoricoLinhaHira[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, numero])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, obraId, status])
+  @@index([empresaId, processoId])
+  @@index([empresaId, proximaReavaliacaoEm])
+  @@map("linha_hira")
+}
+
+/// Histórico append-only da linha HIRA (trigger bloqueia UPDATE/DELETE): snapshot dos dados em cada evento.
+model HistoricoLinhaHira {
+  id         String           @id @default(uuid()) @db.Uuid
+  empresaId  String           @map("empresa_id") @db.Uuid
+  linhaId    String           @map("linha_id") @db.Uuid
+  acao       AcaoHistoricoSgi
+  versao     Int
+  dados      Json
+  observacao String?
+  usuarioId  String           @map("usuario_id") @db.Uuid
+  criadoEm   DateTime         @default(now()) @map("criado_em")
+
+  empresa Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  linha   LinhaHira @relation(fields: [empresaId, linhaId], references: [empresaId, id], onDelete: Restrict)
+  usuario Usuario   @relation("HistoricoHiraUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, linhaId, criadoEm])
+  @@map("historico_linha_hira")
 }
 
 model TentativaLogin {

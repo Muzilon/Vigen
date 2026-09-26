@@ -7,6 +7,7 @@ import {
   excluirConfiguracaoEscalaAcao,
   excluirPerfilAcao,
   redefinirSenhaAcao,
+  salvarConfigAprovacaoAcao,
   salvarConfiguracaoEscalaAcao,
   salvarModulosAtivosAcao,
   salvarObraAcao,
@@ -16,6 +17,7 @@ import {
 } from "@/app/(app)/configuracoes/actions";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { dadosAdministracao, dadosEscalas, dadosModulos, MIN_SENHA, PAPEIS } from "@/lib/admin/servico";
+import { lerConfigAprovacao, type ModuloAprovavel } from "@/lib/aprovacao/config-modulo";
 import { getAtor } from "@/lib/ator-servidor";
 import { GRUPO_MODULO, GRUPO_POR_MODULO, ROTULO_MODULO, TODOS_MODULOS } from "@/lib/modulos";
 import { MAX_DIAS_ALERTA } from "@/lib/notificacoes/preferencias";
@@ -34,6 +36,7 @@ const ABAS = [
   ["setores", "Setores"],
   ["modulos", "Módulos"],
   ["escalas", "Escalas"],
+  ["aprovacoes", "Aprovações"],
   ["preferencias", "Notificações"],
 ] as const;
 type Aba = (typeof ABAS)[number][0];
@@ -63,6 +66,8 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   RISCO_GERENCIAR: "Gerenciar riscos e oportunidades",
   RISCO_TRATAR: "Tratar riscos e oportunidades",
   SWOT_GERENCIAR: "Gerenciar SWOT e partes interessadas",
+  HIRA_GERENCIAR: "Gerenciar HIRA (perigos e riscos SST)",
+  LAIA_GERENCIAR: "Gerenciar LAIA (aspectos e impactos)",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };
@@ -428,6 +433,67 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
   );
 }
 
+const MODULOS_APROVACAO: { m: ModuloAprovavel; modulo: "HIRA" | "LAIA"; titulo: string }[] = [
+  { m: "hira", modulo: "HIRA", titulo: "HIRA — perigos e riscos de SST" },
+  { m: "laia", modulo: "LAIA", titulo: "LAIA — aspectos e impactos ambientais" },
+];
+
+/** Fluxo de aprovação de inclusão/alteração/exclusão de linhas HIRA/LAIA (decisão 5). */
+async function AbaAprovacoes() {
+  const a = await getAtor();
+  const [empresa, usuarios] = await Promise.all([
+    a.db.empresa.findFirst({ where: { id: a.empresaId }, select: { config: true, modulosAtivos: true } }),
+    a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+  ]);
+  return (
+    <div className={styles.abaEstreita}>
+      <p className={styles.explicacao}>
+        Quando exigido, toda inclusão, alteração e exclusão de linha da planilha gera uma solicitação de aprovação para os aprovadores
+        padrão (o solicitante nunca aprova o próprio pedido). A linha nova fica &quot;pendente de aprovação&quot; até a última assinatura.
+        Sem exigência, as mudanças são aplicadas direto, com histórico. Com o módulo Documentos (em breve), a aprovação poderá usar a
+        tramitação de documentos.
+      </p>
+      {MODULOS_APROVACAO.map(({ m, modulo, titulo }) => {
+        const c = lerConfigAprovacao(empresa?.config, m);
+        const ativo = empresa?.modulosAtivos.includes(modulo);
+        return (
+          <Cartao key={m} titulo={titulo}>
+            {!ativo && <p className={styles.ajuda}>Módulo não contratado — a configuração vale quando ele for ativado.</p>}
+            <FormAcao acao={salvarConfigAprovacaoAcao} botao="Salvar" classeBotao={styles.botaoPrimario} className={styles.pilhaLarga}>
+              <input type="hidden" name="modulo" value={m} />
+              <label className={styles.opcaoDescrita}>
+                <input type="checkbox" name="exigir" defaultChecked={c.exigir} />
+                <span>
+                  Exigir aprovação para incluir, alterar e excluir linhas
+                  <span className={styles.ajudaOpcao}>Reavaliações e revisões gerais continuam diretas (com histórico).</span>
+                </span>
+              </label>
+              <div>
+                <Rotulo htmlFor={`modo-${m}`}>Modo</Rotulo>
+                <Selecao id={`modo-${m}`} name="modo" defaultValue={c.modo}>
+                  <option value="SEQUENCIAL">Sequencial (na ordem abaixo)</option>
+                  <option value="PARALELO">Simultâneo</option>
+                </Selecao>
+              </div>
+              <fieldset className={styles.grupoOpcoes}>
+                <legend className={styles.legenda}>Aprovadores padrão</legend>
+                <div className={styles.opcoesEmGrade}>
+                  {usuarios.map((u) => (
+                    <label key={u.id} className={styles.opcao}>
+                      <input type="checkbox" name="aprovadorIds" value={u.id} defaultChecked={c.aprovadorIds.includes(u.id)} />
+                      {u.nome}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </FormAcao>
+          </Cartao>
+        );
+      })}
+    </div>
+  );
+}
+
 async function AbaPreferencias({ empresaId }: { empresaId: string }) {
   const p = await obterPreferencias(empresaId);
   return (
@@ -474,7 +540,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
   if (!temPermissao(ctx, "ADMIN_CONFIG")) notFound();
   const sp = await searchParams;
   const aba: Aba = (ABAS.find(([k]) => k === sp.aba)?.[0] ?? "usuarios") as Aba;
-  const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" ? null : await dadosAdministracao(await getAtor());
+  const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" || aba === "aprovacoes" ? null : await dadosAdministracao(await getAtor());
   const escalas = aba === "escalas" ? await dadosEscalas(await getAtor()) : null;
 
   return (
@@ -498,6 +564,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
       {aba === "setores" && d && <AbaSetores d={d} />}
       {aba === "modulos" && <AbaModulos empresaId={ctx.empresaId} />}
       {aba === "escalas" && escalas && <AbaEscalas d={escalas} />}
+      {aba === "aprovacoes" && <AbaAprovacoes />}
       {aba === "preferencias" && <AbaPreferencias empresaId={ctx.empresaId} />}
     </div>
   );

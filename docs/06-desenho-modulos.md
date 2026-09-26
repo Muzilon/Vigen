@@ -212,3 +212,43 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
   vinculados a riscos) e 6 partes interessadas.
 - **Testes**: `tests/riscos.test.ts`, `tests/swot.test.ts` (vitest) e `npm run test:riscos` /
   `npm run test:swot`.
+
+## P3 — HIRA entregue (2026-09-26)
+
+- **Schema** (migração `20260926200000_hira`): `LinhaHira` (número sequencial por empresa → `H-001`;
+  **obra obrigatória** = escopo; setor texto, processo opcional, atividade, rotineira, perigo, risco/dano,
+  `CondicaoOperacional` NORMAL/ANORMAL/EMERGENCIA, controles existentes, `HierarquiaControle`
+  (eliminação → EPI) + controles propostos, P×S inicial e residual com score/faixa gravados, requisito
+  legal (texto), responsável, `planoAcaoId` único, reavaliação ITEM/GERAL, `StatusLinhaSgi`
+  PENDENTE_APROVACAO/VIGENTE/REJEITADA/INATIVA, `versao` = trava otimista) e `HistoricoLinhaHira`
+  (**append-only** por trigger; snapshot JSON + ação `AcaoHistoricoSgi`). CHECKs de P/S, residual completo,
+  periodicidade e textos. Permissões `HIRA_GERENCIAR` e `LAIA_GERENCIAR` (perfis Segurança/Meio Ambiente do
+  seed; usuários `seguranca@` e `meioambiente@monto.com.br`). `OrigemPlanoAcao`, Anexo, Interação e
+  Notificação += `HIRA`.
+- **Escopo por obra**: `filtroObras` foi movido para `src/lib/escopo-obras.ts` (puro; `tenant.ts` reexporta)
+  e é usado em toda leitura/escrita do HIRA; incluir/alterar para obra fora do escopo é negado.
+- **Cálculo**: `src/lib/hira/regras.ts` — eixo 1 = probabilidade, eixo 2 = severidade da
+  `ConfiguracaoEscala` HIRA resolvida obra → empresa → padrão. Sempre recalculado no servidor (também ao
+  aplicar uma aprovação).
+- **Fluxo de aprovação (decisão 5)**: `Empresa.config.aprovacao.hira = { exigir, aprovadorIds, modo }`
+  (`src/lib/aprovacao/config-modulo.ts`, aba **Configurações → Aprovações**). Com `exigir`: INCLUSÃO cria a
+  linha PENDENTE_APROVACAO e o fluxo na mesma transação (`criarFluxoNaTransacao`, novo no motor); ALTERAÇÃO
+  guarda `{ antes, depois, dados, versao, motivo }` (só os campos que mudam em antes/depois) e a linha
+  vigente não muda até a última assinatura; EXCLUSÃO = inativação. O handler (`src/lib/hira/aprovacao.ts`,
+  registrado em `handlers.ts`) aplica em nome do solicitante conferindo a versão (conflito se a linha mudou).
+  Rejeição **ou cancelamento** (novo hook `aoCancelar` no registry) de inclusão → REJEITADA; de
+  alteração/exclusão → só histórico REJEICAO. Aprovadores efetivos = padrões menos o solicitante. Sem
+  `exigir`, aplica direto com histórico. Reavaliação/revisão geral/plano não passam por aprovação.
+  **Ponto de extensão P4**: `canalAprovacao(modulosAtivos)` (hoje sempre "MOTOR") — com DOCUMENTOS ativo,
+  passará a encaminhar para a Tramitação de Documentos com o mesmo payload.
+- **Reavaliação**: item (histórico REAVALIACAO) e **revisão geral por obra** (`/hira/revisao-geral?obra=`);
+  fonte de alerta `src/lib/hira/reavaliacao.ts` (ITEM por linha, GERAL por obra).
+- **Telas**: `/hira` — planilha densa (quadro com rolagem própria, cabeçalho e coluna Nº fixos), filtros
+  obra/setor/processo/nível/status, heatmaps P×S inicial e residual clicáveis, badge "N pendentes de
+  aprovação" e marca "Alteração/Exclusão pendente" por linha; `/hira/novo` (nível inicial e residual ao
+  vivo, aviso de aprovação); `/hira/[id]` (dados, alterar/solicitar alteração, excluir, reavaliar, plano 5W2H,
+  histórico com snapshot, aprovações, anexos, comentários); `/hira/revisao-geral`. Processo: cartão com as
+  linhas HIRA vinculadas. Dashboard: painel HIRA por nível. Menu: HIRA implementado (grupo Segurança).
+- **Seed**: 12 linhas HIRA da Monto (Obra Alfa/Beta, processo PF-03), 1 com plano, 1 inclusão pendente;
+  aprovação exigida com aprovador = admin.
+- **Testes**: `tests/hira.test.ts` e `npm run test:hira` (16 casos).

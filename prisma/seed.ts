@@ -1,6 +1,8 @@
 import { PrismaClient, type Modulo, type Permissao } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { PADRAO_RISCO_OPORTUNIDADE } from "../src/lib/escala/padrao";
+import { mesclarConfigAprovacao } from "../src/lib/aprovacao/config-modulo";
+import { PADRAO_HIRA, PADRAO_RISCO_OPORTUNIDADE } from "../src/lib/escala/padrao";
+import { avaliarPS, codigoHira } from "../src/lib/hira/regras";
 import { avaliar } from "../src/lib/riscos/regras";
 
 const prisma = new PrismaClient();
@@ -67,8 +69,8 @@ async function main() {
       descricao: "Equipe de Qualidade",
       permissoes: ["RNC_VERIFICAR_EFICACIA", "RNC_APROVAR_CANCELAMENTO", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "PROCESSO_GERENCIAR", "RISCO_GERENCIAR", "RISCO_TRATAR", "SWOT_GERENCIAR"],
     },
-    { nome: "Segurança", descricao: "Equipe de SSO", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "RISCO_TRATAR"] },
-    { nome: "Meio Ambiente", descricao: "Equipe de Meio Ambiente", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR"] },
+    { nome: "Segurança", descricao: "Equipe de SSO", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "RISCO_TRATAR", "HIRA_GERENCIAR"] },
+    { nome: "Meio Ambiente", descricao: "Equipe de Meio Ambiente", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "LAIA_GERENCIAR"] },
   ];
   const perfis: Record<string, { id: string }> = {};
   for (const p of perfisSemente) {
@@ -97,6 +99,22 @@ async function main() {
       setorId: setores["Segurança"].id,
     },
     { email: "colaborador@monto.com.br", nome: "Colaborador Monto", papel: "COLABORADOR", escopoObras: "SELECIONADAS" },
+    {
+      email: "seguranca@monto.com.br",
+      nome: "Técnico de Segurança",
+      papel: "INSPETOR",
+      escopoObras: "TODAS",
+      perfilId: perfis["Segurança"].id,
+      setorId: setores["Segurança"].id,
+    },
+    {
+      email: "meioambiente@monto.com.br",
+      nome: "Analista Ambiental",
+      papel: "INSPETOR",
+      escopoObras: "TODAS",
+      perfilId: perfis["Meio Ambiente"].id,
+      setorId: setores["Meio Ambiente"].id,
+    },
   ] as const;
 
   for (const u of usuarios) {
@@ -117,6 +135,7 @@ async function main() {
   await semearProcessos(e);
   await semearRiscos(e);
   await semearSwot(e);
+  await semearHira(e);
 
   // ---- Demo (para testar isolamento) ----
   // Sem override: fica só com o default do schema (RNC + PLANO_ACAO) — testa o gating
@@ -350,6 +369,78 @@ async function semearSwot(empresaId: string) {
         { nome: "Sindicato da construção civil", necessidades: "Cumprimento da convenção coletiva", expectativas: "Diálogo sobre segurança", influencia: 4, interesse: 3 },
       ].map((p) => ({ ...p, empresaId, cicloId: ciclo.id })),
     });
+  }
+}
+
+/** HIRA da Monto: 12 linhas em 2 obras, aprovação exigida (aprovador: admin), 1 plano e 1 inclusão pendente. Idempotente. */
+async function semearHira(empresaId: string) {
+  const usuario = async (email: string) => (await prisma.usuario.findUniqueOrThrow({ where: { email } })).id;
+  const seg = await usuario("seguranca@monto.com.br");
+  const adminId = await usuario("admin@monto.com.br");
+  const inspetor = await usuario("inspetor@monto.com.br");
+  const emp = await prisma.empresa.findUniqueOrThrow({ where: { id: empresaId } });
+  await prisma.empresa.update({ where: { id: empresaId }, data: { config: mesclarConfigAprovacao(emp.config, "hira", { exigir: true, aprovadorIds: [adminId], modo: "SEQUENCIAL" }) as object } });
+  const obra = async (nome: string) => (await prisma.obraUnidade.findFirstOrThrow({ where: { empresaId, nome } })).id;
+  const alfa = await obra("Obra Alfa");
+  const beta = await obra("Obra Beta");
+  const pf03 = (await prisma.processo.findUniqueOrThrow({ where: { empresaId_codigo: { empresaId, codigo: "PF-03" } } })).id;
+  type H = "ELIMINACAO" | "SUBSTITUICAO" | "ENGENHARIA" | "ADMINISTRATIVO" | "EPI";
+  type Semente = [string, string, string, boolean, string, string, "NORMAL" | "ANORMAL" | "EMERGENCIA", string, number, number, H | null, string | null, number | null, number | null, string | null];
+  const S: Semente[] = [
+    [alfa, "Fachada", "Montagem e uso de andaime fachadeiro", true, "Trabalho em altura acima de 2 m", "Queda de pessoa de nível diferente", "NORMAL", "Andaime com guarda-corpo; cinto paraquedista", 3, 5, "ENGENHARIA", "Linha de vida certificada e ancoragens projetadas", 2, 5, "NR-35; NR-18"],
+    [alfa, "Estrutura", "Concretagem de lajes", true, "Bomba-lança de concreto", "Atingimento por mangote; esmagamento", "NORMAL", "Isolamento da área de lançamento", 2, 4, "ADMINISTRATIVO", "Sinaleiro dedicado e APR da concretagem", 1, 4, "NR-18; NR-12"],
+    [alfa, "Estrutura", "Armação e corte de vergalhões", true, "Pontas de vergalhão expostas", "Perfuração e cortes", "NORMAL", "Uso de luvas", 4, 2, "ENGENHARIA", "Protetores plásticos (cogumelos) em todas as esperas", 2, 2, "NR-18"],
+    [alfa, "Instalações", "Instalações elétricas provisórias do canteiro", true, "Eletricidade (220/380 V)", "Choque elétrico", "NORMAL", "Quadro com DR; eletricista qualificado", 2, 5, "ENGENHARIA", "Inspeção mensal do quadro e aterramento", 1, 5, "NR-10"],
+    [alfa, "Canteiro", "Movimentação de cargas com grua", false, "Carga suspensa", "Queda de material sobre pessoas", "NORMAL", "Operador habilitado; plano de rigging", 3, 5, "ADMINISTRATIVO", "Isolamento sob a carga e checklist diário da grua", 2, 5, "NR-11; NR-18"],
+    [alfa, "Escavação", "Escavação de subsolo acima de 1,25 m", false, "Talude instável", "Soterramento", "ANORMAL", "Escoramento em trechos críticos", 2, 5, null, null, null, null, "NR-18"],
+    [alfa, "Canteiro", "Abandono em caso de incêndio no almoxarifado", false, "Inflamáveis (tintas, solventes)", "Queimaduras e intoxicação por fumaça", "EMERGENCIA", "Extintores e brigada treinada", 2, 4, "ADMINISTRATIVO", "Simulado semestral e rota de fuga sinalizada", 1, 4, "NR-23; IT do Corpo de Bombeiros"],
+    [beta, "Alvenaria", "Corte de blocos com serra circular", true, "Poeira de sílica e ruído", "Silicose e perda auditiva", "NORMAL", "Protetor auricular", 4, 3, "SUBSTITUICAO", "Serra com umidificação; PFF2", 2, 3, "NR-15 Anexo 12; NR-09"],
+    [beta, "Acabamento", "Pintura com solventes em ambiente fechado", true, "Vapores orgânicos", "Intoxicação", "NORMAL", "Ventilação natural", 3, 3, "SUBSTITUICAO", "Tinta à base de água; ventilação forçada", 1, 3, "NR-15"],
+    [beta, "Canteiro", "Circulação de caminhões na entrada", true, "Veículos em manobra", "Atropelamento", "NORMAL", "Sinalização vertical", 3, 4, "ENGENHARIA", "Segregação de rota de pedestres com barreiras", 1, 4, "NR-18"],
+    [beta, "Estrutura", "Soldagem de insertos metálicos", false, "Radiação não ionizante e fagulhas", "Queimaduras e lesão ocular", "NORMAL", "Máscara de solda; avental de raspa", 2, 3, "EPI", "Biombo de proteção para terceiros", 1, 3, "NR-18"],
+    [beta, "Cobertura", "Montagem de telhas na cobertura", false, "Telhado frágil", "Queda através da telha", "NORMAL", "Tábuas de apoio", 3, 5, "ENGENHARIA", "Rede de proteção sob a cobertura e linha de vida", 1, 5, "NR-35"],
+  ];
+  for (const [n, s] of S.entries()) {
+    const numero = n + 1;
+    const pendente = numero === 12;
+    const a = avaliarPS(PADRAO_HIRA, s[8], s[9]);
+    const r = s[12] && s[13] ? avaliarPS(PADRAO_HIRA, s[12], s[13]) : null;
+    const entrada = {
+      obraId: s[0], setor: s[1], processoId: pf03, atividade: s[2], rotineira: s[3], perigo: s[4], risco: s[5], condicao: s[6], controlesExistentes: s[7],
+      hierarquiaControle: s[10], controlesPropostos: s[11], requisitoLegal: s[14], responsavelId: s[0] === alfa && numero % 2 ? inspetor : seg,
+      modoReavaliacao: numero > 7 ? ("GERAL" as const) : ("ITEM" as const), periodicidadeMeses: 12,
+    };
+    const dados = {
+      ...entrada,
+      probabilidade: a.probabilidade, severidade: a.severidade, score: a.score, faixa: a.faixa,
+      probabilidadeResidual: r?.probabilidade ?? null, severidadeResidual: r?.severidade ?? null, scoreResidual: r?.score ?? null, faixaResidual: r?.faixa ?? null,
+      proximaReavaliacaoEm: new Date(numero === 1 ? "2026-10-05T00:00:00.000Z" : "2027-06-30T00:00:00.000Z"),
+      status: pendente ? ("PENDENTE_APROVACAO" as const) : ("VIGENTE" as const),
+    };
+    const l = await prisma.linhaHira.upsert({ where: { empresaId_numero: { empresaId, numero } }, update: {}, create: { ...dados, empresaId, numero, criadoPorId: seg } });
+    if ((await prisma.historicoLinhaHira.count({ where: { linhaId: l.id } })) === 0) {
+      await prisma.historicoLinhaHira.create({
+        data: { empresaId, linhaId: l.id, acao: "INCLUSAO", versao: 0, dados: { ...dados, proximaReavaliacaoEm: null, codigo: codigoHira(l) }, observacao: pendente ? "Enviada para aprovação." : "Cadastro inicial (seed).", usuarioId: seg },
+      });
+    }
+    if (numero === 1 && !l.planoAcaoId) {
+      const plano = await prisma.planoAcao.create({
+        data: { empresaId, origemTipo: "HIRA", origemId: l.id, titulo: "Linha de vida certificada na fachada da Obra Alfa", descricao: "Plano de ação da linha HIRA H-001.", obraId: alfa, criadoPorId: seg },
+      });
+      await prisma.itemAcao.create({ data: { empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: 1, oQue: "Instalar linha de vida certificada na fachada norte", quemId: inspetor, quando: new Date("2026-11-15T00:00:00.000Z") } });
+      await prisma.linhaHira.update({ where: { id: l.id }, data: { planoAcaoId: plano.id } });
+    }
+    if (pendente && (await prisma.fluxoAprovacao.count({ where: { entidadeTipo: "HIRA", entidadeId: l.id } })) === 0) {
+      const f = await prisma.fluxoAprovacao.create({
+        data: {
+          empresaId, entidadeTipo: "HIRA", entidadeId: l.id, tipoAlteracao: "INCLUSAO", modo: "SEQUENCIAL", solicitanteId: seg,
+          resumo: `Inclusão HIRA ${codigoHira(l)} — ${s[2]}`,
+          payload: { linhaId: l.id, versao: 0, dados: { ...entrada, probabilidade: s[8], severidade: s[9], probabilidadeResidual: s[12], severidadeResidual: s[13] } },
+        },
+      });
+      await prisma.etapaAprovacao.create({ data: { empresaId, fluxoId: f.id, ordem: 1, aprovadorId: adminId, status: "PENDENTE" } });
+      await prisma.historicoAprovacao.create({ data: { empresaId, fluxoId: f.id, usuarioId: seg, acao: "SOLICITADO" } });
+    }
   }
 }
 

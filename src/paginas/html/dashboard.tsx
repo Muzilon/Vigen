@@ -6,6 +6,7 @@ import { formatarData } from "@/lib/datas";
 import { enumUrl, uuidUrl } from "@/lib/filtros-url";
 import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { ROTULO_TIPO } from "@/lib/rnc/rotulos";
+import { resumoHira } from "@/lib/hira/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -30,7 +31,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -41,6 +42,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     }),
     a.db.setor.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
     contarPorFaixa(a),
+    resumoHira(a),
   ]);
   const k = ind.kpis;
 
@@ -126,6 +128,24 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
             ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
           />
           <Link href="/riscos" className={styles.linkLimpar}>Abrir a matriz de riscos →</Link>
+        </Painel>
+      )}
+
+      {hira && (
+        <Painel titulo="HIRA — perigos e riscos de SST vigentes por nível" subtitulo={`Nível inicial das linhas vigentes nas obras do seu escopo${hira.pendentes ? ` · ${hira.pendentes} pendente(s) de aprovação` : ""}`}>
+          <Barras
+            paleta="gravidade"
+            vazio="Nenhuma linha HIRA vigente."
+            dados={(
+              [
+                ["CRITICA", "Crítico", hira.porFaixa.CRITICO],
+                ["ALTA", "Alto", hira.porFaixa.ALTO],
+                ["MEDIA", "Médio", hira.porFaixa.MEDIO],
+                ["BAIXA", "Baixo", hira.porFaixa.BAIXO],
+              ] as const
+            ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
+          />
+          <Link href="/hira" className={styles.linkLimpar}>Abrir a planilha HIRA →</Link>
         </Painel>
       )}
 

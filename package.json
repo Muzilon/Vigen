@@ -18,7 +18,8 @@
     "test:aprovacao": "tsx scripts/teste-aprovacao.ts",
     "test:processos": "tsx scripts/teste-processos.ts",
     "test:riscos": "tsx scripts/teste-riscos.ts",
-    "test:swot": "tsx scripts/teste-swot.ts"
+    "test:swot": "tsx scripts/teste-swot.ts",
+    "test:hira": "tsx scripts/teste-hira.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

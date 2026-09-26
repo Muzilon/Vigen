@@ -21,6 +21,8 @@ import { codigoRisco, ROTULO_STATUS_RISCO } from "@/lib/riscos/regras";
 import { listarRiscosDoProcesso, podeGerenciarRiscos } from "@/lib/riscos/servico";
 import { getContexto } from "@/lib/tenant";
 import { BadgeFaixa } from "@/paginas/html/componentes/badge";
+import { codigoHira, ROTULO_STATUS_LINHA } from "@/lib/hira/regras";
+import { listarHiraDoProcesso, podeGerenciarHira } from "@/lib/hira/servico";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -45,7 +47,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   const p = await obterProcesso(a, id);
   if (!p) notFound();
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -53,6 +55,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     listarAnexos(a, alvoAnexo),
     podeEnviarAnexo(a, alvoAnexo),
     listarRiscosDoProcesso(a, id),
+    listarHiraDoProcesso(a, id),
   ]);
   const g = podeGerenciarProcessos(a) && p.ativo;
   const candidatos = outros.filter((o) => o.id !== p.id);
@@ -245,10 +248,39 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
+          {linhasHira && (
+            <Cartao
+              titulo={`Perigos e riscos (HIRA) · ${linhasHira.length}`}
+              acoes={podeGerenciarHira(a) ? <Link href={`/hira/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Nova linha</Link> : undefined}
+            >
+              {linhasHira.length === 0 ? (
+                <p className={styles.vazio}>Nenhuma linha HIRA vinculada a este processo.</p>
+              ) : (
+                <table className={styles.tabela}>
+                  <thead>
+                    <tr><th>Nº</th><th>Atividade / perigo</th><th>Obra</th><th>Nível</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {linhasHira.map((l) => (
+                      <tr key={l.id}>
+                        <td><Link href={`/hira/${l.id}`} className={styles.linkProcesso}>{codigoHira(l)}</Link></td>
+                        <td>{l.atividade} — {l.perigo}</td>
+                        <td>{l.obra.nome}</td>
+                        <td><BadgeFaixa faixa={l.faixa} score={l.score} /></td>
+                        <td>{ROTULO_STATUS_LINHA[l.status]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className={styles.rodapeCartao}><Link href={`/hira?processo=${p.id}`} className={styles.linkProcesso}>Ver na planilha HIRA →</Link></p>
+            </Cartao>
+          )}
+
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
               {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
-              <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>em breve</span></li>
+              {!linhasHira && <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>em breve</span></li>
               <li>Documentos vinculados <span className={styles.emBreve}>em breve</span></li>
             </ul>

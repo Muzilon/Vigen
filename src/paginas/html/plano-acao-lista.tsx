@@ -19,6 +19,9 @@ import { EnvoltorioTabela, LinhaCabecalhoTabela, LinhaTabela, Tabela, Td, Th } f
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/plano-acao-lista.module.css";
 
+/** Rótulo curto da origem de planos sem RNC (lista de itens). */
+const ROTULO_ORIGEM_PLANO: Partial<Record<string, string>> = { MANUAL: "Manual", RISCO_OPORTUNIDADE: "Risco", HIRA: "HIRA", LAIA: "LAIA" };
+
 const esquemaFiltros = z.object({
   escopo: enumUrl(["meus", "todos"]),
   status: enumUrl(["PENDENTE", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO", "ATRASADO"]),
@@ -231,7 +234,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
                             <Link href={linkPlano(i.planoAcao.id)} className={styles.linkManual} title={i.planoAcao.titulo}>
                               <span className={styles.rotuloManual}>
                                 <IconeLapis />
-                                {i.planoAcao.origemTipo === "RISCO_OPORTUNIDADE" ? "Risco" : "Manual"}
+                                {ROTULO_ORIGEM_PLANO[i.planoAcao.origemTipo] ?? "Manual"}
                               </span>
                               <span className={styles.tituloPlano}>{i.planoAcao.titulo}</span>
                             </Link>

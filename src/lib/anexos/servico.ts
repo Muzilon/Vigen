@@ -4,6 +4,8 @@ import { getArmazenamento, montarChave } from "@/lib/armazenamento";
 import { ErroNegocio } from "@/lib/erros";
 import { STATUS_FINAIS } from "@/lib/rnc/estados";
 import { podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { moduloHiraAtivo, podeTratarHira } from "@/lib/hira/servico";
+import { filtroObras } from "@/lib/escopo-obras";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
@@ -98,6 +100,13 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       if (!r) return NEGADO;
       const g = podeTratarRisco(a, r);
       return { podeLer: true, podeEnviar: g, podeGerir: atorTem(a, "RISCO_GERENCIAR"), rncId: null, rncFinal: false };
+    }
+    case "HIRA": {
+      // HIRA: leitura com o módulo e a obra no escopo; envio para quem gerencia ou é responsável.
+      if (!(await moduloHiraAtivo(a))) return NEGADO;
+      const l = await a.db.linhaHira.findFirst({ where: { AND: [{ id: alvo.entidadeId }, filtroObras(a)] }, select: { responsavelId: true } });
+      if (!l) return NEGADO;
+      return { podeLer: true, podeEnviar: podeTratarHira(a, l), podeGerir: atorTem(a, "HIRA_GERENCIAR"), rncId: null, rncFinal: false };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({

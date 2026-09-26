@@ -10,6 +10,8 @@ export interface HandlerAprovacao {
   aoAprovar(tx: Tx, fluxo: FluxoAprovacao, ator: Ator): Promise<void>;
   /** Opcional: reação à rejeição (mesma transação). */
   aoRejeitar?(tx: Tx, fluxo: FluxoAprovacao, ator: Ator): Promise<void>;
+  /** Opcional: reação ao cancelamento pelo solicitante (mesma transação). */
+  aoCancelar?(tx: Tx, fluxo: FluxoAprovacao, ator: Ator): Promise<void>;
   /** Opcional: quem além de solicitante/aprovadores pode ver o fluxo (ex.: gestor do módulo). */
   podeVer?(ator: Ator, fluxo: FluxoAprovacao): boolean | Promise<boolean>;
 }

@@ -7,10 +7,11 @@
  */
 import "@/lib/processos/aprovacao";
 import "@/lib/riscos/aprovacao";
+import "@/lib/hira/aprovacao";
 import { obterHandlerAprovacao } from "./registry";
 
 /** Tipos com handler de produção (conferido nos testes). */
-export const TIPOS_COM_HANDLER = ["PROCESSO", "RISCO_OPORTUNIDADE"] as const;
+export const TIPOS_COM_HANDLER = ["PROCESSO", "RISCO_OPORTUNIDADE", "HIRA"] as const;
 
 export function handlersRegistrados() {
   return TIPOS_COM_HANDLER.filter((t) => !!obterHandlerAprovacao(t));
