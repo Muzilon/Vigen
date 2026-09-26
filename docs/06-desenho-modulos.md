@@ -39,3 +39,24 @@ Plano de Ação ganha origens RISCO_OPORTUNIDADE, HIRA, LAIA; Anexo/Interações
 4. Prazo de reavaliação: padrão da empresa (ex. 12 meses) calculado automaticamente, ou manual por item?
 5. HIRA e LAIA precisam de aprovação registrada (rascunho → aprovado, com revisão) ou basta cadastro com histórico?
 6. Mapa de processos: automático por tipo (proposto) ou editável arrastando?
+
+---
+## Decisões do dono (2026-09-26)
+1. **Módulos contratados por empresa** (liga/desliga em `modulosAtivos`). Escala configurada por módulo e por empresa, com **sobrescrita opcional por local/obra**.
+2. **Aprovação com vários aprovadores, estilo DocuSign**: lista de signatários em ordem (sequencial) ou simultânea, cada um assina/rejeita com comentário, trilha registrada.
+3. **Publicação de documento**: quem publica escolhe o público (setor, obra, perfil, usuários) e se envia notificação.
+4. **Reavaliação**: o usuário escolhe se reavalia item a item ou a planilha inteira (revisão geral).
+5. **HIRA e LAIA com fluxo de aprovação** para inclusão, alteração e exclusão. Se a empresa tem o módulo de Documentos, a aprovação usa a tramitação; senão, o fluxo interno do próprio módulo (mesmo motor de aprovação).
+6. **Mapa de processos em formato de planilha/grade**, montado automaticamente e editável (reordenar/mover).
+7. Incluir também: Inspeções/Checklists, Auditorias, Requisitos Legais, Incidentes/Acidentes, Indicadores, Treinamentos.
+
+## Pacotes de entrega
+| Pacote | Conteúdo |
+|---|---|
+| P1 | Fundação: gating por módulo contratado, ConfiguracaoEscala (empresa + obra), heatmap, **motor de aprovação multi-assinante**, reavaliação; **Mapa de Processos** |
+| P2 | **Riscos e Oportunidades** + **SWOT** + Partes interessadas |
+| P3 | **HIRA** + **LAIA** com fluxo de aprovação |
+| P4 | **Tramitação de Documentos** (assinaturas, versões, distribuição/ciência) + integração com aprovação de HIRA/LAIA |
+| P5 | **Inspeções/Checklists** + **Auditorias internas** |
+| P6 | **Requisitos Legais** + **Incidentes e Acidentes** |
+| P7 | **Indicadores** + **Treinamentos e competências** |
