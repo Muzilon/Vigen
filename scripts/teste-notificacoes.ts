@@ -6,7 +6,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { hojeNoFuso, paraDataDb, somarDias } from "../src/lib/datas";
+import { criarDbTenant } from "../src/lib/db-tenant";
+import { definirDriverEmail } from "../src/lib/email";
 import { executarCronDiario, executarCronSemanal } from "../src/lib/notificacoes/cron";
+import { criarNotificacoes, MAX_TENTATIVAS_EMAIL, reenviarEmailsPendentes } from "../src/lib/notificacoes/servico";
 
 const admin = new PrismaClient();
 const dirEmails = mkdtempSync(path.join(tmpdir(), "vigen-emails-"));
@@ -94,6 +97,7 @@ async function main() {
     await caso("e-mails gravados pelo driver arquivo e emailEnviadoEm preenchido", async () => {
       assert.ok(emails1 >= n1.length, `emails=${emails1} notifs=${n1.length}`);
       assert.ok(n1.every((n) => n.emailEnviadoEm));
+      assert.ok(n1.every((n) => n.emailStatus === "ENVIADO" && n.emailTentativas === 1));
     });
 
     const r2 = await executarCronDiario({ base: admin, agora, empresaIds });
@@ -140,20 +144,90 @@ async function main() {
       assert.equal(await admin.tentativaLogin.count({ where: { id: tentativaNova.id } }), 1);
     });
 
+    console.log("Status de e-mail (M4):");
+    const dbMonto = criarDbTenant(monto.id, admin);
+    const chavesM4: string[] = [];
+    const novaPendente = async (sufixo: string, criadoEm?: Date) => {
+      const chave = `teste-m4:${Date.now()}:${sufixo}`;
+      chavesM4.push(chave);
+      return admin.notificacao.create({
+        data: {
+          empresaId: monto.id, usuarioId: qualidade.id, tipo: "RNC_ATRIBUIDA", titulo: "Teste M4", corpo: "x",
+          chaveIdempotencia: chave, ...(criadoEm ? { criadoEm } : {}),
+        },
+      });
+    };
+    const estado = (id: string) => admin.notificacao.findUniqueOrThrow({ where: { id } });
+    try {
+      await caso("claim atômico: dois reenvios concorrentes enviam o e-mail uma única vez", async () => {
+        let enviados = 0;
+        definirDriverEmail({ nome: "contador", enviar: async () => { enviados++; await new Promise((r) => setTimeout(r, 50)); } });
+        const n = await novaPendente("claim");
+        const desde = new Date(Date.now() - 60_000);
+        await Promise.all([reenviarEmailsPendentes(dbMonto, desde), reenviarEmailsPendentes(dbMonto, desde), reenviarEmailsPendentes(dbMonto, desde)]);
+        assert.equal(enviados, 1);
+        const e = await estado(n.id);
+        assert.equal(e.emailStatus, "ENVIADO");
+        assert.equal(e.emailTentativas, 1);
+        assert.ok(e.emailEnviadoEm);
+        await reenviarEmailsPendentes(dbMonto, desde);
+        assert.equal(enviados, 1); // ENVIADO não volta à fila
+      });
+
+      await caso("falha vira FALHOU e é reenviada até o limite de tentativas", async () => {
+        let chamadas = 0;
+        definirDriverEmail({ nome: "falho", enviar: async () => { chamadas++; throw new Error("SMTP fora"); } });
+        const n = await novaPendente("falha");
+        const desde = new Date(Date.now() - 60_000);
+        for (let i = 0; i < MAX_TENTATIVAS_EMAIL + 2; i++) await reenviarEmailsPendentes(dbMonto, desde);
+        assert.equal(chamadas, MAX_TENTATIVAS_EMAIL);
+        const e = await estado(n.id);
+        assert.equal(e.emailStatus, "FALHOU");
+        assert.equal(e.emailTentativas, MAX_TENTATIVAS_EMAIL);
+      });
+
+      await caso("e-mail desativado => IGNORADO (nunca reenviado); backlog antigo fora da janela não é reenviado", async () => {
+        let enviados = 0;
+        definirDriverEmail({ nome: "contador", enviar: async () => { enviados++; } });
+        const configOriginal = monto.config ?? {};
+        await admin.empresa.update({ where: { id: monto.id }, data: { config: { notificacoes: { email: false } } } });
+        try {
+          const chave = `teste-m4:${Date.now()}:ignorado`;
+          chavesM4.push(chave);
+          const [c] = await criarNotificacoes(dbMonto, monto.id, [
+            { usuarioId: qualidade.id, tipo: "RNC_ATRIBUIDA", titulo: "Teste M4", corpo: "x", chave },
+          ]);
+          assert.equal((await estado(c.id)).emailStatus, "IGNORADO");
+        } finally {
+          await admin.empresa.update({ where: { id: monto.id }, data: { config: configOriginal as object } });
+        }
+        const velha = await novaPendente("velha", new Date(Date.now() - 5 * 86_400_000));
+        await reenviarEmailsPendentes(dbMonto, new Date(Date.now() - 2 * 86_400_000));
+        assert.equal(enviados, 0);
+        assert.equal((await estado(velha.id)).emailStatus, "PENDENTE");
+      });
+    } finally {
+      definirDriverEmail(null);
+      await admin.notificacao.deleteMany({ where: { chaveIdempotencia: { in: chavesM4 } } });
+    }
+
     console.log("Cron semanal:");
-    const antesResumo = new Date();
+    // Resumos da semana que já existiam (ex.: execução manual anterior) não são apagados pelo teste.
+    const resumosDaSemana = () =>
+      admin.notificacao.findMany({ where: { tipo: "RESUMO_SEMANAL", empresaId: { in: empresaIds }, chaveIdempotencia: { startsWith: "resumo:" } } });
+    const preExistentes = new Set((await resumosDaSemana()).map((r) => r.id));
     await caso("resumo semanal para gestores, idempotente e isolado", async () => {
       const s1 = await executarCronSemanal({ base: admin, agora, empresaIds });
       assert.ok(s1.empresas.every((e) => !e.erro), JSON.stringify(s1.empresas));
       const s2 = await executarCronSemanal({ base: admin, agora, empresaIds });
       assert.ok(s2.empresas.every((e) => e.notificacoesCriadas === 0));
-      const resumos = await admin.notificacao.findMany({ where: { tipo: "RESUMO_SEMANAL", criadoEm: { gte: antesResumo } } });
+      const resumos = await resumosDaSemana();
       const destinatarios = await admin.usuario.findMany({ where: { id: { in: resumos.map((r) => r.usuarioId) } } });
       assert.ok(destinatarios.some((u) => u.id === adminMonto.id));
       assert.ok(destinatarios.some((u) => u.id === adminDemo.id));
       for (const r of resumos) assert.equal(destinatarios.find((u) => u.id === r.usuarioId)!.empresaId, r.empresaId);
       assert.ok(resumos.every((r) => r.corpo.includes("RNCs abertas")));
-      await admin.notificacao.deleteMany({ where: { id: { in: resumos.map((r) => r.id) } } });
+      await admin.notificacao.deleteMany({ where: { id: { in: resumos.filter((r) => !preExistentes.has(r.id)).map((r) => r.id) } } });
     });
 
     await caso("resumo desativado nas preferências não é enviado", async () => {

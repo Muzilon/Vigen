@@ -76,7 +76,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       </form>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <Kpi titulo="RNCs em aberto" valor={k.abertas} dica="Situação atual" />
+        <Kpi titulo="RNCs em aberto" valor={k.abertas} dica="Estoque atual (qualquer data de abertura)" />
         <Kpi titulo="Encerradas" valor={k.encerradasPeriodo} dica="No período" />
         <Kpi titulo="Canceladas" valor={k.canceladasPeriodo} dica="No período" />
         <Kpi titulo="Itens atrasados" valor={k.itensAtrasados} dica="Situação atual" alerta={k.itensAtrasados > 0} />
@@ -88,18 +88,18 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
         <Kpi
           titulo="Eficácia na 1ª verificação"
           valor={k.eficaciaPrimeiraVerificacaoPct === null ? "—" : `${k.eficaciaPrimeiraVerificacaoPct.toLocaleString("pt-BR")}%`}
-          dica="Verificações no período"
+          dica="% de RNCs aprovadas já na 1ª verificação (no período)"
         />
       </div>
 
-      <Cartao titulo="RNCs abertas x encerradas por mês">
+      <Cartao titulo="RNCs registradas x encerradas por mês">
         <GraficoMensal dados={ind.porMes} />
       </Cartao>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Cartao titulo="Por tipo (abertas no período)"><Barras dados={ind.porTipo} /></Cartao>
-        <Cartao titulo="Por gravidade (abertas no período)"><Barras dados={ind.porGravidade} paleta="gravidade" /></Cartao>
-        <Cartao titulo="Por obra (abertas no período)"><Barras dados={ind.porObra.slice(0, 10)} /></Cartao>
+        <Cartao titulo="Por tipo (registradas no período, qualquer status)"><Barras dados={ind.porTipo} /></Cartao>
+        <Cartao titulo="Por gravidade (registradas no período, qualquer status)"><Barras dados={ind.porGravidade} paleta="gravidade" /></Cartao>
+        <Cartao titulo="Por obra (registradas no período, qualquer status)"><Barras dados={ind.porObra.slice(0, 10)} /></Cartao>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { notFound } from "next/navigation";
 import { EnviarAnexos, GaleriaAnexos } from "@/components/anexos";
 import { Interacoes } from "@/components/interacoes";
@@ -28,7 +29,7 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
       planoAcao: {
         select: {
           titulo: true,
-          rnc: { select: { id: true, codigo: true, status: true, responsavelId: true, verificacoes: { select: { resultado: true } } } },
+          rnc: { select: { id: true, codigo: true, status: true, responsavelId: true, obraId: true, verificacoes: { select: { resultado: true } } } },
         },
       },
     },
@@ -40,7 +41,12 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
   const hoje = hojeNoFuso(fuso);
   const st = statusEfetivoItem(item, hoje);
   const atual = !rnc || item.ciclo === cicloAtual(rnc.verificacoes);
-  const usuarios = await a.db.usuario.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } });
+  const ativos = (await usuariosAtivos(a.db)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+  const usuarios = ativos.map((u) => ({ id: u.id, nome: u.nome }));
+  // "Quem": só usuários ativos com acesso à obra da RNC (mantém o atual na lista).
+  const usuariosQuem = ativos
+    .filter((u) => !rnc || u.obras === null || u.obras.includes(rnc.obraId) || u.id === item.quemId)
+    .map((u) => ({ id: u.id, nome: u.nome }));
   const podeGerenciar =
     atual &&
     (rnc
@@ -91,7 +97,7 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
             item={item}
             rncId={rnc && rncVisivel ? rnc.id : undefined}
             hoje={hoje}
-            usuarios={usuarios}
+            usuarios={usuariosQuem}
             podeExecutar={podeExecutar}
             podeGerenciar={podeGerenciar}
           />

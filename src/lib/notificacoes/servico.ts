@@ -19,7 +19,15 @@ export interface NovaNotificacao {
   detalhesEmail?: { rotulo: string; valor: string }[];
 }
 
-type NotificacaoCriada = { id: string; usuarioId: string; titulo: string; corpo: string; link: string | null; chaveIdempotencia: string };
+type NotificacaoCriada = {
+  id: string;
+  usuarioId: string;
+  titulo: string;
+  corpo: string;
+  link: string | null;
+  chaveIdempotencia: string;
+  emailTentativas: number;
+};
 
 /**
  * Cria notificações (idempotente pela chave) e envia e-mail apenas das efetivamente criadas.
@@ -48,43 +56,81 @@ export async function criarNotificacoes(db: DbTenant, empresaId: string, lista: 
   return criadas;
 }
 
+/** Máximo de tentativas de envio de e-mail por notificação (depois fica FALHOU). */
+export const MAX_TENTATIVAS_EMAIL = 3;
+/** Um claim mais antigo que isto é considerado abandonado (processo caiu no meio do envio). */
+const CLAIM_EXPIRA_MS = 10 * 60_000;
+
+/**
+ * M4: reserva atômica (compare-and-swap em emailTentativas) de uma notificação para envio.
+ * Só uma execução concorrente consegue o claim; claims recentes não são retomados.
+ */
+export async function reservarEnvioEmail(db: DbTenant, n: { id: string; emailTentativas: number }, agora = new Date()) {
+  const r = await db.notificacao.updateMany({
+    where: {
+      id: n.id,
+      emailStatus: { in: ["PENDENTE", "FALHOU"] },
+      emailTentativas: n.emailTentativas,
+      OR: [{ emailTentativaEm: null }, { emailTentativaEm: { lt: new Date(agora.getTime() - CLAIM_EXPIRA_MS) } }],
+    },
+    data: { emailTentativas: { increment: 1 }, emailTentativaEm: agora },
+  });
+  return r.count === 1;
+}
+
 async function enviarEmailsDe(db: DbTenant, criadas: NotificacaoCriada[], extras?: Map<string, NovaNotificacao>) {
+  const ids = criadas.map((c) => c.id);
   const empresa = await db.empresa.findFirst({ select: { config: true, diasAlertaPrazo: true } });
-  if (!empresa || !lerPreferencias(empresa).email) return;
+  if (!empresa || !lerPreferencias(empresa).email) {
+    await db.notificacao.updateMany({ where: { id: { in: ids }, emailStatus: "PENDENTE" }, data: { emailStatus: "IGNORADO" } });
+    return;
+  }
   const usuarios = await db.usuario.findMany({
     where: { id: { in: [...new Set(criadas.map((c) => c.usuarioId))] }, ativo: true },
     select: { id: true, email: true, nome: true },
   });
   const porId = new Map(usuarios.map((u) => [u.id, u]));
-  const enviadas: string[] = [];
-  await Promise.all(
-    criadas.map(async (n) => {
-      const u = porId.get(n.usuarioId);
-      if (!u?.email) return;
-      try {
-        const m = montarEmail({
-          titulo: n.titulo,
-          paragrafos: [`Olá, ${u.nome}.`, ...n.corpo.split("\n").filter(Boolean)],
-          itens: extras?.get(n.chaveIdempotencia)?.detalhesEmail,
-          link: n.link,
-        });
-        await enviarEmail({ para: u.email, ...m });
-        enviadas.push(n.id);
-      } catch (e) {
-        console.error(`[notificacoes] e-mail não enviado (${n.id})`, e);
-      }
-    }),
-  );
-  if (enviadas.length) {
-    await db.notificacao.updateMany({ where: { id: { in: enviadas } }, data: { emailEnviadoEm: new Date() } });
+  const semEndereco = criadas.filter((n) => !porId.get(n.usuarioId)?.email).map((n) => n.id);
+  if (semEndereco.length) {
+    await db.notificacao.updateMany({
+      where: { id: { in: semEndereco }, emailStatus: { in: ["PENDENTE", "FALHOU"] } },
+      data: { emailStatus: "IGNORADO" },
+    });
+  }
+  for (const n of criadas) {
+    const u = porId.get(n.usuarioId);
+    if (!u?.email) continue;
+    if (!(await reservarEnvioEmail(db, n))) continue; // outra execução já está enviando / enviou
+    try {
+      const m = montarEmail({
+        titulo: n.titulo,
+        paragrafos: [`Olá, ${u.nome}.`, ...n.corpo.split("\n").filter(Boolean)],
+        itens: extras?.get(n.chaveIdempotencia)?.detalhesEmail,
+        link: n.link,
+      });
+      await enviarEmail({ para: u.email, ...m });
+      await db.notificacao.updateMany({ where: { id: n.id }, data: { emailStatus: "ENVIADO", emailEnviadoEm: new Date() } });
+    } catch (e) {
+      console.error(`[notificacoes] e-mail não enviado (${n.id})`, e);
+      await db.notificacao.updateMany({ where: { id: n.id }, data: { emailStatus: "FALHOU", emailTentativaEm: null } });
+    }
   }
 }
 
-/** Reenvia e-mails de notificações recentes que ficaram sem envio (falha transitória). */
-export async function reenviarEmailsPendentes(db: DbTenant, desde: Date) {
+/**
+ * Reenvia e-mails de notificações recentes PENDENTE/FALHOU (abaixo do limite de tentativas),
+ * das mais antigas para as mais novas. Notificações IGNORADO nunca voltam à fila.
+ */
+export async function reenviarEmailsPendentes(db: DbTenant, desde: Date, agora = new Date()) {
   const pendentes = await db.notificacao.findMany({
-    where: { emailEnviadoEm: null, criadoEm: { gte: desde } },
-    select: { id: true, usuarioId: true, titulo: true, corpo: true, link: true, chaveIdempotencia: true },
+    where: {
+      emailStatus: { in: ["PENDENTE", "FALHOU"] },
+      emailTentativas: { lt: MAX_TENTATIVAS_EMAIL },
+      criadoEm: { gte: desde },
+      OR: [{ emailTentativaEm: null }, { emailTentativaEm: { lt: new Date(agora.getTime() - CLAIM_EXPIRA_MS) } }],
+    },
+    select: { id: true, usuarioId: true, titulo: true, corpo: true, link: true, chaveIdempotencia: true, emailTentativas: true },
+    orderBy: { criadoEm: "asc" },
     take: 200,
   });
   if (pendentes.length) await enviarEmailsDe(db, pendentes);

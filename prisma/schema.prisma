@@ -137,6 +137,13 @@ enum TipoEntidadeNotificacao {
   ITEM_ACAO
 }
 
+enum StatusEmailNotificacao {
+  PENDENTE
+  ENVIADO
+  IGNORADO
+  FALHOU
+}
+
 enum TipoSequencia {
   RNC
 }
@@ -573,6 +580,11 @@ model Notificacao {
   link              String?
   lidaEm            DateTime?                @map("lida_em")
   emailEnviadoEm    DateTime?                @map("email_enviado_em")
+  /// M4: PENDENTE -> ENVIADO | IGNORADO (e-mail desativado/sem endereço) | FALHOU (reenvio até o limite).
+  emailStatus       StatusEmailNotificacao   @default(PENDENTE) @map("email_status")
+  emailTentativas   Int                      @default(0) @map("email_tentativas")
+  /// Momento do último claim (evita envio em paralelo por duas execuções).
+  emailTentativaEm  DateTime?                @map("email_tentativa_em")
   chaveIdempotencia String                   @map("chave_idempotencia")
   criadoEm          DateTime                 @default(now()) @map("criado_em")
 
@@ -583,6 +595,7 @@ model Notificacao {
   @@unique([empresaId, chaveIdempotencia])
   @@index([empresaId, usuarioId, lidaEm])
   @@index([empresaId, usuarioId, criadoEm])
+  @@index([empresaId, emailStatus, criadoEm])
   @@map("notificacao")
 }
 

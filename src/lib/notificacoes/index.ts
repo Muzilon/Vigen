@@ -1,5 +1,5 @@
 import { criarDbTenant } from "@/lib/db-tenant";
-import { rotuloRnc } from "./gatilhos";
+import { descricaoItem, rotuloRnc } from "./gatilhos";
 import { comSeguranca, criarNotificacoes } from "./servico";
 
 /** Evento de domínio que gera notificação (in-app + e-mail). */
@@ -26,12 +26,18 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
     let onde = "um item de ação";
     let link = `/plano-acao/${evento.entidadeId}`;
     if (evento.entidadeTipo === "RNC") {
-      const rnc = await db.rnc.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true, titulo: true, restrita: true } });
+      const rnc = await db.rnc.findFirst({
+        where: { id: evento.entidadeId },
+        select: { codigo: true, titulo: true, restrita: true, contemDadosPessoais: true },
+      });
       onde = rnc ? `a ${rotuloRnc(rnc)}` : "uma RNC";
       link = `/rncs/${evento.entidadeId}?aba=interacoes`;
     } else {
-      const item = await db.itemAcao.findFirst({ where: { id: evento.entidadeId }, select: { oQue: true } });
-      if (item) onde = `o item de ação "${item.oQue}"`;
+      const item = await db.itemAcao.findFirst({
+        where: { id: evento.entidadeId },
+        select: { oQue: true, planoAcao: { select: { rnc: { select: { codigo: true, titulo: true, restrita: true, contemDadosPessoais: true } } } } },
+      });
+      if (item) onde = `o item de ação "${descricaoItem(item)}"`;
     }
     await criarNotificacoes(db, evento.empresaId, [
       {

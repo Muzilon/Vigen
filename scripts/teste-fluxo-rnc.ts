@@ -7,6 +7,7 @@ import type { Ator } from "../src/lib/ator";
 import { hojeNoFuso } from "../src/lib/datas";
 import { criarDbTenant } from "../src/lib/db-tenant";
 import { permissoesEfetivas } from "../src/lib/permissoes";
+import { garantirUsuarioSemObra } from "./util-teste";
 import { autenticar, LIMITE_LOGIN } from "../src/lib/auth/limite-login";
 import { contarNaoLidas, criarInteracao, listarInteracoes, listarNaoLidas, marcarLidas } from "../src/lib/interacoes/servico";
 import { adicionarItensRnc, cancelarItem, concluirItem, marcarEmAndamento } from "../src/lib/plano-acao/servico";
@@ -55,7 +56,9 @@ async function ator(email: string): Promise<Ator> {
 async function main() {
   const inspetor = await ator("inspetor@monto.com.br");
   const qualidade = await ator("qualidade@monto.com.br");
-  const colaborador = await ator("colaborador@monto.com.br");
+  // Colaborador SEM obra (usuário de teste): o seed dá Obra Alfa ao colaborador@monto.
+  const colaborador = await ator((await garantirUsuarioSemObra(admin, "colab-sem-obra.teste@monto.com.br")).email);
+  const adminMonto = await ator("admin@monto.com.br");
   const obra = inspetor.obrasPermitidas![0];
   const prazo = hojeNoFuso("America/Sao_Paulo");
   const rncDb = (id: string) => admin.rnc.findUniqueOrThrow({ where: { id }, include: { planoAcao: { include: { itens: true } } } });
@@ -271,8 +274,9 @@ async function main() {
       origem: "INSPECAO",
       gravidade: "BAIXA",
       obraId: obra,
-      responsavelId: colaborador.usuarioId,
     });
+    // B2 impede designar responsável sem RNC_TRATAR; simula dado legado (permissão removida depois).
+    await admin.rnc.update({ where: { id: r.id }, data: { responsavelId: colaborador.usuarioId } });
     rncColab = r.id;
     await assert.rejects(assumirAnalise(colaborador, r.id), /permissão/);
     await admin.rnc.update({ where: { id: r.id }, data: { status: "EM_ANALISE" } }); // simula análise já iniciada
@@ -342,9 +346,9 @@ async function main() {
     assert.equal(n[0].link, `/rncs/${r.id}`);
     assert.ok(n[0].emailEnviadoEm);
     await assert.rejects(alterarResponsavel(inspetor, r.id, qualidade.usuarioId), /permissão/);
-    await alterarResponsavel(qualidade, r.id, colaborador.usuarioId);
-    assert.equal((await notifs(colaborador.usuarioId, r.id, "RNC_ATRIBUIDA")).length, 1);
-    assert.equal((await admin.rnc.findUniqueOrThrow({ where: { id: r.id } })).responsavelId, colaborador.usuarioId);
+    await alterarResponsavel(qualidade, r.id, adminMonto.usuarioId);
+    assert.equal((await notifs(adminMonto.usuarioId, r.id, "RNC_ATRIBUIDA")).length, 1);
+    assert.equal((await admin.rnc.findUniqueOrThrow({ where: { id: r.id } })).responsavelId, adminMonto.usuarioId);
   });
   await caso("cancelamento: solicitação -> aprovadores; decisão -> solicitante", async () => {
     const r = await criarRnc(inspetor, {
@@ -363,6 +367,39 @@ async function main() {
     assert.equal(d.length, 1);
     assert.match(d[0].titulo, /rejeitado/);
   });
+  await caso("cancelamento: solicitante não aprova o próprio pedido (pode rejeitar); outro aprovador aprova", async () => {
+    const r = await criarRnc(qualidade, {
+      titulo: "Teste E2E — autoaprovação de cancelamento",
+      descricao: "x",
+      tipo: "QUALIDADE",
+      origem: "INSPECAO",
+      gravidade: "BAIXA",
+      obraId: obra,
+    });
+    const s = await solicitarCancelamento(qualidade, r.id, "Aberta por engano");
+    await assert.rejects(decidirCancelamento(qualidade, s.id, true), /não pode aprová-lo/);
+    assert.equal((await admin.solicitacaoCancelamento.findUniqueOrThrow({ where: { id: s.id } })).status, "PENDENTE");
+    await decidirCancelamento(adminMonto, s.id, true);
+    assert.equal((await rncDb(r.id)).status, "CANCELADO");
+  });
+
+  console.log("Novo responsável (B2):");
+  await caso("exige RNC_TRATAR, acesso à obra e, se restrita, RNC_VER_RESTRITAS (troca e criação)", async () => {
+    const inspSemObra = await ator(
+      (await garantirUsuarioSemObra(admin, "insp-sem-obra.teste@monto.com.br", "inspetor@monto.com.br", "INSPETOR")).email,
+    );
+    const base = { descricao: "b2", tipo: "QUALIDADE" as const, origem: "INSPECAO" as const, gravidade: "BAIXA" as const, obraId: obra };
+    const r = await criarRnc(qualidade, { ...base, titulo: "Teste E2E — B2 comum" });
+    await assert.rejects(alterarResponsavel(qualidade, r.id, colaborador.usuarioId), /tratar/);
+    await assert.rejects(alterarResponsavel(qualidade, r.id, inspSemObra.usuarioId), /obra/);
+    await alterarResponsavel(qualidade, r.id, inspetor.usuarioId);
+    const restrita = await criarRnc(qualidade, { ...base, titulo: "Teste E2E — B2 restrita", restrita: true });
+    await assert.rejects(alterarResponsavel(qualidade, restrita.id, inspetor.usuarioId), /restrita/);
+    await assert.rejects(criarRnc(qualidade, { ...base, titulo: "Teste E2E — B2 criação", restrita: true, responsavelId: inspetor.usuarioId }), /restrita/);
+    await assert.rejects(criarRnc(qualidade, { ...base, titulo: "Teste E2E — B2 criação 2", responsavelId: colaborador.usuarioId }), /tratar/);
+    await alterarResponsavel(qualidade, restrita.id, adminMonto.usuarioId);
+  });
+
   await caso("interação gera notificação ao destinatário; abrir a thread marca como lida", async () => {
     const t = { tipo: "RNC" as const, entidadeId: id };
     const antes = await contarNotificacoesNaoLidas(qualidade);

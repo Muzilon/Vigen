@@ -6,11 +6,12 @@ import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { definirArmazenamento } from "../src/lib/armazenamento";
 import { criarArmazenamentoLocal } from "../src/lib/armazenamento/local";
-import { abrirAnexo, enviarAnexos, excluirAnexo, listarAnexos } from "../src/lib/anexos/servico";
+import { abrirAnexo, enviarAnexos, excluirAnexo, listarAnexos, prevalidarArquivos } from "../src/lib/anexos/servico";
 import type { Ator } from "../src/lib/ator";
 import { hojeNoFuso } from "../src/lib/datas";
 import { criarDbTenant } from "../src/lib/db-tenant";
 import { permissoesEfetivas } from "../src/lib/permissoes";
+import { garantirUsuarioSemObra } from "./util-teste";
 import { adicionarItensRnc } from "../src/lib/plano-acao/servico";
 import { assumirAnalise, criarRnc } from "../src/lib/rnc/servico";
 
@@ -49,7 +50,8 @@ async function lerTudo(s: ReadableStream<Uint8Array>) {
 async function main() {
   const inspetor = await ator("inspetor@monto.com.br");
   const qualidade = await ator("qualidade@monto.com.br");
-  const colaborador = await ator("colaborador@monto.com.br");
+  // Colaborador SEM obra (usuário de teste): o seed dá Obra Alfa ao colaborador@monto.
+  const colaborador = await ator((await garantirUsuarioSemObra(admin, "colab-sem-obra.teste@monto.com.br")).email);
   const outraEmpresa = await ator("admin@demo.com.br");
   assert.ok(!inspetor.permissoes.includes("RNC_VER_RESTRITAS"), "pré-condição: inspetor sem RNC_VER_RESTRITAS");
   assert.ok(qualidade.permissoes.includes("RNC_VER_RESTRITAS"), "pré-condição: qualidade com RNC_VER_RESTRITAS");
@@ -61,6 +63,7 @@ async function main() {
     origem: "INSPECAO",
     gravidade: "MEDIA",
     obraId: inspetor.obrasPermitidas![0],
+    contemDadosPessoais: true,
   });
   const alvoRnc = { tipo: "RNC" as const, entidadeId: rnc.id };
 
@@ -112,6 +115,49 @@ async function main() {
     assert.equal(await abrirAnexo(inspetor, s.id), null); // vê a RNC, mas não o anexo sensível
     assert.deepEqual(await listarAnexos(inspetor, alvoS), []);
     assert.ok(await abrirAnexo(qualidade, s.id));
+  });
+
+  await caso("B1: anexo sensível só em RNC marcada com dados pessoais", async () => {
+    const semFlag = await criarRnc(qualidade, {
+      titulo: "Teste anexos — sem dados pessoais",
+      descricao: "b1",
+      tipo: "QUALIDADE",
+      origem: "INSPECAO",
+      gravidade: "BAIXA",
+      obraId: inspetor.obrasPermitidas![0],
+    });
+    await assert.rejects(
+      enviarAnexos(qualidade, { tipo: "RNC_DADOS_SENSIVEIS", entidadeId: semFlag.id }, [{ nome: "atestado.pdf", dados: PDF }]),
+      /Sem permissão para anexar/,
+    );
+  });
+
+  await caso("B3: quantidade/tamanho/permissão checados só com metadados (antes de ler o arquivo)", async () => {
+    await assert.rejects(prevalidarArquivos(inspetor, [{ nome: "enorme.pdf", tamanho: 52 * 1024 * 1024 }], alvoRnc), /limite/);
+    const seis = Array.from({ length: 6 }, (_, i) => ({ nome: `f${i}.png`, tamanho: 10 }));
+    await assert.rejects(prevalidarArquivos(inspetor, seis, alvoRnc), /no máximo/);
+    await assert.rejects(prevalidarArquivos(colaborador, [{ nome: "x.pdf", tamanho: 10 }], alvoRnc), /sem acesso/);
+    await prevalidarArquivos(inspetor, [{ nome: "ok.pdf", tamanho: 10 }], alvoRnc);
+  });
+
+  await caso("RNC encerrada/cancelada: anexos não podem ser excluídos (serviço e listagem)", async () => {
+    const r = await criarRnc(inspetor, {
+      titulo: "Teste anexos — RNC encerrada",
+      descricao: "imutável",
+      tipo: "QUALIDADE",
+      origem: "INSPECAO",
+      gravidade: "BAIXA",
+      obraId: inspetor.obrasPermitidas![0],
+    });
+    const alvo = { tipo: "RNC" as const, entidadeId: r.id };
+    const [x] = await enviarAnexos(inspetor, alvo, [{ nome: "prova.png", dados: PNG }]);
+    for (const status of ["ENCERRADO", "CANCELADO"] as const) {
+      await admin.rnc.update({ where: { id: r.id }, data: { status } });
+      await assert.rejects(excluirAnexo(inspetor, x.id), /encerrada ou cancelada/);
+      await assert.rejects(excluirAnexo(qualidade, x.id), /encerrada ou cancelada/);
+      assert.equal((await listarAnexos(inspetor, alvo))[0].podeExcluir, false);
+    }
+    assert.equal((await admin.anexo.findUniqueOrThrow({ where: { id: x.id } })).excluidoEm, null);
   });
 
   await caso("item de ação: 'quem' anexa evidência ao próprio item; terceiro sem acesso não", async () => {

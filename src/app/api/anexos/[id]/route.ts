@@ -9,7 +9,7 @@ const naoEncontrado = () => new Response("Não encontrado", { status: 404, heade
 
 /**
  * Download de anexo: SEMPRE por aqui. Revalida sessão, empresa (DbTenant), acesso à entidade
- * e sensibilidade a cada requisição. ?inline=1 exibe no navegador apenas imagens seguras e PDF.
+ * e sensibilidade a cada requisição. ?inline=1 exibe no navegador apenas imagens seguras (PDF sempre como attachment — B5).
  */
 export async function GET(req: Request, ctx: RouteContext<"/api/anexos/[id]">) {
   const session = await auth();

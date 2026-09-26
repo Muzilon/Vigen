@@ -2,7 +2,7 @@
 
 import { useActionState, type ReactNode } from "react";
 
-export type ResultadoAcao = { erro?: string; ok?: string; aviso?: string } | null;
+export type ResultadoAcao = { erro?: string; ok?: string; aviso?: string; valores?: Record<string, string> } | null;
 export type AcaoServidor = (prev: ResultadoAcao, fd: FormData) => Promise<ResultadoAcao>;
 
 /** Formulário com server action e feedback (erro / sucesso / aviso). */

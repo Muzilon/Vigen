@@ -8,8 +8,20 @@ import { formatarData } from "@/lib/datas";
 import { usuariosComPermissaoNaRnc } from "./destinatarios";
 import { comSeguranca, criarNotificacoes, type NovaNotificacao } from "./servico";
 
-export function rotuloRnc(r: { codigo: string; titulo: string; restrita: boolean }) {
-  return r.restrita ? `RNC ${r.codigo}` : `RNC ${r.codigo} — ${r.titulo}`;
+/** RNC restrita ou com dados pessoais: nenhum texto livre (título, oQue, motivo) sai em notificação/e-mail (M2). */
+export function rncSensivel(r: { restrita: boolean; contemDadosPessoais?: boolean } | null | undefined) {
+  return !!r && (r.restrita || !!r.contemDadosPessoais);
+}
+
+export function rotuloRnc(r: { codigo: string; titulo: string; restrita: boolean; contemDadosPessoais?: boolean }) {
+  return rncSensivel(r) ? `RNC ${r.codigo}` : `RNC ${r.codigo} — ${r.titulo}`;
+}
+
+/** Descrição de um item de ação sem expor texto livre quando a RNC de origem é sensível. */
+export function descricaoItem(i: { oQue: string; planoAcao: { rnc: { codigo: string; titulo: string; restrita: boolean; contemDadosPessoais?: boolean } | null } }) {
+  const rnc = i.planoAcao.rnc;
+  if (!rnc) return i.oQue;
+  return rncSensivel(rnc) ? `Item de ação da ${rotuloRnc(rnc)}` : `${i.oQue} (${rotuloRnc(rnc)})`;
 }
 
 export const linkRnc = (id: string) => `/rncs/${id}`;
@@ -20,6 +32,7 @@ const selRnc = {
   codigo: true,
   titulo: true,
   restrita: true,
+  contemDadosPessoais: true,
   obraId: true,
   abertoPorId: true,
   responsavelId: true,
@@ -52,20 +65,25 @@ export function notificarItensAtribuidos(a: Ator, itemIds: string[], marca: stri
     if (itemIds.length === 0) return;
     const itens = await a.db.itemAcao.findMany({
       where: { id: { in: itemIds }, quemId: { not: a.usuarioId } },
-      select: { id: true, oQue: true, quando: true, quemId: true, planoAcao: { select: { rnc: { select: { codigo: true, titulo: true, restrita: true } } } } },
+      select: {
+        id: true,
+        oQue: true,
+        quando: true,
+        quemId: true,
+        planoAcao: { select: { rnc: { select: { codigo: true, titulo: true, restrita: true, contemDadosPessoais: true } } } },
+      },
     });
     await criarNotificacoes(
       a.db,
       a.empresaId,
       itens.map((i) => {
-        const origem = i.planoAcao.rnc ? ` (${rotuloRnc(i.planoAcao.rnc)})` : "";
         return {
           usuarioId: i.quemId,
           tipo: "ITEM_ATRIBUIDO",
           entidadeTipo: "ITEM_ACAO",
           entidadeId: i.id,
           titulo: "Nova ação atribuída a você",
-          corpo: `${i.oQue}${origem}\nPrazo: ${formatarData(i.quando)}`,
+          corpo: `${descricaoItem(i)}\nPrazo: ${formatarData(i.quando)}`,
           link: linkItem(i.id),
           chave: `item-atribuido:${i.id}:${i.quemId}:${marca}`,
         } satisfies NovaNotificacao;
@@ -79,7 +97,7 @@ export function notificarCancelamentoSolicitado(a: Ator, solicitacaoId: string) 
   return comSeguranca("cancelamento-solicitado", async () => {
     const s = await a.db.solicitacaoCancelamento.findFirst({
       where: { id: solicitacaoId },
-      select: { id: true, motivo: true, solicitante: { select: { nome: true } }, rnc: { select: selRnc } },
+      select: { id: true, solicitante: { select: { nome: true } }, rnc: { select: selRnc } },
     });
     if (!s) return;
     const dest = await usuariosComPermissaoNaRnc(a.db, s.rnc, "RNC_APROVAR_CANCELAMENTO", [a.usuarioId]);
@@ -92,7 +110,8 @@ export function notificarCancelamentoSolicitado(a: Ator, solicitacaoId: string) 
         entidadeTipo: "RNC",
         entidadeId: s.rnc.id,
         titulo: `Cancelamento solicitado: ${rotuloRnc(s.rnc)}`,
-        corpo: `${s.solicitante.nome} solicitou o cancelamento. Motivo: ${s.motivo}`,
+        // M2: o motivo (texto livre) nunca vai na notificação/e-mail; é lido no sistema.
+        corpo: `${s.solicitante.nome} solicitou o cancelamento. Acesse o sistema para ver o motivo e decidir.`,
         link: `${linkRnc(s.rnc.id)}?aba=cancelamento`,
         chave: `cancelamento-solicitado:${s.id}:${u.id}`,
       })),
@@ -105,7 +124,7 @@ export function notificarCancelamentoDecidido(a: Ator, solicitacaoId: string) {
   return comSeguranca("cancelamento-decidido", async () => {
     const s = await a.db.solicitacaoCancelamento.findFirst({
       where: { id: solicitacaoId },
-      select: { id: true, status: true, solicitanteId: true, comentarioDecisao: true, aprovador: { select: { nome: true } }, rnc: { select: selRnc } },
+      select: { id: true, status: true, solicitanteId: true, aprovador: { select: { nome: true } }, rnc: { select: selRnc } },
     });
     if (!s || s.status === "PENDENTE" || s.solicitanteId === a.usuarioId) return;
     const aprovada = s.status === "APROVADA";
@@ -116,7 +135,8 @@ export function notificarCancelamentoDecidido(a: Ator, solicitacaoId: string) {
         entidadeTipo: "RNC",
         entidadeId: s.rnc.id,
         titulo: `Cancelamento ${aprovada ? "aprovado" : "rejeitado"}: ${rotuloRnc(s.rnc)}`,
-        corpo: `${s.aprovador?.nome ?? "O aprovador"} ${aprovada ? "aprovou" : "rejeitou"} sua solicitação.${s.comentarioDecisao ? ` Comentário: ${s.comentarioDecisao}` : ""}`,
+        // M2: comentário da decisão não vai na notificação/e-mail.
+        corpo: `${s.aprovador?.nome ?? "O aprovador"} ${aprovada ? "aprovou" : "rejeitou"} sua solicitação. Acesse o sistema para ver os detalhes.`,
         link: linkRnc(s.rnc.id),
         chave: `cancelamento-decidido:${s.id}`,
       },

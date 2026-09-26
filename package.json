@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:fluxo-rnc": "tsx scripts/teste-fluxo-rnc.ts",
     "test:anexos": "tsx scripts/teste-anexos.ts",
-    "test:notificacoes": "tsx scripts/teste-notificacoes.ts"
+    "test:notificacoes": "tsx scripts/teste-notificacoes.ts",
+    "test:admin": "tsx scripts/teste-admin.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

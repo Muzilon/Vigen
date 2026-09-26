@@ -51,7 +51,7 @@ export function ItensForm({ rncId, usuarios }: { rncId: string; usuarios: { id: 
                 </td>
                 <td className="p-1">{campo(i, "como", "Método", "min-w-32")}</td>
                 <td className="p-1">
-                  <input type="number" min={0} step="0.01" value={l.quanto} onChange={(e) => set(i, "quanto", e.target.value)} className={`${cls.input} w-28`} />
+                  <input type="number" min={0} step="0.01" value={l.quanto} onChange={(e) => set(i, "quanto", e.target.value)} className={`${cls.input} w-36 min-w-36`} />
                 </td>
                 <td className="p-1">
                   {linhas.length > 1 && (

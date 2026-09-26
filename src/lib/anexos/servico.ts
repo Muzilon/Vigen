@@ -1,10 +1,10 @@
-import type { Anexo, TipoEntidadeAnexo } from "@prisma/client";
+import type { Anexo, StatusRnc, TipoEntidadeAnexo } from "@prisma/client";
 import { atorTem, type Ator } from "@/lib/ator";
 import { getArmazenamento, montarChave } from "@/lib/armazenamento";
 import { ErroNegocio } from "@/lib/erros";
 import { STATUS_FINAIS } from "@/lib/rnc/estados";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
-import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, validarArquivo } from "./validacao";
+import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
 
 export interface Alvo {
   tipo: TipoEntidadeAnexo;
@@ -24,9 +24,12 @@ interface AcessoEntidade {
   podeGerir: boolean;
   /** RNC a que a entidade pertence (para o histórico). */
   rncId: string | null;
+  /** A entidade pertence a uma RNC encerrada/cancelada (anexos imutáveis). */
+  rncFinal: boolean;
 }
 
-const NEGADO: AcessoEntidade = { podeLer: false, podeEnviar: false, podeGerir: false, rncId: null };
+const NEGADO: AcessoEntidade = { podeLer: false, podeEnviar: false, podeGerir: false, rncId: null, rncFinal: false };
+const finalizada = (rnc: { status: StatusRnc } | null | undefined) => !!rnc && STATUS_FINAIS.includes(rnc.status);
 
 function gestorRnc(a: Ator, rnc: { responsavelId: string | null }) {
   return atorTem(a, "PLANO_GERENCIAR") || podeTratarRnc(a, rnc);
@@ -35,15 +38,21 @@ function gestorRnc(a: Ator, rnc: { responsavelId: string | null }) {
 /** Regras de acesso por tipo de entidade (sempre dentro da empresa do ator, via DbTenant). */
 async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
   const rncVisivel = (id: string) =>
-    a.db.rnc.findFirst({ where: { AND: [{ id }, filtroAcessoRnc(a)] }, select: { id: true, status: true, responsavelId: true } });
+    a.db.rnc.findFirst({
+      where: { AND: [{ id }, filtroAcessoRnc(a)] },
+      select: { id: true, status: true, responsavelId: true, contemDadosPessoais: true },
+    });
 
   switch (alvo.tipo) {
     case "RNC":
     case "RNC_DADOS_SENSIVEIS": {
-      if (alvo.tipo === "RNC_DADOS_SENSIVEIS" && !podeVerDadosSensiveis(a)) return NEGADO;
+      const sensivel = alvo.tipo === "RNC_DADOS_SENSIVEIS";
+      if (sensivel && !podeVerDadosSensiveis(a)) return NEGADO;
       const rnc = await rncVisivel(alvo.entidadeId);
       if (!rnc) return NEGADO;
-      return { podeLer: true, podeEnviar: !STATUS_FINAIS.includes(rnc.status), podeGerir: gestorRnc(a, rnc), rncId: rnc.id };
+      // B1: anexo de dados sensíveis só em RNC marcada com contemDadosPessoais.
+      const podeEnviar = !finalizada(rnc) && (!sensivel || rnc.contemDadosPessoais);
+      return { podeLer: true, podeEnviar, podeGerir: gestorRnc(a, rnc), rncId: rnc.id, rncFinal: finalizada(rnc) };
     }
     case "VERIFICACAO_EFICACIA": {
       const v = await a.db.verificacaoEficacia.findFirst({
@@ -53,12 +62,12 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       if (!v) return NEGADO;
       const rnc = await rncVisivel(v.rncId);
       if (!rnc) return NEGADO;
-      return { podeLer: true, podeEnviar: v.verificadorId === a.usuarioId, podeGerir: atorTem(a, "PLANO_GERENCIAR"), rncId: rnc.id };
+      return { podeLer: true, podeEnviar: v.verificadorId === a.usuarioId, podeGerir: atorTem(a, "PLANO_GERENCIAR"), rncId: rnc.id, rncFinal: finalizada(rnc) };
     }
     case "ITEM_ACAO": {
       const item = await a.db.itemAcao.findFirst({
         where: { AND: [{ id: alvo.entidadeId }, filtroAcessoItem(a)] },
-        select: { quemId: true, status: true, planoAcao: { select: { rnc: { select: { id: true, responsavelId: true } } } } },
+        select: { quemId: true, status: true, planoAcao: { select: { rnc: { select: { id: true, responsavelId: true, status: true } } } } },
       });
       if (!item) return NEGADO;
       const rnc = item.planoAcao.rnc;
@@ -68,22 +77,23 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
         podeEnviar: item.status !== "CANCELADO" && (item.quemId === a.usuarioId || gerencia),
         podeGerir: gerencia,
         rncId: null,
+        rncFinal: finalizada(rnc),
       };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({
         where: { id: alvo.entidadeId },
-        select: { criadoPorId: true, rnc: { select: { id: true, responsavelId: true } } },
+        select: { criadoPorId: true, rnc: { select: { id: true, responsavelId: true, status: true } } },
       });
       if (!plano) return NEGADO;
       if (plano.rnc) {
         if (!(await rncVisivel(plano.rnc.id))) return NEGADO;
         const g = podeGerenciarPlanoRnc(a, plano.rnc);
-        return { podeLer: true, podeEnviar: g, podeGerir: g, rncId: null };
+        return { podeLer: true, podeEnviar: g, podeGerir: g, rncId: null, rncFinal: finalizada(plano.rnc) };
       }
       const g = atorTem(a, "PLANO_GERENCIAR");
       const ler = g || plano.criadoPorId === a.usuarioId;
-      return { podeLer: ler, podeEnviar: ler, podeGerir: g, rncId: null };
+      return { podeLer: ler, podeEnviar: ler, podeGerir: g, rncId: null, rncFinal: false };
     }
   }
 }
@@ -95,6 +105,34 @@ export async function podeEnviarAnexo(a: Ator, alvo: Alvo) {
 async function limiteDaEmpresa(a: Ator) {
   const e = await a.db.empresa.findFirst({ where: { id: a.empresaId }, select: { config: true } });
   return limiteBytes(e?.config);
+}
+
+/** Metadados de um arquivo recebido (antes de ler o conteúdo). */
+export interface MetaArquivo {
+  nome: string;
+  tamanho: number;
+}
+
+/** Erros de quantidade/tamanho só com metadados (puro). */
+export function errosMetadados(metas: readonly MetaArquivo[], limite: number): string[] {
+  if (metas.length > MAX_ARQUIVOS_POR_ENVIO) return [`Envie no máximo ${MAX_ARQUIVOS_POR_ENVIO} arquivos por vez.`];
+  const mb = Math.round(limite / 1024 / 1024);
+  return metas.filter((m) => m.tamanho > limite).map((m) => `${nomeExibicao(m.nome)}: excede o limite de ${mb} MB.`);
+}
+
+/**
+ * B3: valida quantidade e tamanho declarados ANTES de ler os arquivos em memória e, se
+ * informado o alvo, a permissão de envio. Lança ErroNegocio.
+ */
+export async function prevalidarArquivos(a: Ator, metas: readonly MetaArquivo[], alvo?: Alvo) {
+  if (metas.length === 0) return;
+  const erros = errosMetadados(metas, await limiteDaEmpresa(a));
+  if (erros.length) throw new ErroNegocio(erros.join(" "));
+  if (alvo) {
+    const acesso = await acessoEntidade(a, alvo);
+    if (!acesso.podeLer) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    if (!acesso.podeEnviar) throw new ErroNegocio("Sem permissão para anexar arquivos neste registro.");
+  }
 }
 
 /** Valida tipo/tamanho de todos os arquivos (sem gravar). Lança ErroNegocio com todos os problemas. */
@@ -110,10 +148,10 @@ export async function validarArquivos(a: Ator, arquivos: ArquivoEnviado[]) {
 /** Envia anexos para a entidade. Valida conteúdo (magic bytes), tamanho e permissão. */
 export async function enviarAnexos(a: Ator, alvo: Alvo, arquivos: ArquivoEnviado[]): Promise<Anexo[]> {
   if (arquivos.length === 0) return [];
-  const validados = await validarArquivos(a, arquivos);
   const acesso = await acessoEntidade(a, alvo);
   if (!acesso.podeLer) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
   if (!acesso.podeEnviar) throw new ErroNegocio("Sem permissão para anexar arquivos neste registro.");
+  const validados = await validarArquivos(a, arquivos);
   const armazenamento = getArmazenamento();
   const sensivel = alvo.tipo === "RNC_DADOS_SENSIVEIS";
   const criados: Anexo[] = [];
@@ -179,7 +217,7 @@ export async function listarAnexos(a: Ator, alvo: Alvo): Promise<AnexoListado[]>
     select: selecao,
     orderBy: { criadoEm: "asc" },
   });
-  return rs.map((r) => ({ ...r, podeExcluir: r.enviadoPorId === a.usuarioId || acesso.podeGerir }));
+  return rs.map((r) => ({ ...r, podeExcluir: !acesso.rncFinal && (r.enviadoPorId === a.usuarioId || acesso.podeGerir) }));
 }
 
 /** Anexos de várias entidades do mesmo tipo (ex.: itens de um plano), cada uma com checagem de acesso. */
@@ -207,6 +245,7 @@ export async function excluirAnexo(a: Ator, anexoId: string) {
   if (!anexo || (anexo.sensivel && !podeVerDadosSensiveis(a))) throw new ErroNegocio("Anexo não encontrado.");
   const acesso = await acessoEntidade(a, { tipo: anexo.entidadeTipo, entidadeId: anexo.entidadeId });
   if (!acesso.podeLer) throw new ErroNegocio("Anexo não encontrado.");
+  if (acesso.rncFinal) throw new ErroNegocio("Anexos de RNC encerrada ou cancelada não podem ser excluídos.");
   if (anexo.enviadoPorId !== a.usuarioId && !acesso.podeGerir) {
     throw new ErroNegocio("Somente quem enviou o anexo ou um gestor pode excluí-lo.");
   }

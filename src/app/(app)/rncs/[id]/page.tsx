@@ -36,6 +36,7 @@ import {
   solicitarCancelamentoAcao,
   verificarAcao,
 } from "../actions";
+import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { CausaForm } from "./causa-form";
 import { ItensForm } from "./itens-form";
 
@@ -87,7 +88,17 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
   });
   if (!rnc) notFound();
 
-  const usuarios = await a.db.usuario.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } });
+  const ativos = (await usuariosAtivos(a.db)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+  const usuarios = ativos.map((u) => ({ id: u.id, nome: u.nome }));
+  // "Quem" dos itens: só usuários ativos com acesso à obra da RNC.
+  const usuariosObra = ativos.filter((u) => u.obras === null || u.obras.includes(rnc.obraId)).map((u) => ({ id: u.id, nome: u.nome }));
+  // Novo responsável (B2): RNC_TRATAR + obra + (restrita => RNC_VER_RESTRITAS).
+  const elegiveisResponsavel = ativos.filter(
+    (u) =>
+      u.permissoes.includes("RNC_TRATAR") &&
+      (u.obras === null || u.obras.includes(rnc.obraId)) &&
+      (!rnc.restrita || u.permissoes.includes("RNC_VER_RESTRITAS")),
+  );
   const itens = rnc.planoAcao?.itens ?? [];
   const ciclo = cicloAtual(rnc.verificacoes);
   const itensCiclo = itens.filter((i) => i.ciclo === ciclo);
@@ -120,6 +131,11 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
 
   return (
     <div className="max-w-6xl">
+      {sp.aviso === "anexos" && (
+        <p role="status" className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          A RNC foi registrada, mas os anexos não puderam ser armazenados. Não abra a RNC novamente: anexe os arquivos pela seção de anexos no resumo.
+        </p>
+      )}
       <div className="mb-2 text-sm"><Link href="/rncs" className="text-slate-500 hover:text-slate-800">← RNCs</Link></div>
       <Cabecalho
         titulo={<span><span className="font-mono text-lg text-slate-500">{rnc.codigo}</span> {rnc.titulo}</span>}
@@ -135,7 +151,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
         acoes={
           <>
             {podeAssumir && transicao(assumirAcao, rnc.status === "REABERTO" ? "Retomar análise" : "Assumir análise")}
-            {tratar && rnc.status === "EM_ANALISE" && transicao(iniciarExecucaoAcao, "Iniciar execução do plano")}
+            {tratar && rnc.status === "EM_ANALISE" && itensCiclo.some((i) => i.status !== "CANCELADO") && transicao(iniciarExecucaoAcao, "Iniciar execução do plano")}
             {tratar && rnc.status === "PLANO_EM_EXECUCAO" && transicao(enviarVerificacaoAcao, "Enviar para verificação")}
           </>
         }
@@ -207,7 +223,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                   <input type="hidden" name="versao" value={rnc.versao} />
                   <select name="responsavelId" required defaultValue="" aria-label="Novo responsável" className={cls.input}>
                     <option value="" disabled>Novo responsável…</option>
-                    {usuarios.filter((u) => u.id !== rnc.responsavelId).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                    {elegiveisResponsavel.filter((u) => u.id !== rnc.responsavelId).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
                   </select>
                 </FormAcao>
               )}
@@ -300,7 +316,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                           <td className={`${cls.td} whitespace-nowrap`}>{i.quem.nome}</td>
                           <td className={`${cls.td} whitespace-nowrap`}>{formatarData(i.quando)}</td>
                           <td className={cls.td}>{i.como ?? "—"}</td>
-                          <td className={`${cls.td} whitespace-nowrap`}>
+                          <td className={`${cls.td} min-w-32 whitespace-nowrap`}>
                             {i.quanto ? Number(i.quanto).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}
                           </td>
                           <td className={cls.td}><Badge cor={COR_STATUS_ITEM[st]}>{ROTULO_STATUS_ITEM[st]}</Badge></td>
@@ -310,7 +326,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                                 item={i}
                                 rncId={rnc.id}
                                 hoje={hoje}
-                                usuarios={usuarios}
+                                usuarios={usuariosObra.some((u) => u.id === i.quemId) ? usuariosObra : [...usuariosObra, { id: i.quemId, nome: i.quem.nome }]}
                                 podeExecutar={i.quemId === a.usuarioId && rnc.status === "PLANO_EM_EXECUCAO"}
                                 podeGerenciar={editavelPlano}
                               />
@@ -328,7 +344,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
           </Cartao>
           {editavelPlano && (
             <Cartao titulo={`Adicionar itens${ciclo > 1 ? ` (ciclo ${ciclo})` : ""}`}>
-              <ItensForm rncId={rnc.id} usuarios={usuarios} />
+              <ItensForm rncId={rnc.id} usuarios={usuariosObra} />
             </Cartao>
           )}
         </div>
@@ -418,9 +434,12 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                 <span className="font-medium">{pendente.solicitante.nome}</span> solicitou em {formatarDataHora(pendente.criadoEm, fuso)}:
               </p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{pendente.motivo}</p>
+              {atorTem(a, "RNC_APROVAR_CANCELAMENTO") && pendente.solicitanteId === a.usuarioId && (
+                <p className="mt-3 text-xs text-slate-500">Você solicitou este cancelamento: a aprovação cabe a outro usuário.</p>
+              )}
               {atorTem(a, "RNC_APROVAR_CANCELAMENTO") && (
                 <div className="mt-4 flex flex-wrap gap-4">
-                  {(["APROVAR", "REJEITAR"] as const).map((dec) => (
+                  {(pendente.solicitanteId === a.usuarioId ? (["REJEITAR"] as const) : (["APROVAR", "REJEITAR"] as const)).map((dec) => (
                     <FormAcao
                       key={dec}
                       acao={decidirCancelamentoAcao}

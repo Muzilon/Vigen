@@ -11,6 +11,7 @@ import {
   notificarEnviadaVerificacao,
   notificarRncAtribuida,
 } from "@/lib/notificacoes/gatilhos";
+import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 
 // ---------------------------------------------------------------- visibilidade
 
@@ -181,13 +182,10 @@ export async function criarRnc(a: Ator, d: DadosNovaRnc) {
   }
   const obra = await a.db.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true } });
   if (!obra) throw new ErroNegocio("Obra/unidade inválida.");
-  if (d.responsavelId) {
-    const u = await a.db.usuario.findFirst({ where: { id: d.responsavelId, ativo: true } });
-    if (!u) throw new ErroNegocio("Responsável inválido.");
-  }
   const ano = anoNoFuso(await fusoDaEmpresa(a));
   const contemDadosPessoais = !!d.contemDadosPessoais;
   const restrita = !!d.restrita || (d.tipo === "SSO" && contemDadosPessoais);
+  if (d.responsavelId) await validarNovoResponsavel(a.db, d.responsavelId, { obraId: d.obraId, restrita });
 
   const criada = await a.db.$transaction(async (tx) => {
     const sequencia = await proximaSequenciaRnc(tx, a.empresaId, ano);
@@ -235,6 +233,26 @@ export async function criarRnc(a: Ator, d: DadosNovaRnc) {
 
 // ---------------------------------------------------------------- tratativa
 
+/**
+ * B2: o responsável precisa estar ativo, ter RNC_TRATAR, acesso à obra da RNC e, se a RNC
+ * for restrita, RNC_VER_RESTRITAS (ser responsável daria acesso a uma RNC que ele não veria).
+ */
+export async function validarNovoResponsavel(
+  db: Parameters<typeof usuariosAtivos>[0],
+  responsavelId: string,
+  rnc: { obraId: string; restrita: boolean },
+) {
+  const u = (await usuariosAtivos(db)).find((x) => x.id === responsavelId);
+  if (!u) throw new ErroNegocio("Responsável inválido.");
+  if (!u.permissoes.includes("RNC_TRATAR")) throw new ErroNegocio("O responsável precisa da permissão de tratar RNCs.");
+  if (u.obras !== null && !u.obras.includes(rnc.obraId)) {
+    throw new ErroNegocio("O responsável não tem acesso à obra/unidade desta RNC.");
+  }
+  if (rnc.restrita && !u.permissoes.includes("RNC_VER_RESTRITAS")) {
+    throw new ErroNegocio("RNC restrita: o responsável precisa da permissão de ver RNCs restritas.");
+  }
+}
+
 /** Troca o responsável (PLANO_GERENCIAR), fora de status finais; notifica o novo responsável. */
 export async function alterarResponsavel(a: Ator, id: string, responsavelId: string, versao?: number) {
   if (!atorTem(a, "PLANO_GERENCIAR")) throw new ErroNegocio("Sem permissão para alterar o responsável.");
@@ -243,8 +261,7 @@ export async function alterarResponsavel(a: Ator, id: string, responsavelId: str
     exigirVersao(rnc, versao);
     if (STATUS_FINAIS.includes(rnc.status)) throw new ErroNegocio("RNC já finalizada.");
     if (rnc.responsavelId === responsavelId) throw new ErroNegocio("Este usuário já é o responsável.");
-    const u = await tx.usuario.findFirst({ where: { id: responsavelId, ativo: true }, select: { id: true } });
-    if (!u) throw new ErroNegocio("Responsável inválido.");
+    await validarNovoResponsavel(tx, responsavelId, rnc);
     await travarRnc(tx, rnc, { responsavelId });
     await tx.historicoStatusRnc.create({
       data: {
@@ -409,6 +426,9 @@ export async function decidirCancelamento(a: Ator, solicitacaoId: string, aprova
   await a.db.$transaction(async (tx) => {
     const sol = await tx.solicitacaoCancelamento.findFirst({ where: { id: solicitacaoId } });
     if (!sol) throw new ErroNegocio("Solicitação não encontrada.");
+    if (aprovar && sol.solicitanteId === a.usuarioId) {
+      throw new ErroNegocio("Quem solicitou o cancelamento não pode aprová-lo.");
+    }
     const rnc = await carregar(tx, a, sol.rncId);
     const r = await tx.solicitacaoCancelamento.updateMany({
       where: { id: solicitacaoId, status: "PENDENTE" },

@@ -80,7 +80,7 @@ async function main() {
       update: { ...u, senhaHash, ativo: true },
       create: { ...u, senhaHash, empresaId: e },
     });
-    if (u.email === "inspetor@monto.com.br") {
+    if (u.email === "inspetor@monto.com.br" || u.email === "colaborador@monto.com.br") {
       await prisma.usuarioAcessoObra.upsert({
         where: { empresaId_usuarioId_obraId: { empresaId: e, usuarioId: criado.id, obraId: obras[0].id } },
         update: {},

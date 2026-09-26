@@ -29,8 +29,12 @@ const EXTENSOES: Record<string, TipoArquivo> = {
   txt: "txt",
 };
 
-/** Tipos que o navegador pode exibir com segurança (inline) — o resto é sempre attachment. */
-export const MIMES_INLINE = new Set([MIME.jpg, MIME.png, MIME.webp, MIME.pdf]);
+/**
+ * Tipos que o navegador pode exibir com segurança (inline) — o resto é sempre attachment.
+ * B5: PDF fica de fora: o visualizador de PDF do navegador não funciona sob CSP "sandbox",
+ * então PDF é sempre baixado (attachment) em vez de afrouxar a CSP.
+ */
+export const MIMES_INLINE = new Set([MIME.jpg, MIME.png, MIME.webp]);
 export const MIMES_IMAGEM = new Set([MIME.jpg, MIME.png, MIME.webp, MIME.heic]);
 
 export const ACEITAR_INPUT = ".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf,.docx,.xlsx,.txt";

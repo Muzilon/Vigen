@@ -1,20 +1,26 @@
 import Link from "next/link";
 import { Cabecalho, cls } from "@/components/ui";
 import { exigirPermissao, getDb } from "@/lib/tenant";
+import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { FormNovaRnc } from "./form-nova";
 
 export default async function NovaRnc() {
   const ctx = await exigirPermissao("RNC_ABRIR");
   const db = await getDb();
-  const [obras, setores, usuarios] = await Promise.all([
+  const [obras, setores, ativos] = await Promise.all([
     db.obraUnidade.findMany({
       where: { ativo: true, ...(ctx.obrasPermitidas ? { id: { in: ctx.obrasPermitidas } } : {}) },
       orderBy: { nome: "asc" },
       select: { id: true, nome: true },
     }),
     db.setor.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
-    db.usuario.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+    usuariosAtivos(db),
   ]);
+  // Responsável sugerido: só quem pode tratar RNCs (o serviço valida obra/restrita).
+  const usuarios = ativos
+    .filter((u) => u.permissoes.includes("RNC_TRATAR"))
+    .sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"))
+    .map((u) => ({ id: u.id, nome: u.nome }));
 
   return (
     <div className="max-w-3xl">

@@ -14,9 +14,9 @@ export interface FiltrosDashboard {
 }
 
 /** Carrega os indicadores respeitando isolamento (db do tenant) e visibilidade (filtroAcessoRnc). */
-export async function carregarIndicadores(a: Ator, f: FiltrosDashboard): Promise<{ indicadores: Indicadores; periodo: Periodo; fuso: string }> {
+export async function carregarIndicadores(a: Ator, f: FiltrosDashboard, agora: Date = new Date()): Promise<{ indicadores: Indicadores; periodo: Periodo; fuso: string }> {
   const fuso = await fusoDaEmpresa(a);
-  const hoje = hojeNoFuso(fuso);
+  const hoje = hojeNoFuso(fuso, agora);
   const padrao = periodoPadrao(hoje);
   let periodo: Periodo = { inicio: f.inicio || padrao.inicio, fim: f.fim || padrao.fim };
   if (periodo.inicio > periodo.fim) periodo = { inicio: periodo.fim, fim: periodo.inicio };

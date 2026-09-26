@@ -9,7 +9,7 @@ import { criarDbTenant, type DbTenant } from "@/lib/db-tenant";
 import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { prismaAdmin } from "@/lib/prisma";
 import { atorDoUsuario, usuariosAtivos } from "./destinatarios";
-import { linkItem, rotuloRnc } from "./gatilhos";
+import { descricaoItem, linkItem } from "./gatilhos";
 import { lerPreferencias, type PreferenciasNotificacao } from "./preferencias";
 import { diasAte, segundaDaSemana, selecionarAlertas } from "./selecao";
 import { criarNotificacoes, reenviarEmailsPendentes, type NovaNotificacao } from "./servico";
@@ -60,12 +60,16 @@ export async function alertasDaEmpresa(db: DbTenant, empresa: EmpresaCron, prefs
   const itens = await db.itemAcao.findMany({
     where: {
       status: { in: ["PENDENTE", "EM_ANDAMENTO"] },
-      quando: { lte: paraDataDb(limite) },
-      OR: [{ alertaEnviadoEm: null }, { atrasoNotificadoEm: null }],
+      // M1: só o que ainda precisa de aviso, filtrado no banco (itens já tratados não ocupam o lote).
+      OR: [
+        { quando: { lt: paraDataDb(hoje) }, atrasoNotificadoEm: null },
+        { quando: { gte: paraDataDb(hoje), lte: paraDataDb(limite) }, alertaEnviadoEm: null },
+      ],
       planoAcao: {
         OR: [{ rnc: { is: null } }, { rnc: { is: { status: { notIn: ["ENCERRADO", "CANCELADO"] } } } }],
       },
     },
+    orderBy: [{ quando: "asc" }, { id: "asc" }],
     select: {
       id: true,
       oQue: true,
@@ -75,12 +79,16 @@ export async function alertasDaEmpresa(db: DbTenant, empresa: EmpresaCron, prefs
       alertaEnviadoEm: true,
       atrasoNotificadoEm: true,
       quem: { select: { nome: true } },
-      planoAcao: { select: { criadoPorId: true, rnc: { select: { codigo: true, titulo: true, restrita: true, responsavelId: true } } } },
+      planoAcao: {
+        select: {
+          criadoPorId: true,
+          rnc: { select: { codigo: true, titulo: true, restrita: true, contemDadosPessoais: true, responsavelId: true } },
+        },
+      },
     },
     take: 5000,
   });
   const { prazo, atraso } = selecionarAlertas(itens, hoje, prefs.diasAlertaPrazo);
-  const origem = (i: (typeof itens)[number]) => (i.planoAcao.rnc ? ` (${rotuloRnc(i.planoAcao.rnc)})` : "");
 
   const notifs: NovaNotificacao[] = [];
   for (const i of prazo) {
@@ -91,7 +99,7 @@ export async function alertasDaEmpresa(db: DbTenant, empresa: EmpresaCron, prefs
       entidadeTipo: "ITEM_ACAO",
       entidadeId: i.id,
       titulo: d === 0 ? "Ação vence hoje" : `Ação vence em ${d} dia${d > 1 ? "s" : ""}`,
-      corpo: `${i.oQue}${origem(i)}\nPrazo: ${dataIso(i.quando).split("-").reverse().join("/")}`,
+      corpo: `${descricaoItem(i)}\nPrazo: ${dataIso(i.quando).split("-").reverse().join("/")}`,
       link: linkItem(i.id),
       chave: `item-prazo:${i.id}:${dataIso(i.quando)}`,
     });
@@ -107,7 +115,7 @@ export async function alertasDaEmpresa(db: DbTenant, empresa: EmpresaCron, prefs
         entidadeTipo: "ITEM_ACAO",
         entidadeId: i.id,
         titulo: `Ação atrasada há ${d} dia${d > 1 ? "s" : ""}`,
-        corpo: `${i.oQue}${origem(i)}\nResponsável: ${i.quem.nome}\nPrazo: ${dataIso(i.quando).split("-").reverse().join("/")}`,
+        corpo: `${descricaoItem(i)}\nResponsável: ${i.quem.nome}\nPrazo: ${dataIso(i.quando).split("-").reverse().join("/")}`,
         link: linkItem(i.id),
         chave: `item-atraso:${i.id}:${dataIso(i.quando)}:${uid}`,
       });
@@ -167,7 +175,8 @@ export async function executarCronSemanal(opts: OpcoesCron = {}) {
       const notifs: NovaNotificacao[] = [];
       for (const u of gestores) {
         // Indicadores na visão do destinatário (respeita obras/restritas dele).
-        const { indicadores, periodo } = await carregarIndicadores(atorDoUsuario(db, e.id, u), {});
+        // B7: indicadores calculados no "agora" do cron (não na hora real).
+        const { indicadores, periodo } = await carregarIndicadores(atorDoUsuario(db, e.id, u), {}, agora);
         const k = indicadores.kpis;
         const eficacia = k.eficaciaPrimeiraVerificacaoPct === null ? "sem verificações no período" : `${Math.round(k.eficaciaPrimeiraVerificacaoPct)}%`;
         notifs.push({

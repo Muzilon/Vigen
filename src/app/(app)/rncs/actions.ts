@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import type { ResultadoAcao } from "@/components/form-acao";
+import type { Ator } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import * as anexos from "@/lib/anexos/servico";
@@ -44,10 +45,32 @@ const uuidOpcional = z
 const versao = z.coerce.number().int().optional();
 const obj = (fd: FormData) => Object.fromEntries(fd.entries());
 
-/** Arquivos (não vazios) de um campo multipart. */
-async function arquivosDe(fd: FormData, campo = "arquivos"): Promise<anexos.ArquivoEnviado[]> {
+/**
+ * Arquivos (não vazios) de um campo multipart. B3: quantidade, tamanho declarado e (se houver
+ * alvo) permissão são checados ANTES de ler o conteúdo em memória.
+ */
+async function arquivosDe(a: Ator, fd: FormData, campo = "arquivos", alvo?: anexos.Alvo): Promise<anexos.ArquivoEnviado[]> {
   const fs = fd.getAll(campo).filter((v): v is File => v instanceof File && v.size > 0);
+  await anexos.prevalidarArquivos(a, fs.map((f) => ({ nome: f.name, tamanho: f.size })), alvo);
   return Promise.all(fs.map(async (f) => ({ nome: f.name, dados: new Uint8Array(await f.arrayBuffer()) })));
+}
+
+const AVISO_ANEXOS =
+  "O registro foi salvo, mas os anexos não puderam ser armazenados. Não repita a operação: anexe os arquivos novamente pela seção de anexos.";
+
+/**
+ * M3: o upload ocorre depois da transação; se falhar, o registro já existe. Não propaga erro
+ * (evita retry que duplicaria/quebraria o fluxo) e devolve um aviso claro.
+ */
+async function anexarSemFalhar(a: Ator, alvo: anexos.Alvo, arquivos: anexos.ArquivoEnviado[]): Promise<string | null> {
+  if (arquivos.length === 0) return null;
+  try {
+    await anexos.enviarAnexos(a, alvo, arquivos);
+    return null;
+  } catch (e) {
+    console.error(`[anexos] falha ao anexar após salvar ${alvo.tipo}:${alvo.entidadeId}`, e);
+    return AVISO_ANEXOS;
+  }
 }
 
 // ---------------------------------------------------------------- nova RNC
@@ -73,12 +96,13 @@ const esquemaNova = z.object({
 
 export async function criarRncAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   let id = "";
+  let falhaAnexo = false;
   const r = await executar(async () => {
     const d = esquemaNova.parse(obj(fd));
     const a = await getAtor();
     // Valida os anexos antes de criar a RNC (tipo/tamanho), para não abrir RNC com upload inválido.
-    const arquivos = await arquivosDe(fd);
-    const sensiveis = d.contemDadosPessoais && rnc.podeVerDadosSensiveis(a) ? await arquivosDe(fd, "arquivosSensiveis") : [];
+    const arquivos = await arquivosDe(a, fd);
+    const sensiveis = d.contemDadosPessoais && rnc.podeVerDadosSensiveis(a) ? await arquivosDe(a, fd, "arquivosSensiveis") : [];
     await anexos.validarArquivos(a, arquivos);
     await anexos.validarArquivos(a, sensiveis);
     const criada = await rnc.criarRnc(a, {
@@ -96,11 +120,13 @@ export async function criarRncAcao(_: ResultadoAcao, fd: FormData): Promise<Resu
         : null,
     });
     id = criada.id;
-    await anexos.enviarAnexos(a, { tipo: "RNC", entidadeId: criada.id }, arquivos);
-    await anexos.enviarAnexos(a, { tipo: "RNC_DADOS_SENSIVEIS", entidadeId: criada.id }, sensiveis);
+    const f1 = await anexarSemFalhar(a, { tipo: "RNC", entidadeId: criada.id }, arquivos);
+    const f2 = await anexarSemFalhar(a, { tipo: "RNC_DADOS_SENSIVEIS", entidadeId: criada.id }, sensiveis);
+    falhaAnexo = !!(f1 || f2);
   }, ["/rncs"]);
-  if (id) redirect(`/rncs/${id}`);
-  return r;
+  if (id) redirect(`/rncs/${id}${falhaAnexo ? "?aviso=anexos" : ""}`);
+  // Devolve os valores enviados para o formulário não perder o que foi digitado.
+  return { ...r, valores: valoresDoForm(fd) };
 }
 
 // ---------------------------------------------------------------- transições
@@ -178,7 +204,7 @@ export async function verificarAcao(_: ResultadoAcao, fd: FormData) {
   return executar(async () => {
     const d = esquemaVerificacao.parse(obj(fd));
     const a = await getAtor();
-    const arquivos = await arquivosDe(fd);
+    const arquivos = await arquivosDe(a, fd);
     await anexos.validarArquivos(a, arquivos);
     const r = await rnc.verificarEficacia(
       a,
@@ -186,8 +212,9 @@ export async function verificarAcao(_: ResultadoAcao, fd: FormData) {
       { eficaz: d.resultado === "EFICAZ", comentario: d.comentario },
       d.versao,
     );
-    await anexos.enviarAnexos(a, { tipo: "VERIFICACAO_EFICACIA", entidadeId: r.verificacaoId }, arquivos);
-    return { ok: d.resultado === "EFICAZ" ? "RNC encerrada." : "RNC reaberta para novo ciclo.", aviso: r.aviso ?? undefined };
+    const falha = await anexarSemFalhar(a, { tipo: "VERIFICACAO_EFICACIA", entidadeId: r.verificacaoId }, arquivos);
+    const aviso = [r.aviso, falha].filter(Boolean).join(" ") || undefined;
+    return { ok: d.resultado === "EFICAZ" ? "RNC encerrada." : "RNC reaberta para novo ciclo.", aviso };
   }, [`/rncs/${fd.get("id")}`, "/rncs"]);
 }
 
@@ -279,11 +306,11 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
       })
       .parse(obj(fd));
     const a = await getAtor();
-    const arquivos = await arquivosDe(fd);
+    const arquivos = await arquivosDe(a, fd, "arquivos", { tipo: "ITEM_ACAO", entidadeId: d.itemId });
     await anexos.validarArquivos(a, arquivos);
     await plano.concluirItem(a, d.itemId, d);
-    await anexos.enviarAnexos(a, { tipo: "ITEM_ACAO", entidadeId: d.itemId }, arquivos);
-    return { ok: "Item concluído." };
+    const aviso = await anexarSemFalhar(a, { tipo: "ITEM_ACAO", entidadeId: d.itemId }, arquivos);
+    return { ok: "Item concluído.", aviso: aviso ?? undefined };
   }, [`/rncs/${fd.get("rncId") ?? ""}`]);
 }
 
@@ -318,9 +345,11 @@ function revalidarAnexos() {
 export async function enviarAnexosAcao(_: ResultadoAcao, fd: FormData) {
   return executar(async () => {
     const d = z.object({ entidadeTipo: z.enum(TIPOS_ANEXO), entidadeId: uuid }).parse(obj(fd));
-    const arquivos = await arquivosDe(fd);
+    const a = await getAtor();
+    const alvo = { tipo: d.entidadeTipo, entidadeId: d.entidadeId };
+    const arquivos = await arquivosDe(a, fd, "arquivos", alvo);
     if (arquivos.length === 0) return { erro: "Selecione ao menos um arquivo." };
-    const r = await anexos.enviarAnexos(await getAtor(), { tipo: d.entidadeTipo, entidadeId: d.entidadeId }, arquivos);
+    const r = await anexos.enviarAnexos(a, alvo, arquivos);
     revalidarAnexos();
     return { ok: `${r.length} arquivo(s) anexado(s).` };
   });
@@ -333,4 +362,11 @@ export async function excluirAnexoAcao(_: ResultadoAcao, fd: FormData) {
     revalidarAnexos();
     return { ok: "Anexo excluído." };
   });
+}
+
+/** Campos de texto do formulário (sem arquivos/senhas) para repovoar o form após erro. */
+function valoresDoForm(fd: FormData): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of fd.entries()) if (typeof v === "string" && !k.startsWith("$")) out[k] = v;
+  return out;
 }
