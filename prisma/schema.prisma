@@ -152,11 +152,15 @@ enum TipoNotificacao {
   ITEM_PRAZO_PROXIMO
   ITEM_ATRASADO
   RESUMO_SEMANAL
+  APROVACAO_PENDENTE
+  APROVACAO_DECIDIDA
+  REAVALIACAO_PROXIMA
 }
 
 enum TipoEntidadeNotificacao {
   RNC
   ITEM_ACAO
+  FLUXO_APROVACAO
 }
 
 enum StatusEmailNotificacao {
@@ -164,6 +168,53 @@ enum StatusEmailNotificacao {
   ENVIADO
   IGNORADO
   FALHOU
+}
+
+/// Entidade alvo de um fluxo de aprovação (motor multi-assinante, src/lib/aprovacao).
+/// TESTE: usado só pelos scripts de teste (handler registrado no próprio script).
+enum TipoEntidadeAprovacao {
+  PROCESSO
+  HIRA
+  LAIA
+  DOCUMENTO
+  RISCO_OPORTUNIDADE
+  TESTE
+}
+
+enum TipoAlteracaoAprovacao {
+  INCLUSAO
+  ALTERACAO
+  EXCLUSAO
+  PUBLICACAO
+}
+
+enum ModoAprovacao {
+  SEQUENCIAL
+  PARALELO
+}
+
+enum StatusFluxoAprovacao {
+  PENDENTE
+  APROVADO
+  REJEITADO
+  CANCELADO
+}
+
+/// AGUARDANDO: ainda não é a vez (sequencial). IGNORADA: fluxo encerrado antes da decisão.
+enum StatusEtapaAprovacao {
+  AGUARDANDO
+  PENDENTE
+  APROVADA
+  REJEITADA
+  IGNORADA
+}
+
+enum AcaoHistoricoAprovacao {
+  SOLICITADO
+  APROVADO
+  REJEITADO
+  CANCELADO
+  CONCLUIDO
 }
 
 enum TipoSequencia {
@@ -202,6 +253,9 @@ model Empresa {
   leiturasInteracao        LeituraInteracao[]
   notificacoes             Notificacao[]
   configuracoesEscala      ConfiguracaoEscala[]
+  fluxosAprovacao          FluxoAprovacao[]
+  etapasAprovacao          EtapaAprovacao[]
+  historicosAprovacao      HistoricoAprovacao[]
 
   @@map("empresa")
 }
@@ -298,6 +352,9 @@ model Usuario {
   interacoesDestinatario   Interacao[]               @relation("InteracaoDestinatario")
   leiturasInteracao        LeituraInteracao[]
   notificacoes             Notificacao[]
+  fluxosSolicitados        FluxoAprovacao[]          @relation("FluxoSolicitante")
+  etapasAprovador          EtapaAprovacao[]          @relation("EtapaAprovador")
+  historicosAprovacao      HistoricoAprovacao[]      @relation("HistoricoAprovacaoUsuario")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -663,6 +720,79 @@ model ConfiguracaoEscala {
   @@unique([empresaId, tipo, obraId])
   @@index([empresaId, tipo])
   @@map("configuracao_escala")
+}
+
+/// Fluxo de aprovação multi-assinante (estilo DocuSign) sobre uma entidade de qualquer módulo.
+/// payload: a alteração proposta, aplicada pelo handler do entidadeTipo (aoAprovar) na mesma
+/// transação da última aprovação. versao: trava otimista (toda decisão incrementa).
+/// Um único fluxo PENDENTE por (empresa, entidadeTipo, entidadeId): índice único parcial na migração.
+model FluxoAprovacao {
+  id            String                 @id @default(uuid()) @db.Uuid
+  empresaId     String                 @map("empresa_id") @db.Uuid
+  entidadeTipo  TipoEntidadeAprovacao  @map("entidade_tipo")
+  entidadeId    String                 @map("entidade_id") @db.Uuid
+  tipoAlteracao TipoAlteracaoAprovacao @map("tipo_alteracao")
+  modo          ModoAprovacao
+  status        StatusFluxoAprovacao   @default(PENDENTE)
+  solicitanteId String                 @map("solicitante_id") @db.Uuid
+  payload       Json                   @default("{}")
+  resumo        String
+  versao        Int                    @default(0)
+  criadoEm      DateTime               @default(now()) @map("criado_em")
+  concluidoEm   DateTime?              @map("concluido_em")
+
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  solicitante Usuario              @relation("FluxoSolicitante", fields: [empresaId, solicitanteId], references: [empresaId, id], onDelete: Restrict)
+  etapas      EtapaAprovacao[]
+  historico   HistoricoAprovacao[]
+
+  @@unique([empresaId, id])
+  @@index([empresaId, entidadeTipo, entidadeId])
+  @@index([empresaId, solicitanteId, status])
+  @@index([empresaId, status])
+  @@map("fluxo_aprovacao")
+}
+
+model EtapaAprovacao {
+  id          String               @id @default(uuid()) @db.Uuid
+  empresaId   String               @map("empresa_id") @db.Uuid
+  fluxoId     String               @map("fluxo_id") @db.Uuid
+  ordem       Int
+  aprovadorId String               @map("aprovador_id") @db.Uuid
+  status      StatusEtapaAprovacao
+  decididoEm  DateTime?            @map("decidido_em")
+  comentario  String?
+
+  empresa   Empresa        @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  fluxo     FluxoAprovacao @relation(fields: [empresaId, fluxoId], references: [empresaId, id], onDelete: Restrict)
+  aprovador Usuario        @relation("EtapaAprovador", fields: [empresaId, aprovadorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, fluxoId, ordem])
+  @@unique([empresaId, fluxoId, aprovadorId])
+  @@index([empresaId, aprovadorId, status])
+  @@map("etapa_aprovacao")
+}
+
+/// Append-only (trigger na migração bloqueia UPDATE/DELETE).
+model HistoricoAprovacao {
+  id         String                 @id @default(uuid()) @db.Uuid
+  empresaId  String                 @map("empresa_id") @db.Uuid
+  fluxoId    String                 @map("fluxo_id") @db.Uuid
+  etapaId    String?                @map("etapa_id") @db.Uuid
+  usuarioId  String                 @map("usuario_id") @db.Uuid
+  acao       AcaoHistoricoAprovacao
+  comentario String?
+  metadados  Json?
+  criadoEm   DateTime               @default(now()) @map("criado_em")
+
+  empresa Empresa        @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  fluxo   FluxoAprovacao @relation(fields: [empresaId, fluxoId], references: [empresaId, id], onDelete: Restrict)
+  usuario Usuario        @relation("HistoricoAprovacaoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, fluxoId, criadoEm])
+  @@map("historico_aprovacao")
 }
 
 /// Tentativas de login (rate limit por e-mail e IP). Global: e-mail é único no sistema.

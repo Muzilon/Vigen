@@ -19,6 +19,9 @@ const ROTULO: Record<TipoNotificacao, string> = {
   ITEM_PRAZO_PROXIMO: "Prazo",
   ITEM_ATRASADO: "Atraso",
   RESUMO_SEMANAL: "Resumo semanal",
+  APROVACAO_PENDENTE: "Aprovação",
+  APROVACAO_DECIDIDA: "Aprovação",
+  REAVALIACAO_PROXIMA: "Reavaliação",
 };
 
 export default async function Notificacoes({ searchParams }: PageProps<"/notificacoes">) {

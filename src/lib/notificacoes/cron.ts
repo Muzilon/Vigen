@@ -3,11 +3,12 @@
  * e, para cada uma, trabalha com criarDbTenant(empresa.id) — toda consulta fica filtrada por
  * empresaId. Tudo é idempotente (flags no item + chaveIdempotencia única por empresa).
  */
-import type { PrismaClient } from "@prisma/client";
+import type { Modulo, PrismaClient } from "@prisma/client";
 import { dataIso, hojeNoFuso, paraDataDb, somarDias } from "@/lib/datas";
 import { criarDbTenant, type DbTenant } from "@/lib/db-tenant";
 import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { prismaAdmin } from "@/lib/prisma";
+import { gerarAlertasReavaliacao } from "@/lib/reavaliacao/fontes";
 import { atorDoUsuario, usuariosAtivos } from "./destinatarios";
 import { descricaoItem, linkItem } from "./gatilhos";
 import { lerPreferencias, type PreferenciasNotificacao } from "./preferencias";
@@ -31,12 +32,13 @@ interface EmpresaCron {
   fusoHorario: string;
   diasAlertaPrazo: number;
   config: unknown;
+  modulosAtivos: Modulo[];
 }
 
 async function empresasAtivas(base: PrismaClient, ids?: string[]): Promise<EmpresaCron[]> {
   return base.empresa.findMany({
     where: { ativo: true, ...(ids ? { id: { in: ids } } : {}) },
-    select: { id: true, nome: true, fusoHorario: true, diasAlertaPrazo: true, config: true },
+    select: { id: true, nome: true, fusoHorario: true, diasAlertaPrazo: true, config: true, modulosAtivos: true },
     orderBy: { criadoEm: "asc" },
   });
 }
@@ -50,6 +52,7 @@ export interface ResultadoDiarioEmpresa {
   avisosAtraso: number;
   notificacoesCriadas: number;
   emailsReenviados: number;
+  alertasReavaliacao: number;
   erro?: string;
 }
 
@@ -141,13 +144,14 @@ export async function executarCronDiario(opts: OpcoesCron = {}) {
     const db = criarDbTenant(e.id, base);
     try {
       const r = await alertasDaEmpresa(db, e, lerPreferencias(e), agora);
+      const alertasReavaliacao = await gerarAlertasReavaliacao(db, e, r.hoje);
       const emailsReenviados = await reenviarEmailsPendentes(db, new Date(agora.getTime() - 2 * DIA_MS));
-      empresas.push({ empresaId: e.id, ...r, emailsReenviados });
+      empresas.push({ empresaId: e.id, ...r, alertasReavaliacao, emailsReenviados });
     } catch (err) {
       console.error(`[cron diario] empresa ${e.id}`, err);
       empresas.push({
         empresaId: e.id, hoje: hojeNoFuso(e.fusoHorario, agora), alertasPrazo: 0, avisosAtraso: 0,
-        notificacoesCriadas: 0, emailsReenviados: 0, erro: err instanceof Error ? err.message : String(err),
+        notificacoesCriadas: 0, alertasReavaliacao: 0, emailsReenviados: 0, erro: err instanceof Error ? err.message : String(err),
       });
     }
   }
