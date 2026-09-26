@@ -120,6 +120,23 @@ enum TipoEntidadeInteracao {
   ITEM_ACAO
 }
 
+enum TipoNotificacao {
+  RNC_ATRIBUIDA
+  ITEM_ATRIBUIDO
+  INTERACAO_NOVA
+  CANCELAMENTO_SOLICITADO
+  CANCELAMENTO_DECIDIDO
+  RNC_EM_VERIFICACAO
+  ITEM_PRAZO_PROXIMO
+  ITEM_ATRASADO
+  RESUMO_SEMANAL
+}
+
+enum TipoEntidadeNotificacao {
+  RNC
+  ITEM_ACAO
+}
+
 enum TipoSequencia {
   RNC
 }
@@ -154,6 +171,7 @@ model Empresa {
   anexos                   Anexo[]
   interacoes               Interacao[]
   leiturasInteracao        LeituraInteracao[]
+  notificacoes             Notificacao[]
 
   @@map("empresa")
 }
@@ -247,6 +265,7 @@ model Usuario {
   interacoesAutor          Interacao[]               @relation("InteracaoAutor")
   interacoesDestinatario   Interacao[]               @relation("InteracaoDestinatario")
   leiturasInteracao        LeituraInteracao[]
+  notificacoes             Notificacao[]
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -538,6 +557,33 @@ model LeituraInteracao {
   @@id([empresaId, interacaoId, usuarioId])
   @@index([empresaId, usuarioId])
   @@map("leitura_interacao")
+}
+
+/// Notificação in-app (e opcionalmente por e-mail) para um usuário.
+/// chaveIdempotencia: evita duplicar o mesmo evento (ex.: cron executado 2x).
+model Notificacao {
+  id                String                   @id @default(uuid()) @db.Uuid
+  empresaId         String                   @map("empresa_id") @db.Uuid
+  usuarioId         String                   @map("usuario_id") @db.Uuid
+  tipo              TipoNotificacao
+  entidadeTipo      TipoEntidadeNotificacao? @map("entidade_tipo")
+  entidadeId        String?                  @map("entidade_id") @db.Uuid
+  titulo            String
+  corpo             String
+  link              String?
+  lidaEm            DateTime?                @map("lida_em")
+  emailEnviadoEm    DateTime?                @map("email_enviado_em")
+  chaveIdempotencia String                   @map("chave_idempotencia")
+  criadoEm          DateTime                 @default(now()) @map("criado_em")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuario Usuario @relation(fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Cascade)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, chaveIdempotencia])
+  @@index([empresaId, usuarioId, lidaEm])
+  @@index([empresaId, usuarioId, criadoEm])
+  @@map("notificacao")
 }
 
 /// Tentativas de login (rate limit por e-mail e IP). Global: e-mail é único no sistema.

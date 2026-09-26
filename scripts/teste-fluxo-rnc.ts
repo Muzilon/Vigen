@@ -1,5 +1,7 @@
 /* Executar: npm run test:fluxo-rnc (requer seed). Cria dados reais (histórico é append-only). */
 import assert from "node:assert/strict";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import type { Ator } from "../src/lib/ator";
 import { hojeNoFuso } from "../src/lib/datas";
@@ -8,7 +10,9 @@ import { permissoesEfetivas } from "../src/lib/permissoes";
 import { autenticar, LIMITE_LOGIN } from "../src/lib/auth/limite-login";
 import { contarNaoLidas, criarInteracao, listarInteracoes, listarNaoLidas, marcarLidas } from "../src/lib/interacoes/servico";
 import { adicionarItensRnc, cancelarItem, concluirItem, marcarEmAndamento } from "../src/lib/plano-acao/servico";
+import { contarNotificacoesNaoLidas } from "../src/lib/notificacoes/servico";
 import {
+  alterarResponsavel,
   assumirAnalise,
   criarRnc,
   filtroAcessoItem,
@@ -22,6 +26,9 @@ import {
 } from "../src/lib/rnc/servico";
 
 const admin = new PrismaClient();
+// E-mails das notificações vão para um diretório temporário (driver arquivo).
+process.env.EMAIL_DRIVER = "arquivo";
+process.env.EMAIL_DIR = path.join(tmpdir(), "vigen-emails-teste-fluxo");
 let ok = 0;
 async function caso(nome: string, fn: () => Promise<void>) {
   await fn();
@@ -304,6 +311,68 @@ async function main() {
     const r = await criarInteracao(colaborador, tr, "Preciso de apoio na análise.");
     assert.equal(r.destinatarioId, inspetor.usuarioId); // padrão: quem abriu
     await assert.rejects(criarInteracao(colaborador, tr, "   "), /Escreva/);
+  });
+
+  console.log("Notificações (gatilhos):");
+  const notifs = (usuarioId: string, entidadeId: string, tipo?: string) =>
+    admin.notificacao.findMany({ where: { usuarioId, entidadeId, ...(tipo ? { tipo: tipo as never } : {}) } });
+  await caso("envio para verificação notifica quem tem RNC_VERIFICAR_EFICACIA (não o autor)", async () => {
+    assert.ok((await notifs(qualidade.usuarioId, id, "RNC_EM_VERIFICACAO")).length >= 2); // 2 ciclos
+    assert.equal((await notifs(inspetor.usuarioId, id, "RNC_EM_VERIFICACAO")).length, 0);
+  });
+  await caso("item atribuído notifica o 'quem' (não quem atribuiu a si mesmo)", async () => {
+    const itens = (await rncDb(id)).planoAcao!.itens;
+    const doColab = itens.find((i) => i.quemId === colaborador.usuarioId)!;
+    const doInsp = itens.find((i) => i.quemId === inspetor.usuarioId)!;
+    assert.equal((await notifs(colaborador.usuarioId, doColab.id, "ITEM_ATRIBUIDO")).length, 1);
+    assert.equal((await notifs(inspetor.usuarioId, doInsp.id, "ITEM_ATRIBUIDO")).length, 0);
+  });
+  await caso("RNC atribuída na criação e na troca de responsável", async () => {
+    const r = await criarRnc(qualidade, {
+      titulo: "Teste E2E — atribuição",
+      descricao: "Notificação de responsável",
+      tipo: "QUALIDADE",
+      origem: "INSPECAO",
+      gravidade: "BAIXA",
+      obraId: obra,
+      responsavelId: inspetor.usuarioId,
+    });
+    const n = await notifs(inspetor.usuarioId, r.id, "RNC_ATRIBUIDA");
+    assert.equal(n.length, 1);
+    assert.equal(n[0].link, `/rncs/${r.id}`);
+    assert.ok(n[0].emailEnviadoEm);
+    await assert.rejects(alterarResponsavel(inspetor, r.id, qualidade.usuarioId), /permissão/);
+    await alterarResponsavel(qualidade, r.id, colaborador.usuarioId);
+    assert.equal((await notifs(colaborador.usuarioId, r.id, "RNC_ATRIBUIDA")).length, 1);
+    assert.equal((await admin.rnc.findUniqueOrThrow({ where: { id: r.id } })).responsavelId, colaborador.usuarioId);
+  });
+  await caso("cancelamento: solicitação -> aprovadores; decisão -> solicitante", async () => {
+    const r = await criarRnc(inspetor, {
+      titulo: "Teste E2E — notificação de cancelamento",
+      descricao: "x",
+      tipo: "QUALIDADE",
+      origem: "INSPECAO",
+      gravidade: "BAIXA",
+      obraId: obra,
+    });
+    const s = await solicitarCancelamento(inspetor, r.id, "Duplicada");
+    assert.equal((await notifs(qualidade.usuarioId, r.id, "CANCELAMENTO_SOLICITADO")).length, 1);
+    assert.equal((await notifs(colaborador.usuarioId, r.id, "CANCELAMENTO_SOLICITADO")).length, 0);
+    await decidirCancelamento(qualidade, s.id, false, "Não é duplicada");
+    const d = await notifs(inspetor.usuarioId, r.id, "CANCELAMENTO_DECIDIDO");
+    assert.equal(d.length, 1);
+    assert.match(d[0].titulo, /rejeitado/);
+  });
+  await caso("interação gera notificação ao destinatário; abrir a thread marca como lida", async () => {
+    const t = { tipo: "RNC" as const, entidadeId: id };
+    const antes = await contarNotificacoesNaoLidas(qualidade);
+    const m = await criarInteracao(inspetor, t, "Pode verificar?", qualidade.usuarioId);
+    const n = await admin.notificacao.findFirstOrThrow({ where: { chaveIdempotencia: `interacao:${m.id}` } });
+    assert.equal(n.usuarioId, qualidade.usuarioId);
+    assert.ok(!n.corpo.includes("Pode verificar")); // conteúdo não vai para notificação/e-mail
+    assert.equal(await contarNotificacoesNaoLidas(qualidade), antes + 1);
+    await marcarLidas(qualidade, t);
+    assert.equal(await contarNotificacoesNaoLidas(qualidade), antes);
   });
 
   console.log("Rate limit de login (M2):");

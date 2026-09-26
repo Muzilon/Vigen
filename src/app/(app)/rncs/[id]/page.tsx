@@ -28,6 +28,7 @@ import { EnviarAnexos, GaleriaAnexos } from "@/components/anexos";
 import { CampoArquivos } from "@/components/campo-arquivos";
 import { listarAnexos, listarAnexosDe, type AnexoListado } from "@/lib/anexos/servico";
 import {
+  alterarResponsavelAcao,
   assumirAcao,
   decidirCancelamentoAcao,
   enviarVerificacaoAcao,
@@ -51,6 +52,7 @@ type Aba = (typeof ABAS)[number][0];
 
 const ROTULO_EVENTO: Record<string, string> = {
   CANCELAMENTO_SOLICITADO: "Cancelamento solicitado",
+  RESPONSAVEL_ALTERADO: "Responsável alterado",
   CANCELAMENTO_REJEITADO: "Cancelamento rejeitado",
   CANCELAMENTO_APROVADO: "Cancelamento aprovado",
   ANEXO_EXCLUIDO: "Anexo excluído",
@@ -199,6 +201,16 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
               <Campo rotulo="Aberta por">{rnc.abertoPor.nome}</Campo>
               <Campo rotulo="Abertura">{formatarDataHora(rnc.dataAbertura, fuso)}</Campo>
               <Campo rotulo="Responsável">{rnc.responsavel?.nome ?? "—"}</Campo>
+              {!final && atorTem(a, "PLANO_GERENCIAR") && (
+                <FormAcao acao={alterarResponsavelAcao} botao="Alterar responsável" classeBotao={cls.btnSec} className="space-y-2">
+                  <input type="hidden" name="id" value={rnc.id} />
+                  <input type="hidden" name="versao" value={rnc.versao} />
+                  <select name="responsavelId" required defaultValue="" aria-label="Novo responsável" className={cls.input}>
+                    <option value="" disabled>Novo responsável…</option>
+                    {usuarios.filter((u) => u.id !== rnc.responsavelId).map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                  </select>
+                </FormAcao>
+              )}
               {rnc.encerradoEm && <Campo rotulo="Encerrada em">{formatarDataHora(rnc.encerradoEm, fuso)}</Campo>}
               {rnc.canceladoEm && <Campo rotulo="Cancelada em">{formatarDataHora(rnc.canceladoEm, fuso)}</Campo>}
             </dl>

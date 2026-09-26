@@ -3,6 +3,7 @@ import { atorTem, type Ator, type Tx } from "@/lib/ator";
 import { paraDataDb } from "@/lib/datas";
 import { ErroNegocio } from "@/lib/erros";
 import { cicloAtual } from "@/lib/rnc/estados";
+import { notificarItensAtribuidos } from "@/lib/notificacoes/gatilhos";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, travarRnc } from "@/lib/rnc/servico";
 
 export interface DadosItem {
@@ -43,7 +44,7 @@ function dadosItem(d: DadosItem) {
 export async function adicionarItensRnc(a: Ator, rncId: string, itens: DadosItem[]) {
   if (itens.length === 0) throw new ErroNegocio("Informe ao menos um item.");
   if (itens.length > 50) throw new ErroNegocio("No máximo 50 itens por vez.");
-  return a.db.$transaction(async (tx) => {
+  const r = await a.db.$transaction(async (tx) => {
     const rnc = await tx.rnc.findFirst({
       where: { AND: [{ id: rncId }, filtroAcessoRnc(a)] },
       include: { verificacoes: true, planoAcao: { include: { itens: { select: { ordem: true } } } } },
@@ -73,11 +74,14 @@ export async function adicionarItensRnc(a: Ator, rncId: string, itens: DadosItem
     await travarRnc(tx, rnc, rnc.planoAcaoId ? {} : { planoAcaoId: planoId });
     const ciclo = cicloAtual(rnc.verificacoes);
     const base = Math.max(0, ...(rnc.planoAcao?.itens.map((i) => i.ordem) ?? []));
-    await tx.itemAcao.createMany({
+    const criados = await tx.itemAcao.createManyAndReturn({
       data: dados.map((d, i) => ({ ...d, empresaId: a.empresaId, planoAcaoId: planoId!, ciclo, ordem: base + i + 1 })),
+      select: { id: true },
     });
-    return { planoId, ciclo };
+    return { planoId, ciclo, itemIds: criados.map((c) => c.id) };
   });
+  await notificarItensAtribuidos(a, r.itemIds, "criado");
+  return { planoId: r.planoId, ciclo: r.ciclo };
 }
 
 async function carregarItem(tx: Tx, a: Ator, itemId: string) {
@@ -122,18 +126,25 @@ async function travarRncDoItem(tx: Tx, item: ItemCarregado) {
 }
 
 export async function editarItem(a: Ator, itemId: string, d: DadosItem) {
-  return a.db.$transaction(async (tx) => {
+  const trocouQuem = await a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirGerenciar(a, item);
     const dados = dadosItem(d);
     await validarUsuarios(tx, [dados.quemId]);
     await travarRncDoItem(tx, item);
+    // Prazo alterado: os alertas de prazo/atraso voltam a valer para a nova data.
+    const novoPrazo = dados.quando.getTime() !== item.quando.getTime();
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
-      data: dados as Prisma.ItemAcaoUncheckedUpdateManyInput,
+      data: {
+        ...(dados as Prisma.ItemAcaoUncheckedUpdateManyInput),
+        ...(novoPrazo ? { alertaEnviadoEm: null, atrasoNotificadoEm: null } : {}),
+      },
     });
     if (r.count === 0) throw new ErroNegocio("Item já finalizado.");
+    return item.quemId !== dados.quemId;
   });
+  if (trocouQuem) await notificarItensAtribuidos(a, [itemId], `troca-${Date.now()}`);
 }
 
 export async function cancelarItem(a: Ator, itemId: string) {

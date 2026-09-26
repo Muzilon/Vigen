@@ -1,10 +1,12 @@
 import type { TipoEntidadeInteracao } from "@prisma/client";
 import { enviarInteracaoAcao } from "@/app/(app)/rncs/actions";
+import { AtualizarContadores } from "@/components/atualizar-contadores";
 import { FormAcao } from "@/components/form-acao";
 import { Cartao, cls } from "@/components/ui";
 import type { Ator } from "@/lib/ator";
 import { formatarDataHora } from "@/lib/datas";
 import { listarInteracoes, marcarLidas } from "@/lib/interacoes/servico";
+import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
 
 /** Seção "Interações" (thread da entidade). Ao exibir, marca as mensagens recebidas como lidas. */
 export async function Interacoes({
@@ -22,9 +24,13 @@ export async function Interacoes({
 }) {
   const t = { tipo, entidadeId };
   const msgs = await listarInteracoes(a, t);
-  await marcarLidas(a, t);
+  // marcarLidas também marca as notificações INTERACAO_NOVA; contamos as duas para saber se o
+  // contador do layout (sino) ficou desatualizado.
+  const notifPendentes = await marcarLidasDaEntidade(a, tipo, entidadeId);
+  const marcadas = (await marcarLidas(a, t)) + notifPendentes;
   return (
     <Cartao titulo="Interações">
+      {marcadas > 0 && <AtualizarContadores />}
       {msgs.length === 0 ? (
         <p className="text-sm text-slate-500">Nenhuma mensagem ainda.</p>
       ) : (

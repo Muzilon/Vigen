@@ -5,6 +5,12 @@ import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { avaliarTransicao, cicloAtual, STATUS_FINAIS, type AcaoRnc } from "@/lib/rnc/estados";
 import { formatarCodigoRnc, proximaSequenciaRnc } from "@/lib/rnc/numeracao";
 import { MAX_CAUSA_RAIZ, validarAnalise } from "@/lib/rnc/analise";
+import {
+  notificarCancelamentoDecidido,
+  notificarCancelamentoSolicitado,
+  notificarEnviadaVerificacao,
+  notificarRncAtribuida,
+} from "@/lib/notificacoes/gatilhos";
 
 // ---------------------------------------------------------------- visibilidade
 
@@ -183,7 +189,7 @@ export async function criarRnc(a: Ator, d: DadosNovaRnc) {
   const contemDadosPessoais = !!d.contemDadosPessoais;
   const restrita = !!d.restrita || (d.tipo === "SSO" && contemDadosPessoais);
 
-  return a.db.$transaction(async (tx) => {
+  const criada = await a.db.$transaction(async (tx) => {
     const sequencia = await proximaSequenciaRnc(tx, a.empresaId, ano);
     const rnc = await tx.rnc.create({
       data: {
@@ -223,9 +229,36 @@ export async function criarRnc(a: Ator, d: DadosNovaRnc) {
     }
     return rnc;
   });
+  if (criada.responsavelId) await notificarRncAtribuida(a, criada.id);
+  return criada;
 }
 
 // ---------------------------------------------------------------- tratativa
+
+/** Troca o responsável (PLANO_GERENCIAR), fora de status finais; notifica o novo responsável. */
+export async function alterarResponsavel(a: Ator, id: string, responsavelId: string, versao?: number) {
+  if (!atorTem(a, "PLANO_GERENCIAR")) throw new ErroNegocio("Sem permissão para alterar o responsável.");
+  await a.db.$transaction(async (tx) => {
+    const rnc = await carregar(tx, a, id);
+    exigirVersao(rnc, versao);
+    if (STATUS_FINAIS.includes(rnc.status)) throw new ErroNegocio("RNC já finalizada.");
+    if (rnc.responsavelId === responsavelId) throw new ErroNegocio("Este usuário já é o responsável.");
+    const u = await tx.usuario.findFirst({ where: { id: responsavelId, ativo: true }, select: { id: true } });
+    if (!u) throw new ErroNegocio("Responsável inválido.");
+    await travarRnc(tx, rnc, { responsavelId });
+    await tx.historicoStatusRnc.create({
+      data: {
+        empresaId: a.empresaId,
+        rncId: id,
+        statusAnterior: rnc.status,
+        statusNovo: rnc.status,
+        usuarioId: a.usuarioId,
+        metadados: { evento: "RESPONSAVEL_ALTERADO", de: rnc.responsavelId, para: responsavelId },
+      },
+    });
+  });
+  await notificarRncAtribuida(a, id);
+}
 
 /** ABERTO/REABERTO -> EM_ANALISE: o usuário assume como responsável. */
 export async function assumirAnalise(a: Ator, id: string, versao?: number) {
@@ -275,12 +308,13 @@ export async function iniciarExecucao(a: Ator, id: string, versao?: number) {
 }
 
 export async function enviarParaVerificacao(a: Ator, id: string, versao?: number) {
-  return a.db.$transaction(async (tx) => {
+  await a.db.$transaction(async (tx) => {
     const rnc = await carregar(tx, a, id);
     exigirVersao(rnc, versao);
     if (!podeTratarRnc(a, rnc)) throw new ErroNegocio("Sem permissão para enviar à verificação.");
     await transicionar(tx, a, rnc, checar(rnc, "ENVIAR_VERIFICACAO"));
   });
+  await notificarEnviadaVerificacao(a, id);
 }
 
 // ---------------------------------------------------------------- verificação
@@ -338,8 +372,9 @@ export async function solicitarCancelamento(a: Ator, id: string, motivo: string)
   if (!atorTem(a, "RNC_SOLICITAR_CANCELAMENTO")) throw new ErroNegocio("Sem permissão para solicitar cancelamento.");
   const m = motivo.trim();
   if (!m) throw new ErroNegocio("Motivo obrigatório.");
+  let s;
   try {
-    return await a.db.$transaction(async (tx) => {
+    s = await a.db.$transaction(async (tx) => {
       const rnc = await carregar(tx, a, id);
       if (STATUS_FINAIS.includes(rnc.status)) throw new ErroNegocio("RNC já finalizada.");
       const s = await tx.solicitacaoCancelamento.create({
@@ -364,12 +399,14 @@ export async function solicitarCancelamento(a: Ator, id: string, motivo: string)
     }
     throw e;
   }
+  await notificarCancelamentoSolicitado(a, s.id);
+  return s;
 }
 
 export async function decidirCancelamento(a: Ator, solicitacaoId: string, aprovar: boolean, comentario?: string | null) {
   if (!atorTem(a, "RNC_APROVAR_CANCELAMENTO")) throw new ErroNegocio("Sem permissão para decidir cancelamentos.");
   const c = comentario?.trim() || null;
-  return a.db.$transaction(async (tx) => {
+  await a.db.$transaction(async (tx) => {
     const sol = await tx.solicitacaoCancelamento.findFirst({ where: { id: solicitacaoId } });
     if (!sol) throw new ErroNegocio("Solicitação não encontrada.");
     const rnc = await carregar(tx, a, sol.rncId);
@@ -398,4 +435,5 @@ export async function decidirCancelamento(a: Ator, solicitacaoId: string, aprova
       });
     }
   });
+  await notificarCancelamentoDecidido(a, solicitacaoId);
 }

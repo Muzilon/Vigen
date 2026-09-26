@@ -2,6 +2,7 @@ import type { Prisma, TipoEntidadeInteracao } from "@prisma/client";
 import type { Ator } from "@/lib/ator";
 import { ErroNegocio } from "@/lib/erros";
 import { notificar } from "@/lib/notificacoes";
+import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
 export const MAX_MENSAGEM = 4000;
@@ -97,9 +98,13 @@ export async function listarInteracoes(a: Ator, t: Thread) {
   });
 }
 
-/** Marca como lidas, para o ator, as mensagens da thread escritas por outros. */
+/**
+ * Marca como lidas, para o ator, as mensagens da thread escritas por outros e as
+ * notificações INTERACAO_NOVA da mesma entidade. Retorna quantas mensagens foram marcadas.
+ */
 export async function marcarLidas(a: Ator, t: Thread) {
   await acessarEntidade(a, t);
+  await marcarLidasDaEntidade(a, t.tipo, t.entidadeId);
   const pendentes = await a.db.interacao.findMany({
     where: { ...naoLidasWhere(a), entidadeTipo: t.tipo, entidadeId: t.entidadeId },
     select: { id: true },

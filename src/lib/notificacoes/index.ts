@@ -1,0 +1,49 @@
+import { criarDbTenant } from "@/lib/db-tenant";
+import { rotuloRnc } from "./gatilhos";
+import { comSeguranca, criarNotificacoes } from "./servico";
+
+/** Evento de domínio que gera notificação (in-app + e-mail). */
+export type EventoNotificacao = {
+  tipo: "INTERACAO_CRIADA";
+  empresaId: string;
+  interacaoId: string;
+  destinatarioId: string | null;
+  autorId: string;
+  entidadeTipo: "RNC" | "ITEM_ACAO";
+  entidadeId: string;
+};
+
+/**
+ * Ponto de extensão para eventos de interação: gera notificação INTERACAO_NOVA para o
+ * destinatário (idempotente por interação). O conteúdo da mensagem não vai para o e-mail
+ * (pode conter dados pessoais); o usuário lê a thread no sistema. Nunca lança erro.
+ */
+export async function notificar(evento: EventoNotificacao): Promise<void> {
+  await comSeguranca("interacao", async () => {
+    if (!evento.destinatarioId || evento.destinatarioId === evento.autorId) return;
+    const db = criarDbTenant(evento.empresaId);
+    const autor = await db.usuario.findFirst({ where: { id: evento.autorId }, select: { nome: true } });
+    let onde = "um item de ação";
+    let link = `/plano-acao/${evento.entidadeId}`;
+    if (evento.entidadeTipo === "RNC") {
+      const rnc = await db.rnc.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true, titulo: true, restrita: true } });
+      onde = rnc ? `a ${rotuloRnc(rnc)}` : "uma RNC";
+      link = `/rncs/${evento.entidadeId}?aba=interacoes`;
+    } else {
+      const item = await db.itemAcao.findFirst({ where: { id: evento.entidadeId }, select: { oQue: true } });
+      if (item) onde = `o item de ação "${item.oQue}"`;
+    }
+    await criarNotificacoes(db, evento.empresaId, [
+      {
+        usuarioId: evento.destinatarioId,
+        tipo: "INTERACAO_NOVA",
+        entidadeTipo: evento.entidadeTipo,
+        entidadeId: evento.entidadeId,
+        titulo: `Nova mensagem de ${autor?.nome ?? "um usuário"}`,
+        corpo: `${autor?.nome ?? "Um usuário"} enviou uma mensagem sobre ${onde}.`,
+        link,
+        chave: `interacao:${evento.interacaoId}`,
+      },
+    ]);
+  });
+}

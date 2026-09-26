@@ -131,6 +131,14 @@ export async function enviarVerificacaoAcao(_: ResultadoAcao, fd: FormData) {
   }, [`/rncs/${fd.get("id")}`, "/rncs"]);
 }
 
+export async function alterarResponsavelAcao(_: ResultadoAcao, fd: FormData) {
+  return executar(async () => {
+    const d = esquemaTransicao.extend({ responsavelId: uuid }).parse(obj(fd));
+    await rnc.alterarResponsavel(await getAtor(), d.id, d.responsavelId, d.versao);
+    return { ok: "Responsável alterado." };
+  }, [`/rncs/${fd.get("id")}`, "/rncs"]);
+}
+
 const esquemaCausa = z.object({
   id: uuid,
   versao,
