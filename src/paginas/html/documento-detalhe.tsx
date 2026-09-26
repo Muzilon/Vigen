@@ -68,9 +68,9 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
     p.publicoTodos
       ? ["Todos os usuários da empresa"]
       : [
-          ...p.setorIds.map((x) => `Setor ${nSetor.get(x) ?? "?"}`),
-          ...p.obraIds.map((x) => `Obra ${nObra.get(x) ?? "?"}`),
-          ...p.perfilIds.map((x) => `Perfil ${nPerfil.get(x) ?? "?"}`),
+          ...p.setorIds.map((x) => `Setor: ${nSetor.get(x) ?? "?"}`),
+          ...p.obraIds.map((x) => `Obra/unidade: ${nObra.get(x) ?? "?"}`),
+          ...p.perfilIds.map((x) => `Perfil: ${nPerfil.get(x) ?? "?"}`),
           ...p.usuarioIds.map((x) => nUsuario.get(x) ?? "?"),
         ];
   const podeCiencia = !!meu && meu.exigirCiencia && !meu.cienciaEm;

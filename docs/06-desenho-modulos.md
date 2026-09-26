@@ -275,3 +275,38 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
   total de significativos. Menu: "Aspectos ambientais" (grupo Meio Ambiente).
 - **Seed**: 10 linhas LAIA da Monto (Obra Alfa/Beta), 5 significativas, 1 com plano; aprovação exigida.
 - **Testes**: `tests/laia.test.ts` e `npm run test:laia` (16 casos).
+
+## P4 — Tramitação de Documentos entregue (2026-09-26)
+
+- **Schema** (migração `20260927000000_documentos`): `TipoDocumentoEmpresa` (sigla única, periodicidade padrão),
+  `Documento` (código `SIGLA-NNN` via `ContadorSequencial` DOCUMENTO com novo campo **`subtipo`** = id do tipo — a PK
+  do contador virou `(empresa, tipo, ano, subtipo)`; status ELABORACAO/EM_REVISAO/EM_APROVACAO/APROVADO/PUBLICADO/
+  OBSOLETO/CANCELADO, `versaoVigenteId`, `proximaRevisaoEm`, `versao` = trava otimista, `chavePlanilha`),
+  `VersaoDocumento` (Rev. 00, 01…; motivo; arquivo = Anexo `DOCUMENTO_VERSAO`; fluxo; **imutável após publicada** por
+  trigger — só PUBLICADA → OBSOLETA), `PublicacaoDocumento` (público todos ou listas setores/obras/perfis/usuários —
+  união —, notificar, exigir ciência), `CienciaDocumento` e `HistoricoDocumento` (append-only por trigger).
+  Permissões `DOCUMENTO_ELABORAR`/`DOCUMENTO_GERENCIAR` (perfil Qualidade; Segurança elabora). Notificações
+  `DOCUMENTO_PUBLICADO`, `CIENCIA_PENDENTE`, `REVISAO_DOCUMENTO_PROXIMA`; Interação/Notificação `DOCUMENTO`.
+- **Fluxo** (`src/lib/documentos/`): elaborar (arquivo validado por magic bytes + motivo) → enviar: **um fluxo** do
+  motor com revisores (primeiro) e aprovadores, sequencial/paralelo → EM_REVISAO; novo hook `aoAvancar` no registry
+  passa a EM_APROVACAO quando todos os revisores assinam → última assinatura: APROVADO → publicar (GERENCIAR, público,
+  notifica, exige ciência) — a vigente anterior vira OBSOLETA na mesma transação. Rejeição/cancelamento devolvem a
+  revisão a rascunho. Nova revisão parte da vigente (que continua valendo). Cancelar (sem vigente → CANCELADO; com
+  vigente cancela só a revisão) e tornar obsoleto. Regras puras em `regras.ts` (máquina de status, público, ciências).
+- **Acesso**: lista mestra para ELABORAR/GERENCIAR; demais veem só o que foi publicado para eles (visão reduzida:
+  vigente + ciência), além de responsável e signatários. Download pela rota autenticada `/api/anexos/[id]`
+  (público só baixa a vigente); arquivo de revisão nunca é excluído pela tela de anexos. **Decisão**: sem filtro por
+  obra na lista mestra (controle documental é corporativo); a obra entra no público da publicação.
+- **Integração HIRA/LAIA (decisão 5)**: opção "Usar tramitação de documentos" em Configurações → Aprovações
+  (`Empresa.config.aprovacao.<m>.usarTramitacao`); `canalAprovacao(modulos, config)` = TRAMITACAO com DOCUMENTOS ativo.
+  As assinaturas continuam no motor; ao aprovar, o handler registra nova revisão do **documento-planilha da obra**
+  (`chavePlanilha` `HIRA:<obra>`, tipo PL criado sob demanda) já publicada, com `conteudo` = snapshot JSON das linhas
+  vigentes (download em `/documentos/[id]/versoes/[versaoId]/conteudo`). **Não feito**: roteamento das próprias
+  solicitações pela tela de documentos e exibição do código/revisão da planilha nas telas do HIRA/LAIA.
+- **Revisão periódica**: fonte `src/lib/documentos/reavaliacao.ts` (cron) com `tipoNotificacao` novo em `FonteReavaliacao`.
+- **Telas**: `/documentos` (lista mestra, filtros, alerta de vencidas), `/documentos/novo`, `/documentos/[id]`,
+  `/documentos/meus` ("Li e estou ciente"), Configurações → Tipos de documento, cartão no processo e no dashboard; menu
+  (grupo Qualidade).
+- **Seed**: tipos PR/IT/FO/POL/MAN, 8 documentos (publicados, em revisão, em aprovação, aprovado, rascunho, obsoleto)
+  com PDFs reais; POL-001 exige ciência com ciências parciais. **Testes**: `tests/documentos.test.ts` e
+  `npm run test:documentos` (16 casos).
