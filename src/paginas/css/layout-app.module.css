@@ -1,0 +1,347 @@
+/* ==========================================================
+   ÍNDICE
+   01. Casca — grid raiz (sidebar + coluna principal)
+   02. Sidebar — fixa, escura, 100vh
+   03. Logo e seletor de empresa
+   04. Navegação lateral (itens de menu + contadores)
+   05. Rodapé da sidebar (usuário + sair)
+   06. Cabeçalho do app (sticky, trilha, busca, sino)
+   07. Área de conteúdo — isolada, nunca acima do cabeçalho/sidebar
+   ========================================================== */
+
+/* ==========================================================
+   01. CASCA
+   ========================================================== */
+.casca {
+  display: flex;
+  min-height: 100vh;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   02. SIDEBAR
+   position: sticky + altura 100vh — permanece visível ao rolar,
+   com seu próprio scroll interno se o menu crescer.
+   ========================================================== */
+.sidebar {
+  width: 248px;
+  flex: none;
+  background: var(--cor-sidebar-fundo);
+  color: var(--cor-sidebar-texto);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: var(--espaco-4) var(--espaco-3);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: var(--z-sidebar);
+}
+
+/* ==========================================================
+   03. LOGO E SELETOR DE EMPRESA
+   ========================================================== */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 18px 8px;
+}
+.logoTexto {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.seletorEmpresa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--cor-sidebar-fundo-alt);
+  border: 1px solid var(--cor-sidebar-borda);
+  border-radius: var(--raio-padrao);
+  color: var(--cor-sidebar-texto);
+  text-align: left;
+  margin-bottom: 18px;
+}
+.iniciaisEmpresa {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--raio-padrao);
+  background: #3a4549;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.textoEmpresa {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  overflow: hidden;
+}
+.nomeEmpresa {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.detalheEmpresa {
+  font-size: 12px;
+  color: var(--cor-sidebar-texto-secundario);
+}
+
+/* ==========================================================
+   04. NAVEGAÇÃO LATERAL
+   ========================================================== */
+.navLateral {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemNav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--raio-padrao);
+  color: #d3d0c9;
+  text-decoration: none;
+  font-size: 14px;
+}
+.itemNav:hover {
+  background: var(--cor-sidebar-fundo-alt);
+  color: var(--cor-sidebar-texto-ativo);
+}
+
+/* Item ativo: fundo destacado + barra de acento à esquerda (inset shadow) */
+.itemNavAtivo {
+  color: var(--cor-sidebar-texto-ativo);
+  background: var(--cor-sidebar-item-ativo-fundo);
+  box-shadow: inset 3px 0 0 var(--cor-acento-claro);
+  font-weight: 500;
+}
+.itemNavAtivo .iconeItemNav {
+  color: var(--cor-acento-claro);
+}
+
+.iconeItemNav {
+  display: inline-flex;
+  flex: none;
+}
+
+.rotuloItemNav {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contadorItemNav,
+.contadorItemNavAtivo {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: var(--raio-pill);
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fonte-mono);
+}
+.contadorItemNav {
+  background: #3a4549;
+  color: #ffffff;
+}
+.contadorItemNavAtivo {
+  background: var(--cor-acento-claro);
+  color: var(--cor-sidebar-fundo);
+}
+
+.espacador {
+  flex: 1;
+}
+
+/* ==========================================================
+   05. RODAPÉ DA SIDEBAR
+   ========================================================== */
+.linkConfiguracoes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--raio-padrao);
+  color: #d3d0c9;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.linkConfiguracoes:hover {
+  background: var(--cor-sidebar-fundo-alt);
+  color: var(--cor-sidebar-texto-ativo);
+}
+
+.rodapeUsuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 8px 4px 8px;
+  border-top: 1px solid var(--cor-sidebar-borda);
+}
+.avatarUsuario {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-acento-claro);
+  color: var(--cor-sidebar-fundo);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex: none;
+}
+.textoUsuario {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  overflow: hidden;
+}
+.nomeUsuario {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cargoUsuario {
+  font-size: 12px;
+  color: var(--cor-sidebar-texto-secundario);
+}
+.botaoSair {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--cor-sidebar-texto-secundario);
+  border-radius: var(--raio-padrao);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+.botaoSair:hover {
+  color: var(--cor-sidebar-texto-ativo);
+  background: var(--cor-sidebar-fundo-alt);
+}
+
+/* ==========================================================
+   06. CABEÇALHO DO APP
+   Sempre no topo: sticky + z-cabecalho (escala definida em base.css,
+   seção 07), acima de qualquer conteúdo da área principal.
+   ========================================================== */
+.colunaPrincipal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cabecalho {
+  height: 56px;
+  flex: none;
+  background: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-4);
+  padding: 0 var(--espaco-6);
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-cabecalho);
+}
+
+.trilha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  flex: 1;
+  min-width: 0;
+}
+.trilhaAtual {
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+.buscaGlobal {
+  width: 320px;
+  flex: none;
+}
+
+.botaoSino {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
+  border-radius: var(--raio-padrao);
+  color: var(--cor-texto);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.botaoSino:hover {
+  background: var(--cor-fundo-sutil);
+}
+.contadorSino {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-acento);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fonte-mono);
+}
+
+/* ==========================================================
+   07. ÁREA DE CONTEÚDO
+   isolation: isolate + z-index baixo: qualquer mídia futura
+   (img/video/iframe) dentro do conteúdo nunca cria um stacking
+   context que fique acima do cabeçalho/sidebar.
+   ========================================================== */
+.conteudo {
+  flex: 1;
+  min-height: 0;
+  isolation: isolate;
+  z-index: var(--z-conteudo);
+  padding: var(--espaco-6);
+}

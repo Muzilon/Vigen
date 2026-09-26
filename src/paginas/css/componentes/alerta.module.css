@@ -1,0 +1,49 @@
+/* ==========================================================
+   ÍNDICE
+   01. Alerta base — layout comum (ícone + texto)
+   02. Variante erro (ex.: falha de login)
+   03. Variante aviso (ex.: tentativas restantes antes do bloqueio)
+   ========================================================== */
+
+/* ==========================================================
+   01. BASE
+   ========================================================== */
+.alerta {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--raio-padrao);
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid transparent;
+}
+
+.icone {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* ==========================================================
+   02. ERRO
+   ========================================================== */
+.erro {
+  background: var(--cor-atrasado-fundo);
+  border-color: var(--cor-perigo-texto);
+  color: var(--cor-texto);
+}
+.erro .icone {
+  color: var(--cor-perigo-texto);
+}
+
+/* ==========================================================
+   03. AVISO
+   ========================================================== */
+.aviso {
+  background: var(--cor-aviso-fundo);
+  border-color: var(--cor-aviso-borda);
+  color: var(--cor-texto);
+}
+.aviso .icone {
+  color: var(--cor-acento-hover);
+}

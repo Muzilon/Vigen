@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { signOut } from "@/auth";
 import { getAtor } from "@/lib/ator-servidor";
 import { contarNotificacoesNaoLidas } from "@/lib/notificacoes/servico";
 import { getContexto, temPermissao } from "@/lib/tenant";
+import { LayoutApp } from "@/paginas/html/layout-app";
+import type { ItemMenuLateral } from "@/paginas/html/componentes/nav-lateral";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const ctx = await getContexto();
@@ -10,13 +11,16 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // sino cobre tudo; "Mensagens" fica como caixa de conversas, sem contador próprio (evita
   // contar a mesma mensagem duas vezes).
   const naoLidas = await contarNotificacoesNaoLidas(await getAtor());
-  const itens = [
-    { href: "/", label: "Início" },
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/rncs", label: "RNCs" },
-    { href: "/plano-acao", label: "Plano de Ação" },
-    { href: "/mensagens", label: "Mensagens" },
-    ...(temPermissao(ctx, "ADMIN_CONFIG") ? [{ href: "/configuracoes", label: "Configurações" }] : []),
+
+  const itensMenu: ItemMenuLateral[] = [
+    { href: "/", label: "Início", icone: <IconeInicio /> },
+    { href: "/dashboard", label: "Dashboard", icone: <IconeDashboard /> },
+    { href: "/rncs", label: "RNCs", icone: <IconeRncs /> },
+    { href: "/plano-acao", label: "Plano de Ação", icone: <IconePlanoAcao /> },
+    { href: "/mensagens", label: "Mensagens", icone: <IconeMensagens /> },
+    ...(temPermissao(ctx, "ADMIN_CONFIG")
+      ? [{ href: "/configuracoes", label: "Configurações", icone: <IconeConfiguracoes /> }]
+      : []),
   ];
 
   async function sair() {
@@ -25,42 +29,77 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside className="flex w-60 flex-col border-r border-slate-200 bg-white">
-        <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-2xl font-bold tracking-tight text-emerald-700">Vigen</span>
-          <Link
-            href="/notificacoes"
-            aria-label={naoLidas > 0 ? `Notificações: ${naoLidas} não lida(s)` : "Notificações"}
-            className="relative rounded-md p-1.5 text-slate-600 hover:bg-emerald-50 hover:text-emerald-800"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-            </svg>
-            {naoLidas > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-red-600 px-1 text-center text-[11px] font-semibold leading-5 text-white">
-                {naoLidas > 99 ? "99+" : naoLidas}
-              </span>
-            )}
-          </Link>
-        </div>
-        <nav className="flex-1 space-y-1 px-3">
-          {itens.map((i) => (
-            <Link key={i.href} href={i.href}
-              className="block rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800">
-              {i.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="border-t border-slate-200 p-4">
-          <p className="truncate text-sm font-medium text-slate-900">{ctx.usuario.nome}</p>
-          <p className="truncate text-xs text-slate-500">{ctx.usuario.empresaNome}</p>
-          <form action={sair} className="mt-3">
-            <button type="submit" className="text-sm text-slate-600 hover:text-red-700">Sair</button>
-          </form>
-        </div>
-      </aside>
-      <main className="flex-1 p-8">{children}</main>
-    </div>
+    <LayoutApp
+      itensMenu={itensMenu}
+      empresaNome={ctx.usuario.empresaNome}
+      usuarioNome={ctx.usuario.nome}
+      usuarioPapel={ctx.usuario.papel}
+      naoLidas={naoLidas}
+      aoSair={sair}
+    >
+      {children}
+    </LayoutApp>
+  );
+}
+
+function IconeInicio() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z" />
+    </svg>
+  );
+}
+function IconeDashboard() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 20V10" />
+      <path d="M10 20V4" />
+      <path d="M16 20v-7" />
+      <path d="M21 20H3" />
+    </svg>
+  );
+}
+function IconeRncs() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 3H6.5a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V7.5z" />
+      <path d="M14 3v4.5h4.5" />
+      <path d="M12 11v4" />
+      <path d="M12 18h.01" />
+    </svg>
+  );
+}
+function IconePlanoAcao() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 6h10" />
+      <path d="M10 12h10" />
+      <path d="M10 18h10" />
+      <path d="m3.5 6 1.5 1.5L7.5 5" />
+      <path d="m3.5 12 1.5 1.5 2.5-2.5" />
+      <path d="m3.5 18 1.5 1.5 2.5-2.5" />
+    </svg>
+  );
+}
+function IconeMensagens() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.5 15a2 2 0 0 1-2 2H8l-4.5 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+function IconeConfiguracoes() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2.5v3" />
+      <path d="M12 18.5v3" />
+      <path d="m5.3 5.3 2.1 2.1" />
+      <path d="m16.6 16.6 2.1 2.1" />
+      <path d="M2.5 12h3" />
+      <path d="M18.5 12h3" />
+      <path d="m5.3 18.7 2.1-2.1" />
+      <path d="m16.6 7.4 2.1-2.1" />
+    </svg>
   );
 }

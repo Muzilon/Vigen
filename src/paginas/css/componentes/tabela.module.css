@@ -1,0 +1,81 @@
+/* ==========================================================
+   ÍNDICE
+   01. Envoltório — borda e cantos arredondados da tabela
+   02. Tabela — largura fixa, colunas alinhadas via <colgroup>
+   03. Cabeçalho de coluna
+   04. Célula de dado — altura densa (44px, ver BRIEF Direção A)
+   ========================================================== */
+
+/* ==========================================================
+   01. ENVOLTÓRIO
+   ========================================================== */
+.envoltorio {
+  flex: 1;
+  min-height: 0;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* ==========================================================
+   02. TABELA
+   ========================================================== */
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+/* ==========================================================
+   03. CABEÇALHO DE COLUNA
+   ========================================================== */
+.linhaCabecalho {
+  background: var(--cor-fundo-sutil);
+}
+
+.th {
+  height: 36px;
+  padding: 0 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cor-texto-secundario);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+/* ==========================================================
+   04. CÉLULA DE DADO
+   ========================================================== */
+.linha:hover {
+  background: var(--cor-fundo-sutil);
+}
+
+.td {
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  color: var(--cor-texto);
+}
+
+.tdSecundario {
+  composes: td;
+  color: var(--cor-texto-secundario);
+}
+
+.tdTruncado {
+  composes: td;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+
+.tdMono {
+  composes: td;
+  font-family: var(--fonte-mono);
+  font-size: 12.5px;
+}

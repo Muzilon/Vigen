@@ -1,0 +1,11 @@
+/* ==========================================================
+   ÍNDICE
+   01. Estado vazio — mensagem central em listas/tabelas sem dados
+   ========================================================== */
+
+.estadoVazio {
+  padding: 40px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}

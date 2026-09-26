@@ -1,0 +1,184 @@
+/* ==========================================================
+   ÍNDICE
+   01. Fontes (variáveis geradas pelo next/font, ver layout raiz)
+   02. Tokens de cor — Direção A "Campo"
+   03. Tokens de status de RNC (cor de fundo + texto)
+   04. Tokens de gravidade e atraso
+   05. Tokens de tipografia
+   06. Tokens de espaço e raio
+   07. Escala de z-index
+   08. Reset básico
+   09. Tipografia base (body, headings, links)
+   ========================================================== */
+
+/* ==========================================================
+   02. TOKENS DE COR — superfícies, bordas, texto, acento
+   Direção A "Campo": fundo neutro quente + acento âmbar de segurança.
+   Contraste texto/fundo verificado ≥ 4.5:1 (WCAG AA).
+   ========================================================== */
+:root {
+  /* Sidebar (sempre escura, independente de tema) */
+  --cor-sidebar-fundo: #1e2528;
+  --cor-sidebar-fundo-alt: #252e31;
+  --cor-sidebar-item-ativo-fundo: #2c3639;
+  --cor-sidebar-borda: #334044;
+  --cor-sidebar-texto: #e7e5e0;
+  --cor-sidebar-texto-secundario: #a8a49c;
+  --cor-sidebar-texto-ativo: #ffffff;
+
+  /* Acento âmbar de segurança */
+  --cor-acento: #b45309;
+  --cor-acento-hover: #92400e;
+  --cor-acento-claro: #f59e0b;
+  --cor-acento-texto: #ffffff;
+
+  /* Superfícies e fundo de conteúdo */
+  --cor-fundo: #f5f3ee;
+  --cor-fundo-sutil: #faf8f4;
+  --cor-superficie: #ffffff;
+  --cor-contador-fundo: #e9e5dc;
+
+  /* Bordas */
+  --cor-borda: #e2ded5;
+  --cor-borda-forte: #d6d1c6;
+  --cor-borda-sutil: #eeebe4;
+  --cor-borda-tracejada: #c9c2b4;
+
+  /* Texto sobre superfícies claras */
+  --cor-texto: #1c1b19;
+  --cor-texto-secundario: #5c5850;
+  --cor-texto-fraco: #a8a49c;
+
+  /* Perigo / atraso */
+  --cor-perigo-texto: #9f1239;
+  --cor-perigo-fundo: #ffe4e6;
+}
+
+/* ==========================================================
+   03. TOKENS DE STATUS DE RNC
+   Um par fundo/texto por status, com diferença de luminância
+   suficiente para leitura rápida em campo.
+   ========================================================== */
+:root {
+  --cor-status-aberto-fundo: #dbeafe;
+  --cor-status-aberto-texto: #1d4ed8;
+
+  --cor-status-em-analise-fundo: #ede9fe;
+  --cor-status-em-analise-texto: #6d28d9;
+
+  --cor-status-plano-execucao-fundo: #fef3c7;
+  --cor-status-plano-execucao-texto: #b45309;
+
+  --cor-status-em-verificacao-fundo: #cffafe;
+  --cor-status-em-verificacao-texto: #0e7490;
+
+  --cor-status-encerrado-fundo: #dcfce7;
+  --cor-status-encerrado-texto: #15803d;
+
+  --cor-status-reaberto-fundo: #ffe4e6;
+  --cor-status-reaberto-texto: #be123c;
+
+  --cor-status-cancelado-fundo: #e7e5e4;
+  --cor-status-cancelado-texto: #57534e;
+}
+
+/* ==========================================================
+   04. TOKENS DE GRAVIDADE E ATRASO
+   Crítica é a única com fundo sólido (maior alarme visual).
+   ========================================================== */
+:root {
+  --cor-gravidade-baixa-fundo: #e7e5e4;
+  --cor-gravidade-baixa-texto: #57534e;
+
+  --cor-gravidade-media-fundo: #dbeafe;
+  --cor-gravidade-media-texto: #1d4ed8;
+
+  --cor-gravidade-alta-fundo: #ffedd5;
+  --cor-gravidade-alta-texto: #c2410c;
+
+  --cor-gravidade-critica-fundo: #9f1239;
+  --cor-gravidade-critica-texto: #ffffff;
+
+  --cor-atrasado-texto: #9f1239;
+  --cor-atrasado-fundo: #ffe4e6;
+
+  /* Alerta de aviso (ex.: tentativas restantes antes do bloqueio de login) */
+  --cor-aviso-fundo: #fbf6ea;
+  --cor-aviso-borda: #e8d9b8;
+}
+
+/* ==========================================================
+   05. TOKENS DE TIPOGRAFIA
+   As variáveis --font-ibm-plex-* são geradas por next/font/google
+   no layout raiz (src/app/layout.tsx) e ficam disponíveis aqui.
+   ========================================================== */
+:root {
+  --fonte-ui: var(--font-ibm-plex-sans), "IBM Plex Sans", system-ui, sans-serif;
+  --fonte-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* ==========================================================
+   06. TOKENS DE ESPAÇO E RAIO
+   ========================================================== */
+:root {
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-5: 20px;
+  --espaco-6: 24px;
+  --espaco-8: 32px;
+
+  --raio-padrao: 6px;
+  --raio-pill: 999px;
+}
+
+/* ==========================================================
+   07. ESCALA DE Z-INDEX
+   Ordem (do mais baixo para o mais alto):
+     conteúdo (mídia/imagens/vídeos/cards) < sidebar/cabeçalho < dropdown < modal < toast
+   O cabeçalho e a sidebar ficam SEMPRE acima de qualquer conteúdo
+   (a área de conteúdo usa isolation: isolate + z-index baixo para
+   nunca criar um stacking context que vaze acima deles).
+   ========================================================== */
+:root {
+  --z-conteudo: 1;
+  --z-cabecalho: 10;
+  --z-sidebar: 10;
+  --z-dropdown: 20;
+  --z-modal: 30;
+  --z-toast: 40;
+}
+
+/* ==========================================================
+   08. RESET BÁSICO
+   ========================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* ==========================================================
+   09. TIPOGRAFIA BASE
+   Aplicada apenas onde a página usa fonte IBM Plex (ver guia em
+   docs/05-guia-paginas-css.md); páginas ainda não migradas seguem
+   com a fonte definida em src/app/globals.css.
+   ========================================================== */
+.fonteIbmPlex,
+.fonteIbmPlex input,
+.fonteIbmPlex select,
+.fonteIbmPlex textarea,
+.fonteIbmPlex button {
+  font-family: var(--fonte-ui);
+}
+
+.fonteIbmPlex code,
+.fonteIbmPlex .mono {
+  font-family: var(--fonte-mono);
+}

@@ -1,0 +1,53 @@
+import type { ReactNode } from "react";
+import styles from "@/paginas/css/componentes/badge.module.css";
+
+/**
+ * Badges de status/gravidade da Direção A "Campo". Usam os tokens de cor de
+ * src/paginas/css/base.css (seções 03 e 04) — nunca hex solto aqui.
+ * Para páginas ainda não migradas, ver o Badge (Tailwind) em src/components/ui.tsx.
+ */
+
+export type StatusRncBadge =
+  | "ABERTO"
+  | "EM_ANALISE"
+  | "PLANO_EM_EXECUCAO"
+  | "EM_VERIFICACAO"
+  | "ENCERRADO"
+  | "REABERTO"
+  | "CANCELADO";
+
+export type GravidadeBadge = "BAIXA" | "MEDIA" | "ALTA" | "CRITICA";
+
+const CLASSE_STATUS: Record<StatusRncBadge, string> = {
+  ABERTO: styles.statusAberto,
+  EM_ANALISE: styles.statusEmAnalise,
+  PLANO_EM_EXECUCAO: styles.statusPlanoEmExecucao,
+  EM_VERIFICACAO: styles.statusEmVerificacao,
+  ENCERRADO: styles.statusEncerrado,
+  REABERTO: styles.statusReaberto,
+  CANCELADO: styles.statusCancelado,
+};
+
+const CLASSE_GRAVIDADE: Record<GravidadeBadge, string> = {
+  BAIXA: styles.gravidadeBaixa,
+  MEDIA: styles.gravidadeMedia,
+  ALTA: styles.gravidadeAlta,
+  CRITICA: styles.gravidadeCritica,
+};
+
+export function BadgeStatusRnc({ status, rotulo }: { status: StatusRncBadge; rotulo: string }) {
+  return (
+    <span className={`${styles.badge} ${CLASSE_STATUS[status]}`}>
+      <span className={styles.ponto} aria-hidden="true" />
+      {rotulo}
+    </span>
+  );
+}
+
+export function BadgeGravidade({ gravidade, rotulo }: { gravidade: GravidadeBadge; rotulo: string }) {
+  return <span className={`${styles.gravidade} ${CLASSE_GRAVIDADE[gravidade]}`}>{rotulo}</span>;
+}
+
+export function BadgeAtrasado({ children }: { children: ReactNode }) {
+  return <span className={`${styles.badge} ${styles.atrasado}`}>{children}</span>;
+}

@@ -1,0 +1,135 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical entre cabeçalho/filtros/tabela
+   02. Filtros — barra de busca e selects acima da tabela
+   03. Colunas da tabela de RNCs — larguras fixas (colgroup)
+   04. Célula de responsável — avatar + nome
+   05. Estado "restrita" (LGPD) e badge de atraso na linha
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  height: 100%;
+}
+
+/* ==========================================================
+   02. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 10px 12px;
+}
+
+.campoBuscaFiltro {
+  width: 250px;
+  flex: none;
+}
+
+.selecaoFiltro {
+  width: auto;
+}
+
+.linkLimpar {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.linkLimpar:hover {
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   03. COLUNAS DA TABELA
+   ========================================================== */
+.colCodigo {
+  width: 120px;
+}
+.colTipo {
+  width: 130px;
+}
+.colObra {
+  width: 160px;
+}
+.colGravidade {
+  width: 100px;
+}
+.colResponsavel {
+  width: 170px;
+}
+.colAbertura {
+  width: 110px;
+}
+.colStatus {
+  width: 190px;
+}
+
+/* ==========================================================
+   04. CÉLULA DE RESPONSÁVEL
+   ========================================================== */
+.responsavel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.avatarResponsavel {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-gravidade-alta-fundo);
+  color: var(--cor-gravidade-alta-texto);
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.semResponsavel {
+  color: var(--cor-texto-fraco);
+}
+
+/* ==========================================================
+   05. RESTRITA / ATRASO
+   ========================================================== */
+.iconeRestrita {
+  color: var(--cor-texto-secundario);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.statusCelula {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.linkCodigo,
+.linkTitulo {
+  color: var(--cor-acento);
+  text-decoration: none;
+  font-weight: 500;
+}
+.linkCodigo:hover,
+.linkTitulo:hover {
+  color: var(--cor-acento-hover);
+  text-decoration: underline;
+}
+.linkTitulo {
+  font-weight: 400;
+  color: var(--cor-texto);
+}

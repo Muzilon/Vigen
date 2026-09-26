@@ -1,0 +1,105 @@
+/* ==========================================================
+   ÍNDICE
+   01. Badge base — formato pill comum a todas as variantes
+   02. Variantes de status de RNC
+   03. Variantes de gravidade
+   04. Variante de atraso (item 5W2H vencido)
+   ========================================================== */
+
+/* ==========================================================
+   01. BADGE BASE
+   ========================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--raio-pill);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Ponto colorido usado nos badges de status (bolinha antes do texto) */
+.ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--raio-pill);
+  background: currentColor;
+}
+
+/* ==========================================================
+   02. VARIANTES DE STATUS DE RNC
+   ========================================================== */
+.statusAberto {
+  background: var(--cor-status-aberto-fundo);
+  color: var(--cor-status-aberto-texto);
+}
+.statusEmAnalise {
+  background: var(--cor-status-em-analise-fundo);
+  color: var(--cor-status-em-analise-texto);
+}
+.statusPlanoEmExecucao {
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-status-plano-execucao-texto);
+}
+.statusEmVerificacao {
+  background: var(--cor-status-em-verificacao-fundo);
+  color: var(--cor-status-em-verificacao-texto);
+}
+.statusEncerrado {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}
+.statusReaberto {
+  background: var(--cor-status-reaberto-fundo);
+  color: var(--cor-status-reaberto-texto);
+}
+.statusCancelado {
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+}
+
+/* ==========================================================
+   03. VARIANTES DE GRAVIDADE
+   Altura menor (20px) e sem ponto — diferencia visualmente do
+   badge de status na mesma linha da tabela.
+   ========================================================== */
+.gravidade {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--raio-pill);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.gravidadeBaixa {
+  background: var(--cor-gravidade-baixa-fundo);
+  color: var(--cor-gravidade-baixa-texto);
+}
+.gravidadeMedia {
+  background: var(--cor-gravidade-media-fundo);
+  color: var(--cor-gravidade-media-texto);
+}
+.gravidadeAlta {
+  background: var(--cor-gravidade-alta-fundo);
+  color: var(--cor-gravidade-alta-texto);
+}
+/* Crítica: fundo sólido + texto branco (peso 600) — maior alarme visual */
+.gravidadeCritica {
+  background: var(--cor-gravidade-critica-fundo);
+  color: var(--cor-gravidade-critica-texto);
+  font-weight: 600;
+}
+
+/* ==========================================================
+   04. VARIANTE DE ATRASO
+   ========================================================== */
+.atrasado {
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+  font-weight: 500;
+}

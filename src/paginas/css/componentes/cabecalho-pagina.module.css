@@ -1,0 +1,56 @@
+/* ==========================================================
+   ÍNDICE
+   01. Faixa do título — título, contador, subtítulo e ações
+   ========================================================== */
+
+/* ==========================================================
+   01. FAIXA DO TÍTULO
+   ========================================================== */
+.faixa {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--espaco-4);
+  flex-wrap: wrap;
+}
+
+.blocoTitulo {
+  flex: 1;
+  min-width: 240px;
+}
+
+.linhaTitulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cor-texto);
+}
+
+/* Contador redondo ao lado do título (ex.: total de registros) */
+.contador {
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  color: var(--cor-texto);
+}
+
+.subtitulo {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+}

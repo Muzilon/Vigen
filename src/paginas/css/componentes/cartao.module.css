@@ -1,0 +1,37 @@
+/* ==========================================================
+   ÍNDICE
+   01. Cartão — superfície branca com borda, base de painéis
+   02. Cabeçalho interno opcional (título + ações)
+   ========================================================== */
+
+/* ==========================================================
+   01. CARTÃO
+   ========================================================== */
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+
+.corpo {
+  padding: var(--espaco-4);
+}
+
+/* ==========================================================
+   02. CABEÇALHO INTERNO
+   ========================================================== */
+.cabecalhoInterno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  border-bottom: 1px solid var(--cor-borda);
+  padding: var(--espaco-3) var(--espaco-4);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}

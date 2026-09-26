@@ -1,0 +1,81 @@
+/* ==========================================================
+   ÍNDICE
+   01. Base — tamanho e alinhamento comuns a todos os botões
+   02. Variante primária (acento âmbar)
+   03. Variante secundária (contorno neutro)
+   04. Variante perigo (ações destrutivas)
+   05. Variante texto (link discreto, ex.: "Limpar filtros")
+   ========================================================== */
+
+/* ==========================================================
+   01. BASE
+   ========================================================== */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--raio-padrao);
+  font-family: var(--fonte-ui);
+  font-size: 14px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.botao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
+   02. PRIMÁRIO
+   ========================================================== */
+.primario {
+  background: var(--cor-acento);
+  color: var(--cor-acento-texto);
+}
+.primario:hover:not(:disabled) {
+  background: var(--cor-acento-hover);
+}
+
+/* ==========================================================
+   03. SECUNDÁRIO
+   ========================================================== */
+.secundario {
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-borda-forte);
+  padding: 0 14px;
+}
+.secundario:hover:not(:disabled) {
+  background: var(--cor-fundo-sutil);
+}
+
+/* ==========================================================
+   04. PERIGO
+   ========================================================== */
+.perigo {
+  background: var(--cor-superficie);
+  color: var(--cor-perigo-texto);
+  border: 1px solid var(--cor-perigo-texto);
+}
+.perigo:hover:not(:disabled) {
+  background: var(--cor-perigo-fundo);
+}
+
+/* ==========================================================
+   05. TEXTO
+   ========================================================== */
+.texto {
+  background: transparent;
+  color: var(--cor-texto-secundario);
+  height: 34px;
+  padding: 0 8px;
+}
+.texto:hover:not(:disabled) {
+  color: var(--cor-texto);
+}

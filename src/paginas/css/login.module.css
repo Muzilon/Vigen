@@ -1,0 +1,184 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — divide em painel de marca + painel de formulário
+   02. Painel de marca — fundo escuro, mensagem institucional
+   03. Lista de destaques do painel de marca
+   04. Painel de formulário — cartão de entrada centralizado
+   05. Campo de senha com botão de mostrar/ocultar
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  min-height: 100vh;
+  display: flex;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   02. PAINEL DE MARCA
+   ========================================================== */
+.painelMarca {
+  width: 46%;
+  max-width: 640px;
+  flex: none;
+  background: var(--cor-sidebar-fundo);
+  color: var(--cor-sidebar-texto);
+  box-sizing: border-box;
+  padding: var(--espaco-8) 56px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .painelMarca {
+    display: none;
+  }
+}
+
+.logoMarca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+.logoTextoMarca {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.conteudoMarca {
+  position: relative;
+  max-width: 470px;
+  margin: auto 0;
+}
+.selo {
+  margin: 0 0 14px 0;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--cor-acento-claro);
+}
+.tituloMarca {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.18;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+.descricaoMarca {
+  margin: 18px 0 0 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #c9c6bf;
+}
+
+.rodapeMarca {
+  font-size: 12px;
+  color: var(--cor-sidebar-texto-secundario);
+}
+
+/* ==========================================================
+   03. LISTA DE DESTAQUES
+   ========================================================== */
+.listaDestaques {
+  list-style: none;
+  margin: 28px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 14px;
+  color: var(--cor-sidebar-texto);
+}
+.itemDestaque {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.iconeDestaque {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--raio-padrao);
+  background: var(--cor-sidebar-fundo-alt);
+  color: var(--cor-acento-claro);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* ==========================================================
+   04. PAINEL DE FORMULÁRIO
+   ========================================================== */
+.painelFormulario {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espaco-8) var(--espaco-6);
+}
+
+.cartaoFormulario {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tituloFormulario {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.subtituloFormulario {
+  margin: 6px 0 28px 0;
+  font-size: 14px;
+  color: var(--cor-texto-secundario);
+}
+
+.grupoCampo {
+  margin-top: 18px;
+}
+.grupoCampo:first-of-type {
+  margin-top: 0;
+}
+
+/* ==========================================================
+   05. CAMPO DE SENHA
+   ========================================================== */
+.envoltorioSenha {
+  position: relative;
+}
+.botaoMostrarSenha {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--cor-texto-secundario);
+  border-radius: var(--raio-padrao);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.botaoMostrarSenha:hover {
+  background: var(--cor-fundo-sutil);
+}
+
+.botaoEntrar {
+  margin-top: 22px;
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+}
