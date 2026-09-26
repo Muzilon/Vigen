@@ -8,6 +8,7 @@ import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { ROTULO_TIPO } from "@/lib/rnc/rotulos";
 import { resumoHira } from "@/lib/hira/servico";
 import { resumoLaia } from "@/lib/laia/servico";
+import { resumoDocumentos } from "@/lib/documentos/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -32,7 +33,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -45,6 +46,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     contarPorFaixa(a),
     resumoHira(a),
     resumoLaia(a),
+    resumoDocumentos(a),
   ]);
   const k = ind.kpis;
 
@@ -114,6 +116,26 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
         <Painel titulo="Por gravidade" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porGravidade} paleta="gravidade" /></Painel>
         <Painel titulo="Por obra" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porObra.slice(0, 10)} /></Painel>
       </div>
+
+      {docs && (
+        <Painel titulo="Documentos controlados" subtitulo={docs.mestra ? "Lista mestra e ciências" : "Documentos publicados para você"}>
+          <div className={styles.gradeKpis}>
+            {docs.mestra && (
+              <Link href="/documentos?vencidas=1" className={styles.linkKpi}>
+                <Kpi titulo="Revisões vencidas" valor={docs.revisoesVencidas} dica="Revisão periódica em atraso" alerta={docs.revisoesVencidas > 0} />
+              </Link>
+            )}
+            <Link href="/documentos/meus" className={styles.linkKpi}>
+              <Kpi titulo="Minhas ciências pendentes" valor={docs.cienciasPendentes} dica={`De ${docs.publicadosParaMim} documento(s) publicados para você`} alerta={docs.cienciasPendentes > 0} />
+            </Link>
+            {docs.mestra && (
+              <Link href="/documentos?status=EM_APROVACAO" className={styles.linkKpi}>
+                <Kpi titulo="Em revisão/aprovação" valor={docs.emTramitacao} dica={`${docs.aPublicar} aprovado(s) aguardando publicação`} />
+              </Link>
+            )}
+          </div>
+        </Painel>
+      )}
 
       {riscosPorFaixa && (
         <Painel titulo="Riscos e oportunidades abertos por nível" subtitulo="Situação atual (nível inicial), sem os encerrados">

@@ -13,7 +13,7 @@ import {
 import { listarAnexos, podeEnviarAnexo } from "@/lib/anexos/servico";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
-import { formatarDataHora } from "@/lib/datas";
+import { formatarData, formatarDataHora } from "@/lib/datas";
 import { exigirModulo } from "@/lib/modulos";
 import { ROTULO_TIPO_PROCESSO, type SnapshotProcesso } from "@/lib/processos/regras";
 import { listarProcessos, listarVersoes, obterProcesso, podeGerenciarProcessos } from "@/lib/processos/servico";
@@ -25,6 +25,10 @@ import { codigoHira, ROTULO_STATUS_LINHA } from "@/lib/hira/regras";
 import { listarHiraDoProcesso, podeGerenciarHira } from "@/lib/hira/servico";
 import { codigoLaia } from "@/lib/laia/regras";
 import { listarLaiaDoProcesso, podeGerenciarLaia } from "@/lib/laia/servico";
+import { podeElaborarDocumentos } from "@/lib/documentos/acesso";
+import { formatarRevisao, ROTULO_STATUS_DOCUMENTO } from "@/lib/documentos/regras";
+import { listarDocumentosDoProcesso } from "@/lib/documentos/servico";
+import { BadgeStatusDocumento } from "@/paginas/html/componentes/badge";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -49,7 +53,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   const p = await obterProcesso(a, id);
   if (!p) notFound();
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -59,6 +63,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     listarRiscosDoProcesso(a, id),
     listarHiraDoProcesso(a, id),
     listarLaiaDoProcesso(a, id),
+    listarDocumentosDoProcesso(a, id),
   ]);
   const g = podeGerenciarProcessos(a) && p.ativo;
   const candidatos = outros.filter((o) => o.id !== p.id);
@@ -309,14 +314,45 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
+          {documentos && (
+            <Cartao
+              titulo={`Documentos vinculados · ${documentos.length}`}
+              acoes={podeElaborarDocumentos(a) ? <Link href={`/documentos/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Novo</Link> : undefined}
+            >
+              {documentos.length === 0 ? (
+                <p className={styles.vazio}>Nenhum documento vinculado a este processo.</p>
+              ) : (
+                <table className={styles.tabela}>
+                  <thead>
+                    <tr><th>Código</th><th>Título</th><th>Rev.</th><th>Status</th><th>Próx. revisão</th></tr>
+                  </thead>
+                  <tbody>
+                    {documentos.map((d) => (
+                      <tr key={d.id}>
+                        <td><Link href={`/documentos/${d.id}`} className={styles.linkProcesso}>{d.codigo}</Link></td>
+                        <td>{d.titulo}</td>
+                        <td>{d.versaoVigente ? formatarRevisao(d.versaoVigente.numero) : "—"}</td>
+                        <td><BadgeStatusDocumento status={d.status} rotulo={ROTULO_STATUS_DOCUMENTO[d.status]} /></td>
+                        <td>{d.versaoVigente ? `${formatarData(d.proximaRevisaoEm)}${d.vencida ? " (vencida)" : ""}` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {podeElaborarDocumentos(a) && <p className={styles.rodapeCartao}><Link href={`/documentos?processo=${p.id}`} className={styles.linkProcesso}>Ver na lista mestra →</Link></p>}
+            </Cartao>
+          )}
+
+          {(!riscos || !linhasHira || !linhasLaia || !documentos) && (
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
               {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasHira && <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasLaia && <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>módulo não contratado</span></li>}
-              <li>Documentos vinculados <span className={styles.emBreve}>em breve</span></li>
+              {!documentos && <li>Documentos vinculados <span className={styles.emBreve}>módulo não contratado</span></li>}
             </ul>
           </Cartao>
+          )}
         </div>
 
         <div className={styles.coluna}>

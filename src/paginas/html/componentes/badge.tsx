@@ -59,3 +59,19 @@ export function BadgeFaixa({ faixa, score }: { faixa: FaixaBadge; score?: number
 export function BadgeAtrasado({ children }: { children: ReactNode }) {
   return <span className={`${styles.badge} ${styles.atrasado}`}>{children}</span>;
 }
+
+/** Status de documento (Tramitação de Documentos) — reaproveita as cores de status da RNC. */
+export type StatusDocumentoBadge = "ELABORACAO" | "EM_REVISAO" | "EM_APROVACAO" | "APROVADO" | "PUBLICADO" | "OBSOLETO" | "CANCELADO";
+const COR_STATUS_DOCUMENTO: Record<StatusDocumentoBadge, StatusRncBadge> = {
+  ELABORACAO: "ABERTO",
+  EM_REVISAO: "EM_ANALISE",
+  EM_APROVACAO: "EM_VERIFICACAO",
+  APROVADO: "PLANO_EM_EXECUCAO",
+  PUBLICADO: "ENCERRADO",
+  OBSOLETO: "CANCELADO",
+  CANCELADO: "CANCELADO",
+};
+
+export function BadgeStatusDocumento({ status, rotulo }: { status: StatusDocumentoBadge; rotulo: string }) {
+  return <BadgeStatusRnc status={COR_STATUS_DOCUMENTO[status]} rotulo={rotulo} />;
+}

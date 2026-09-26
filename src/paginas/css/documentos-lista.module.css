@@ -1,0 +1,124 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página
+   02. Indicadores (revisões vencidas / em tramitação)
+   03. Filtros
+   04. Tabela da lista mestra
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   02. INDICADORES
+   ========================================================== */
+.resumo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-3);
+}
+.indicador {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--raio-pill);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.indicador strong { color: var(--cor-texto); font-size: 15px; }
+.indicadorAlerta {
+  background: var(--cor-atrasado-fundo);
+  border-color: transparent;
+  color: var(--cor-atrasado-texto);
+}
+.indicadorAlerta strong { color: var(--cor-atrasado-texto); }
+
+/* ==========================================================
+   03. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.campoBusca { min-width: 220px; }
+.marcador {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  padding-bottom: 8px;
+}
+.acoesFiltro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin-left: auto;
+}
+.linkLimpar { font-size: 13px; color: var(--cor-texto-secundario); }
+.linkLimpar:hover { color: var(--cor-texto); }
+
+/* ==========================================================
+   04. TABELA DA LISTA MESTRA
+   ========================================================== */
+.quadro {
+  overflow-x: auto;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.tabela th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-fundo-sutil);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--cor-borda-forte);
+  white-space: nowrap;
+}
+.tabela td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  vertical-align: middle;
+}
+.tabela tbody tr:hover { background: var(--cor-fundo-sutil); }
+.codigo {
+  font-family: var(--fonte-mono);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.codigo a { color: var(--cor-texto); }
+.titulo { min-width: 240px; }
+.linkTitulo { color: var(--cor-texto); text-decoration: none; }
+.linkTitulo:hover { text-decoration: underline; }
+.numero { font-family: var(--fonte-mono); }
+.linhaInativa td { color: var(--cor-texto-fraco); }

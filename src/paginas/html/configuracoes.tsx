@@ -15,6 +15,8 @@ import {
   salvarPreferenciasAcao,
   salvarSetorAcao,
 } from "@/app/(app)/configuracoes/actions";
+import { salvarTipoDocumentoAcao } from "@/app/(app)/documentos/actions";
+import { listarTipos } from "@/lib/documentos/servico";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { dadosAdministracao, dadosEscalas, dadosModulos, MIN_SENHA, PAPEIS } from "@/lib/admin/servico";
 import { lerConfigAprovacao, type ModuloAprovavel } from "@/lib/aprovacao/config-modulo";
@@ -37,6 +39,7 @@ const ABAS = [
   ["modulos", "Módulos"],
   ["escalas", "Escalas"],
   ["aprovacoes", "Aprovações"],
+  ["tipos-documento", "Tipos de documento"],
   ["preferencias", "Notificações"],
 ] as const;
 type Aba = (typeof ABAS)[number][0];
@@ -452,11 +455,13 @@ async function AbaAprovacoes() {
       <p className={styles.explicacao}>
         Quando exigido, toda inclusão, alteração e exclusão de linha da planilha gera uma solicitação de aprovação para os aprovadores
         padrão (o solicitante nunca aprova o próprio pedido). A linha nova fica &quot;pendente de aprovação&quot; até a última assinatura.
-        Sem exigência, as mudanças são aplicadas direto, com histórico. Com o módulo Documentos (em breve), a aprovação poderá usar a
-        tramitação de documentos.
+        Sem exigência, as mudanças são aplicadas direto, com histórico. Com o módulo Documentos contratado, marque &quot;usar tramitação
+        de documentos&quot; para que cada aprovação registre uma nova revisão da planilha controlada da obra (código e revisão, com
+        snapshot das linhas vigentes) na lista mestra.
       </p>
       {MODULOS_APROVACAO.map(({ m, modulo, titulo }) => {
         const c = lerConfigAprovacao(empresa?.config, m);
+        const docs = !!empresa?.modulosAtivos.includes("DOCUMENTOS");
         const ativo = empresa?.modulosAtivos.includes(modulo);
         return (
           <Cartao key={m} titulo={titulo}>
@@ -477,6 +482,15 @@ async function AbaAprovacoes() {
                   <option value="PARALELO">Simultâneo</option>
                 </Selecao>
               </div>
+              <label className={styles.opcaoDescrita}>
+                <input type="checkbox" name="usarTramitacao" defaultChecked={c.usarTramitacao} disabled={!docs} />
+                <span>
+                  Usar tramitação de documentos (revisão da planilha controlada)
+                  <span className={styles.ajudaOpcao}>
+                    {docs ? "Cada inclusão/alteração/exclusão aprovada gera nova revisão do documento-planilha da obra (tipo PL)." : "Requer o módulo Documentos contratado."}
+                  </span>
+                </span>
+              </label>
               <fieldset className={styles.grupoOpcoes}>
                 <legend className={styles.legenda}>Aprovadores padrão</legend>
                 <div className={styles.opcoesEmGrade}>
@@ -492,6 +506,50 @@ async function AbaAprovacoes() {
           </Cartao>
         );
       })}
+    </div>
+  );
+}
+
+/** Tipos de documento da Tramitação de Documentos (sigla compõe o código; periodicidade padrão de revisão). */
+async function AbaTiposDocumento({ ativo }: { ativo: boolean }) {
+  if (!ativo) return <p className={styles.explicacao}>Módulo Documentos não contratado.</p>;
+  const tipos = await listarTipos(await getAtor(), { incluirInativos: true });
+  const campos = (t?: (typeof tipos)[number]) => (
+    <>
+      {t && <input type="hidden" name="id" value={t.id} />}
+      <Entrada name="sigla" required defaultValue={t?.sigla} placeholder="Sigla *" aria-label="Sigla" maxLength={6} className={styles.entradaCodigo} readOnly={!!t && t._count.documentos > 0} />
+      <Entrada name="nome" required defaultValue={t?.nome} placeholder="Nome *" aria-label="Nome" className={styles.entradaNomeSetor} />
+      <label className={styles.opcaoEmLinha}>
+        Revisão a cada
+        <Entrada name="periodicidadeRevisaoMeses" type="number" min={1} max={120} required defaultValue={t?.periodicidadeRevisaoMeses ?? 24} aria-label="Periodicidade de revisão (meses)" className={styles.entradaCodigo} />
+        meses
+      </label>
+      {t && (
+        <label className={styles.opcaoEmLinha}>
+          <input type="checkbox" name="ativo" defaultChecked={t.ativo} /> Ativo
+        </label>
+      )}
+      {t && <span className={styles.ajuda}>{t._count.documentos} documento(s)</span>}
+    </>
+  );
+  return (
+    <div className={styles.secoesAba}>
+      <p className={styles.explicacao}>
+        O código do documento é gerado automaticamente com a sigla do tipo e uma sequência própria do tipo (ex.: PR-001, IT-004). A sigla
+        não muda depois que houver documentos. A periodicidade é o padrão sugerido para novos documentos do tipo.
+      </p>
+      <Cartao titulo="Novo tipo de documento">
+        <FormAcao acao={salvarTipoDocumentoAcao} botao="Criar" classeBotao={styles.botaoPrimario} className={styles.formEmLinha}>{campos()}</FormAcao>
+      </Cartao>
+      <Cartao titulo={`Tipos de documento (${tipos.length})`}>
+        <ul className={styles.listaRegistros}>
+          {tipos.map((t) => (
+            <li key={t.id}>
+              <FormAcao acao={salvarTipoDocumentoAcao} botao="Salvar" classeBotao={styles.botaoSecundario} className={styles.formEmLinha}>{campos(t)}</FormAcao>
+            </li>
+          ))}
+        </ul>
+      </Cartao>
     </div>
   );
 }
@@ -542,7 +600,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
   if (!temPermissao(ctx, "ADMIN_CONFIG")) notFound();
   const sp = await searchParams;
   const aba: Aba = (ABAS.find(([k]) => k === sp.aba)?.[0] ?? "usuarios") as Aba;
-  const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" || aba === "aprovacoes" ? null : await dadosAdministracao(await getAtor());
+  const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" || aba === "aprovacoes" || aba === "tipos-documento" ? null : await dadosAdministracao(await getAtor());
   const escalas = aba === "escalas" ? await dadosEscalas(await getAtor()) : null;
 
   return (
@@ -567,6 +625,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
       {aba === "modulos" && <AbaModulos empresaId={ctx.empresaId} />}
       {aba === "escalas" && escalas && <AbaEscalas d={escalas} />}
       {aba === "aprovacoes" && <AbaAprovacoes />}
+      {aba === "tipos-documento" && <AbaTiposDocumento ativo={ctx.modulosAtivos.includes("DOCUMENTOS")} />}
       {aba === "preferencias" && <AbaPreferencias empresaId={ctx.empresaId} />}
     </div>
   );

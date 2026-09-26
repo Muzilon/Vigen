@@ -1,0 +1,82 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página e aviso de pendências
+   02. Lista de documentos
+   03. Ações (baixar / ciência)
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA E AVISO DE PENDÊNCIAS
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  max-width: 1100px;
+}
+.aviso {
+  margin: 0;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-status-plano-execucao-texto);
+  font-size: 13px;
+}
+
+/* ==========================================================
+   02. LISTA DE DOCUMENTOS
+   ========================================================== */
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espaco-4);
+  padding: var(--espaco-3) var(--espaco-4);
+}
+.item + .item { border-top: 1px solid var(--cor-borda-sutil); }
+.itemPendente { border-left: 3px solid var(--cor-acento); }
+.principal { min-width: 0; }
+.codigo {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-texto-secundario);
+}
+.titulo {
+  display: block;
+  margin: 2px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.titulo:hover { text-decoration: underline; }
+.meta { margin: 0; font-size: 12px; color: var(--cor-texto-secundario); }
+
+/* ==========================================================
+   03. AÇÕES
+   ========================================================== */
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  flex-shrink: 0;
+}
+.baixar {
+  composes: botao secundario from "./componentes/botao.module.css";
+  text-decoration: none;
+}
+.formCiencia { display: flex; flex-direction: column; align-items: flex-end; }
+.ciente { font-size: 12px; color: var(--cor-status-encerrado-texto); font-weight: 600; }
+.semCiencia { font-size: 12px; color: var(--cor-texto-fraco); }

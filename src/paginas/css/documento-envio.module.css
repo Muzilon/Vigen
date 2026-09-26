@@ -1,0 +1,159 @@
+/* ==========================================================
+   ÍNDICE
+   01. Formulário e campos
+   02. Listas de revisores e aprovadores
+   03. Modo — segmentado
+   04. Rodapé e aviso
+   ========================================================== */
+
+/* ==========================================================
+   01. FORMULÁRIO E CAMPOS
+   ========================================================== */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rotulo {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+.ajuda {
+  margin: 0;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+.entrada {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 9px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+}
+
+/* ==========================================================
+   02. LISTAS DE REVISORES E APROVADORES
+   ========================================================== */
+.listas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-4);
+}
+@media (max-width: 720px) {
+  .listas { grid-template-columns: minmax(0, 1fr); }
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  min-width: 0;
+}
+.linhaAdicionar {
+  display: flex;
+  gap: var(--espaco-2);
+}
+.selecao {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 var(--espaco-3);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 14px;
+}
+.pessoas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.pessoa {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  padding: 6px var(--espaco-3);
+}
+.pessoa + .pessoa { border-top: 1px solid var(--cor-borda-sutil); }
+.ordem {
+  width: 28px;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  color: var(--cor-texto-fraco);
+}
+.nome {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+.botaoIcone {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  cursor: pointer;
+}
+.botaoIcone:disabled { opacity: 0.4; cursor: default; }
+.botaoRemover {
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ==========================================================
+   03. MODO — SEGMENTADO
+   ========================================================== */
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.segmentado {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+}
+.opcao {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--espaco-4);
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--cor-superficie);
+}
+.opcao + .opcao { border-left: 1px solid var(--cor-borda-forte); }
+.opcaoMarcada {
+  background: var(--cor-destaque-escuro);
+  color: var(--cor-destaque-escuro-texto);
+}
+.opcao:focus-within { outline: 2px solid var(--cor-acento); outline-offset: -2px; }
+.radio { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+/* ==========================================================
+   04. RODAPÉ E AVISO
+   ========================================================== */
+.rodape { display: flex; justify-content: flex-end; }
+.aviso {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-atrasado-texto);
+}

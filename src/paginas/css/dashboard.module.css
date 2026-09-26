@@ -5,6 +5,7 @@
    03. KPIs — grade de indicadores com número em fonte mono
    04. Painéis de gráfico — superfície, título e subtítulo
    05. Grades de painéis — 3 colunas (tipo/gravidade/obra) e 2 colunas
+   06. Documentos — KPI clicável
    ========================================================== */
 
 /* ==========================================================
@@ -154,3 +155,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ==========================================================
+   06. DOCUMENTOS — KPI CLICÁVEL (card do módulo Documentos)
+   ========================================================== */
+.linkKpi {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.linkKpi:hover > * { border-color: var(--cor-borda-forte); }
