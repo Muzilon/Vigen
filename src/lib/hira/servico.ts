@@ -8,7 +8,7 @@
  */
 import { Prisma, type FaixaNivel, type StatusLinhaSgi } from "@prisma/client";
 import { atorTem, fusoDaEmpresa, type Ator, type Tx } from "@/lib/ator";
-import { aprovadoresEfetivos, canalAprovacao, obterConfigAprovacao } from "@/lib/aprovacao/config-modulo";
+import { aprovadoresEfetivos, obterConfigAprovacao } from "@/lib/aprovacao/config-modulo";
 import { criarFluxoNaTransacao, notificarFluxoCriado } from "@/lib/aprovacao/servico";
 import { dataIso, hojeNoFuso, paraDataDb } from "@/lib/datas";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
@@ -272,9 +272,8 @@ async function calcular(tx: Tx, a: Pick<Ator, "obrasPermitidas">, d: DadosHira) 
 async function politicaAprovacao(tx: Tx, a: Quem) {
   const c = await obterConfigAprovacao(tx, a.empresaId, "hira");
   if (!c.exigir) return null;
-  const e = await tx.empresa.findFirst({ where: { id: a.empresaId }, select: { modulosAtivos: true } });
-  // Ponto de extensão P4: canal "TRAMITACAO" (Documentos) — ver src/lib/aprovacao/config-modulo.ts.
-  if (canalAprovacao(e?.modulosAtivos ?? []) !== "MOTOR") throw new ErroNegocio("Tramitação de documentos ainda não disponível.");
+  // Canal "TRAMITACAO" (P4): as assinaturas são as mesmas do motor; o handler registra a revisão da
+  // planilha controlada ao aprovar (src/lib/documentos/planilha.ts).
   return { aprovadorIds: aprovadoresEfetivos(c, a.usuarioId), modo: c.modo };
 }
 

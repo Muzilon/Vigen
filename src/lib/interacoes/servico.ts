@@ -6,6 +6,7 @@ import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
 import { filtroObras } from "@/lib/escopo-obras";
 import { moduloHiraAtivo } from "@/lib/hira/servico";
 import { moduloLaiaAtivo } from "@/lib/laia/servico";
+import { acessoDocumento } from "@/lib/documentos/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
@@ -64,6 +65,13 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     if (!l) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = l.responsavelId ?? l.criadoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
+  }
+  if (t.tipo === "DOCUMENTO") {
+    // Documentos: comentários para quem tem acesso completo (lista mestra, responsável, signatários); fala com o responsável.
+    if (!(await acessoDocumento(a, t.entidadeId)).completo) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const d = await a.db.documento.findFirst({ where: { id: t.entidadeId }, select: { responsavelId: true } });
+    if (!d) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    return { destinatarioPadrao: d.responsavelId !== a.usuarioId ? d.responsavelId : null };
   }
   const item = await a.db.itemAcao.findFirst({
     where: { AND: [{ id: t.entidadeId }, filtroAcessoItem(a)] },
@@ -184,5 +192,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "RISCO_OPORTUNIDADE") return `/riscos/${t.entidadeId}`;
   if (t.entidadeTipo === "HIRA") return `/hira/${t.entidadeId}`;
   if (t.entidadeTipo === "LAIA") return `/laia/${t.entidadeId}`;
+  if (t.entidadeTipo === "DOCUMENTO") return `/documentos/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

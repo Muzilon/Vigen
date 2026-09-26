@@ -6,6 +6,7 @@ import { STATUS_FINAIS } from "@/lib/rnc/estados";
 import { podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { moduloHiraAtivo, podeTratarHira } from "@/lib/hira/servico";
 import { moduloLaiaAtivo, podeTratarLaia } from "@/lib/laia/servico";
+import { podeLerVersao } from "@/lib/documentos/acesso";
 import { filtroObras } from "@/lib/escopo-obras";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
@@ -32,6 +33,8 @@ interface AcessoEntidade {
   rncId: string | null;
   /** A entidade pertence a uma RNC encerrada/cancelada (anexos imutáveis). */
   rncFinal: boolean;
+  /** Anexos imutáveis por outra regra (ex.: arquivo de revisão de documento): mensagem ao tentar excluir. */
+  imutavel?: string;
 }
 
 const NEGADO: AcessoEntidade = { podeLer: false, podeEnviar: false, podeGerir: false, rncId: null, rncFinal: false };
@@ -115,6 +118,12 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       const l = await a.db.linhaLaia.findFirst({ where: { AND: [{ id: alvo.entidadeId }, filtroObras(a)] }, select: { responsavelId: true } });
       if (!l) return NEGADO;
       return { podeLer: true, podeEnviar: podeTratarLaia(a, l), podeGerir: atorTem(a, "LAIA_GERENCIAR"), rncId: null, rncFinal: false };
+    }
+    case "DOCUMENTO_VERSAO": {
+      // Arquivo de revisão de documento: leitura conforme o acesso ao documento (público só a vigente).
+      // Envio/troca só pelo serviço de documentos; nunca excluído pela tela de anexos (controle de versão).
+      const v = await podeLerVersao(a, alvo.entidadeId);
+      return { podeLer: v.ler, podeEnviar: false, podeGerir: false, rncId: null, rncFinal: false, imutavel: "O arquivo de uma revisão de documento não pode ser excluído (use nova revisão ou troque o arquivo do rascunho)." };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({
@@ -253,7 +262,7 @@ export async function listarAnexos(a: Ator, alvo: Alvo): Promise<AnexoListado[]>
     select: selecao,
     orderBy: { criadoEm: "asc" },
   });
-  return rs.map((r) => ({ ...r, podeExcluir: !acesso.rncFinal && (r.enviadoPorId === a.usuarioId || acesso.podeGerir) }));
+  return rs.map((r) => ({ ...r, podeExcluir: !acesso.rncFinal && !acesso.imutavel && (r.enviadoPorId === a.usuarioId || acesso.podeGerir) }));
 }
 
 /** Anexos de várias entidades do mesmo tipo (ex.: itens de um plano), cada uma com checagem de acesso. */
@@ -282,6 +291,7 @@ export async function excluirAnexo(a: Ator, anexoId: string) {
   const acesso = await acessoEntidade(a, { tipo: anexo.entidadeTipo, entidadeId: anexo.entidadeId });
   if (!acesso.podeLer) throw new ErroNegocio("Anexo não encontrado.");
   if (acesso.rncFinal) throw new ErroNegocio("Anexos de RNC encerrada ou cancelada não podem ser excluídos.");
+  if (acesso.imutavel) throw new ErroNegocio(acesso.imutavel);
   if (anexo.enviadoPorId !== a.usuarioId && !acesso.podeGerir) {
     throw new ErroNegocio("Somente quem enviou o anexo ou um gestor pode excluí-lo.");
   }

@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO";
   entidadeId: string;
 };
 
@@ -49,6 +49,10 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       const l = await db.linhaLaia.findFirst({ where: { id: evento.entidadeId }, select: { numero: true } });
       onde = l ? `a linha LAIA A-${String(l.numero).padStart(3, "0")}` : "uma linha LAIA";
       link = `/laia/${evento.entidadeId}`;
+    } else if (evento.entidadeTipo === "DOCUMENTO") {
+      const d = await db.documento.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
+      onde = d ? `o documento ${d.codigo}` : "um documento";
+      link = `/documentos/${evento.entidadeId}`;
     } else {
       const item = await db.itemAcao.findFirst({
         where: { id: evento.entidadeId },

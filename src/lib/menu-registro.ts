@@ -21,7 +21,8 @@ export interface ItemMenuRegistro {
   grupo: GrupoModulo;
   /** false enquanto a página do módulo não existir — some do menu independente do gating. */
   implementado: boolean;
-  permissao?: Permissao;
+  /** Exige ao menos uma destas permissões (lista = qualquer uma). */
+  permissao?: Permissao | readonly Permissao[];
 }
 
 export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
@@ -32,7 +33,8 @@ export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
   { modulo: "LAIA", href: "/laia", label: "Aspectos ambientais", grupo: GRUPO_MODULO.MEIO_AMBIENTE, implementado: true },
   { modulo: "INSPECOES", href: "/inspecoes", label: "Inspeções / checklists", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
   { modulo: "AUDITORIAS", href: "/auditorias", label: "Auditorias internas", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
-  { modulo: "DOCUMENTOS", href: "/documentos", label: "Documentos", grupo: GRUPO_MODULO.GESTAO, implementado: false },
+  { modulo: "DOCUMENTOS", href: "/documentos", label: "Documentos (lista mestra)", grupo: GRUPO_MODULO.QUALIDADE, implementado: true, permissao: ["DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR"] },
+  { modulo: "DOCUMENTOS", href: "/documentos/meus", label: "Meus documentos", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },
   { modulo: "REQUISITOS_LEGAIS", href: "/requisitos-legais", label: "Requisitos legais", grupo: GRUPO_MODULO.MEIO_AMBIENTE, implementado: false },
   { modulo: "INCIDENTES", href: "/incidentes", label: "Incidentes e acidentes", grupo: GRUPO_MODULO.SEGURANCA, implementado: false },
   { modulo: "INDICADORES", href: "/indicadores", label: "Indicadores", grupo: GRUPO_MODULO.GESTAO, implementado: false },
@@ -45,6 +47,6 @@ export function itensMenuVisiveis(ctx: Contexto): Omit<ItemMenuRegistro, "modulo
     (item) =>
       item.implementado &&
       temModulo(ctx, item.modulo) &&
-      (!item.permissao || temPermissao(ctx, item.permissao)),
+      (!item.permissao || (Array.isArray(item.permissao) ? item.permissao : [item.permissao]).some((p: Permissao) => temPermissao(ctx, p))),
   ).map((item) => ({ href: item.href, label: item.label, grupo: item.grupo }));
 }

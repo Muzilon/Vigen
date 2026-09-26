@@ -4,11 +4,11 @@
  *   { exigir: boolean, aprovadorIds: string[], modo: "SEQUENCIAL" | "PARALELO" }
  * Se `exigir` for false, inclusão/alteração/exclusão são aplicadas direto (com histórico).
  *
- * PONTO DE EXTENSÃO (P4 — Tramitação de Documentos): `canalAprovacao()` decide por onde a
- * aprovação passa. Hoje sempre "MOTOR" (motor de aprovação multi-assinante). Quando o módulo
- * DOCUMENTOS for entregue e estiver ativo na empresa, ele passa a devolver "TRAMITACAO" e os
- * serviços de HIRA/LAIA encaminham a solicitação para a tramitação de documentos (a planilha
- * vira um documento controlado com versão), mantendo o mesmo payload { antes, depois, dados }.
+ * INTEGRAÇÃO P4 (Tramitação de Documentos): `usarTramitacao` + módulo DOCUMENTOS ativo →
+ * `canalAprovacao()` devolve "TRAMITACAO": as assinaturas continuam no motor multi-assinante (mesmo
+ * payload { antes, depois, dados }), e ao aprovar o handler de HIRA/LAIA registra uma nova revisão
+ * do documento-planilha controlado da obra (código + revisão, snapshot JSON das linhas vigentes) —
+ * ver src/lib/documentos/planilha.ts.
  */
 import type { Modulo, ModoAprovacao, Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -21,9 +21,11 @@ export interface ConfigAprovacaoModulo {
   exigir: boolean;
   aprovadorIds: string[];
   modo: ModoAprovacao;
+  /** Com o módulo DOCUMENTOS: cada aprovação gera nova revisão da planilha controlada (P4). */
+  usarTramitacao: boolean;
 }
 
-export const CONFIG_APROVACAO_PADRAO: ConfigAprovacaoModulo = { exigir: false, aprovadorIds: [], modo: "SEQUENCIAL" };
+export const CONFIG_APROVACAO_PADRAO: ConfigAprovacaoModulo = { exigir: false, aprovadorIds: [], modo: "SEQUENCIAL", usarTramitacao: false };
 
 const objeto = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
@@ -31,6 +33,7 @@ const esquema = z.object({
   exigir: z.boolean().catch(false),
   aprovadorIds: z.array(z.string()).catch([]),
   modo: z.enum(["SEQUENCIAL", "PARALELO"]).catch("SEQUENCIAL"),
+  usarTramitacao: z.boolean().catch(false),
 });
 
 /** Lê a configuração do módulo a partir de Empresa.config (tolerante a JSON incompleto). */
@@ -42,9 +45,9 @@ export function lerConfigAprovacao(config: unknown, modulo: ModuloAprovavel): Co
 }
 
 /** Novo Empresa.config com a configuração do módulo substituída (demais chaves preservadas). */
-export function mesclarConfigAprovacao(config: unknown, modulo: ModuloAprovavel, c: ConfigAprovacaoModulo) {
+export function mesclarConfigAprovacao(config: unknown, modulo: ModuloAprovavel, c: Omit<ConfigAprovacaoModulo, "usarTramitacao"> & { usarTramitacao?: boolean }) {
   const base = objeto(config);
-  return { ...base, aprovacao: { ...objeto(base.aprovacao), [modulo]: { exigir: c.exigir, aprovadorIds: c.aprovadorIds, modo: c.modo } } };
+  return { ...base, aprovacao: { ...objeto(base.aprovacao), [modulo]: { exigir: c.exigir, aprovadorIds: c.aprovadorIds, modo: c.modo, usarTramitacao: !!c.usarTramitacao } } };
 }
 
 type DbEmpresa = Pick<Ator["db"], "empresa"> | Tx;
@@ -82,9 +85,7 @@ export function aprovadoresEfetivos(c: ConfigAprovacaoModulo, solicitanteId: str
   return ids;
 }
 
-/** Canal da aprovação — ver PONTO DE EXTENSÃO no topo do arquivo. */
-export function canalAprovacao(modulosAtivos: readonly Modulo[]): "MOTOR" | "TRAMITACAO" {
-  void modulosAtivos;
-  // P4: return modulosAtivos.includes("DOCUMENTOS") && tramitacaoDisponivel() ? "TRAMITACAO" : "MOTOR";
-  return "MOTOR";
+/** Canal da aprovação — ver INTEGRAÇÃO P4 no topo do arquivo. */
+export function canalAprovacao(modulosAtivos: readonly Modulo[], c: Pick<ConfigAprovacaoModulo, "usarTramitacao">): "MOTOR" | "TRAMITACAO" {
+  return modulosAtivos.includes("DOCUMENTOS") && c.usarTramitacao ? "TRAMITACAO" : "MOTOR";
 }

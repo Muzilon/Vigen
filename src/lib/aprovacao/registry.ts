@@ -8,6 +8,8 @@ import type { Ator, Tx } from "@/lib/ator";
 export interface HandlerAprovacao {
   /** Aplica a alteração aprovada (fluxo.payload). Erro aqui desfaz a aprovação inteira. */
   aoAprovar(tx: Tx, fluxo: FluxoAprovacao, ator: Ator): Promise<void>;
+  /** Opcional: após uma assinatura que não encerra o fluxo (mesma transação) — ex.: Documentos passa de EM_REVISAO para EM_APROVACAO. */
+  aoAvancar?(tx: Tx, fluxo: FluxoAprovacao, ator: Ator): Promise<void>;
   /** Opcional: reação à rejeição (mesma transação). */
   aoRejeitar?(tx: Tx, fluxo: FluxoAprovacao, ator: Ator): Promise<void>;
   /** Opcional: reação ao cancelamento pelo solicitante (mesma transação). */

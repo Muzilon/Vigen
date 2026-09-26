@@ -262,7 +262,7 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
 export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
   const d = z
     .object({
-      entidadeTipo: z.enum(["RNC", "ITEM_ACAO", "PROCESSO", "RISCO_OPORTUNIDADE", "HIRA", "LAIA"]),
+      entidadeTipo: z.enum(["RNC", "ITEM_ACAO", "PROCESSO", "RISCO_OPORTUNIDADE", "HIRA", "LAIA", "DOCUMENTO"]),
       entidadeId: uuid,
       mensagem: z.string().trim().min(1, "Escreva a mensagem.").max(interacoes.MAX_MENSAGEM, "Mensagem muito longa."),
       destinatarioId: uuidOpcional,
@@ -288,6 +288,7 @@ function revalidarAnexos() {
   revalidatePath("/riscos/[id]", "page");
   revalidatePath("/hira/[id]", "page");
   revalidatePath("/laia/[id]", "page");
+  revalidatePath("/documentos/[id]", "page");
 }
 
 export async function enviarAnexosAcao(_: ResultadoAcao, fd: FormData) {

@@ -184,7 +184,7 @@ export async function salvarConfigAprovacaoAcao(_: ResultadoAcao, fd: FormData) 
     const modulo = txt(fd, "modulo");
     if (modulo !== "hira" && modulo !== "laia") throw new ErroNegocio("Módulo inválido.");
     const modo = txt(fd, "modo") === "PARALELO" ? "PARALELO" : "SEQUENCIAL";
-    await salvarConfigAprovacao(a, modulo, { exigir: fd.get("exigir") === "on", aprovadorIds: fd.getAll("aprovadorIds").map(String), modo });
+    await salvarConfigAprovacao(a, modulo, { exigir: fd.get("exigir") === "on", aprovadorIds: fd.getAll("aprovadorIds").map(String), modo, usarTramitacao: fd.get("usarTramitacao") === "on" });
     return "Fluxo de aprovação atualizado.";
   });
 }

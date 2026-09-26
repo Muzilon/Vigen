@@ -148,6 +148,9 @@ export async function decidir(a: Ator, fluxoId: string, d: DadosDecisao): Promis
         await h.aoRejeitar(tx, atualizado, a);
       }
       await registrarHistorico(tx, a, fluxoId, "CONCLUIDO", { metadados: { status: res.statusFluxo } });
+    } else {
+      const h = obterHandlerAprovacao(fluxo.entidadeTipo);
+      if (h?.aoAvancar) await h.aoAvancar(tx, { ...fluxo, versao: fluxo.versao + 1 }, a);
     }
     return res;
   });

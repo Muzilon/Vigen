@@ -9,6 +9,7 @@ import type { FluxoAprovacao } from "@prisma/client";
 import { atorTem } from "@/lib/ator";
 import { obterHandlerAprovacao, registrarHandlerAprovacao } from "@/lib/aprovacao/registry";
 import type { Tx } from "@/lib/ator";
+import { registrarRevisaoPlanilha } from "@/lib/documentos/planilha";
 import type { DadosLaia } from "./regras";
 import { aplicarAlteracaoLaia, aplicarExclusaoLaia, aprovarInclusaoLaia, registrarRejeicaoLaia } from "./servico";
 
@@ -36,6 +37,8 @@ if (!obterHandlerAprovacao("LAIA")) {
       if (fluxo.tipoAlteracao === "INCLUSAO" && p.dados) await aprovarInclusaoLaia(tx, quem, id, p.dados, p.versao, obs);
       else if (fluxo.tipoAlteracao === "ALTERACAO" && p.dados) await aplicarAlteracaoLaia(tx, quem, id, p.dados, p.versao, obs);
       else if (fluxo.tipoAlteracao === "EXCLUSAO") await aplicarExclusaoLaia(tx, quem, id, p.versao, obs);
+      // P4: com "usar tramitação de documentos", registra a nova revisão da planilha controlada da obra.
+      await registrarRevisaoPlanilha(tx, quem, "LAIA", id, `${fluxo.resumo}${p.motivo ? ` (motivo: ${p.motivo})` : ""}`, fluxo.id);
     },
     async aoRejeitar(tx, fluxo) {
       await rejeitar(tx, fluxo, "rejeitada");

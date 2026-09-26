@@ -12,6 +12,7 @@ import { gerarAlertasReavaliacao } from "@/lib/reavaliacao/fontes";
 import "@/lib/riscos/reavaliacao";
 import "@/lib/hira/reavaliacao";
 import "@/lib/laia/reavaliacao";
+import "@/lib/documentos/reavaliacao";
 import { atorDoUsuario, usuariosAtivos } from "./destinatarios";
 import { descricaoItem, linkItem } from "./gatilhos";
 import { lerPreferencias, type PreferenciasNotificacao } from "./preferencias";

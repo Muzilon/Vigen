@@ -66,16 +66,18 @@ describe("HIRA — cálculo", () => {
 
 describe("config de aprovação por módulo", () => {
   it("lê com padrão tolerante e mescla preservando outras chaves", () => {
-    expect(lerConfigAprovacao({}, "hira")).toEqual({ exigir: false, aprovadorIds: [], modo: "SEQUENCIAL" });
+    expect(lerConfigAprovacao({}, "hira")).toEqual({ exigir: false, aprovadorIds: [], modo: "SEQUENCIAL", usarTramitacao: false });
     const cfg = mesclarConfigAprovacao({ notificacoes: { email: true } }, "hira", { exigir: true, aprovadorIds: ["a"], modo: "PARALELO" });
     expect(cfg).toMatchObject({ notificacoes: { email: true } });
-    expect(lerConfigAprovacao(cfg, "hira")).toEqual({ exigir: true, aprovadorIds: ["a"], modo: "PARALELO" });
+    expect(lerConfigAprovacao(cfg, "hira")).toEqual({ exigir: true, aprovadorIds: ["a"], modo: "PARALELO", usarTramitacao: false });
     expect(lerConfigAprovacao(cfg, "laia").exigir).toBe(false);
   });
   it("aprovadores efetivos excluem o solicitante", () => {
-    expect(aprovadoresEfetivos({ exigir: true, aprovadorIds: ["a", "b"], modo: "SEQUENCIAL" }, "a")).toEqual(["b"]);
-    expect(() => aprovadoresEfetivos({ exigir: true, aprovadorIds: ["a"], modo: "SEQUENCIAL" }, "a")).toThrow(ErroNegocio);
-    expect(canalAprovacao(["DOCUMENTOS"])).toBe("MOTOR");
+    expect(aprovadoresEfetivos({ exigir: true, aprovadorIds: ["a", "b"], modo: "SEQUENCIAL", usarTramitacao: false }, "a")).toEqual(["b"]);
+    expect(() => aprovadoresEfetivos({ exigir: true, aprovadorIds: ["a"], modo: "SEQUENCIAL", usarTramitacao: false }, "a")).toThrow(ErroNegocio);
+    expect(canalAprovacao(["DOCUMENTOS"], { usarTramitacao: false })).toBe("MOTOR");
+    expect(canalAprovacao(["HIRA"], { usarTramitacao: true })).toBe("MOTOR");
+    expect(canalAprovacao(["HIRA", "DOCUMENTOS"], { usarTramitacao: true })).toBe("TRAMITACAO");
   });
   it("escopo por obra", () => {
     expect(filtroObras({ obrasPermitidas: null })).toEqual({});

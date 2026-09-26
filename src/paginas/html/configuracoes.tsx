@@ -68,6 +68,8 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   SWOT_GERENCIAR: "Gerenciar SWOT e partes interessadas",
   HIRA_GERENCIAR: "Gerenciar HIRA (perigos e riscos SST)",
   LAIA_GERENCIAR: "Gerenciar LAIA (aspectos e impactos)",
+  DOCUMENTO_ELABORAR: "Elaborar documentos (lista mestra, revisões)",
+  DOCUMENTO_GERENCIAR: "Gerenciar documentos (tipos, publicar, obsoletar)",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };
