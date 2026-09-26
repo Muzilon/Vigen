@@ -9,6 +9,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const naoLidas = await contarNaoLidas(await getAtor());
   const itens = [
     { href: "/", label: "Início" },
+    { href: "/dashboard", label: "Dashboard" },
     { href: "/rncs", label: "RNCs" },
     { href: "/plano-acao", label: "Plano de Ação" },
     { href: "/mensagens", label: naoLidas > 0 ? `Mensagens (${naoLidas})` : "Mensagens" },
