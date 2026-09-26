@@ -9,6 +9,7 @@ import { Badge, Cabecalho, Campo, Cartao } from "@/components/ui";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso } from "@/lib/datas";
+import { linkPlano, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { statusEfetivoItem } from "@/lib/plano-acao/status";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { COR_STATUS_ITEM, ROTULO_STATUS_ITEM } from "@/lib/rnc/rotulos";
@@ -28,7 +29,9 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
       quem: { select: { nome: true } },
       planoAcao: {
         select: {
+          id: true,
           titulo: true,
+          obraId: true,
           rnc: { select: { id: true, codigo: true, status: true, responsavelId: true, obraId: true, verificacoes: { select: { resultado: true } } } },
         },
       },
@@ -43,15 +46,16 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
   const atual = !rnc || item.ciclo === cicloAtual(rnc.verificacoes);
   const ativos = (await usuariosAtivos(a.db)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
   const usuarios = ativos.map((u) => ({ id: u.id, nome: u.nome }));
-  // "Quem": só usuários ativos com acesso à obra da RNC (mantém o atual na lista).
+  // "Quem": só usuários ativos com acesso à obra da RNC / do plano avulso (mantém o atual na lista).
+  const obraQuem = rnc ? rnc.obraId : item.planoAcao.obraId;
   const usuariosQuem = ativos
-    .filter((u) => !rnc || u.obras === null || u.obras.includes(rnc.obraId) || u.id === item.quemId)
+    .filter((u) => !obraQuem || u.obras === null || u.obras.includes(obraQuem) || u.id === item.quemId)
     .map((u) => ({ id: u.id, nome: u.nome }));
   const podeGerenciar =
     atual &&
     (rnc
       ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
-      : a.permissoes.includes("PLANO_GERENCIAR"));
+      : podeGerenciarPlanoManual(a, item.planoAcao));
   const podeExecutar = atual && item.quemId === a.usuarioId && (!rnc || rnc.status === "PLANO_EM_EXECUCAO");
   const alvoAnexo = { tipo: "ITEM_ACAO" as const, entidadeId: item.id };
   const [anexos, podeAnexar] = await Promise.all([listarAnexos(a, alvoAnexo), podeEnviarAnexo(a, alvoAnexo)]);
@@ -71,7 +75,7 @@ export default async function DetalheItem({ params }: PageProps<"/plano-acao/[id
                 <span className="font-mono text-xs text-slate-500">{rnc.codigo}</span>
               )
             ) : (
-              <span className="text-xs text-slate-500">{item.planoAcao.titulo}</span>
+              <Link href={linkPlano(item.planoAcao.id)} className="text-xs text-emerald-700 hover:underline">Plano manual: {item.planoAcao.titulo}</Link>
             )}
           </div>
         }

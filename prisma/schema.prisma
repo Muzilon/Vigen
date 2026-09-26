@@ -197,6 +197,7 @@ model ObraUnidade {
   empresa Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   acessos UsuarioAcessoObra[]
   rncs    Rnc[]
+  planos  PlanoAcao[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -457,17 +458,25 @@ model PlanoAcao {
   origemTipo   OrigemPlanoAcao @map("origem_tipo")
   origemId     String?         @map("origem_id") @db.Uuid
   titulo       String
+  /// Objetivo/descrição (planos avulsos).
+  descricao    String?
+  /// Obra/unidade opcional (planos avulsos): restringe visibilidade/gestão e o "quem".
+  obraId       String?         @map("obra_id") @db.Uuid
+  /// Trava otimista das escritas em planos sem RNC (com RNC, a trava é a versão da RNC).
+  versao       Int             @default(0)
   criadoPorId  String          @map("criado_por_id") @db.Uuid
   criadoEm     DateTime        @default(now()) @map("criado_em")
   atualizadoEm DateTime        @updatedAt @map("atualizado_em")
 
-  empresa   Empresa    @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  criadoPor Usuario    @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  empresa   Empresa      @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra      ObraUnidade? @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor Usuario      @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
   rnc       Rnc?
   itens     ItemAcao[]
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
+  @@index([empresaId, obraId])
   @@map("plano_acao")
 }
 

@@ -5,6 +5,7 @@
  */
 import type { Ator } from "@/lib/ator";
 import { formatarData } from "@/lib/datas";
+import { linkPlano } from "@/lib/plano-acao/acesso";
 import { usuariosComPermissaoNaRnc } from "./destinatarios";
 import { comSeguranca, criarNotificacoes, type NovaNotificacao } from "./servico";
 
@@ -70,21 +71,26 @@ export function notificarItensAtribuidos(a: Ator, itemIds: string[], marca: stri
         oQue: true,
         quando: true,
         quemId: true,
-        planoAcao: { select: { rnc: { select: { codigo: true, titulo: true, restrita: true, contemDadosPessoais: true } } } },
+        planoAcao: {
+          select: { id: true, titulo: true, rnc: { select: { codigo: true, titulo: true, restrita: true, contemDadosPessoais: true } } },
+        },
       },
     });
     await criarNotificacoes(
       a.db,
       a.empresaId,
       itens.map((i) => {
+        // Plano avulso (sem RNC): cita o plano e leva à página do plano.
+        const manual = !i.planoAcao.rnc;
+        const descricao = manual ? `${i.oQue} (Plano: ${i.planoAcao.titulo})` : descricaoItem(i);
         return {
           usuarioId: i.quemId,
           tipo: "ITEM_ATRIBUIDO",
           entidadeTipo: "ITEM_ACAO",
           entidadeId: i.id,
           titulo: "Nova ação atribuída a você",
-          corpo: `${descricaoItem(i)}\nPrazo: ${formatarData(i.quando)}`,
-          link: linkItem(i.id),
+          corpo: `${descricao}\nPrazo: ${formatarData(i.quando)}`,
+          link: manual ? linkPlano(i.planoAcao.id) : linkItem(i.id),
           chave: `item-atribuido:${i.id}:${i.quemId}:${marca}`,
         } satisfies NovaNotificacao;
       }),

@@ -1,9 +1,12 @@
 import type { Prisma } from "@prisma/client";
-import { atorTem, type Ator, type Tx } from "@/lib/ator";
-import { paraDataDb } from "@/lib/datas";
-import { ErroNegocio } from "@/lib/erros";
+import { atorTem, fusoDaEmpresa, type Ator, type Tx } from "@/lib/ator";
+import { hojeNoFuso, paraDataDb } from "@/lib/datas";
+import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { cicloAtual } from "@/lib/rnc/estados";
+import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { notificarItensAtribuidos } from "@/lib/notificacoes/gatilhos";
+import { filtroAcessoPlanoManual, filtroGestaoPlanoManual, obraDoPlanoAcessivel, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { statusGeralPlano } from "@/lib/plano-acao/status";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, travarRnc } from "@/lib/rnc/servico";
 
 export interface DadosItem {
@@ -24,6 +27,27 @@ async function validarUsuarios(tx: Tx, ids: string[]) {
   const unicos = [...new Set(ids)];
   const n = await tx.usuario.count({ where: { id: { in: unicos }, ativo: true } });
   if (n !== unicos.length) throw new ErroNegocio("Responsável (quem) inválido em algum item.");
+}
+
+/** Plano sem RNC: "quem" ativo e, se o plano tiver obra, com acesso a ela. */
+async function validarQuemPlanoManual(tx: Tx, ids: string[], obraId: string | null) {
+  const ativos = new Map((await usuariosAtivos(tx)).map((u) => [u.id, u]));
+  for (const id of new Set(ids)) {
+    const u = ativos.get(id);
+    if (!u) throw new ErroNegocio("Responsável (quem) inválido em algum item.");
+    if (obraId && u.obras !== null && !u.obras.includes(obraId)) {
+      throw new ErroNegocio(`${u.nome} não tem acesso à obra/unidade deste plano.`);
+    }
+  }
+}
+
+/** Trava otimista do plano sem RNC (versão lida); serializa escritas concorrentes nos itens. */
+async function travarPlano(tx: Tx, plano: { id: string; versao: number }, extra: Prisma.PlanoAcaoUncheckedUpdateManyInput = {}) {
+  const r = await tx.planoAcao.updateMany({
+    where: { id: plano.id, versao: plano.versao },
+    data: { ...extra, versao: { increment: 1 } },
+  });
+  if (r.count === 0) throw new ErroConflito();
 }
 
 function dadosItem(d: DadosItem) {
@@ -100,7 +124,7 @@ type ItemCarregado = Awaited<ReturnType<typeof carregarItem>>;
 
 function exigirGerenciar(a: Ator, item: ItemCarregado) {
   const rnc = item.planoAcao.rnc;
-  const pode = rnc ? item.rncVisivel && podeGerenciarPlanoRnc(a, rnc) : atorTem(a, "PLANO_GERENCIAR");
+  const pode = rnc ? item.rncVisivel && podeGerenciarPlanoRnc(a, rnc) : podeGerenciarPlanoManual(a, item.planoAcao);
   if (!pode) throw new ErroNegocio("Sem permissão para editar o plano de ação.");
   if (rnc) {
     if (!(STATUS_EDICAO_PLANO as readonly string[]).includes(rnc.status)) {
@@ -119,10 +143,14 @@ function exigirExecucao(a: Ator, item: ItemCarregado) {
   }
 }
 
-/** M1: toda escrita em item vinculado a RNC trava a RNC (versão + status lidos). */
-async function travarRncDoItem(tx: Tx, item: ItemCarregado) {
+/**
+ * M1: toda escrita em item trava a origem: a RNC (versão + status lidos) ou, em plano sem RNC,
+ * o próprio plano (versão lida).
+ */
+async function travarOrigemDoItem(tx: Tx, item: ItemCarregado) {
   const rnc = item.planoAcao.rnc;
   if (rnc) await travarRnc(tx, rnc);
+  else await travarPlano(tx, item.planoAcao);
 }
 
 export async function editarItem(a: Ator, itemId: string, d: DadosItem) {
@@ -130,8 +158,11 @@ export async function editarItem(a: Ator, itemId: string, d: DadosItem) {
     const item = await carregarItem(tx, a, itemId);
     exigirGerenciar(a, item);
     const dados = dadosItem(d);
-    await validarUsuarios(tx, [dados.quemId]);
-    await travarRncDoItem(tx, item);
+    if (item.planoAcao.rnc) await validarUsuarios(tx, [dados.quemId]);
+    // Plano sem RNC: o novo "quem" precisa de acesso à obra do plano (o atual é mantido se não mudou).
+    else if (dados.quemId !== item.quemId) await validarQuemPlanoManual(tx, [dados.quemId], item.planoAcao.obraId);
+    else await validarUsuarios(tx, [dados.quemId]);
+    await travarOrigemDoItem(tx, item);
     // Prazo alterado: os alertas de prazo/atraso voltam a valer para a nova data.
     const novoPrazo = dados.quando.getTime() !== item.quando.getTime();
     const r = await tx.itemAcao.updateMany({
@@ -151,7 +182,7 @@ export async function cancelarItem(a: Ator, itemId: string) {
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirGerenciar(a, item);
-    await travarRncDoItem(tx, item);
+    await travarOrigemDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
       data: { status: "CANCELADO" },
@@ -164,7 +195,7 @@ export async function marcarEmAndamento(a: Ator, itemId: string) {
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirExecucao(a, item);
-    await travarRncDoItem(tx, item);
+    await travarOrigemDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({ where: { id: itemId, status: "PENDENTE" }, data: { status: "EM_ANDAMENTO" } });
     if (r.count === 0) throw new ErroNegocio("Item não está pendente.");
   });
@@ -177,11 +208,134 @@ export async function concluirItem(a: Ator, itemId: string, d: { dataConclusao: 
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirExecucao(a, item);
-    await travarRncDoItem(tx, item);
+    await travarOrigemDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
       data: { status: "CONCLUIDO", dataConclusao: paraDataDb(d.dataConclusao), evidenciaConclusao: d.evidencia.trim() },
     });
     if (r.count === 0) throw new ErroNegocio("Item já finalizado.");
   });
+}
+
+// ---------------------------------------------------------------- planos avulsos (origem MANUAL)
+
+export interface DadosCabecalhoPlano {
+  titulo: string;
+  /** Objetivo/descrição (opcional). */
+  descricao?: string | null;
+}
+
+export interface DadosPlanoManual extends DadosCabecalhoPlano {
+  /** Obra/unidade opcional: restringe visibilidade/gestão e o "quem" dos itens. */
+  obraId?: string | null;
+  itens: DadosItem[];
+}
+
+const MAX_ITENS_POR_VEZ = 50;
+
+function cabecalhoPlano(d: DadosCabecalhoPlano) {
+  const titulo = d.titulo.trim();
+  if (titulo.length < 3) throw new ErroNegocio("Informe o título do plano (mínimo 3 caracteres).");
+  if (titulo.length > 200) throw new ErroNegocio("Título excede 200 caracteres.");
+  const descricao = d.descricao?.trim() || null;
+  if (descricao && descricao.length > 5000) throw new ErroNegocio("Objetivo excede 5000 caracteres.");
+  return { titulo, descricao };
+}
+
+function validarQuantidadeItens(itens: readonly DadosItem[]) {
+  if (itens.length === 0) throw new ErroNegocio("Informe ao menos um item.");
+  if (itens.length > MAX_ITENS_POR_VEZ) throw new ErroNegocio(`No máximo ${MAX_ITENS_POR_VEZ} itens por vez.`);
+}
+
+/** Cria um plano de ação avulso (sem RNC) com os itens 5W2H iniciais. Exige PLANO_GERENCIAR. */
+export async function criarPlanoManual(a: Ator, d: DadosPlanoManual) {
+  if (!atorTem(a, "PLANO_GERENCIAR")) throw new ErroNegocio("Sem permissão para criar planos de ação.");
+  const cab = cabecalhoPlano(d);
+  validarQuantidadeItens(d.itens);
+  const obraId = d.obraId || null;
+  if (obraId && !obraDoPlanoAcessivel(a, { obraId })) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  const dados = d.itens.map(dadosItem);
+  const r = await a.db.$transaction(async (tx) => {
+    if (obraId && !(await tx.obraUnidade.findFirst({ where: { id: obraId, ativo: true }, select: { id: true } }))) {
+      throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    }
+    await validarQuemPlanoManual(tx, dados.map((x) => x.quemId), obraId);
+    const plano = await tx.planoAcao.create({
+      data: { empresaId: a.empresaId, origemTipo: "MANUAL", origemId: null, ...cab, obraId, criadoPorId: a.usuarioId },
+      select: { id: true },
+    });
+    const criados = await tx.itemAcao.createManyAndReturn({
+      data: dados.map((x, i) => ({ ...x, empresaId: a.empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: i + 1 })),
+      select: { id: true },
+    });
+    return { id: plano.id, itemIds: criados.map((c) => c.id) };
+  });
+  await notificarItensAtribuidos(a, r.itemIds, "criado");
+  return { id: r.id };
+}
+
+async function carregarPlanoParaGestao(tx: Tx, a: Ator, planoId: string) {
+  const plano = await tx.planoAcao.findFirst({
+    where: { AND: [{ id: planoId }, filtroGestaoPlanoManual(a)] },
+    include: { itens: { select: { ordem: true } } },
+  });
+  if (!plano) throw new ErroNegocio("Plano de ação não encontrado ou sem acesso.");
+  if (!podeGerenciarPlanoManual(a, plano)) throw new ErroNegocio("Sem permissão para editar o plano de ação.");
+  return plano;
+}
+
+/** Edita título/objetivo do plano avulso (trava otimista pela versão exibida, se informada). */
+export async function editarPlanoManual(a: Ator, planoId: string, d: DadosCabecalhoPlano, versao?: number) {
+  const cab = cabecalhoPlano(d);
+  await a.db.$transaction(async (tx) => {
+    const plano = await carregarPlanoParaGestao(tx, a, planoId);
+    if (versao !== undefined && versao !== plano.versao) throw new ErroConflito();
+    await travarPlano(tx, plano, cab);
+  });
+}
+
+/** Adiciona itens 5W2H a um plano avulso. */
+export async function adicionarItensPlanoManual(a: Ator, planoId: string, itens: DadosItem[]) {
+  validarQuantidadeItens(itens);
+  const dados = itens.map(dadosItem);
+  const r = await a.db.$transaction(async (tx) => {
+    const plano = await carregarPlanoParaGestao(tx, a, planoId);
+    await validarQuemPlanoManual(tx, dados.map((x) => x.quemId), plano.obraId);
+    await travarPlano(tx, plano);
+    const base = Math.max(0, ...plano.itens.map((i) => i.ordem));
+    const criados = await tx.itemAcao.createManyAndReturn({
+      data: dados.map((x, i) => ({ ...x, empresaId: a.empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: base + i + 1 })),
+      select: { id: true },
+    });
+    return criados.map((c) => c.id);
+  });
+  await notificarItensAtribuidos(a, r, "criado");
+  return { itemIds: r };
+}
+
+/**
+ * Plano sem RNC para exibição, com status geral calculado. Visão completa para quem criou ou
+ * pode gerenciar; o "quem" de algum item vê o cabeçalho e apenas os próprios itens.
+ */
+export async function obterPlanoManual(a: Ator, planoId: string) {
+  const plano = await a.db.planoAcao.findFirst({
+    where: { AND: [{ id: planoId }, filtroAcessoPlanoManual(a)] },
+    include: {
+      obra: { select: { id: true, nome: true } },
+      criadoPor: { select: { nome: true } },
+      itens: { orderBy: [{ ordem: "asc" }, { criadoEm: "asc" }], include: { quem: { select: { nome: true } } } },
+    },
+  });
+  if (!plano) return null;
+  const podeGerenciar = podeGerenciarPlanoManual(a, plano);
+  const visaoCompleta = podeGerenciar || plano.criadoPorId === a.usuarioId;
+  const hoje = hojeNoFuso(await fusoDaEmpresa(a));
+  return {
+    ...plano,
+    itens: visaoCompleta ? plano.itens : plano.itens.filter((i) => i.quemId === a.usuarioId),
+    statusGeral: statusGeralPlano(plano.itens, hoje),
+    hoje,
+    podeGerenciar,
+    visaoCompleta,
+  };
 }

@@ -3,6 +3,7 @@ import { atorTem, type Ator } from "@/lib/ator";
 import { getArmazenamento, montarChave } from "@/lib/armazenamento";
 import { ErroNegocio } from "@/lib/erros";
 import { STATUS_FINAIS } from "@/lib/rnc/estados";
+import { podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
 import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
 
@@ -67,11 +68,11 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
     case "ITEM_ACAO": {
       const item = await a.db.itemAcao.findFirst({
         where: { AND: [{ id: alvo.entidadeId }, filtroAcessoItem(a)] },
-        select: { quemId: true, status: true, planoAcao: { select: { rnc: { select: { id: true, responsavelId: true, status: true } } } } },
+        select: { quemId: true, status: true, planoAcao: { select: { obraId: true, rnc: { select: { id: true, responsavelId: true, status: true } } } } },
       });
       if (!item) return NEGADO;
       const rnc = item.planoAcao.rnc;
-      const gerencia = rnc ? !!(await rncVisivel(rnc.id)) && podeGerenciarPlanoRnc(a, rnc) : atorTem(a, "PLANO_GERENCIAR");
+      const gerencia = rnc ? !!(await rncVisivel(rnc.id)) && podeGerenciarPlanoRnc(a, rnc) : podeGerenciarPlanoManual(a, item.planoAcao);
       return {
         podeLer: true,
         podeEnviar: item.status !== "CANCELADO" && (item.quemId === a.usuarioId || gerencia),
@@ -83,7 +84,7 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({
         where: { id: alvo.entidadeId },
-        select: { criadoPorId: true, rnc: { select: { id: true, responsavelId: true, status: true } } },
+        select: { criadoPorId: true, obraId: true, rnc: { select: { id: true, responsavelId: true, status: true } } },
       });
       if (!plano) return NEGADO;
       if (plano.rnc) {
@@ -91,7 +92,7 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
         const g = podeGerenciarPlanoRnc(a, plano.rnc);
         return { podeLer: true, podeEnviar: g, podeGerir: g, rncId: null, rncFinal: finalizada(plano.rnc) };
       }
-      const g = atorTem(a, "PLANO_GERENCIAR");
+      const g = podeGerenciarPlanoManual(a, plano);
       const ler = g || plano.criadoPorId === a.usuarioId;
       return { podeLer: ler, podeEnviar: ler, podeGerir: g, rncId: null, rncFinal: false };
     }

@@ -12,6 +12,7 @@ import {
   notificarRncAtribuida,
 } from "@/lib/notificacoes/gatilhos";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
+import { filtroGestaoPlanoManual } from "@/lib/plano-acao/acesso";
 
 // ---------------------------------------------------------------- visibilidade
 
@@ -40,16 +41,14 @@ export function filtroAcessoRnc(a: Ator): Prisma.RncWhereInput {
 
 /**
  * Itens de ação visíveis: os próprios (quem), os de RNC acessível e, sem RNC de origem,
- * os de planos que o usuário criou ou todos se tiver PLANO_GERENCIAR.
+ * os de planos que o usuário criou ou que pode gerenciar (PLANO_GERENCIAR + obra do plano).
  */
 export function filtroAcessoItem(a: Ator): Prisma.ItemAcaoWhereInput {
   return {
     OR: [
       { quemId: a.usuarioId },
       { planoAcao: { rnc: { is: filtroAcessoRnc(a) } } },
-      atorTem(a, "PLANO_GERENCIAR")
-        ? { planoAcao: { rnc: { is: null } } }
-        : { planoAcao: { rnc: { is: null }, criadoPorId: a.usuarioId } },
+      { planoAcao: filtroGestaoPlanoManual(a) },
     ],
   };
 }

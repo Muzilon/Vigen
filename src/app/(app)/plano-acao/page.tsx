@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { ItemAcoes } from "@/components/item-acoes";
 import { Badge, Cabecalho, cls } from "@/components/ui";
+import { linkPlano, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso, paraDataDb, somarDias } from "@/lib/datas";
@@ -61,8 +62,10 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
         quem: { select: { nome: true } },
         planoAcao: {
           select: {
+            id: true,
             titulo: true,
             origemTipo: true,
+            obraId: true,
             rnc: { select: { id: true, codigo: true, status: true, responsavelId: true, verificacoes: { select: { resultado: true } } } },
           },
         },
@@ -82,7 +85,11 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
 
   return (
     <div>
-      <Cabecalho titulo="Plano de Ação" subtitulo="Todos os itens de ação, independente da origem." />
+      <Cabecalho
+        titulo="Plano de Ação"
+        subtitulo="Todos os itens de ação, independente da origem."
+        acoes={podeTodos && <Link href="/plano-acao/novo" className={cls.btn}>Novo plano de ação</Link>}
+      />
 
       <div className="mb-3 inline-flex rounded-md border border-slate-300 bg-white p-0.5">
         <Link href={link({ escopo: "meus" })} className={`rounded px-3 py-1 text-sm ${f.escopo === "meus" ? "bg-emerald-700 text-white" : "text-slate-600"}`}>Meus itens</Link>
@@ -132,7 +139,10 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
                         <span className="font-mono text-xs text-slate-500">{rnc.codigo}</span>
                       )
                     ) : (
-                      <span className="text-xs text-slate-500">{i.planoAcao.titulo}</span>
+                      <Link href={linkPlano(i.planoAcao.id)} className="group inline-flex flex-col hover:underline">
+                        <span className="text-xs font-medium text-emerald-700">Manual</span>
+                        <span className="max-w-48 truncate text-xs text-slate-500 group-hover:text-slate-700" title={i.planoAcao.titulo}>{i.planoAcao.titulo}</span>
+                      </Link>
                     )}
                   </td>
                   <td className={`${cls.td} text-slate-900`}>
@@ -152,7 +162,7 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
                         podeGerenciar={
                           rnc
                             ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
-                            : podeTodos
+                            : podeGerenciarPlanoManual(a, i.planoAcao)
                         }
                       />
                     ) : (
