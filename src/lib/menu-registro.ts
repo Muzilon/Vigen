@@ -29,7 +29,7 @@ export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
   { modulo: "RISCOS_OPORTUNIDADES", href: "/riscos", label: "Riscos e oportunidades", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "SWOT", href: "/swot", label: "SWOT", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "HIRA", href: "/hira", label: "Perigos e riscos (HIRA)", grupo: GRUPO_MODULO.SEGURANCA, implementado: true },
-  { modulo: "LAIA", href: "/laia", label: "LAIA", grupo: GRUPO_MODULO.MEIO_AMBIENTE, implementado: false },
+  { modulo: "LAIA", href: "/laia", label: "Aspectos ambientais", grupo: GRUPO_MODULO.MEIO_AMBIENTE, implementado: true },
   { modulo: "INSPECOES", href: "/inspecoes", label: "Inspeções / checklists", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
   { modulo: "AUDITORIAS", href: "/auditorias", label: "Auditorias internas", grupo: GRUPO_MODULO.QUALIDADE, implementado: false },
   { modulo: "DOCUMENTOS", href: "/documentos", label: "Documentos", grupo: GRUPO_MODULO.GESTAO, implementado: false },

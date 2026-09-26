@@ -128,6 +128,7 @@ enum OrigemPlanoAcao {
   MANUAL
   RISCO_OPORTUNIDADE
   HIRA
+  LAIA
 }
 
 enum StatusItemAcao {
@@ -146,6 +147,7 @@ enum TipoEntidadeAnexo {
   PROCESSO
   RISCO_OPORTUNIDADE
   HIRA
+  LAIA
 }
 
 enum TipoEntidadeInteracao {
@@ -154,6 +156,7 @@ enum TipoEntidadeInteracao {
   PROCESSO
   RISCO_OPORTUNIDADE
   HIRA
+  LAIA
 }
 
 enum TipoNotificacao {
@@ -178,6 +181,7 @@ enum TipoEntidadeNotificacao {
   PROCESSO
   RISCO_OPORTUNIDADE
   HIRA
+  LAIA
 }
 
 enum StatusEmailNotificacao {
@@ -302,6 +306,19 @@ enum HierarquiaControle {
 }
 
 /// Situação de uma linha de planilha com fluxo de aprovação (HIRA/LAIA).
+/// Temporalidade do aspecto ambiental (LAIA).
+enum Temporalidade {
+  PASSADA
+  ATUAL
+  FUTURA
+}
+
+/// Incidência do aspecto (controle direto da organização ou influência indireta).
+enum Incidencia {
+  DIRETA
+  INDIRETA
+}
+
 enum StatusLinhaSgi {
   PENDENTE_APROVACAO
   VIGENTE
@@ -376,6 +393,8 @@ model Empresa {
   itensSwot                ItemSwot[]
   partesInteressadas       ParteInteressada[]
   linhasHira               LinhaHira[]
+  linhasLaia               LinhaLaia[]
+  historicosLaia           HistoricoLinhaLaia[]
   historicosHira           HistoricoLinhaHira[]
 
   @@map("empresa")
@@ -399,6 +418,7 @@ model ObraUnidade {
   configuracoesEscala ConfiguracaoEscala[]
   riscosOportunidades RiscoOportunidade[]
   linhasHira          LinhaHira[]
+  linhasLaia          LinhaLaia[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -487,6 +507,9 @@ model Usuario {
   hiraResponsavel           LinhaHira[]                  @relation("HiraResponsavel")
   hiraCriadas               LinhaHira[]                  @relation("HiraCriadoPor")
   historicosHira            HistoricoLinhaHira[]         @relation("HistoricoHiraUsuario")
+  laiaResponsavel           LinhaLaia[]                  @relation("LaiaResponsavel")
+  laiaCriadas               LinhaLaia[]                  @relation("LaiaCriadoPor")
+  historicosLaia            HistoricoLinhaLaia[]         @relation("HistoricoLaiaUsuario")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -688,6 +711,7 @@ model PlanoAcao {
   itens     ItemAcao[]
   risco     RiscoOportunidade?
   linhaHira LinhaHira?
+  linhaLaia LinhaLaia?
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
@@ -960,6 +984,7 @@ model Processo {
   versoes           VersaoProcesso[]
   riscos            RiscoOportunidade[]
   linhasHira        LinhaHira[]
+  linhasLaia        LinhaLaia[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -1243,6 +1268,80 @@ model HistoricoLinhaHira {
   @@unique([empresaId, id])
   @@index([empresaId, linhaId, criadoEm])
   @@map("historico_linha_hira")
+}
+
+/// LAIA — levantamento de aspectos e impactos ambientais (ISO 14001 6.1.2), por obra. Pontuação =
+/// produto dos eixos da ConfiguracaoEscala ASPECTO_IMPACTO (severidade, frequência, abrangência);
+/// critérios extras (requisito legal, partes interessadas) elevam a faixa; significativo = ALTO/CRÍTICO.
+model LinhaLaia {
+  id                   String              @id @default(uuid()) @db.Uuid
+  empresaId            String              @map("empresa_id") @db.Uuid
+  numero               Int
+  obraId               String              @map("obra_id") @db.Uuid
+  processoId           String?             @map("processo_id") @db.Uuid
+  atividade            String
+  aspecto              String
+  impacto              String
+  situacao             CondicaoOperacional @default(NORMAL)
+  temporalidade        Temporalidade       @default(ATUAL)
+  incidencia           Incidencia          @default(DIRETA)
+  severidade           Int
+  frequencia           Int
+  abrangencia          Int
+  requisitoLegal       Boolean             @default(false) @map("requisito_legal")
+  partesInteressadas   Boolean             @default(false) @map("partes_interessadas")
+  score                Int
+  faixa                FaixaNivel
+  significativo        Boolean
+  controles            String?
+  responsavelId        String?             @map("responsavel_id") @db.Uuid
+  planoAcaoId          String?             @map("plano_acao_id") @db.Uuid
+  modoReavaliacao      ModoReavaliacao     @default(ITEM) @map("modo_reavaliacao")
+  periodicidadeMeses   Int                 @default(12) @map("periodicidade_meses")
+  proximaReavaliacaoEm DateTime?           @map("proxima_reavaliacao_em") @db.Date
+  ultimaReavaliacaoEm  DateTime?           @map("ultima_reavaliacao_em")
+  status               StatusLinhaSgi      @default(VIGENTE)
+  versao               Int                 @default(0)
+  criadoPorId          String              @map("criado_por_id") @db.Uuid
+  criadoEm             DateTime            @default(now()) @map("criado_em")
+  atualizadoEm         DateTime            @updatedAt @map("atualizado_em")
+
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra        ObraUnidade          @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  processo    Processo?            @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  responsavel Usuario?             @relation("LaiaResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor   Usuario              @relation("LaiaCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao   PlanoAcao?           @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  historico   HistoricoLinhaLaia[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, numero])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, obraId, status])
+  @@index([empresaId, processoId])
+  @@index([empresaId, proximaReavaliacaoEm])
+  @@map("linha_laia")
+}
+
+/// Histórico append-only da linha LAIA (trigger bloqueia UPDATE/DELETE).
+model HistoricoLinhaLaia {
+  id         String           @id @default(uuid()) @db.Uuid
+  empresaId  String           @map("empresa_id") @db.Uuid
+  linhaId    String           @map("linha_id") @db.Uuid
+  acao       AcaoHistoricoSgi
+  versao     Int
+  dados      Json
+  observacao String?
+  usuarioId  String           @map("usuario_id") @db.Uuid
+  criadoEm   DateTime         @default(now()) @map("criado_em")
+
+  empresa Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  linha   LinhaLaia @relation(fields: [empresaId, linhaId], references: [empresaId, id], onDelete: Restrict)
+  usuario Usuario   @relation("HistoricoLaiaUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, linhaId, criadoEm])
+  @@map("historico_linha_laia")
 }
 
 model TentativaLogin {

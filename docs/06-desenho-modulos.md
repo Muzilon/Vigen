@@ -252,3 +252,26 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 - **Seed**: 12 linhas HIRA da Monto (Obra Alfa/Beta, processo PF-03), 1 com plano, 1 inclusão pendente;
   aprovação exigida com aprovador = admin.
 - **Testes**: `tests/hira.test.ts` e `npm run test:hira` (16 casos).
+
+## P3 — LAIA entregue (2026-09-26) — P3 completo
+
+- **Schema** (migração `20260926220000_laia`): `LinhaLaia` (`A-001`; obra obrigatória, processo opcional,
+  atividade, aspecto, impacto, situação N/A/E (`CondicaoOperacional`), `Temporalidade` passada/atual/futura,
+  `Incidencia` direta/indireta, severidade, frequência, abrangência, requisito legal e partes interessadas
+  (bool), score/faixa/`significativo` gravados, controles, responsável, plano, reavaliação, status/versão como
+  no HIRA) e `HistoricoLinhaLaia` (append-only por trigger). `OrigemPlanoAcao`, Anexo, Interação e Notificação
+  += `LAIA`.
+- **Pontuação** (`src/lib/laia/regras.ts`): produto dos eixos da `ConfiguracaoEscala` ASPECTO_IMPACTO
+  localizados **pela chave** (`severidade`, `frequencia`, `abrangencia`; eixo ausente na configuração fica fora
+  do score, eixo com outra chave é erro). Critérios extras `requisitoLegal`/`partesInteressadas` elevam a faixa
+  (`nivelComCriteriosExtras`); **significativo = ALTO/CRÍTICO** (`ehSignificativo`). **Decisão**: o padrão do
+  sistema ASPECTO_IMPACTO passou a ter 3 eixos 1–3 (score 1–27; faixas ≤4 baixo, ≤12 médio, ≤18 alto,
+  ≤27 crítico) — antes eram 2 eixos 3×3 sem abrangência.
+- **Aprovação**: igual ao HIRA, com `Empresa.config.aprovacao.laia` (mesma aba de Configurações). Handler
+  `src/lib/laia/aprovacao.ts` registrado em `handlers.ts`.
+- **Telas**: `/laia` (planilha densa, filtros obra/processo/nível/status/**somente significativos**, heatmap
+  severidade × frequência clicável + contador de significativos), `/laia/novo` (pontuação e significância ao
+  vivo), `/laia/[id]`, `/laia/revisao-geral`. Processo: cartão LAIA. Dashboard: painel LAIA por nível com
+  total de significativos. Menu: "Aspectos ambientais" (grupo Meio Ambiente).
+- **Seed**: 10 linhas LAIA da Monto (Obra Alfa/Beta), 5 significativas, 1 com plano; aprovação exigida.
+- **Testes**: `tests/laia.test.ts` e `npm run test:laia` (16 casos).

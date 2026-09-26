@@ -1,7 +1,8 @@
 import { PrismaClient, type Modulo, type Permissao } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { mesclarConfigAprovacao } from "../src/lib/aprovacao/config-modulo";
-import { PADRAO_HIRA, PADRAO_RISCO_OPORTUNIDADE } from "../src/lib/escala/padrao";
+import { PADRAO_ASPECTO_IMPACTO, PADRAO_HIRA, PADRAO_RISCO_OPORTUNIDADE } from "../src/lib/escala/padrao";
+import { codigoLaia, pontuarLaia } from "../src/lib/laia/regras";
 import { avaliarPS, codigoHira } from "../src/lib/hira/regras";
 import { avaliar } from "../src/lib/riscos/regras";
 
@@ -136,6 +137,7 @@ async function main() {
   await semearRiscos(e);
   await semearSwot(e);
   await semearHira(e);
+  await semearLaia(e);
 
   // ---- Demo (para testar isolamento) ----
   // Sem override: fica só com o default do schema (RNC + PLANO_ACAO) — testa o gating
@@ -440,6 +442,57 @@ async function semearHira(empresaId: string) {
       });
       await prisma.etapaAprovacao.create({ data: { empresaId, fluxoId: f.id, ordem: 1, aprovadorId: adminId, status: "PENDENTE" } });
       await prisma.historicoAprovacao.create({ data: { empresaId, fluxoId: f.id, usuarioId: seg, acao: "SOLICITADO" } });
+    }
+  }
+}
+
+/** LAIA da Monto: 10 linhas em 2 obras, aprovação exigida (aprovador: admin), 1 plano. Idempotente. */
+async function semearLaia(empresaId: string) {
+  const usuario = async (email: string) => (await prisma.usuario.findUniqueOrThrow({ where: { email } })).id;
+  const amb = await usuario("meioambiente@monto.com.br");
+  const adminId = await usuario("admin@monto.com.br");
+  const emp = await prisma.empresa.findUniqueOrThrow({ where: { id: empresaId } });
+  await prisma.empresa.update({ where: { id: empresaId }, data: { config: mesclarConfigAprovacao(emp.config, "laia", { exigir: true, aprovadorIds: [adminId], modo: "SEQUENCIAL" }) as object } });
+  const obra = async (nome: string) => (await prisma.obraUnidade.findFirstOrThrow({ where: { empresaId, nome } })).id;
+  const alfa = await obra("Obra Alfa");
+  const beta = await obra("Obra Beta");
+  const pf03 = (await prisma.processo.findUniqueOrThrow({ where: { empresaId_codigo: { empresaId, codigo: "PF-03" } } })).id;
+  type Sit = "NORMAL" | "ANORMAL" | "EMERGENCIA";
+  type Semente = [string, string, string, string, Sit, "PASSADA" | "ATUAL" | "FUTURA", "DIRETA" | "INDIRETA", number, number, number, boolean, boolean, string];
+  const S: Semente[] = [
+    [alfa, "Concretagem", "Lavagem de caminhões betoneira", "Contaminação do solo e da água por efluente alcalino", "NORMAL", "ATUAL", "DIRETA", 2, 3, 1, false, false, "Bacia de decantação e reúso da água"],
+    [alfa, "Canteiro", "Geração de resíduos classe A (entulho)", "Ocupação de aterros; esgotamento de recursos", "NORMAL", "ATUAL", "DIRETA", 2, 3, 2, false, false, "PGRCC; baias segregadas; destinação a ATT licenciada"],
+    [alfa, "Terraplenagem", "Emissão de material particulado", "Alteração da qualidade do ar; incômodo à vizinhança", "NORMAL", "ATUAL", "DIRETA", 2, 2, 3, false, true, "Umectação de vias duas vezes ao dia"],
+    [alfa, "Canteiro", "Ruído de equipamentos (bate-estaca, serra)", "Incômodo à comunidade do entorno", "NORMAL", "ATUAL", "DIRETA", 1, 3, 2, false, true, "Horário restrito 7h–17h; enclausuramento da serra"],
+    [alfa, "Manutenção", "Vazamento de óleo de máquinas", "Contaminação do solo", "ANORMAL", "ATUAL", "DIRETA", 3, 1, 1, true, false, "Bandejas de contenção; kit de mitigação"],
+    [beta, "Pintura", "Descarte de latas e solventes", "Contaminação do solo por resíduo classe D", "NORMAL", "ATUAL", "DIRETA", 3, 2, 1, true, false, "Armazenamento coberto; coleta por empresa licenciada"],
+    [beta, "Canteiro", "Consumo de água potável", "Esgotamento de recurso natural", "NORMAL", "ATUAL", "DIRETA", 1, 3, 1, false, false, "Medição mensal e redutores de vazão"],
+    [beta, "Supressão", "Supressão de vegetação para acesso", "Perda de habitat", "NORMAL", "PASSADA", "DIRETA", 3, 1, 2, true, false, "Autorização de supressão e compensação ambiental"],
+    [beta, "Suprimentos", "Transporte de materiais por fornecedores", "Emissão de gases de efeito estufa", "NORMAL", "ATUAL", "INDIRETA", 1, 3, 3, false, false, "Critério de proximidade na seleção de fornecedores"],
+    [beta, "Almoxarifado", "Incêndio no depósito de inflamáveis", "Emissões atmosféricas e contaminação por água de combate", "EMERGENCIA", "FUTURA", "DIRETA", 3, 1, 3, true, true, "Plano de emergência; brigada; contenção"],
+  ];
+  const config = PADRAO_ASPECTO_IMPACTO;
+  for (const [n, s] of S.entries()) {
+    const numero = n + 1;
+    const p = pontuarLaia(config, { severidade: s[7], frequencia: s[8], abrangencia: s[9], requisitoLegal: s[10], partesInteressadas: s[11] });
+    const dados = {
+      obraId: s[0], processoId: pf03, atividade: s[1], aspecto: s[2], impacto: s[3], situacao: s[4], temporalidade: s[5], incidencia: s[6],
+      severidade: s[7], frequencia: s[8], abrangencia: s[9], requisitoLegal: s[10], partesInteressadas: s[11], controles: s[12],
+      score: p.score, faixa: p.faixa, significativo: p.significativo, responsavelId: amb, modoReavaliacao: numero > 5 ? ("GERAL" as const) : ("ITEM" as const),
+      periodicidadeMeses: 12, proximaReavaliacaoEm: new Date(numero === 1 ? "2026-10-08T00:00:00.000Z" : "2027-07-31T00:00:00.000Z"), status: "VIGENTE" as const,
+    };
+    const l = await prisma.linhaLaia.upsert({ where: { empresaId_numero: { empresaId, numero } }, update: dados, create: { ...dados, empresaId, numero, criadoPorId: amb } });
+    if ((await prisma.historicoLinhaLaia.count({ where: { linhaId: l.id } })) === 0) {
+      await prisma.historicoLinhaLaia.create({
+        data: { empresaId, linhaId: l.id, acao: "INCLUSAO", versao: 0, dados: { ...dados, proximaReavaliacaoEm: null, codigo: codigoLaia(l) }, observacao: "Cadastro inicial (seed).", usuarioId: amb },
+      });
+    }
+    if (numero === 2 && !l.planoAcaoId) {
+      const plano = await prisma.planoAcao.create({
+        data: { empresaId, origemTipo: "LAIA", origemId: l.id, titulo: "Reduzir entulho enviado a aterro na Obra Alfa", descricao: "Plano de ação da linha LAIA A-002.", obraId: alfa, criadoPorId: amb },
+      });
+      await prisma.itemAcao.create({ data: { empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: 1, oQue: "Contratar britagem móvel para reaproveitar entulho classe A", quemId: amb, quando: new Date("2026-12-15T00:00:00.000Z") } });
+      await prisma.linhaLaia.update({ where: { id: l.id }, data: { planoAcaoId: plano.id } });
     }
   }
 }

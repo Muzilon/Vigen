@@ -1,0 +1,18 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e título
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E TÍTULO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  max-width: 960px;
+}
+.trilha { font-size: 13px; }
+.linkVoltar { color: var(--cor-texto-secundario); text-decoration: none; }
+.linkVoltar:hover { color: var(--cor-texto); }
+.titulo { margin: 0; font-size: 22px; }

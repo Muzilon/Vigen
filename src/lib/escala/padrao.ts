@@ -13,7 +13,7 @@ const FAIXAS_5X5: ConfigEscala["faixas"] = [
   { limite: 25, nivel: "CRITICO", cor: "critica" },
 ];
 
-const FAIXAS_3X3: ConfigEscala["faixas"] = [
+export const FAIXAS_3X3: ConfigEscala["faixas"] = [
   { limite: 2, nivel: "BAIXO", cor: "baixa" },
   { limite: 4, nivel: "MEDIO", cor: "media" },
   { limite: 6, nivel: "ALTO", cor: "alta" },
@@ -28,7 +28,7 @@ const NIVEIS_5 = [
   { valor: 5, rotulo: "Muito alta" },
 ];
 
-const NIVEIS_3 = [
+export const NIVEIS_3 = [
   { valor: 1, rotulo: "Baixa" },
   { valor: 2, rotulo: "Média" },
   { valor: 3, rotulo: "Alta" },
@@ -52,13 +52,22 @@ export const PADRAO_HIRA: ConfigEscala = {
   faixas: FAIXAS_5X5,
 };
 
+/** LAIA: severidade × frequência × abrangência (1–3 cada, score 1–27). */
+const FAIXAS_LAIA: ConfigEscala["faixas"] = [
+  { limite: 4, nivel: "BAIXO", cor: "baixa" },
+  { limite: 12, nivel: "MEDIO", cor: "media" },
+  { limite: 18, nivel: "ALTO", cor: "alta" },
+  { limite: 27, nivel: "CRITICO", cor: "critica" },
+];
+
 export const PADRAO_ASPECTO_IMPACTO: ConfigEscala = {
   tamanho: 3,
   eixos: [
-    { chave: "frequencia", rotulo: "Frequência", niveis: NIVEIS_3 },
-    { chave: "severidade", rotulo: "Severidade", niveis: NIVEIS_3 },
+    { chave: "severidade", rotulo: "Severidade", niveis: [{ valor: 1, rotulo: "Baixa" }, { valor: 2, rotulo: "Média" }, { valor: 3, rotulo: "Alta" }] },
+    { chave: "frequencia", rotulo: "Frequência", niveis: [{ valor: 1, rotulo: "Rara" }, { valor: 2, rotulo: "Ocasional" }, { valor: 3, rotulo: "Contínua" }] },
+    { chave: "abrangencia", rotulo: "Abrangência", niveis: [{ valor: 1, rotulo: "Local" }, { valor: 2, rotulo: "Canteiro" }, { valor: 3, rotulo: "Externa" }] },
   ],
-  faixas: FAIXAS_3X3,
+  faixas: FAIXAS_LAIA,
   criteriosExtras: [
     { chave: "requisitoLegal", rotulo: "Há requisito legal aplicável não atendido", elevaPara: "CRITICO" },
     { chave: "partesInteressadas", rotulo: "Preocupação relevante de parte interessada", elevaPara: "ALTO" },

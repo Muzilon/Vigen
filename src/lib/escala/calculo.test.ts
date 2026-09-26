@@ -52,12 +52,12 @@ describe("calcularNivel", () => {
   });
 
   it("calcula score, nível e cor para aspecto/impacto (3x3)", () => {
-    const r = calcularNivel(PADRAO_ASPECTO_IMPACTO, { frequencia: 1, severidade: 1 });
+    const r = calcularNivel(PADRAO_ASPECTO_IMPACTO, { frequencia: 1, severidade: 1, abrangencia: 1 });
     expect(r).toEqual({ score: 1, nivel: "BAIXO", cor: "baixa" });
   });
 
-  it("3x3: score 9 (3x3) cai na faixa CRITICO", () => {
-    const r = calcularNivel(PADRAO_ASPECTO_IMPACTO, { frequencia: 3, severidade: 3 });
+  it("LAIA: 3×3×3 = 27 cai na faixa CRITICO", () => {
+    const r = calcularNivel(PADRAO_ASPECTO_IMPACTO, { frequencia: 3, severidade: 3, abrangencia: 3 });
     expect(r.nivel).toBe("CRITICO");
   });
 });

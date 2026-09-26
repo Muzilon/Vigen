@@ -1,0 +1,189 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página
+   02. Filtros e badge de pendentes
+   03. Heatmap e resumo de significativos
+   04. Planilha — quadro com rolagem própria e cabeçalho fixo
+   05. Planilha — células
+   06. Filtro "somente significativos" e resumo
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   02. FILTROS E BADGE DE PENDENTES
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.acoesFiltro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin-left: auto;
+}
+.linkLimpar {
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.linkLimpar:hover { color: var(--cor-texto); }
+
+.badgePendentes {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.badgePendentes:hover { text-decoration: underline; }
+
+/* ==========================================================
+   03. HEATMAPS
+   ========================================================== */
+.heatmaps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-4);
+  padding: var(--espaco-4);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+@media (max-width: 1000px) {
+  .heatmaps { grid-template-columns: minmax(0, 1fr); }
+}
+.filtroCelula {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   04. PLANILHA — QUADRO
+   A rolagem (horizontal e vertical) fica dentro do quadro, para o
+   cabeçalho da tabela poder ser sticky sem vazar acima do app.
+   ========================================================== */
+.quadroPlanilha {
+  overflow: auto;
+  max-height: 72vh;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.quadroPlanilha:focus-visible { outline: 2px solid var(--cor-acento); outline-offset: 2px; }
+
+.planilha {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.planilha thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1; /* acima das células ao rolar; o quadro isola o empilhamento */
+  background: var(--cor-fundo-sutil);
+  color: var(--cor-texto-secundario);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--cor-borda-forte);
+  border-right: 1px solid var(--cor-borda-sutil);
+}
+.planilha td {
+  vertical-align: top;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  border-right: 1px solid var(--cor-borda-sutil);
+  color: var(--cor-texto);
+  white-space: nowrap;
+}
+.planilha tbody tr:hover td { background: var(--cor-fundo-sutil); }
+
+/* ==========================================================
+   05. PLANILHA — CÉLULAS
+   ========================================================== */
+.colCodigo {
+  position: sticky;
+  left: 0;
+  background: var(--cor-superficie);
+  font-family: var(--fonte-mono);
+}
+.planilha thead th.colCodigo { z-index: 2; background: var(--cor-fundo-sutil); }
+.colTexto {
+  white-space: normal !important;
+  min-width: 180px;
+  max-width: 260px;
+}
+.numero { font-family: var(--fonte-mono); }
+.linkCodigo {
+  font-weight: 600;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linkCodigo:hover,
+.linkTexto:hover { text-decoration: underline; }
+.linkTexto {
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linhaInativa td { color: var(--cor-texto-fraco); }
+.status { display: block; }
+.pendencia {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cor-atrasado-texto);
+}
+.significativo { font-weight: 700; color: var(--cor-gravidade-alta-texto); }
+
+/* ==========================================================
+   06. FILTRO "SOMENTE SIGNIFICATIVOS" E RESUMO
+   ========================================================== */
+.checkFiltro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  height: 36px;
+}
+.resumo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--espaco-2);
+}
+.numeroResumo { margin: 0; font-size: 40px; font-weight: 700; color: var(--cor-gravidade-alta-texto); }
+.rotuloResumo { margin: 0; font-size: 14px; color: var(--cor-texto); }
+.notaResumo { margin: 0; font-size: 12px; color: var(--cor-texto-fraco); }

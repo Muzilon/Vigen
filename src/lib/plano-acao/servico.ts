@@ -270,7 +270,7 @@ export async function criarPlanoNaTransacao(
   tx: Tx,
   a: Ator,
   d: DadosPlanoManual,
-  origem: { tipo: "MANUAL" | "RISCO_OPORTUNIDADE" | "HIRA"; id: string | null },
+  origem: { tipo: "MANUAL" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA"; id: string | null },
 ) {
   const cab = cabecalhoPlano(d);
   validarQuantidadeItens(d.itens);

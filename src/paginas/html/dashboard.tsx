@@ -7,6 +7,7 @@ import { enumUrl, uuidUrl } from "@/lib/filtros-url";
 import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { ROTULO_TIPO } from "@/lib/rnc/rotulos";
 import { resumoHira } from "@/lib/hira/servico";
+import { resumoLaia } from "@/lib/laia/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -31,7 +32,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -43,6 +44,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     a.db.setor.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
     contarPorFaixa(a),
     resumoHira(a),
+    resumoLaia(a),
   ]);
   const k = ind.kpis;
 
@@ -146,6 +148,27 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
             ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
           />
           <Link href="/hira" className={styles.linkLimpar}>Abrir a planilha HIRA →</Link>
+        </Painel>
+      )}
+
+      {laia && (
+        <Painel
+          titulo="LAIA — aspectos e impactos vigentes por nível"
+          subtitulo={`${laia.significativos} significativo(s)${laia.pendentes ? ` · ${laia.pendentes} pendente(s) de aprovação` : ""}`}
+        >
+          <Barras
+            paleta="gravidade"
+            vazio="Nenhuma linha LAIA vigente."
+            dados={(
+              [
+                ["CRITICA", "Crítico", laia.porFaixa.CRITICO],
+                ["ALTA", "Alto", laia.porFaixa.ALTO],
+                ["MEDIA", "Médio", laia.porFaixa.MEDIO],
+                ["BAIXA", "Baixo", laia.porFaixa.BAIXO],
+              ] as const
+            ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
+          />
+          <Link href="/laia?sig=1" className={styles.linkLimpar}>Ver aspectos significativos →</Link>
         </Painel>
       )}
 

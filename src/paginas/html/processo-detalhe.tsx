@@ -23,6 +23,8 @@ import { getContexto } from "@/lib/tenant";
 import { BadgeFaixa } from "@/paginas/html/componentes/badge";
 import { codigoHira, ROTULO_STATUS_LINHA } from "@/lib/hira/regras";
 import { listarHiraDoProcesso, podeGerenciarHira } from "@/lib/hira/servico";
+import { codigoLaia } from "@/lib/laia/regras";
+import { listarLaiaDoProcesso, podeGerenciarLaia } from "@/lib/laia/servico";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -47,7 +49,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   const p = await obterProcesso(a, id);
   if (!p) notFound();
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -56,6 +58,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     podeEnviarAnexo(a, alvoAnexo),
     listarRiscosDoProcesso(a, id),
     listarHiraDoProcesso(a, id),
+    listarLaiaDoProcesso(a, id),
   ]);
   const g = podeGerenciarProcessos(a) && p.ativo;
   const candidatos = outros.filter((o) => o.id !== p.id);
@@ -277,11 +280,40 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
+          {linhasLaia && (
+            <Cartao
+              titulo={`Aspectos e impactos (LAIA) · ${linhasLaia.length}`}
+              acoes={podeGerenciarLaia(a) ? <Link href={`/laia/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Nova linha</Link> : undefined}
+            >
+              {linhasLaia.length === 0 ? (
+                <p className={styles.vazio}>Nenhuma linha LAIA vinculada a este processo.</p>
+              ) : (
+                <table className={styles.tabela}>
+                  <thead>
+                    <tr><th>Nº</th><th>Aspecto → impacto</th><th>Obra</th><th>Pontuação</th><th>Significativo</th></tr>
+                  </thead>
+                  <tbody>
+                    {linhasLaia.map((l) => (
+                      <tr key={l.id}>
+                        <td><Link href={`/laia/${l.id}`} className={styles.linkProcesso}>{codigoLaia(l)}</Link></td>
+                        <td>{l.aspecto} → {l.impacto}</td>
+                        <td>{l.obra.nome}</td>
+                        <td><BadgeFaixa faixa={l.faixa} score={l.score} /></td>
+                        <td>{l.significativo ? "Sim" : "Não"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className={styles.rodapeCartao}><Link href={`/laia?processo=${p.id}`} className={styles.linkProcesso}>Ver na planilha LAIA →</Link></p>
+            </Cartao>
+          )}
+
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
               {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasHira && <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>módulo não contratado</span></li>}
-              <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>em breve</span></li>
+              {!linhasLaia && <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               <li>Documentos vinculados <span className={styles.emBreve}>em breve</span></li>
             </ul>
           </Cartao>
