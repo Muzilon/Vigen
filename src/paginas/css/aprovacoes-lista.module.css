@@ -1,0 +1,144 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical
+   02. Abas — "Aguardando mim" (com contador) / "Solicitadas por mim"
+   03. Filtros — status (aba Solicitadas)
+   04. Tabela — larguras de coluna e célula de resumo
+   05. Estado vazio
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+
+/* ==========================================================
+   02. ABAS
+   ========================================================== */
+.abas {
+  display: flex;
+  gap: var(--espaco-1);
+  border-bottom: 1px solid var(--cor-borda);
+}
+/* margin-bottom: -1px sobrepõe a borda da aba ativa à borda da barra */
+.aba {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  margin-bottom: -1px;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+.abaAtiva {
+  border-bottom-color: var(--cor-acento);
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+.contadorAba {
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-contador-fundo);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   03. FILTROS
+   ========================================================== */
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+.rotuloFiltro {
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.selecao {
+  height: 32px;
+  padding: 0 var(--espaco-2);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13px;
+}
+.botaoFiltrar {
+  height: 32px;
+  padding: 0 var(--espaco-3);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--cor-texto);
+}
+.botaoFiltrar:hover {
+  background: var(--cor-fundo-sutil);
+}
+
+/* ==========================================================
+   04. TABELA
+   ========================================================== */
+.tabela {
+  min-width: 960px;
+}
+.colEntidade {
+  width: 130px;
+}
+.colTipo {
+  width: 110px;
+}
+.colSolicitante {
+  width: 160px;
+}
+.colModo {
+  width: 100px;
+}
+.colProgresso {
+  width: 110px;
+}
+.colData {
+  width: 140px;
+}
+.celulaResumo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  min-width: 0;
+}
+.linkResumo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linkResumo:hover {
+  color: var(--cor-acento);
+  text-decoration: underline;
+}
+
+/* ==========================================================
+   05. ESTADO VAZIO
+   ========================================================== */
+.painelVazio {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}

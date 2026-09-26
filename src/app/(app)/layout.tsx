@@ -1,4 +1,5 @@
 import { signOut } from "@/auth";
+import { contarAguardandoMim } from "@/lib/aprovacao";
 import { getAtor } from "@/lib/ator-servidor";
 import { itensMenuVisiveis } from "@/lib/menu-registro";
 import { contarNotificacoesNaoLidas } from "@/lib/notificacoes/servico";
@@ -11,7 +12,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Contador único: mensagens de interação também geram notificação (INTERACAO_NOVA), então o
   // sino cobre tudo; "Mensagens" fica como caixa de conversas, sem contador próprio (evita
   // contar a mesma mensagem duas vezes).
-  const naoLidas = await contarNotificacoesNaoLidas(await getAtor());
+  const ator = await getAtor();
+  const [naoLidas, aprovacoesPendentes] = await Promise.all([contarNotificacoesNaoLidas(ator), contarAguardandoMim(ator)]);
 
   // Itens fixos (base do sistema, fora do gating por módulo contratado) + itens dos módulos
   // contratados/implementados (registro em src/lib/menu-registro.ts — hoje nenhum módulo novo
@@ -22,6 +24,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     { href: "/rncs", label: "RNCs", icone: <IconeRncs /> },
     { href: "/plano-acao", label: "Plano de Ação", icone: <IconePlanoAcao /> },
     { href: "/mensagens", label: "Mensagens", icone: <IconeMensagens /> },
+    // Aprovações: sempre disponível (motor transversal, não depende de módulo contratado).
+    { href: "/aprovacoes", label: "Aprovações", icone: <IconeAprovacoes />, contador: aprovacoesPendentes },
     ...itensMenuVisiveis(ctx).map((item) => ({ href: item.href, label: item.label, icone: <IconeModulo /> })),
     ...(temPermissao(ctx, "ADMIN_CONFIG")
       ? [{ href: "/configuracoes", label: "Configurações", icone: <IconeConfiguracoes /> }]
@@ -90,6 +94,15 @@ function IconeMensagens() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20.5 15a2 2 0 0 1-2 2H8l-4.5 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+function IconeAprovacoes() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 20h16" />
+      <path d="M6.5 16.5c2-3 3.5-7 5-7s1 4 2.5 4 2-2 3.5-3" />
+      <path d="m15 4 2 2 3.5-3.5" />
     </svg>
   );
 }

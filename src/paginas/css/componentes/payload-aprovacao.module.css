@@ -1,0 +1,97 @@
+/* ==========================================================
+   ÍNDICE
+   01. Lista chave/valor
+   02. Tabela antes → depois (diff)
+   03. Valores — normal, antigo (riscado), novo (destaque)
+   04. Estado vazio e texto só para leitor de tela
+   ========================================================== */
+
+/* ==========================================================
+   01. LISTA CHAVE/VALOR
+   ========================================================== */
+.lista {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.par {
+  display: grid;
+  grid-template-columns: minmax(120px, 30%) 1fr;
+  gap: var(--espaco-3);
+  padding: var(--espaco-2) 0;
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+.par:last-child {
+  border-bottom: 0;
+}
+.campo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto-secundario);
+  text-align: left;
+}
+
+/* ==========================================================
+   02. TABELA ANTES → DEPOIS
+   ========================================================== */
+.diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.th {
+  padding: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda);
+  background: var(--cor-fundo-sutil);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--cor-texto-secundario);
+}
+.diff td,
+.diff tbody th {
+  padding: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  vertical-align: top;
+}
+.linhaAlterada {
+  background: var(--cor-aviso-fundo);
+}
+
+/* ==========================================================
+   03. VALORES
+   ========================================================== */
+.valor {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.valorAntigo {
+  composes: valor;
+  color: var(--cor-perigo-texto);
+  text-decoration: line-through;
+}
+.valorNovo {
+  composes: valor;
+  color: var(--cor-status-encerrado-texto);
+  font-weight: 500;
+}
+
+/* ==========================================================
+   04. VAZIO / LEITOR DE TELA
+   ========================================================== */
+.vazio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.somenteLeitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

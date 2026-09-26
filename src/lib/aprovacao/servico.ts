@@ -274,3 +274,23 @@ function notificarDecisaoFinal(a: Ator, fluxoId: string) {
     ]);
   });
 }
+
+// ---------------------------------------------------------------- apoio às telas
+
+/** Contador do menu "Aprovações": fluxos em que é a vez do ator. */
+export function contarAguardandoMim(a: Ator) {
+  return a.db.fluxoAprovacao.count({
+    where: { status: "PENDENTE", etapas: { some: { aprovadorId: a.usuarioId, status: "PENDENTE" } } },
+  });
+}
+
+/** Usuários ativos que podem ser escolhidos como aprovadores (exclui o próprio ator). */
+export function listarAprovadoresPossiveis(a: Ator) {
+  return a.db.usuario.findMany({
+    where: { ativo: true, id: { not: a.usuarioId } },
+    select: { id: true, nome: true },
+    orderBy: { nome: "asc" },
+  });
+}
+
+export type FluxoResumo = Awaited<ReturnType<typeof listarAguardandoMim>>[number];

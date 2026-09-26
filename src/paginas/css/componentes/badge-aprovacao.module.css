@@ -1,0 +1,46 @@
+/* ==========================================================
+   ÍNDICE
+   01. Badge base — pill com ponto colorido
+   02. Variantes — pendente, aprovado, rejeitado, neutro
+   ========================================================== */
+
+/* ==========================================================
+   01. BADGE BASE
+   ========================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--raio-pill);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--raio-pill);
+  background: currentColor;
+}
+
+/* ==========================================================
+   02. VARIANTES (reaproveitam os tokens de status de base.css)
+   ========================================================== */
+.pendente {
+  background: var(--cor-status-plano-execucao-fundo);
+  color: var(--cor-status-plano-execucao-texto);
+}
+.aprovado {
+  background: var(--cor-status-encerrado-fundo);
+  color: var(--cor-status-encerrado-texto);
+}
+.rejeitado {
+  background: var(--cor-status-reaberto-fundo);
+  color: var(--cor-status-reaberto-texto);
+}
+.neutro {
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+}

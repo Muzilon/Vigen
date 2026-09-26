@@ -1,0 +1,77 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página — espaçamento vertical e link "voltar"
+   02. Grade — coluna principal + coluna da trilha (empilha no celular)
+   03. Dados do resumo — lista de rótulo/valor
+   04. Nota de cancelamento
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+.voltar {
+  align-self: flex-start;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+}
+.voltar:hover {
+  color: var(--cor-acento);
+}
+
+/* ==========================================================
+   02. GRADE
+   ========================================================== */
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: var(--espaco-4);
+  align-items: start;
+}
+.colunaPrincipal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+.colunaLateral {
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================
+   03. DADOS DO RESUMO
+   ========================================================== */
+.dados {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--espaco-3) var(--espaco-4);
+  margin: 0;
+}
+.dado dt {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+.dado dd {
+  margin: 2px 0 0 0;
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+
+/* ==========================================================
+   04. NOTA DE CANCELAMENTO
+   ========================================================== */
+.notaCancelado {
+  margin: var(--espaco-4) 0 0 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}

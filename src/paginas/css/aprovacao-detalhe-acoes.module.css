@@ -1,0 +1,67 @@
+/* ==========================================================
+   ÍNDICE
+   01. Contêiner — decisão e cancelamento empilhados
+   02. Campos — rótulo, dica, textarea, input
+   03. Botões e aviso de rejeição sem comentário
+   ========================================================== */
+
+/* ==========================================================
+   01. CONTÊINER
+   ========================================================== */
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-5);
+}
+.formDecisao,
+.formCancelar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+.formDecisao + .formCancelar {
+  padding-top: var(--espaco-4);
+  border-top: 1px solid var(--cor-borda-sutil);
+}
+
+/* ==========================================================
+   02. CAMPOS
+   ========================================================== */
+.rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+.dica {
+  font-weight: 400;
+  color: var(--cor-texto-secundario);
+}
+.areaTexto,
+.entrada {
+  width: 100%;
+  padding: var(--espaco-2) var(--espaco-3);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 14px;
+}
+.areaTexto {
+  resize: vertical;
+}
+.areaTexto[aria-invalid="true"] {
+  border-color: var(--cor-perigo-texto);
+}
+
+/* ==========================================================
+   03. BOTÕES E AVISO
+   ========================================================== */
+.botoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espaco-2);
+}
+.aviso {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-perigo-texto);
+}

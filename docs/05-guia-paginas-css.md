@@ -44,6 +44,13 @@ src/paginas/
       interacoes.tsx              # Interacoes (thread da entidade, server)
       item-acoes.tsx              # ItemAcoes (Iniciar/Concluir/Editar/Cancelar item 5W2H)
       tabela-5w2h.tsx             # Tabela5W2H / ItensForm (client)
+      badge-aprovacao.tsx         # BadgeStatusFluxo / BadgeStatusEtapa
+      trilha-assinaturas.tsx      # TrilhaAssinaturas (linha do tempo das assinaturas)
+      payload-aprovacao.tsx       # PayloadAprovacao (chave/valor ou antes → depois)
+      solicitar-aprovacao.tsx     # SolicitarAprovacao (client — pedir aprovação num módulo)
+      aprovacoes-da-entidade.tsx  # AprovacoesDaEntidade (fluxos de um registro)
+    aprovacoes-lista.tsx          # /aprovacoes
+    aprovacao-detalhe.tsx         # /aprovacoes/[id] (+ aprovacao-detalhe-acoes.tsx, client)
     rnc-detalhe.tsx               # detalhe da RNC (+ rnc-detalhe-causa.tsx, client)
     rnc-nova.tsx                  # nova RNC (+ rnc-nova-formulario.tsx, client)
 ```
@@ -222,6 +229,40 @@ ordena-o em relação aos demais filhos do cabeçalho e a futuros popovers fora 
   badges de gravidade — BAIXO/MEDIO/ALTO/CRITICO mapeiam para
   baixa/media/alta/critica). Rolagem horizontal própria (`overflow-x: auto`)
   para caber em telas estreitas sem quebrar o layout da página.
+
+- **Aprovações (motor multi-assinante, `src/lib/aprovacao/`)** — telas em
+  `/aprovacoes` (`aprovacoes-lista.tsx`: abas "Aguardando mim" com contador e
+  "Solicitadas por mim" com filtro de status) e `/aprovacoes/[id]`
+  (`aprovacao-detalhe.tsx` + `aprovacao-detalhe-acoes.tsx`, client: Aprovar /
+  Rejeitar com comentário obrigatório na rejeição — bloqueado no cliente e no
+  servidor —, Cancelar para o solicitante; `ErroConflito` vira "alguém decidiu
+  antes, recarregue"; sem acesso → 404). Server actions em
+  `app/(app)/aprovacoes/actions.ts`. Menu "Aprovações" é fixo (não depende de
+  módulo) com contador `contarAguardandoMim`. Rótulos em
+  `src/lib/aprovacao/rotulos.ts`. Componentes reutilizáveis:
+  - `BadgeStatusFluxo` / `BadgeStatusEtapa` (`badge-aprovacao.tsx`) — tokens
+    de status de `base.css`.
+  - `TrilhaAssinaturas` (`trilha-assinaturas.tsx`) — linha do tempo vertical
+    estilo DocuSign: `etapas` (ordem, aprovador, status, `decididoEm`,
+    comentário), `modo`, `fuso` e `solicitante` opcional (primeiro marco).
+  - `PayloadAprovacao` (`payload-aprovacao.tsx`) — payload legível: lista
+    chave/valor, ou tabela antes → depois se o payload for `{ antes, depois }`
+    (campos alterados destacados, "(alterado)" para leitor de tela).
+  - `SolicitarAprovacao` (`solicitar-aprovacao.tsx`, client) — para os
+    módulos: props `entidadeTipo`, `entidadeId`, `tipoAlteracao`, `payload`,
+    `usuarios` (use `listarAprovadoresPossiveis(ator)`), `acao` (server action
+    do módulo), `resumoInicial?`, `botao?`. Select de usuários + "Adicionar",
+    lista ordenável com botões ↑/↓ (`aria-label` "Mover X para cima/baixo") e
+    "Remover", modo Sequencial/Paralelo (segmentado com rádios), resumo. Na
+    action: `solicitarAprovacao(ator, lerSolicitacaoDoForm(fd))`
+    (`src/lib/aprovacao/form.ts`) — recalcule o `payload` no servidor em vez de
+    confiar no enviado pelo cliente.
+  - `AprovacoesDaEntidade` (`aprovacoes-da-entidade.tsx`, server async) —
+    `<AprovacoesDaEntidade entidadeTipo="HIRA" entidadeId={id} />` na página
+    do registro: fluxos visíveis ao usuário com resumo, tipo, solicitante,
+    data, progresso e status, com link para o detalhe.
+  - Fora de produção, `src/lib/aprovacao/handler-teste.ts` registra um handler
+    no-op para o tipo `TESTE` (permite exercitar as telas ponta a ponta).
 
 Todos em `src/paginas/html/componentes/`.
 
