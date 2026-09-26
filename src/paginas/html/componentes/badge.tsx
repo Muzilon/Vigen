@@ -47,6 +47,15 @@ export function BadgeGravidade({ gravidade, rotulo }: { gravidade: GravidadeBadg
   return <span className={`${styles.gravidade} ${CLASSE_GRAVIDADE[gravidade]}`}>{rotulo}</span>;
 }
 
+/** Faixa de nível da escala (Riscos/HIRA/LAIA): BAIXO/MEDIO/ALTO/CRITICO com as cores de gravidade. */
+export type FaixaBadge = "BAIXO" | "MEDIO" | "ALTO" | "CRITICO";
+const GRAVIDADE_DA_FAIXA: Record<FaixaBadge, GravidadeBadge> = { BAIXO: "BAIXA", MEDIO: "MEDIA", ALTO: "ALTA", CRITICO: "CRITICA" };
+const ROTULO_FAIXA_BADGE: Record<FaixaBadge, string> = { BAIXO: "Baixo", MEDIO: "Médio", ALTO: "Alto", CRITICO: "Crítico" };
+
+export function BadgeFaixa({ faixa, score }: { faixa: FaixaBadge; score?: number | null }) {
+  return <BadgeGravidade gravidade={GRAVIDADE_DA_FAIXA[faixa]} rotulo={score != null ? `${ROTULO_FAIXA_BADGE[faixa]} · ${score}` : ROTULO_FAIXA_BADGE[faixa]} />;
+}
+
 export function BadgeAtrasado({ children }: { children: ReactNode }) {
   return <span className={`${styles.badge} ${styles.atrasado}`}>{children}</span>;
 }

@@ -3,7 +3,7 @@
 import { z } from "zod";
 import type { ResultadoAcao } from "@/paginas/html/componentes/form-acao";
 import { getAtor } from "@/lib/ator-servidor";
-import "@/lib/processos/aprovacao";
+import "@/lib/aprovacao/handlers";
 import * as proc from "@/lib/processos/servico";
 import { executar, obj, opcional, uuid, uuidOpcional, versao } from "../acoes-comuns";
 

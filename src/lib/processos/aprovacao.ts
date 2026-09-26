@@ -1,6 +1,6 @@
 /**
  * Handler de aprovação do tipo PROCESSO (publicação de versão pelo motor multi-assinante).
- * Módulo com efeito colateral: importe-o (import "@/lib/processos/aprovacao") em qualquer ponto
+ * Módulo com efeito colateral: importe "@/lib/aprovacao/handlers" (que importa este e os demais) em qualquer ponto
  * de entrada que chame decidir() — ex.: as actions de /aprovacoes — para o handler estar
  * registrado no processo do servidor.
  */

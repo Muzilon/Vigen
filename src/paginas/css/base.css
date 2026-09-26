@@ -88,6 +88,16 @@
 
   --cor-status-cancelado-fundo: #e7e5e4;
   --cor-status-cancelado-texto: #57534e;
+
+  /* Quadrantes da SWOT (reaproveitam as cores de status) */
+  --cor-swot-forca: var(--cor-status-encerrado-texto);
+  --cor-swot-forca-fundo: var(--cor-status-encerrado-fundo);
+  --cor-swot-fraqueza: var(--cor-status-plano-execucao-texto);
+  --cor-swot-fraqueza-fundo: var(--cor-status-plano-execucao-fundo);
+  --cor-swot-oportunidade: var(--cor-status-aberto-texto);
+  --cor-swot-oportunidade-fundo: var(--cor-status-aberto-fundo);
+  --cor-swot-ameaca: var(--cor-status-reaberto-texto);
+  --cor-swot-ameaca-fundo: var(--cor-status-reaberto-fundo);
 }
 
 /* ==========================================================

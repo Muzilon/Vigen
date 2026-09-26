@@ -5,6 +5,7 @@ import { ErroNegocio } from "@/lib/erros";
 import { STATUS_FINAIS } from "@/lib/rnc/estados";
 import { podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
+import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
 import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
 
@@ -89,6 +90,14 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       if (!p) return NEGADO;
       const g = atorTem(a, "PROCESSO_GERENCIAR");
       return { podeLer: true, podeEnviar: g, podeGerir: g, rncId: null, rncFinal: false };
+    }
+    case "RISCO_OPORTUNIDADE": {
+      // Riscos: leitura para a empresa com o módulo (escopo de obras); envio para quem trata.
+      if (!(await moduloRiscosAtivo(a))) return NEGADO;
+      const r = await a.db.riscoOportunidade.findFirst({ where: { AND: [{ id: alvo.entidadeId, ativo: true }, filtroObraRisco(a)] }, select: { responsavelId: true } });
+      if (!r) return NEGADO;
+      const g = podeTratarRisco(a, r);
+      return { podeLer: true, podeEnviar: g, podeGerir: atorTem(a, "RISCO_GERENCIAR"), rncId: null, rncFinal: false };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({

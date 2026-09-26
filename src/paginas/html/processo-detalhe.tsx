@@ -17,7 +17,10 @@ import { formatarDataHora } from "@/lib/datas";
 import { exigirModulo } from "@/lib/modulos";
 import { ROTULO_TIPO_PROCESSO, type SnapshotProcesso } from "@/lib/processos/regras";
 import { listarProcessos, listarVersoes, obterProcesso, podeGerenciarProcessos } from "@/lib/processos/servico";
+import { codigoRisco, ROTULO_STATUS_RISCO } from "@/lib/riscos/regras";
+import { listarRiscosDoProcesso, podeGerenciarRiscos } from "@/lib/riscos/servico";
 import { getContexto } from "@/lib/tenant";
+import { BadgeFaixa } from "@/paginas/html/componentes/badge";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -42,13 +45,14 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   const p = await obterProcesso(a, id);
   if (!p) notFound();
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
     fusoDaEmpresa(a),
     listarAnexos(a, alvoAnexo),
     podeEnviarAnexo(a, alvoAnexo),
+    listarRiscosDoProcesso(a, id),
   ]);
   const g = podeGerenciarProcessos(a) && p.ativo;
   const candidatos = outros.filter((o) => o.id !== p.id);
@@ -209,9 +213,41 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             )}
           </Cartao>
 
+          {riscos && (
+            <Cartao
+              titulo={`Riscos e oportunidades · ${riscos.length}`}
+              acoes={
+                podeGerenciarRiscos(a) ? (
+                  <Link href={`/riscos/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Novo</Link>
+                ) : undefined
+              }
+            >
+              {riscos.length === 0 ? (
+                <p className={styles.vazio}>Nenhum risco ou oportunidade vinculado.</p>
+              ) : (
+                <table className={styles.tabela}>
+                  <thead>
+                    <tr><th>Código</th><th>Descrição</th><th>Nível</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {riscos.map((r) => (
+                      <tr key={r.id}>
+                        <td><Link href={`/riscos/${r.id}`} className={styles.linkProcesso}>{codigoRisco(r)}</Link></td>
+                        <td>{r.descricao}</td>
+                        <td><BadgeFaixa faixa={r.faixa} score={r.score} /></td>
+                        <td>{ROTULO_STATUS_RISCO[r.status]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className={styles.rodapeCartao}><Link href={`/riscos?processo=${p.id}`} className={styles.linkProcesso}>Ver na matriz de riscos →</Link></p>
+            </Cartao>
+          )}
+
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
-              <li>Riscos e oportunidades <span className={styles.emBreve}>em breve</span></li>
+              {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
               <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>em breve</span></li>
               <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>em breve</span></li>
               <li>Documentos vinculados <span className={styles.emBreve}>em breve</span></li>

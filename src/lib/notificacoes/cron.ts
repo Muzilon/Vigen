@@ -9,6 +9,7 @@ import { criarDbTenant, type DbTenant } from "@/lib/db-tenant";
 import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { prismaAdmin } from "@/lib/prisma";
 import { gerarAlertasReavaliacao } from "@/lib/reavaliacao/fontes";
+import "@/lib/riscos/reavaliacao";
 import { atorDoUsuario, usuariosAtivos } from "./destinatarios";
 import { descricaoItem, linkItem } from "./gatilhos";
 import { lerPreferencias, type PreferenciasNotificacao } from "./preferencias";

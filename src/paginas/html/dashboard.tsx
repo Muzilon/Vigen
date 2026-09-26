@@ -6,6 +6,7 @@ import { formatarData } from "@/lib/datas";
 import { enumUrl, uuidUrl } from "@/lib/filtros-url";
 import { carregarIndicadores } from "@/lib/indicadores/servico";
 import { ROTULO_TIPO } from "@/lib/rnc/rotulos";
+import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Entrada, Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
@@ -29,7 +30,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -39,6 +40,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       select: { id: true, nome: true },
     }),
     a.db.setor.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+    contarPorFaixa(a),
   ]);
   const k = ind.kpis;
 
@@ -108,6 +110,24 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
         <Painel titulo="Por gravidade" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porGravidade} paleta="gravidade" /></Painel>
         <Painel titulo="Por obra" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porObra.slice(0, 10)} /></Painel>
       </div>
+
+      {riscosPorFaixa && (
+        <Painel titulo="Riscos e oportunidades abertos por nível" subtitulo="Situação atual (nível inicial), sem os encerrados">
+          <Barras
+            paleta="gravidade"
+            vazio="Nenhum risco ou oportunidade aberto."
+            dados={(
+              [
+                ["CRITICA", "Crítico", riscosPorFaixa.CRITICO],
+                ["ALTA", "Alto", riscosPorFaixa.ALTO],
+                ["MEDIA", "Médio", riscosPorFaixa.MEDIO],
+                ["BAIXA", "Baixo", riscosPorFaixa.BAIXO],
+              ] as const
+            ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
+          />
+          <Link href="/riscos" className={styles.linkLimpar}>Abrir a matriz de riscos →</Link>
+        </Painel>
+      )}
 
       <div className={styles.gradeDuas}>
         <Painel titulo="Itens de ação por status">

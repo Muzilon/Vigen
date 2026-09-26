@@ -1,0 +1,208 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Grade de duas colunas
+   03. Dados (dl) e formulários
+   04. Avaliação, tratamento e plano
+   05. Histórico
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+.trilha { font-size: 13px; }
+.linkVoltar { color: var(--cor-texto-secundario); text-decoration: none; }
+.linkVoltar:hover { color: var(--cor-texto); }
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+}
+.codigo {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cor-texto-secundario);
+}
+.titulo {
+  margin: 2px 0 var(--espaco-2);
+  font-size: 22px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.status {
+  padding: 1px 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* ==========================================================
+   02. GRADE
+   ========================================================== */
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--espaco-4);
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   03. DADOS E FORMULÁRIOS
+   ========================================================== */
+.dados {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: var(--espaco-2) var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+}
+.dados dt { color: var(--cor-texto-secundario); font-weight: 500; }
+.dados dd { margin: 0; white-space: pre-line; }
+.vencida { color: var(--cor-atrasado-texto); font-weight: 600; }
+.linkBloco { display: block; color: var(--cor-texto); }
+
+.editar { margin-top: var(--espaco-3); font-size: 13px; }
+.editar summary { cursor: pointer; color: var(--cor-acento); font-weight: 500; margin-bottom: var(--espaco-3); }
+
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-2) var(--espaco-3);
+  align-items: end;
+}
+.campo,
+.campoLargo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+.campoLargo { grid-column: 1 / -1; }
+.entrada {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: 4px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+.formLinha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+  align-items: center;
+  margin-top: var(--espaco-3);
+}
+.formLinha .entrada { flex: 1 1 160px; }
+
+/* ==========================================================
+   04. AVALIAÇÃO, TRATAMENTO E PLANO
+   ========================================================== */
+.avaliacoes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+.blocoAvaliacao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: var(--espaco-3);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.rotulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--cor-texto-secundario);
+}
+.detalheAvaliacao { font-size: 12px; color: var(--cor-texto-secundario); }
+.texto { margin: 0; font-size: 14px; }
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-fraco); }
+.linkForte { font-weight: 600; color: var(--cor-texto); }
+
+.itensPlano {
+  list-style: none;
+  margin: var(--espaco-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+.itemPlano {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--espaco-3);
+  align-items: center;
+  font-size: 13px;
+  padding-bottom: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+
+/* ==========================================================
+   05. HISTÓRICO
+   ========================================================== */
+.historico {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+.eventoHistorico {
+  font-size: 13px;
+  padding-left: var(--espaco-3);
+  border-left: 2px solid var(--cor-borda-forte);
+}
+.cabecalhoEvento {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+  color: var(--cor-texto-secundario);
+  font-size: 12px;
+}
+.cabecalhoEvento strong { color: var(--cor-texto); font-size: 13px; }
+.linhaEvento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--espaco-3);
+  margin-top: 2px;
+  color: var(--cor-texto);
+}
+.observacao { margin: 4px 0 0; color: var(--cor-texto-secundario); }

@@ -61,6 +61,9 @@ enum Permissao {
   PROCESSO_GERENCIAR
   ADMIN_CONFIG
   VER_TODAS_OBRAS
+  RISCO_GERENCIAR
+  RISCO_TRATAR
+  SWOT_GERENCIAR
 }
 
 enum EscopoObras {
@@ -121,6 +124,7 @@ enum OrigemPlanoAcao {
   INSPECAO
   AUDITORIA
   MANUAL
+  RISCO_OPORTUNIDADE
 }
 
 enum StatusItemAcao {
@@ -137,12 +141,14 @@ enum TipoEntidadeAnexo {
   PLANO_ACAO
   ITEM_ACAO
   PROCESSO
+  RISCO_OPORTUNIDADE
 }
 
 enum TipoEntidadeInteracao {
   RNC
   ITEM_ACAO
   PROCESSO
+  RISCO_OPORTUNIDADE
 }
 
 enum TipoNotificacao {
@@ -165,6 +171,7 @@ enum TipoEntidadeNotificacao {
   ITEM_ACAO
   FLUXO_APROVACAO
   PROCESSO
+  RISCO_OPORTUNIDADE
 }
 
 enum StatusEmailNotificacao {
@@ -228,6 +235,57 @@ enum TipoProcesso {
   APOIO
 }
 
+enum TipoRiscoOportunidade {
+  RISCO
+  OPORTUNIDADE
+}
+
+enum TratamentoRisco {
+  ACEITAR
+  MITIGAR
+  TRANSFERIR
+  EVITAR
+  EXPLORAR
+}
+
+enum StatusRiscoOportunidade {
+  IDENTIFICADO
+  EM_TRATAMENTO
+  MONITORADO
+  ENCERRADO
+}
+
+/// Faixa do nível calculado (ConfiguracaoEscala.faixas[].nivel).
+enum FaixaNivel {
+  BAIXO
+  MEDIO
+  ALTO
+  CRITICO
+}
+
+/// ITEM: cada registro tem sua data; GERAL: revisão geral (todos do processo/empresa de uma vez).
+enum ModoReavaliacao {
+  ITEM
+  GERAL
+}
+
+enum AcaoHistoricoRisco {
+  CRIACAO
+  ALTERACAO
+  TRATAMENTO
+  REAVALIACAO
+  REVISAO_GERAL
+  STATUS
+  EXCLUSAO
+}
+
+enum QuadranteSwot {
+  FORCA
+  FRAQUEZA
+  OPORTUNIDADE
+  AMEACA
+}
+
 enum TipoSequencia {
   RNC
 }
@@ -271,6 +329,11 @@ model Empresa {
   indicadoresProcesso      IndicadorProcesso[]
   interacoesProcesso       InteracaoProcesso[]
   versoesProcesso          VersaoProcesso[]
+  riscosOportunidades      RiscoOportunidade[]
+  historicosRisco          HistoricoRiscoOportunidade[]
+  ciclosSwot               CicloSwot[]
+  itensSwot                ItemSwot[]
+  partesInteressadas       ParteInteressada[]
 
   @@map("empresa")
 }
@@ -291,6 +354,7 @@ model ObraUnidade {
   rncs                Rnc[]
   planos              PlanoAcao[]
   configuracoesEscala ConfiguracaoEscala[]
+  riscosOportunidades RiscoOportunidade[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -353,25 +417,29 @@ model Usuario {
   setor   Setor?  @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
 
   acessosObra               UsuarioAcessoObra[]
-  rncsAbertas               Rnc[]                     @relation("RncAbertoPor")
-  rncsResponsavel           Rnc[]                     @relation("RncResponsavel")
-  verificacoes              VerificacaoEficacia[]     @relation("VerificacaoVerificador")
-  historicosStatus          HistoricoStatusRnc[]      @relation("HistoricoUsuario")
-  cancelamentosSolicitados  SolicitacaoCancelamento[] @relation("CancelamentoSolicitante")
-  cancelamentosDecididos    SolicitacaoCancelamento[] @relation("CancelamentoAprovador")
-  planosCriados             PlanoAcao[]               @relation("PlanoCriadoPor")
-  itensResponsavel          ItemAcao[]                @relation("ItemQuem")
-  anexosEnviados            Anexo[]                   @relation("AnexoEnviadoPor")
-  anexosExcluidos           Anexo[]                   @relation("AnexoExcluidoPor")
-  interacoesAutor           Interacao[]               @relation("InteracaoAutor")
-  interacoesDestinatario    Interacao[]               @relation("InteracaoDestinatario")
+  rncsAbertas               Rnc[]                        @relation("RncAbertoPor")
+  rncsResponsavel           Rnc[]                        @relation("RncResponsavel")
+  verificacoes              VerificacaoEficacia[]        @relation("VerificacaoVerificador")
+  historicosStatus          HistoricoStatusRnc[]         @relation("HistoricoUsuario")
+  cancelamentosSolicitados  SolicitacaoCancelamento[]    @relation("CancelamentoSolicitante")
+  cancelamentosDecididos    SolicitacaoCancelamento[]    @relation("CancelamentoAprovador")
+  planosCriados             PlanoAcao[]                  @relation("PlanoCriadoPor")
+  itensResponsavel          ItemAcao[]                   @relation("ItemQuem")
+  anexosEnviados            Anexo[]                      @relation("AnexoEnviadoPor")
+  anexosExcluidos           Anexo[]                      @relation("AnexoExcluidoPor")
+  interacoesAutor           Interacao[]                  @relation("InteracaoAutor")
+  interacoesDestinatario    Interacao[]                  @relation("InteracaoDestinatario")
   leiturasInteracao         LeituraInteracao[]
   notificacoes              Notificacao[]
-  fluxosSolicitados         FluxoAprovacao[]          @relation("FluxoSolicitante")
-  etapasAprovador           EtapaAprovacao[]          @relation("EtapaAprovador")
-  historicosAprovacao       HistoricoAprovacao[]      @relation("HistoricoAprovacaoUsuario")
-  processosDono             Processo[]                @relation("ProcessoDono")
-  versoesProcessoPublicadas VersaoProcesso[]          @relation("VersaoProcessoPublicadoPor")
+  fluxosSolicitados         FluxoAprovacao[]             @relation("FluxoSolicitante")
+  etapasAprovador           EtapaAprovacao[]             @relation("EtapaAprovador")
+  historicosAprovacao       HistoricoAprovacao[]         @relation("HistoricoAprovacaoUsuario")
+  processosDono             Processo[]                   @relation("ProcessoDono")
+  versoesProcessoPublicadas VersaoProcesso[]             @relation("VersaoProcessoPublicadoPor")
+  riscosResponsavel         RiscoOportunidade[]          @relation("RiscoResponsavel")
+  riscosCriados             RiscoOportunidade[]          @relation("RiscoCriadoPor")
+  historicosRisco           HistoricoRiscoOportunidade[] @relation("HistoricoRiscoUsuario")
+  ciclosSwotCriados         CicloSwot[]                  @relation("CicloSwotCriadoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -566,11 +634,12 @@ model PlanoAcao {
   criadoEm     DateTime        @default(now()) @map("criado_em")
   atualizadoEm DateTime        @updatedAt @map("atualizado_em")
 
-  empresa   Empresa      @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  obra      ObraUnidade? @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
-  criadoPor Usuario      @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  empresa   Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra      ObraUnidade?       @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor Usuario            @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
   rnc       Rnc?
   itens     ItemAcao[]
+  risco     RiscoOportunidade?
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
@@ -841,6 +910,7 @@ model Processo {
   interacoesOrigem  InteracaoProcesso[] @relation("InteracaoOrigem")
   interacoesDestino InteracaoProcesso[] @relation("InteracaoDestino")
   versoes           VersaoProcesso[]
+  riscos            RiscoOportunidade[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -904,6 +974,149 @@ model VersaoProcesso {
   @@unique([empresaId, id])
   @@unique([empresaId, processoId, versao])
   @@map("versao_processo")
+}
+
+/// Riscos e oportunidades (ISO 9001 6.1). Nível = P×I pela ConfiguracaoEscala RISCO_OPORTUNIDADE
+/// resolvida por obra → empresa → padrão; gravado (score/faixa) para filtro e heatmap.
+model RiscoOportunidade {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  empresaId             String                  @map("empresa_id") @db.Uuid
+  numero                Int
+  tipo                  TipoRiscoOportunidade
+  processoId            String?                 @map("processo_id") @db.Uuid
+  obraId                String?                 @map("obra_id") @db.Uuid
+  descricao             String
+  causa                 String?
+  consequencia          String?
+  probabilidade         Int
+  impacto               Int
+  score                 Int
+  faixa                 FaixaNivel
+  tratamento            TratamentoRisco?
+  descricaoTratamento   String?                 @map("descricao_tratamento")
+  probabilidadeResidual Int?                    @map("probabilidade_residual")
+  impactoResidual       Int?                    @map("impacto_residual")
+  scoreResidual         Int?                    @map("score_residual")
+  faixaResidual         FaixaNivel?             @map("faixa_residual")
+  status                StatusRiscoOportunidade @default(IDENTIFICADO)
+  responsavelId         String?                 @map("responsavel_id") @db.Uuid
+  planoAcaoId           String?                 @map("plano_acao_id") @db.Uuid
+  modoReavaliacao       ModoReavaliacao         @default(ITEM) @map("modo_reavaliacao")
+  periodicidadeMeses    Int                     @default(12) @map("periodicidade_meses")
+  proximaReavaliacaoEm  DateTime?               @map("proxima_reavaliacao_em") @db.Date
+  ultimaReavaliacaoEm   DateTime?               @map("ultima_reavaliacao_em")
+  versao                Int                     @default(0)
+  ativo                 Boolean                 @default(true)
+  criadoPorId           String                  @map("criado_por_id") @db.Uuid
+  criadoEm              DateTime                @default(now()) @map("criado_em")
+  atualizadoEm          DateTime                @updatedAt @map("atualizado_em")
+
+  empresa     Empresa                      @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  processo    Processo?                    @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  obra        ObraUnidade?                 @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  responsavel Usuario?                     @relation("RiscoResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor   Usuario                      @relation("RiscoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao   PlanoAcao?                   @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  historico   HistoricoRiscoOportunidade[]
+  itensSwot   ItemSwot[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, numero])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, processoId])
+  @@index([empresaId, faixa])
+  @@index([empresaId, proximaReavaliacaoEm])
+  @@map("risco_oportunidade")
+}
+
+/// Histórico de cada avaliação/reavaliação/alteração do risco. Append-only (trigger).
+model HistoricoRiscoOportunidade {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  empresaId             String                  @map("empresa_id") @db.Uuid
+  riscoId               String                  @map("risco_id") @db.Uuid
+  acao                  AcaoHistoricoRisco
+  probabilidade         Int
+  impacto               Int
+  score                 Int
+  faixa                 FaixaNivel
+  probabilidadeResidual Int?                    @map("probabilidade_residual")
+  impactoResidual       Int?                    @map("impacto_residual")
+  scoreResidual         Int?                    @map("score_residual")
+  faixaResidual         FaixaNivel?             @map("faixa_residual")
+  tratamento            TratamentoRisco?
+  status                StatusRiscoOportunidade
+  observacao            String?
+  usuarioId             String                  @map("usuario_id") @db.Uuid
+  criadoEm              DateTime                @default(now()) @map("criado_em")
+
+  empresa Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  risco   RiscoOportunidade @relation(fields: [empresaId, riscoId], references: [empresaId, id], onDelete: Restrict)
+  usuario Usuario           @relation("HistoricoRiscoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, riscoId, criadoEm])
+  @@map("historico_risco_oportunidade")
+}
+
+/// Ciclo anual de análise de contexto (SWOT + partes interessadas, ISO 9001 4.1/4.2).
+model CicloSwot {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  ano          Int
+  titulo       String
+  encerrado    Boolean  @default(false)
+  criadoPorId  String   @map("criado_por_id") @db.Uuid
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa            Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  criadoPor          Usuario            @relation("CicloSwotCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  itens              ItemSwot[]
+  partesInteressadas ParteInteressada[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano])
+  @@map("ciclo_swot")
+}
+
+model ItemSwot {
+  id                  String        @id @default(uuid()) @db.Uuid
+  empresaId           String        @map("empresa_id") @db.Uuid
+  cicloId             String        @map("ciclo_id") @db.Uuid
+  quadrante           QuadranteSwot
+  descricao           String
+  relevancia          Int           @default(3)
+  riscoOportunidadeId String?       @map("risco_oportunidade_id") @db.Uuid
+  criadoEm            DateTime      @default(now()) @map("criado_em")
+  atualizadoEm        DateTime      @updatedAt @map("atualizado_em")
+
+  empresa           Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  ciclo             CicloSwot          @relation(fields: [empresaId, cicloId], references: [empresaId, id], onDelete: Cascade)
+  riscoOportunidade RiscoOportunidade? @relation(fields: [empresaId, riscoOportunidadeId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, cicloId, quadrante])
+  @@map("item_swot")
+}
+
+model ParteInteressada {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  cicloId      String   @map("ciclo_id") @db.Uuid
+  nome         String
+  necessidades String?
+  expectativas String?
+  influencia   Int      @default(3)
+  interesse    Int      @default(3)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  ciclo   CicloSwot @relation(fields: [empresaId, cicloId], references: [empresaId, id], onDelete: Cascade)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, cicloId])
+  @@map("parte_interessada")
 }
 
 model TentativaLogin {

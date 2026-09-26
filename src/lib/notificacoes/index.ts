@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE";
   entidadeId: string;
 };
 
@@ -36,6 +36,11 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       const p = await db.processo.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true, nome: true } });
       onde = p ? `o processo ${p.codigo} — ${p.nome}` : "um processo";
       link = `/processos/${evento.entidadeId}`;
+    } else if (evento.entidadeTipo === "RISCO_OPORTUNIDADE") {
+      const r = await db.riscoOportunidade.findFirst({ where: { id: evento.entidadeId }, select: { numero: true, tipo: true } });
+      const num = r ? String(r.numero).padStart(3, "0") : "";
+      onde = !r ? "um risco/oportunidade" : r.tipo === "RISCO" ? `o risco R-${num}` : `a oportunidade O-${num}`;
+      link = `/riscos/${evento.entidadeId}`;
     } else {
       const item = await db.itemAcao.findFirst({
         where: { id: evento.entidadeId },

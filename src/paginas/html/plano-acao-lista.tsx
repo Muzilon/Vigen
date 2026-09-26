@@ -231,7 +231,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
                             <Link href={linkPlano(i.planoAcao.id)} className={styles.linkManual} title={i.planoAcao.titulo}>
                               <span className={styles.rotuloManual}>
                                 <IconeLapis />
-                                Manual
+                                {i.planoAcao.origemTipo === "RISCO_OPORTUNIDADE" ? "Risco" : "Manual"}
                               </span>
                               <span className={styles.tituloPlano}>{i.planoAcao.titulo}</span>
                             </Link>

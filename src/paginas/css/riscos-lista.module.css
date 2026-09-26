@@ -1,0 +1,117 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página
+   02. Filtros
+   03. Heatmaps (inicial e residual lado a lado)
+   04. Tabela
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   02. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.checkFiltro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  height: 36px;
+}
+.acoesFiltro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin-left: auto;
+}
+.linkLimpar {
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.linkLimpar:hover { color: var(--cor-texto); }
+
+/* ==========================================================
+   03. HEATMAPS
+   ========================================================== */
+.heatmaps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-4);
+  padding: var(--espaco-4);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+@media (max-width: 1000px) {
+  .heatmaps { grid-template-columns: minmax(0, 1fr); }
+}
+.filtroCelula {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   04. TABELA
+   ========================================================== */
+.tabela { min-width: 900px; }
+.colCodigo { width: 80px; }
+.colProcesso { width: 90px; }
+.colNivel { width: 110px; }
+.colTratamento { width: 110px; }
+.colStatus { width: 120px; }
+.colData { width: 110px; }
+
+.celulaDescricao {
+  max-width: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.linkCodigo {
+  font-weight: 600;
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.linkCodigo:hover,
+.linkDescricao:hover { text-decoration: underline; }
+.linkDescricao {
+  display: block;
+  color: var(--cor-texto);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.subtexto {
+  display: block;
+  font-size: 12px;
+  color: var(--cor-texto-fraco);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

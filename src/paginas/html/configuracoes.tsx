@@ -60,6 +60,9 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   RNC_VER_RESTRITAS: "Ver RNCs restritas e dados sensíveis",
   PLANO_GERENCIAR: "Gerenciar planos de ação",
   PROCESSO_GERENCIAR: "Gerenciar mapa de processos",
+  RISCO_GERENCIAR: "Gerenciar riscos e oportunidades",
+  RISCO_TRATAR: "Tratar riscos e oportunidades",
+  SWOT_GERENCIAR: "Gerenciar SWOT e partes interessadas",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };

@@ -16,7 +16,9 @@
     "test:admin": "tsx scripts/teste-admin.ts",
     "test:plano-manual": "tsx scripts/teste-plano-manual.ts",
     "test:aprovacao": "tsx scripts/teste-aprovacao.ts",
-    "test:processos": "tsx scripts/teste-processos.ts"
+    "test:processos": "tsx scripts/teste-processos.ts",
+    "test:riscos": "tsx scripts/teste-riscos.ts",
+    "test:swot": "tsx scripts/teste-swot.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

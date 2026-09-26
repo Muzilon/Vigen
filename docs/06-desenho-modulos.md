@@ -149,3 +149,66 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 - **Testes**: `tests/processos.test.ts` (regras) e `npm run test:processos` (CRUD, código
   único, reordenação, interações, permissão, gating Demo, isolamento, versão/snapshot
   imutável, publicação via aprovação, inativar).
+
+## P2 — Riscos e Oportunidades + SWOT entregue (2026-09-26)
+
+- **Correção (item 0)**: handlers de aprovação só se registravam quando o arquivo do módulo era
+  importado — aprovar pela tela `/aprovacoes` concluía o fluxo **sem aplicar** a alteração se o
+  processo do servidor nunca tivesse carregado o módulo. Agora `src/lib/aprovacao/handlers.ts`
+  importa todos os handlers (PROCESSO, RISCO_OPORTUNIDADE) e é importado pelas actions de
+  `/aprovacoes` (único ponto que chama `decidir()`), de `/processos` e de `/riscos`. **Regra**:
+  módulo novo com handler → acrescente o import em `handlers.ts` e em `TIPOS_COM_HANDLER`.
+  Testado em `test:riscos` (processo filho que carrega só as actions de `/aprovacoes` e aprova).
+- **Schema** (migração `20260926180000_riscos_swot`): `RiscoOportunidade` (número sequencial por
+  empresa → código `R-001`/`O-001`; processo e obra opcionais; P, I, score e faixa gravados;
+  tratamento, residual P/I/score/faixa, status, responsável, `planoAcaoId` único, modo de
+  reavaliação ITEM/GERAL, periodicidade em meses, `proximaReavaliacaoEm`, `versao` = trava
+  otimista, `ativo` = exclusão lógica), `HistoricoRiscoOportunidade` (**append-only**, trigger),
+  `CicloSwot` (ano único por empresa, encerrado), `ItemSwot` (quadrante, relevância 1–5,
+  vínculo opcional ao risco), `ParteInteressada` (influência/interesse 1–5). CHECKs de faixa de
+  valores. Permissões `RISCO_GERENCIAR`, `RISCO_TRATAR`, `SWOT_GERENCIAR` (perfil Qualidade tem as
+  três; Segurança tem `RISCO_TRATAR`). `OrigemPlanoAcao` += `RISCO_OPORTUNIDADE`; Anexo, Interação e
+  Notificação ganharam `RISCO_OPORTUNIDADE`.
+- **Cálculo**: `src/lib/riscos/regras.ts` (puro) — P×I pela `ConfiguracaoEscala`
+  RISCO_OPORTUNIDADE resolvida obra → empresa → padrão; eixo 1 = probabilidade, eixo 2 =
+  impacto (pela posição, não pela chave). **Regra**: MITIGAR/EVITAR com faixa ALTO/CRÍTICO exige
+  plano de ação — ao definir o tratamento (ou cadastrar já com ele) sem plano, é preciso informar
+  a primeira ação (o plano é criado com origem RISCO_OPORTUNIDADE e vinculado na mesma
+  transação) ou gerar o plano antes; edição/reavaliação que eleve a faixa também respeita a regra.
+  Tratamento coerente com o tipo (EXPLORAR só oportunidade; MITIGAR/EVITAR/TRANSFERIR só risco).
+- **Acesso** (`src/lib/riscos/servico.ts`): leitura com o módulo contratado e escopo de obras
+  (registro sem obra = empresa toda). Cadastro/edição/exclusão/revisão geral: `RISCO_GERENCIAR`.
+  Tratamento, plano, status e reavaliação do item: `RISCO_TRATAR`, `RISCO_GERENCIAR` **ou o
+  responsável** do registro. Toda mudança grava histórico.
+- **Reavaliação**: "Reavaliar" (item: nova avaliação, histórico REAVALIACAO, próxima data =
+  hoje + periodicidade) e "Revisão geral" (`/riscos/revisao-geral`, escopo processo / sem
+  processo / empresa: todos os registros abertos do escopo numa transação, histórico
+  REVISAO_GERAL em cada um). Fonte de alerta registrada em `src/lib/riscos/reavaliacao.ts`
+  (importada pelo cron): modo ITEM = um alerta por registro; GERAL = um por processo, com a data
+  mais próxima.
+- **Aprovação (opcional)**: "Solicitar alteração via aprovação" no detalhe → fluxo
+  `RISCO_OPORTUNIDADE`/`ALTERACAO` com payload `{ antes, depois, dados, versao }`; o handler
+  (`src/lib/riscos/aprovacao.ts`) aplica em nome do solicitante na transação da última
+  assinatura, conferindo a versão lida (se o registro mudou no meio tempo, a aprovação falha com
+  conflito). EXCLUSAO também é tratada pelo handler (sem botão na tela por ora). **Decisão**:
+  edição direta continua disponível para `RISCO_GERENCIAR`; a empresa escolhe caso a caso.
+- **Telas**: `/riscos` (filtros processo/tipo/nível/status/obra/encerrados, heatmaps P×I inicial
+  e residual clicáveis — `?p=&i=&res=1` filtra a lista —, lista com badge da faixa),
+  `/riscos/novo` (nível calculado ao vivo pela escala da obra escolhida; tratamento inicial e
+  primeira ação quando exigida), `/riscos/[id]` (dados, avaliação inicial/residual, reavaliar,
+  tratamento/residual, status, plano vinculado ou gerar plano 5W2H, histórico, aprovações,
+  anexos, comentários), `/riscos/revisao-geral`. Detalhe do processo: o placeholder foi trocado
+  pela lista de riscos vinculados (+ "Novo" com o processo pré-selecionado). Plano de ação mostra
+  a origem "Risco/oportunidade". Dashboard: painel "Riscos e oportunidades abertos por nível"
+  (só com o módulo). `BadgeFaixa` em `componentes/badge.tsx`.
+- **SWOT** (`src/lib/swot/`): `/swot` (ciclos; novo ciclo com opção de copiar itens e partes do
+  ciclo anterior mais recente, sem os vínculos com riscos) e `/swot/[id]` (quadro 2×2 com itens
+  por relevância, adicionar/editar/remover, "Gerar risco/oportunidade" — fraqueza/ameaça → RISCO,
+  força/oportunidade → OPORTUNIDADE, descrição pré-preenchida, vínculo gravado; só aparece com o
+  módulo RISCOS_OPORTUNIDADES e `RISCO_GERENCIAR` —; aba Partes interessadas com heatmap
+  influência × interesse e estratégia sugerida). Ciclo encerrado é somente leitura.
+- **Menu**: RISCOS_OPORTUNIDADES e SWOT implementados. **Seed**: 10 riscos/oportunidades da
+  Monto ligados aos processos (3 com plano de ação gerado), ciclo SWOT 2026 com 11 itens (6
+  vinculados a riscos) e 6 partes interessadas.
+- **Testes**: `tests/riscos.test.ts`, `tests/swot.test.ts` (vitest) e `npm run test:riscos` /
+  `npm run test:swot`.

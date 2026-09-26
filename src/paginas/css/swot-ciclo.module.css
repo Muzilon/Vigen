@@ -1,0 +1,263 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Abas
+   03. Quadro 2×2 (quadrantes e itens)
+   04. Formulários
+   05. Partes interessadas
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+.trilha { font-size: 13px; }
+.linkVoltar { color: var(--cor-texto-secundario); text-decoration: none; }
+.linkVoltar:hover { color: var(--cor-texto); }
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+}
+.ano {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cor-texto-secundario);
+}
+.titulo { margin: 2px 0 var(--espaco-2); font-size: 22px; }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+.encerrado {
+  padding: 1px 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* ==========================================================
+   02. ABAS
+   ========================================================== */
+.abas {
+  display: flex;
+  gap: var(--espaco-1);
+  border-bottom: 1px solid var(--cor-borda);
+}
+.aba,
+.abaAtiva {
+  height: 38px;
+  padding: 0 var(--espaco-3);
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--cor-texto-secundario);
+}
+.aba:hover { color: var(--cor-texto); }
+.abaAtiva {
+  font-weight: 600;
+  color: var(--cor-texto);
+  box-shadow: inset 0 -2px 0 var(--cor-acento);
+}
+
+/* ==========================================================
+   03. QUADRO 2×2
+   ========================================================== */
+.quadro {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-3);
+}
+@media (max-width: 900px) {
+  .quadro { grid-template-columns: minmax(0, 1fr); }
+}
+.quadrante {
+  --cor-q: var(--cor-texto);
+  --cor-q-fundo: var(--cor-fundo-sutil);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  padding: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-top: 4px solid var(--cor-q);
+  border-radius: var(--raio-padrao);
+  min-width: 0;
+}
+.quadranteForca { --cor-q: var(--cor-swot-forca); --cor-q-fundo: var(--cor-swot-forca-fundo); }
+.quadranteFraqueza { --cor-q: var(--cor-swot-fraqueza); --cor-q-fundo: var(--cor-swot-fraqueza-fundo); }
+.quadranteOportunidade { --cor-q: var(--cor-swot-oportunidade); --cor-q-fundo: var(--cor-swot-oportunidade-fundo); }
+.quadranteAmeaca { --cor-q: var(--cor-swot-ameaca); --cor-q-fundo: var(--cor-swot-ameaca-fundo); }
+
+.tituloQuadrante {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  margin: 0;
+  font-size: 16px;
+  color: var(--cor-q);
+}
+.ambiente {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cor-texto-fraco);
+}
+.contagem {
+  margin-left: auto;
+  min-width: 24px;
+  padding: 0 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-q-fundo);
+  font-size: 12px;
+  text-align: center;
+}
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-fraco); }
+.itens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+.item {
+  padding-bottom: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+.linhaItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  font-size: 14px;
+}
+.relevancia {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--cor-q-fundo);
+  color: var(--cor-q);
+  font-size: 12px;
+  font-weight: 700;
+}
+.descricao { flex: 1 1 auto; min-width: 0; }
+.vinculo {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  color: var(--cor-texto);
+}
+.acoesItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  margin: 4px 0 0 30px;
+  font-size: 12px;
+}
+.acoesItem summary,
+.adicionar summary {
+  cursor: pointer;
+  color: var(--cor-acento);
+  font-weight: 500;
+}
+.adicionar { font-size: 13px; }
+
+/* ==========================================================
+   04. FORMULÁRIOS
+   ========================================================== */
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-2) var(--espaco-3);
+  margin-top: var(--espaco-2);
+  align-items: end;
+  min-width: 260px;
+}
+.campo,
+.campoLargo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+}
+.campoLargo { grid-column: 1 / -1; }
+.entrada {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: 4px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+
+/* ==========================================================
+   05. PARTES INTERESSADAS
+   ========================================================== */
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--espaco-4);
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
+.partes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+.parte {
+  padding-bottom: var(--espaco-3);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+  font-size: 13px;
+}
+.cabecalhoParte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2) var(--espaco-3);
+  font-size: 14px;
+}
+.estrategia {
+  padding: 1px 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-fundo-sutil);
+  border: 1px solid var(--cor-borda);
+  font-size: 12px;
+  font-weight: 600;
+}
+.notas { font-size: 12px; color: var(--cor-texto-secundario); }
+.textoParte { margin: 4px 0 0; color: var(--cor-texto); }
+.textoParte span { color: var(--cor-texto-secundario); }

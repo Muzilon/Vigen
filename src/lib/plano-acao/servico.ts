@@ -250,28 +250,45 @@ function validarQuantidadeItens(itens: readonly DadosItem[]) {
 /** Cria um plano de ação avulso (sem RNC) com os itens 5W2H iniciais. Exige PLANO_GERENCIAR. */
 export async function criarPlanoManual(a: Ator, d: DadosPlanoManual) {
   if (!atorTem(a, "PLANO_GERENCIAR")) throw new ErroNegocio("Sem permissão para criar planos de ação.");
+  // Regras validadas antes de tocar no banco (repetidas em criarPlanoNaTransacao, que é pura quanto a elas).
+  cabecalhoPlano(d);
+  validarQuantidadeItens(d.itens);
+  d.itens.forEach(dadosItem);
+  const obraId = d.obraId || null;
+  if (obraId && !obraDoPlanoAcessivel(a, { obraId })) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  const r = await a.db.$transaction((tx) => criarPlanoNaTransacao(tx, a, { ...d, obraId }, { tipo: "MANUAL", id: null }));
+  await notificarItensAtribuidos(a, r.itemIds, "criado");
+  return { id: r.id };
+}
+
+/**
+ * Cria plano sem RNC (avulso ou de outra origem, ex.: RISCO_OPORTUNIDADE) na transação do
+ * chamador. Não checa permissão (quem chama decide) nem notifica — após o commit, chame
+ * notificarItensAtribuidos(a, itemIds, "criado").
+ */
+export async function criarPlanoNaTransacao(
+  tx: Tx,
+  a: Ator,
+  d: DadosPlanoManual,
+  origem: { tipo: "MANUAL" | "RISCO_OPORTUNIDADE"; id: string | null },
+) {
   const cab = cabecalhoPlano(d);
   validarQuantidadeItens(d.itens);
   const obraId = d.obraId || null;
-  if (obraId && !obraDoPlanoAcessivel(a, { obraId })) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
   const dados = d.itens.map(dadosItem);
-  const r = await a.db.$transaction(async (tx) => {
-    if (obraId && !(await tx.obraUnidade.findFirst({ where: { id: obraId, ativo: true }, select: { id: true } }))) {
-      throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
-    }
-    await validarQuemPlanoManual(tx, dados.map((x) => x.quemId), obraId);
-    const plano = await tx.planoAcao.create({
-      data: { empresaId: a.empresaId, origemTipo: "MANUAL", origemId: null, ...cab, obraId, criadoPorId: a.usuarioId },
-      select: { id: true },
-    });
-    const criados = await tx.itemAcao.createManyAndReturn({
-      data: dados.map((x, i) => ({ ...x, empresaId: a.empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: i + 1 })),
-      select: { id: true },
-    });
-    return { id: plano.id, itemIds: criados.map((c) => c.id) };
+  if (obraId && !(await tx.obraUnidade.findFirst({ where: { id: obraId, ativo: true }, select: { id: true } }))) {
+    throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  }
+  await validarQuemPlanoManual(tx, dados.map((x) => x.quemId), obraId);
+  const plano = await tx.planoAcao.create({
+    data: { empresaId: a.empresaId, origemTipo: origem.tipo, origemId: origem.id, ...cab, obraId, criadoPorId: a.usuarioId },
+    select: { id: true },
   });
-  await notificarItensAtribuidos(a, r.itemIds, "criado");
-  return { id: r.id };
+  const criados = await tx.itemAcao.createManyAndReturn({
+    data: dados.map((x, i) => ({ ...x, empresaId: a.empresaId, planoAcaoId: plano.id, ciclo: 1, ordem: i + 1 })),
+    select: { id: true },
+  });
+  return { id: plano.id, itemIds: criados.map((c) => c.id) };
 }
 
 async function carregarPlanoParaGestao(tx: Tx, a: Ator, planoId: string) {

@@ -277,3 +277,4 @@
 .cabecalhoVersao strong { color: var(--cor-texto); }
 
 .observacao { margin: 4px 0 0; }
+.rodapeCartao { margin: var(--espaco-2) 0 0; font-size: 13px; }

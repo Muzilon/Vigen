@@ -4,6 +4,7 @@ import { ErroNegocio } from "@/lib/erros";
 import { notificar } from "@/lib/notificacoes";
 import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
+import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
 export const MAX_MENSAGEM = 4000;
@@ -33,6 +34,17 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     const p = await a.db.processo.findFirst({ where: { id: t.entidadeId }, select: { donoId: true } });
     if (!p) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     return { destinatarioPadrao: p.donoId && p.donoId !== a.usuarioId ? p.donoId : null };
+  }
+  if (t.tipo === "RISCO_OPORTUNIDADE") {
+    // Riscos: usuários da empresa com o módulo (escopo de obras); fala com o responsável.
+    if (!(await moduloRiscosAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const r = await a.db.riscoOportunidade.findFirst({
+      where: { AND: [{ id: t.entidadeId, ativo: true }, filtroObraRisco(a)] },
+      select: { responsavelId: true, criadoPorId: true },
+    });
+    if (!r) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const padrao = r.responsavelId ?? r.criadoPorId;
+    return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
   }
   const item = await a.db.itemAcao.findFirst({
     where: { AND: [{ id: t.entidadeId }, filtroAcessoItem(a)] },
@@ -150,5 +162,6 @@ export async function listarNaoLidas(a: Ator, take = 20) {
 export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId: string }) {
   if (t.entidadeTipo === "RNC") return `/rncs/${t.entidadeId}?aba=interacoes`;
   if (t.entidadeTipo === "PROCESSO") return `/processos/${t.entidadeId}`;
+  if (t.entidadeTipo === "RISCO_OPORTUNIDADE") return `/riscos/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

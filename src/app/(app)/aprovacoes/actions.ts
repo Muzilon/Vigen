@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { cancelar, decidir } from "@/lib/aprovacao";
 import "@/lib/aprovacao/handler-teste";
+import "@/lib/aprovacao/handlers";
 import { getAtor } from "@/lib/ator-servidor";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { ErroPermissao } from "@/lib/tenant";
