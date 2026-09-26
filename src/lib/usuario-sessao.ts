@@ -7,7 +7,7 @@ export async function carregarDadosSessao(usuarioId: string) {
     where: { id: usuarioId },
     include: {
       perfil: { select: { permissoes: true } },
-      empresa: { select: { nome: true, ativo: true } },
+      empresa: { select: { nome: true, ativo: true, modulosAtivos: true } },
       acessosObra: { select: { obraId: true } },
     },
   });
@@ -16,6 +16,7 @@ export async function carregarDadosSessao(usuarioId: string) {
     userId: u.id,
     empresaId: u.empresaId,
     empresaNome: u.empresa.nome,
+    modulosAtivos: u.empresa.modulosAtivos,
     nome: u.nome,
     email: u.email,
     papel: u.papel,

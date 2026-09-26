@@ -4,10 +4,11 @@
  * escopo de obras, obras, ativo, senha) incrementa tokenVersao — as sessões dele caem.
  */
 import bcrypt from "bcryptjs";
-import { Prisma, type Permissao } from "@prisma/client";
+import { Prisma, type Modulo, type Permissao } from "@prisma/client";
 import { z } from "zod";
 import { atorTem, type Ator, type Tx } from "@/lib/ator";
 import { ErroNegocio } from "@/lib/erros";
+import { TODOS_MODULOS } from "@/lib/modulos";
 import { permissoesEfetivas, TODAS_PERMISSOES } from "@/lib/permissoes";
 
 export const PAPEIS = ["ADMIN", "GESTOR_SGI", "INSPETOR", "COLABORADOR"] as const;
@@ -279,6 +280,94 @@ export async function salvarSetor(a: Ator, id: string | null, dados: unknown) {
     if (r.count === 0) throw new ErroNegocio("Setor não encontrado.");
     return { id };
   }, "Já existe um setor com este nome.");
+}
+
+// ---------------------------------------------------------------- módulos contratados
+
+/** Liga/desliga os módulos contratados da empresa (Empresa.modulosAtivos). */
+export async function salvarModulosAtivos(a: Ator, modulos: unknown) {
+  exigirAdmin(a);
+  const lista = z.array(z.enum(TODOS_MODULOS as [Modulo, ...Modulo[]])).parse(modulos);
+  // RNC e Plano de Ação são a base do sistema: sempre ativos.
+  const modulosAtivos = [...new Set(["RNC", "PLANO_ACAO", ...lista] as Modulo[])];
+  await a.db.empresa.update({ where: { id: a.empresaId }, data: { modulosAtivos } });
+  return modulosAtivos;
+}
+
+export async function dadosModulos(a: Ator) {
+  exigirAdmin(a);
+  const empresa = await a.db.empresa.findFirst({ where: { id: a.empresaId }, select: { modulosAtivos: true } });
+  return { modulosAtivos: empresa?.modulosAtivos ?? [] };
+}
+
+// ---------------------------------------------------------------- configuração de escala
+
+export const esquemaEscala = z.object({
+  tipo: z.enum(["RISCO_OPORTUNIDADE", "HIRA", "ASPECTO_IMPACTO"]),
+  obraId: z
+    .string()
+    .nullish()
+    .transform((s) => s || null)
+    .pipe(z.uuid("Obra inválida.").nullable()),
+  tamanho: z.coerce.number().refine((n) => n === 3 || n === 5, "Tamanho deve ser 3 ou 5."),
+  eixos: z.string().transform((s, ctx) => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      ctx.addIssue({ code: "custom", message: "JSON inválido em Eixos." });
+      return z.NEVER;
+    }
+  }),
+  faixas: z.string().transform((s, ctx) => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      ctx.addIssue({ code: "custom", message: "JSON inválido em Faixas." });
+      return z.NEVER;
+    }
+  }),
+  criteriosExtras: z
+    .string()
+    .nullish()
+    .transform((s, ctx) => {
+      if (!s) return undefined;
+      try {
+        return JSON.parse(s);
+      } catch {
+        ctx.addIssue({ code: "custom", message: "JSON inválido em Critérios extras." });
+        return z.NEVER;
+      }
+    }),
+});
+
+export async function salvarConfiguracaoEscala(a: Ator, dados: unknown) {
+  exigirAdmin(a);
+  const d = validar(esquemaEscala, dados);
+  if (d.obraId && !(await a.db.obraUnidade.findFirst({ where: { id: d.obraId }, select: { id: true } }))) {
+    throw new ErroNegocio("Obra/unidade inválida.");
+  }
+  // Não usa upsert com a chave composta [empresaId, tipo, obraId]: o Prisma não aceita
+  // `null` no tipo do compound-unique input para uma coluna nullable — resolve à mão.
+  return unico(async () => {
+    const existente = await a.db.configuracaoEscala.findFirst({ where: { tipo: d.tipo, obraId: d.obraId }, select: { id: true } });
+    const dadosSalvos = { tamanho: d.tamanho, eixos: d.eixos, faixas: d.faixas, criteriosExtras: d.criteriosExtras };
+    if (existente) return a.db.configuracaoEscala.update({ where: { id: existente.id }, data: dadosSalvos });
+    return a.db.configuracaoEscala.create({ data: { empresaId: a.empresaId, tipo: d.tipo, obraId: d.obraId, ...dadosSalvos } });
+  }, "Já existe uma configuração para este tipo/obra.");
+}
+
+export async function excluirConfiguracaoEscala(a: Ator, id: string) {
+  exigirAdmin(a);
+  await a.db.configuracaoEscala.deleteMany({ where: { id } });
+}
+
+export async function dadosEscalas(a: Ator) {
+  exigirAdmin(a);
+  const [configuracoes, obras] = await Promise.all([
+    a.db.configuracaoEscala.findMany({ orderBy: [{ tipo: "asc" }, { criadoEm: "asc" }] }),
+    a.db.obraUnidade.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+  ]);
+  return { configuracoes, obras };
 }
 
 // ---------------------------------------------------------------- leitura

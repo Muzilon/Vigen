@@ -10,6 +10,7 @@
    08. Etiquetas — papel, perfil, inativo, "Você", sistema
    09. Perfis — título do cartão e botão de exclusão
    10. Obras e setores — lista de registros editáveis
+   11. Módulos e escalas — área de texto para JSON (eixos/faixas)
    ========================================================== */
 
 /* ==========================================================
@@ -154,6 +155,19 @@ input.entradaEndereco {
 }
 input.entradaNomeSetor {
   width: 256px;
+}
+
+/* ==========================================================
+   11. MÓDULOS E ESCALAS
+   ========================================================== */
+textarea.areaTexto {
+  width: 100%;
+  font-family: var(--fonte-mono);
+  font-size: 12px;
+  padding: var(--espaco-2);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  resize: vertical;
 }
 
 /* ==========================================================

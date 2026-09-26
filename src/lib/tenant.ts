@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import type { Permissao } from "@prisma/client";
+import type { Modulo, Permissao } from "@prisma/client";
 import { auth } from "@/auth";
 import { criarDbTenant, type DbTenant } from "@/lib/db-tenant";
 import { carregarDadosSessao } from "@/lib/usuario-sessao";
@@ -11,6 +11,8 @@ export interface Contexto {
   usuario: { id: string; nome: string; email: string | null | undefined; papel: string; empresaNome: string };
   empresaId: string;
   permissoes: Permissao[];
+  /** Módulos contratados (ligados) pela empresa. Ver src/lib/modulos.ts para o gating. */
+  modulosAtivos: Modulo[];
   /** null = todas as obras da empresa. */
   obrasPermitidas: string[] | null;
 }
@@ -34,6 +36,7 @@ export const getContexto = cache(async (): Promise<Contexto> => {
     usuario: { id: u.userId, nome: u.nome, email: u.email, papel: u.papel, empresaNome: u.empresaNome },
     empresaId: u.empresaId,
     permissoes: u.permissoes,
+    modulosAtivos: u.modulosAtivos,
     obrasPermitidas: todas ? null : (u.obrasIds ?? []),
   };
 });

@@ -1,17 +1,40 @@
-import { PrismaClient, type Permissao } from "@prisma/client";
+import { PrismaClient, type Modulo, type Permissao } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-async function empresa(nome: string, cnpj: string) {
-  return prisma.empresa.upsert({ where: { cnpj }, update: { nome }, create: { nome, cnpj } });
+/** Todos os módulos (Monto testa o gating fim a fim com tudo contratado). */
+const TODOS_MODULOS: Modulo[] = [
+  "RNC",
+  "PLANO_ACAO",
+  "MAPA_PROCESSOS",
+  "RISCOS_OPORTUNIDADES",
+  "SWOT",
+  "HIRA",
+  "LAIA",
+  "INSPECOES",
+  "AUDITORIAS",
+  "DOCUMENTOS",
+  "REQUISITOS_LEGAIS",
+  "INCIDENTES",
+  "INDICADORES",
+  "TREINAMENTOS",
+];
+
+async function empresa(nome: string, cnpj: string, modulosAtivos?: Modulo[]) {
+  return prisma.empresa.upsert({
+    where: { cnpj },
+    update: { nome, ...(modulosAtivos ? { modulosAtivos } : {}) },
+    create: { nome, cnpj, ...(modulosAtivos ? { modulosAtivos } : {}) },
+  });
 }
 
 async function main() {
   const senhaHash = await bcrypt.hash("vigen123", 10);
 
   // ---- Monto ----
-  const monto = await empresa("Monto", "00000000000100");
+  // Monto: todos os módulos ativos (testa o gating/menu fim a fim).
+  const monto = await empresa("Monto", "00000000000100", TODOS_MODULOS);
   const e = monto.id;
   const obras = [];
   for (const [nome, codigo] of [
@@ -90,6 +113,8 @@ async function main() {
   }
 
   // ---- Demo (para testar isolamento) ----
+  // Sem override: fica só com o default do schema (RNC + PLANO_ACAO) — testa o gating
+  // junto com o isolamento (Monto tem tudo, Demo só o básico).
   const demo = await empresa("Demo", "00000000000200");
   await prisma.obraUnidade.upsert({
     where: { empresaId_nome: { empresaId: demo.id, nome: "Unidade Demo" } },

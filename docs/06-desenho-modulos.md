@@ -60,3 +60,53 @@ Plano de Ação ganha origens RISCO_OPORTUNIDADE, HIRA, LAIA; Anexo/Interações
 | P5 | **Inspeções/Checklists** + **Auditorias internas** |
 | P6 | **Requisitos Legais** + **Incidentes e Acidentes** |
 | P7 | **Indicadores** + **Treinamentos e competências** |
+
+## P1 — entregue (2026-09-26)
+
+Escopo entregue neste sub-pacote (gating de módulos, escalas configuráveis, heatmap
+genérico). **Não** entregue aqui: motor de aprovação multi-assinante e Mapa de Processos
+(ficam para uma próxima etapa do P1).
+
+- **`Modulo` (schema.prisma)**: estendido com `MAPA_PROCESSOS`, `RISCOS_OPORTUNIDADES`,
+  `SWOT`, `HIRA`, `LAIA`, `REQUISITOS_LEGAIS`, `INCIDENTES`, `INDICADORES`, `TREINAMENTOS`.
+  **Decisão**: `INSPECAO`/`AUDITORIA` foram **renomeados** (não reaproveitados) para
+  `INSPECOES`/`AUDITORIAS` — eram placeholders sem nenhum modelo usando o valor (só
+  apareciam no enum e no default de `Empresa.modulosAtivos`, que não os incluía), então
+  o rename manteve o plural consistente com os módulos novos sem custo de migração de dados.
+- **Gating**: `src/lib/modulos.ts` (`temModulo`, `exigirModulo`, `ROTULO_MODULO`,
+  `GRUPO_POR_MODULO`). `Contexto.modulosAtivos` (src/lib/tenant.ts) carregado a partir de
+  `Empresa.modulosAtivos` em `carregarDadosSessao` (src/lib/usuario-sessao.ts) — mesmo
+  padrão de "lido do banco a cada requisição" já usado para permissões.
+- **Menu**: `src/lib/menu-registro.ts` é o registro de itens por módulo (`href`, `label`,
+  `grupo`, `implementado`, `permissao?`). Um item só aparece quando `implementado: true` **e**
+  o módulo está ativo **e** a permissão (se houver) está presente. Hoje todos os itens do
+  registro têm `implementado: false` (nenhuma página dos módulos novos existe ainda) — a
+  lista fica vazia de propósito até os pacotes P2+ entregarem as páginas. RNC, Plano de
+  Ação e Configurações continuam fixos em `src/app/(app)/layout.tsx` (base do sistema, fora
+  do gating por módulo contratado).
+- **Aba "Módulos"** em Configurações (`ADMIN_CONFIG`): liga/desliga módulos por empresa
+  (`salvarModulosAtivos` em `src/lib/admin/servico.ts`); RNC/PLANO_ACAO sempre ativos.
+- **Seed**: Monto com todos os módulos ativos (para testar o gating fim a fim); Demo
+  mantém só RNC + PLANO_ACAO (default do schema) — reforça o teste de isolamento
+  multi-tenant já existente (`scripts/teste-isolamento.ts`).
+- **`ConfiguracaoEscala`** (novo modelo, migração
+  `20260926120000_modulos_escala_heatmap`): por `empresaId` + `tipo` (`TipoEscala`:
+  `RISCO_OPORTUNIDADE`, `HIRA`, `ASPECTO_IMPACTO`) + `obraId` opcional. Resolução em
+  código, não em SQL: obra (override) → empresa (`obraId` nulo) → padrão do sistema
+  embutido em `src/lib/escala/padrao.ts`. Um índice único parcial
+  (`WHERE obra_id IS NULL`) garante no máximo uma configuração "padrão da empresa" por
+  tipo — a unicidade comum `[empresaId, tipo, obraId]` não bastava porque o Postgres trata
+  `NULL` como distinto em `UNIQUE`.
+- **Funções puras** em `src/lib/escala/` (sem banco, testadas em `*.test.ts` com vitest):
+  `calcularScore`/`faixaParaScore`/`calcularNivel` (P×S e faixa), `resolverConfiguracaoEscala`
+  (obra → empresa → padrão), `nivelComCriteriosExtras`/`ehSignificativo` (significância do
+  LAIA: nível final ALTO ou CRITICO após aplicar critérios extras que podem elevar o nível,
+  nunca rebaixar).
+- **Aba "Escalas"** em Configurações: cria/edita configurações (tipo, obra opcional,
+  tamanho 3/5, eixos/faixas/critérios extras como JSON) e lista as cadastradas com opção de
+  excluir (volta a usar o padrão do sistema). Editor de JSON cru é uma solução mínima para
+  este pacote — um editor guiado (campo por eixo/faixa) fica para quando um módulo
+  consumidor (Riscos, HIRA ou LAIA) precisar de UX mais refinada.
+- **Heatmap genérico**: `src/paginas/html/componentes/heatmap.tsx` +
+  `src/paginas/css/componentes/heatmap.module.css` — ver docs/05-guia-paginas-css.md,
+  seção 6, para a documentação de uso.

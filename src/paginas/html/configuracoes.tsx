@@ -4,16 +4,20 @@ import {
   alternarUsuarioAtivoAcao,
   atualizarUsuarioAcao,
   criarUsuarioAcao,
+  excluirConfiguracaoEscalaAcao,
   excluirPerfilAcao,
   redefinirSenhaAcao,
+  salvarConfiguracaoEscalaAcao,
+  salvarModulosAtivosAcao,
   salvarObraAcao,
   salvarPerfilAcao,
   salvarPreferenciasAcao,
   salvarSetorAcao,
 } from "@/app/(app)/configuracoes/actions";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
-import { dadosAdministracao, MIN_SENHA, PAPEIS } from "@/lib/admin/servico";
+import { dadosAdministracao, dadosEscalas, dadosModulos, MIN_SENHA, PAPEIS } from "@/lib/admin/servico";
 import { getAtor } from "@/lib/ator-servidor";
+import { GRUPO_MODULO, GRUPO_POR_MODULO, ROTULO_MODULO, TODOS_MODULOS } from "@/lib/modulos";
 import { MAX_DIAS_ALERTA } from "@/lib/notificacoes/preferencias";
 import { obterPreferencias } from "@/lib/notificacoes/preferencias-servico";
 import { TODAS_PERMISSOES } from "@/lib/permissoes";
@@ -28,9 +32,17 @@ const ABAS = [
   ["perfis", "Perfis"],
   ["obras", "Obras / unidades"],
   ["setores", "Setores"],
+  ["modulos", "Módulos"],
+  ["escalas", "Escalas"],
   ["preferencias", "Notificações"],
 ] as const;
 type Aba = (typeof ABAS)[number][0];
+
+const ROTULO_TIPO_ESCALA: Record<"RISCO_OPORTUNIDADE" | "HIRA" | "ASPECTO_IMPACTO", string> = {
+  RISCO_OPORTUNIDADE: "Riscos e oportunidades",
+  HIRA: "HIRA",
+  ASPECTO_IMPACTO: "Aspecto e impacto (LAIA)",
+};
 
 const ROTULO_PAPEL: Record<(typeof PAPEIS)[number], string> = {
   ADMIN: "Administrador",
@@ -306,6 +318,112 @@ function AbaSetores({ d }: { d: Dados }) {
   );
 }
 
+async function AbaModulos({ empresaId }: { empresaId: string }) {
+  const { modulosAtivos } = await dadosModulos(await getAtor());
+  const ativos = new Set(modulosAtivos);
+  const grupos = [GRUPO_MODULO.QUALIDADE, GRUPO_MODULO.SEGURANCA, GRUPO_MODULO.MEIO_AMBIENTE, GRUPO_MODULO.GESTAO];
+  return (
+    <div className={styles.abaEstreita}>
+      <p className={styles.explicacao}>
+        Módulos contratados por esta empresa. RNC e Plano de Ação são a base do sistema e ficam sempre ativos.
+        Desligar um módulo esconde seus itens do menu (quando implementados); não apaga dados existentes.
+      </p>
+      <Cartao titulo="Módulos contratados">
+        <FormAcao acao={salvarModulosAtivosAcao} botao="Salvar" classeBotao={styles.botaoPrimario} className={styles.pilhaLarga}>
+          <input type="hidden" name="empresaId" value={empresaId} />
+          {grupos.map((grupo) => (
+            <fieldset key={grupo} className={styles.grupoOpcoes}>
+              <legend className={styles.legenda}>{grupo}</legend>
+              <div className={styles.opcoesEmGrade}>
+                {TODOS_MODULOS.filter((m) => GRUPO_POR_MODULO[m] === grupo && m !== "RNC" && m !== "PLANO_ACAO").map((m) => (
+                  <label key={m} className={styles.opcao}>
+                    <input type="checkbox" name="modulos" value={m} defaultChecked={ativos.has(m)} />
+                    {ROTULO_MODULO[m]}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+        </FormAcao>
+      </Cartao>
+    </div>
+  );
+}
+
+function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
+  const obra = new Map(d.obras.map((o) => [o.id, o.nome]));
+  return (
+    <div className={styles.secoesAba}>
+      <p className={styles.explicacao}>
+        Escala (P×S) usada para calcular o nível de risco/HIRA/aspecto-impacto. Uma configuração sem obra é o padrão
+        da empresa; escolha uma obra para sobrescrever apenas naquele local. Sem nenhuma configuração cadastrada, o
+        sistema usa um padrão embutido (5x5 para Riscos/HIRA, 3x3 para Aspecto/Impacto).
+      </p>
+      <Cartao titulo="Nova configuração de escala">
+        <FormAcao acao={salvarConfiguracaoEscalaAcao} botao="Salvar" classeBotao={styles.botaoPrimario} className={styles.pilha}>
+          <div className={styles.gradeCampos}>
+            <div>
+              <Rotulo>Tipo *</Rotulo>
+              <Selecao name="tipo" required className={styles.selecaoFormulario}>
+                {Object.entries(ROTULO_TIPO_ESCALA).map(([k, r]) => <option key={k} value={k}>{r}</option>)}
+              </Selecao>
+            </div>
+            <div>
+              <Rotulo>Obra (sobrescrita opcional)</Rotulo>
+              <Selecao name="obraId" className={styles.selecaoFormulario}>
+                <option value="">— Padrão da empresa —</option>
+                {d.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
+              </Selecao>
+            </div>
+            <div>
+              <Rotulo>Tamanho *</Rotulo>
+              <Selecao name="tamanho" required className={styles.selecaoFormulario} defaultValue="5">
+                <option value="3">3x3</option>
+                <option value="5">5x5</option>
+              </Selecao>
+            </div>
+          </div>
+          <div>
+            <Rotulo>Eixos (JSON)</Rotulo>
+            <textarea name="eixos" required className={styles.areaTexto} rows={4} placeholder='[{"chave":"probabilidade","rotulo":"Probabilidade","niveis":[{"valor":1,"rotulo":"Baixa"}]}]' />
+          </div>
+          <div>
+            <Rotulo>Faixas (JSON)</Rotulo>
+            <textarea name="faixas" required className={styles.areaTexto} rows={3} placeholder='[{"limite":4,"nivel":"BAIXO","cor":"baixa"}]' />
+          </div>
+          <div>
+            <Rotulo>Critérios extras (JSON, opcional)</Rotulo>
+            <textarea name="criteriosExtras" className={styles.areaTexto} rows={2} placeholder='[{"chave":"requisitoLegal","rotulo":"Requisito legal não atendido","elevaPara":"CRITICO"}]' />
+          </div>
+        </FormAcao>
+      </Cartao>
+      <Cartao titulo={`Configurações cadastradas (${d.configuracoes.length})`}>
+        {d.configuracoes.length === 0 ? (
+          <p className={styles.explicacao}>Nenhuma — todos os tipos usam o padrão do sistema.</p>
+        ) : (
+          <ul className={styles.listaRegistros}>
+            {d.configuracoes.map((c) => (
+              <li key={c.id}>
+                <span className={styles.tituloPerfil}>
+                  {ROTULO_TIPO_ESCALA[c.tipo]} — {c.obraId ? (obra.get(c.obraId) ?? "obra removida") : "padrão da empresa"} ({c.tamanho}x{c.tamanho})
+                </span>
+                <FormAcao
+                  acao={excluirConfiguracaoEscalaAcao}
+                  botao="Excluir"
+                  classeBotao={styles.botaoPerigo}
+                  confirmar="Excluir esta configuração de escala? Volta a usar o padrão."
+                >
+                  <input type="hidden" name="id" value={c.id} />
+                </FormAcao>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Cartao>
+    </div>
+  );
+}
+
 async function AbaPreferencias({ empresaId }: { empresaId: string }) {
   const p = await obterPreferencias(empresaId);
   return (
@@ -352,7 +470,8 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
   if (!temPermissao(ctx, "ADMIN_CONFIG")) notFound();
   const sp = await searchParams;
   const aba: Aba = (ABAS.find(([k]) => k === sp.aba)?.[0] ?? "usuarios") as Aba;
-  const d = aba === "preferencias" ? null : await dadosAdministracao(await getAtor());
+  const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" ? null : await dadosAdministracao(await getAtor());
+  const escalas = aba === "escalas" ? await dadosEscalas(await getAtor()) : null;
 
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>
@@ -373,6 +492,8 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
       {aba === "perfis" && d && <AbaPerfis d={d} />}
       {aba === "obras" && d && <AbaObras d={d} />}
       {aba === "setores" && d && <AbaSetores d={d} />}
+      {aba === "modulos" && <AbaModulos empresaId={ctx.empresaId} />}
+      {aba === "escalas" && escalas && <AbaEscalas d={escalas} />}
       {aba === "preferencias" && <AbaPreferencias empresaId={ctx.empresaId} />}
     </div>
   );

@@ -1,5 +1,6 @@
 import { signOut } from "@/auth";
 import { getAtor } from "@/lib/ator-servidor";
+import { itensMenuVisiveis } from "@/lib/menu-registro";
 import { contarNotificacoesNaoLidas } from "@/lib/notificacoes/servico";
 import { getContexto, temPermissao } from "@/lib/tenant";
 import { LayoutApp } from "@/paginas/html/layout-app";
@@ -12,12 +13,16 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // contar a mesma mensagem duas vezes).
   const naoLidas = await contarNotificacoesNaoLidas(await getAtor());
 
+  // Itens fixos (base do sistema, fora do gating por módulo contratado) + itens dos módulos
+  // contratados/implementados (registro em src/lib/menu-registro.ts — hoje nenhum módulo novo
+  // tem página própria, então a lista abaixo fica vazia até os pacotes P2+ serem entregues).
   const itensMenu: ItemMenuLateral[] = [
     { href: "/", label: "Início", icone: <IconeInicio /> },
     { href: "/dashboard", label: "Dashboard", icone: <IconeDashboard /> },
     { href: "/rncs", label: "RNCs", icone: <IconeRncs /> },
     { href: "/plano-acao", label: "Plano de Ação", icone: <IconePlanoAcao /> },
     { href: "/mensagens", label: "Mensagens", icone: <IconeMensagens /> },
+    ...itensMenuVisiveis(ctx).map((item) => ({ href: item.href, label: item.label, icone: <IconeModulo /> })),
     ...(temPermissao(ctx, "ADMIN_CONFIG")
       ? [{ href: "/configuracoes", label: "Configurações", icone: <IconeConfiguracoes /> }]
       : []),
@@ -85,6 +90,16 @@ function IconeMensagens() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20.5 15a2 2 0 0 1-2 2H8l-4.5 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+function IconeModulo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="4" width="7" height="7" rx="1" />
+      <rect x="13" y="4" width="7" height="7" rx="1" />
+      <rect x="4" y="13" width="7" height="7" rx="1" />
+      <rect x="13" y="13" width="7" height="7" rx="1" />
     </svg>
   );
 }

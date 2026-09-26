@@ -13,12 +13,34 @@ enum Plano {
   ENTERPRISE
 }
 
+/// Módulos contratáveis por empresa (Empresa.modulosAtivos). Somente RNC e PLANO_ACAO têm
+/// funcionalidade implementada hoje; os demais existem para o gating (menu/rotas) já
+/// funcionar conforme cada pacote (docs/06-desenho-modulos.md) é entregue.
+/// Decisão: INSPECAO/AUDITORIA foram renomeados para INSPECOES/AUDITORIAS (plural, consistente
+/// com os demais módulos novos) — nenhum modelo usava esses valores ainda.
 enum Modulo {
   RNC
   PLANO_ACAO
-  INSPECAO
-  AUDITORIA
+  MAPA_PROCESSOS
+  RISCOS_OPORTUNIDADES
+  SWOT
+  HIRA
+  LAIA
+  INSPECOES
+  AUDITORIAS
   DOCUMENTOS
+  REQUISITOS_LEGAIS
+  INCIDENTES
+  INDICADORES
+  TREINAMENTOS
+}
+
+/// Tipo de matriz/escala configurável (ConfiguracaoEscala). Reaproveitada por Riscos e
+/// Oportunidades, HIRA e LAIA (aspecto/impacto ambiental).
+enum TipoEscala {
+  RISCO_OPORTUNIDADE
+  HIRA
+  ASPECTO_IMPACTO
 }
 
 enum PapelUsuario {
@@ -179,6 +201,7 @@ model Empresa {
   interacoes               Interacao[]
   leiturasInteracao        LeituraInteracao[]
   notificacoes             Notificacao[]
+  configuracoesEscala      ConfiguracaoEscala[]
 
   @@map("empresa")
 }
@@ -194,10 +217,11 @@ model ObraUnidade {
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
-  empresa Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  acessos UsuarioAcessoObra[]
-  rncs    Rnc[]
-  planos  PlanoAcao[]
+  empresa             Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  acessos             UsuarioAcessoObra[]
+  rncs                Rnc[]
+  planos              PlanoAcao[]
+  configuracoesEscala ConfiguracaoEscala[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -606,6 +630,39 @@ model Notificacao {
   @@index([empresaId, usuarioId, criadoEm])
   @@index([empresaId, emailStatus, criadoEm])
   @@map("notificacao")
+}
+
+/// Escala (P×S ou similar) de um tipo (Riscos/Oportunidades, HIRA, Aspecto/Impacto) para uma
+/// empresa, com sobrescrita opcional por obra/unidade. Resolução em código (não em SQL):
+/// obra (se houver override) → empresa (obraId nulo) → padrão do sistema (src/lib/escala/padrao.ts).
+/// obraId nulo = configuração padrão da empresa; a unicidade "só um registro padrão por
+/// empresa+tipo" é garantida por índice único parcial (ver migração:
+/// configuracao_escala_empresa_tipo_padrao_key, WHERE obra_id IS NULL).
+model ConfiguracaoEscala {
+  id              String     @id @default(uuid()) @db.Uuid
+  empresaId       String     @map("empresa_id") @db.Uuid
+  tipo            TipoEscala
+  obraId          String?    @map("obra_id") @db.Uuid
+  /// 3 (3x3) ou 5 (5x5).
+  tamanho         Int
+  /// Rótulos e pesos por eixo. Ex.: [{ "chave": "probabilidade", "rotulo": "Probabilidade",
+  /// "niveis": [{ "valor": 1, "rotulo": "Raro" }, ...] }, { "chave": "severidade", ... }]
+  eixos           Json
+  /// Faixas de nível a partir do score (produto dos eixos). Ex.: [{ "limite": 4, "nivel":
+  /// "BAIXO", "cor": "baixa" }, { "limite": 9, "nivel": "MEDIO", "cor": "media" }, ...]
+  faixas          Json
+  /// Critérios adicionais opcionais (ex.: significância do aspecto/impacto no LAIA).
+  criteriosExtras Json?      @map("criterios_extras")
+  criadoEm        DateTime   @default(now()) @map("criado_em")
+  atualizadoEm    DateTime   @updatedAt @map("atualizado_em")
+
+  empresa Empresa      @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra    ObraUnidade? @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Cascade)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, tipo, obraId])
+  @@index([empresaId, tipo])
+  @@map("configuracao_escala")
 }
 
 /// Tentativas de login (rate limit por e-mail e IP). Global: e-mail é único no sistema.

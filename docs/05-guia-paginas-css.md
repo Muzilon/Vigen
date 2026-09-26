@@ -207,6 +207,22 @@ ordena-o em relação aos demais filhos do cabeçalho e a futuros popovers fora 
   `prefers-reduced-motion: reduce` a animação é desligada. Só a entrada é
   animada (o painel usa `hidden` ao fechar).
 
+- **Heatmap**: `Heatmap` (`heatmap.tsx` + `componentes/heatmap.module.css`) —
+  matriz P×S genérica reaproveitada por Riscos e Oportunidades, HIRA, LAIA e
+  futuramente Partes Interessadas (docs/06-desenho-modulos.md, "Base comum").
+  Recebe só dados já calculados: `eixoLinha`/`eixoColuna` (rótulo + valores),
+  `celulas` (`{ linha, coluna, contagem, cor, href? }`) e `legenda` opcional
+  (padrão: baixo/médio/alto/crítico). Não conhece regra de negócio — quem
+  chama usa `src/lib/escala/calculo.ts` (`calcularNivel`) para preencher
+  `cor`/`contagem` por célula. Tabela acessível: `<caption>` (só leitor de
+  tela) descreve os dois eixos, `<th scope="col">`/`<th scope="row">` nos
+  cabeçalhos, célula com contagem legível (`aria-label` sempre presente) e
+  vira `<Link>` só quando `href` é passado e a contagem é maior que zero. Cor
+  da célula reaproveita `--cor-gravidade-*` de `base.css` (mesmos 4 tokens dos
+  badges de gravidade — BAIXO/MEDIO/ALTO/CRITICO mapeiam para
+  baixa/media/alta/critica). Rolagem horizontal própria (`overflow-x: auto`)
+  para caber em telas estreitas sem quebrar o layout da página.
+
 Todos em `src/paginas/html/componentes/`.
 
 ## 7. `src/components/`

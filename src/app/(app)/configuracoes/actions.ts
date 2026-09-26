@@ -143,3 +143,35 @@ export async function salvarSetorAcao(_: ResultadoAcao, fd: FormData) {
     return id ? "Setor atualizado." : "Setor criado.";
   });
 }
+
+// ---------------------------------------------------------------- módulos contratados
+
+export async function salvarModulosAtivosAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await adm.salvarModulosAtivos(a, fd.getAll("modulos").map(String));
+    return "Módulos atualizados.";
+  });
+}
+
+// ---------------------------------------------------------------- escalas
+
+export async function salvarConfiguracaoEscalaAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await adm.salvarConfiguracaoEscala(a, {
+      tipo: txt(fd, "tipo"),
+      obraId: txt(fd, "obraId"),
+      tamanho: txt(fd, "tamanho"),
+      eixos: txt(fd, "eixos"),
+      faixas: txt(fd, "faixas"),
+      criteriosExtras: txt(fd, "criteriosExtras"),
+    });
+    return "Configuração de escala salva.";
+  });
+}
+
+export async function excluirConfiguracaoEscalaAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await adm.excluirConfiguracaoEscala(a, idDe(fd));
+    return "Configuração de escala excluída (volta a usar o padrão).";
+  });
+}
