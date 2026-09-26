@@ -16,20 +16,15 @@ export const authConfig = {
       return logado; // false → redireciona para /login
     },
     session({ session, token }) {
+      // B6: não expor empresaId, permissões, obras ou tokenVersao ao cliente.
       if (token.userId) {
         session.user = {
           ...session.user,
           id: token.userId,
           userId: token.userId,
-          empresaId: token.empresaId!,
-          empresaNome: token.empresaNome!,
           nome: token.nome!,
           name: token.nome!,
-          papel: token.papel!,
-          permissoes: token.permissoes ?? [],
-          escopoObras: token.escopoObras!,
-          obrasIds: token.obrasIds ?? null,
-          tokenVersao: token.tokenVersao ?? 0,
+          empresaNome: token.empresaNome!,
         };
       }
       return session;

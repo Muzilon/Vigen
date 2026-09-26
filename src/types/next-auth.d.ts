@@ -1,26 +1,21 @@
-import type { EscopoObras, PapelUsuario, Permissao } from "@prisma/client";
 import type { DefaultSession } from "next-auth";
 
-interface CamposVigen {
+/** Somente dados de exibição vão para a sessão (exposta em /api/auth/session). */
+interface CamposSessao {
   userId: string;
-  empresaId: string;
-  empresaNome: string;
   nome: string;
-  papel: PapelUsuario;
-  permissoes: Permissao[];
-  escopoObras: EscopoObras;
-  obrasIds: string[] | null;
-  tokenVersao: number;
+  empresaNome: string;
 }
 
 declare module "next-auth" {
   interface Session {
-    user: CamposVigen & DefaultSession["user"];
+    user: CamposSessao & DefaultSession["user"];
   }
 }
 
 declare module "@auth/core/jwt" {
-  interface JWT extends Partial<CamposVigen> {
-    verificadoEm?: number;
+  interface JWT extends Partial<CamposSessao> {
+    /** Fica apenas no JWT (cifrado), nunca na sessão. */
+    tokenVersao?: number;
   }
 }

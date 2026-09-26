@@ -115,6 +115,11 @@ enum TipoEntidadeAnexo {
   ITEM_ACAO
 }
 
+enum TipoEntidadeInteracao {
+  RNC
+  ITEM_ACAO
+}
+
 enum TipoSequencia {
   RNC
 }
@@ -147,6 +152,8 @@ model Empresa {
   planosAcao               PlanoAcao[]
   itensAcao                ItemAcao[]
   anexos                   Anexo[]
+  interacoes               Interacao[]
+  leiturasInteracao        LeituraInteracao[]
 
   @@map("empresa")
 }
@@ -237,6 +244,9 @@ model Usuario {
   itensResponsavel         ItemAcao[]                @relation("ItemQuem")
   anexosEnviados           Anexo[]                   @relation("AnexoEnviadoPor")
   anexosExcluidos          Anexo[]                   @relation("AnexoExcluidoPor")
+  interacoesAutor          Interacao[]               @relation("InteracaoAutor")
+  interacoesDestinatario   Interacao[]               @relation("InteracaoDestinatario")
+  leiturasInteracao        LeituraInteracao[]
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -490,4 +500,56 @@ model Anexo {
   @@unique([empresaId, id])
   @@index([empresaId, entidadeTipo, entidadeId])
   @@map("anexo")
+}
+
+/// Mensagens dentro do sistema, por entidade (thread = entidadeTipo + entidadeId).
+model Interacao {
+  id             String                @id @default(uuid()) @db.Uuid
+  empresaId      String                @map("empresa_id") @db.Uuid
+  entidadeTipo   TipoEntidadeInteracao @map("entidade_tipo")
+  entidadeId     String                @map("entidade_id") @db.Uuid
+  autorId        String                @map("autor_id") @db.Uuid
+  destinatarioId String?               @map("destinatario_id") @db.Uuid
+  mensagem       String
+  criadoEm       DateTime              @default(now()) @map("criado_em")
+
+  empresa      Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  autor        Usuario            @relation("InteracaoAutor", fields: [empresaId, autorId], references: [empresaId, id], onDelete: Restrict)
+  destinatario Usuario?           @relation("InteracaoDestinatario", fields: [empresaId, destinatarioId], references: [empresaId, id], onDelete: Restrict)
+  leituras     LeituraInteracao[]
+
+  @@unique([empresaId, id])
+  @@index([empresaId, entidadeTipo, entidadeId, criadoEm])
+  @@index([empresaId, destinatarioId, criadoEm])
+  @@map("interacao")
+}
+
+/// Leitura de uma interação por um usuário.
+model LeituraInteracao {
+  empresaId   String   @map("empresa_id") @db.Uuid
+  interacaoId String   @map("interacao_id") @db.Uuid
+  usuarioId   String   @map("usuario_id") @db.Uuid
+  lidaEm      DateTime @default(now()) @map("lida_em")
+
+  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  interacao Interacao @relation(fields: [empresaId, interacaoId], references: [empresaId, id], onDelete: Cascade)
+  usuario   Usuario   @relation(fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Cascade)
+
+  @@id([empresaId, interacaoId, usuarioId])
+  @@index([empresaId, usuarioId])
+  @@map("leitura_interacao")
+}
+
+/// Tentativas de login (rate limit por e-mail e IP). Global: e-mail é único no sistema.
+model TentativaLogin {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String
+  ip        String
+  sucesso   Boolean
+  bloqueada Boolean  @default(false)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  @@index([email, criadoEm])
+  @@index([ip, criadoEm])
+  @@map("tentativa_login")
 }

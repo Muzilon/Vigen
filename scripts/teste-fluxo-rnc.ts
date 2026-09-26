@@ -5,10 +5,14 @@ import type { Ator } from "../src/lib/ator";
 import { hojeNoFuso } from "../src/lib/datas";
 import { criarDbTenant } from "../src/lib/db-tenant";
 import { permissoesEfetivas } from "../src/lib/permissoes";
-import { adicionarItensRnc, concluirItem, marcarEmAndamento } from "../src/lib/plano-acao/servico";
+import { autenticar, LIMITE_LOGIN } from "../src/lib/auth/limite-login";
+import { contarNaoLidas, criarInteracao, listarInteracoes, listarNaoLidas, marcarLidas } from "../src/lib/interacoes/servico";
+import { adicionarItensRnc, cancelarItem, concluirItem, marcarEmAndamento } from "../src/lib/plano-acao/servico";
 import {
   assumirAnalise,
   criarRnc,
+  filtroAcessoItem,
+  filtroAcessoRnc,
   decidirCancelamento,
   enviarParaVerificacao,
   iniciarExecucao,
@@ -104,7 +108,14 @@ async function main() {
     const doColab = itens.find((i) => i.quemId === colaborador.usuarioId)!;
     const doInsp = itens.find((i) => i.quemId === inspetor.usuarioId)!;
     await assert.rejects(concluirItem(inspetor, doColab.id, { dataConclusao: prazo, evidencia: "x" }), /Somente o responsável/);
-    await marcarEmAndamento(colaborador, doColab.id); // colaborador enxerga por ser 'quem'
+    // B4: "quem" de outra obra não abre a RNC, mas vê e executa o próprio item.
+    assert.equal(await colaborador.db.rnc.findFirst({ where: { AND: [{ id }, filtroAcessoRnc(colaborador)] } }), null);
+    const visiveis = await colaborador.db.itemAcao.findMany({
+      where: { AND: [{ planoAcao: { rnc: { is: { id } } } }, filtroAcessoItem(colaborador)] },
+    });
+    assert.deepEqual(visiveis.map((i) => i.id), [doColab.id]); // só o próprio item
+    await assert.rejects(listarInteracoes(colaborador, { tipo: "RNC", entidadeId: id }), /sem acesso/);
+    await marcarEmAndamento(colaborador, doColab.id);
     await concluirItem(colaborador, doColab.id, { dataConclusao: prazo, evidencia: "Lista de presença" });
     await concluirItem(inspetor, doInsp.id, { dataConclusao: prazo, evidencia: "Traço revisado" });
     await enviarParaVerificacao(inspetor, id);
@@ -200,6 +211,121 @@ async function main() {
     assert.equal(new Set(cods).size, 10);
     const seqs = rs.map((r) => r.sequencia).sort((a, b) => a - b);
     for (let i = 1; i < seqs.length; i++) assert.equal(seqs[i], seqs[i - 1] + 1);
+  });
+
+  console.log("Concorrência de itens do plano (M1):");
+  const novaRncEmExecucao = async (titulo: string) => {
+    const r = await criarRnc(inspetor, { titulo, descricao: "m1", tipo: "QUALIDADE", origem: "INSPECAO", gravidade: "BAIXA", obraId: obra });
+    await assumirAnalise(inspetor, r.id);
+    await salvarCausaRaiz(inspetor, r.id, { metodo: "OUTRO", analise: { texto: "x" }, causaRaiz: "Causa" });
+    await adicionarItensRnc(inspetor, r.id, [{ oQue: "Ação", quemId: inspetor.usuarioId, quando: prazo }]);
+    await iniciarExecucao(inspetor, r.id);
+    return r.id;
+  };
+  await caso("escrita em item incrementa rnc.versao; versão obsoleta gera conflito", async () => {
+    const rid = await novaRncEmExecucao("Teste E2E — M1 versão");
+    const antes = await rncDb(rid);
+    await concluirItem(inspetor, antes.planoAcao!.itens[0].id, { dataConclusao: prazo, evidencia: "ok" });
+    const depois = await rncDb(rid);
+    assert.equal(depois.versao, antes.versao + 1);
+    await assert.rejects(enviarParaVerificacao(inspetor, rid, antes.versao), /alterado por outra pessoa/);
+    await enviarParaVerificacao(inspetor, rid, depois.versao);
+  });
+  await caso("adicionar item x enviar para verificação em paralelo: só um vence, sem item pendente em verificação", async () => {
+    for (let n = 0; n < 3; n++) {
+      const rid = await novaRncEmExecucao(`Teste E2E — M1 corrida ${n}`);
+      const item = (await rncDb(rid)).planoAcao!.itens[0];
+      await concluirItem(inspetor, item.id, { dataConclusao: prazo, evidencia: "ok" });
+      const rs = await Promise.allSettled([
+        adicionarItensRnc(inspetor, rid, [{ oQue: "Nova ação", quemId: inspetor.usuarioId, quando: prazo }]),
+        enviarParaVerificacao(inspetor, rid),
+      ]);
+      assert.equal(rs.filter((r) => r.status === "fulfilled").length, 1, JSON.stringify(rs.map((r) => r.status)));
+      const f = await rncDb(rid);
+      if (f.status === "EM_VERIFICACAO") assert.ok(f.planoAcao!.itens.every((i) => i.status === "CONCLUIDO" || i.status === "CANCELADO"));
+    }
+  });
+  await caso("cancelar item em paralelo duas vezes: um vence, outro recebe conflito/erro de negócio", async () => {
+    const rid = await novaRncEmExecucao("Teste E2E — M1 cancelar");
+    const item = (await rncDb(rid)).planoAcao!.itens[0];
+    const rs = await Promise.allSettled([cancelarItem(qualidade, item.id), cancelarItem(qualidade, item.id)]);
+    assert.equal(rs.filter((r) => r.status === "fulfilled").length, 1);
+    const erro = rs.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    assert.match(String(erro.reason?.message), /alterado por outra pessoa|já finalizado/);
+  });
+
+  console.log("Permissões de tratativa (B3):");
+  let rncColab = "";
+  await caso("responsável sem RNC_TRATAR não trata a RNC nem gerencia itens", async () => {
+    const r = await criarRnc(inspetor, {
+      titulo: "Teste E2E — responsável sem permissão",
+      descricao: "b3",
+      tipo: "QUALIDADE",
+      origem: "INSPECAO",
+      gravidade: "BAIXA",
+      obraId: obra,
+      responsavelId: colaborador.usuarioId,
+    });
+    rncColab = r.id;
+    await assert.rejects(assumirAnalise(colaborador, r.id), /permissão/);
+    await admin.rnc.update({ where: { id: r.id }, data: { status: "EM_ANALISE" } }); // simula análise já iniciada
+    await assert.rejects(
+      salvarCausaRaiz(colaborador, r.id, { metodo: "OUTRO", analise: { texto: "x" }, causaRaiz: "Causa" }),
+      /permissão/,
+    );
+    await assert.rejects(adicionarItensRnc(colaborador, r.id, [{ oQue: "x", quemId: colaborador.usuarioId, quando: prazo }]), /permissão/);
+    await assert.rejects(iniciarExecucao(colaborador, r.id), /permissão/);
+    // ...mas, como responsável, abre o detalhe (fora da sua obra).
+    assert.ok(await colaborador.db.rnc.findFirst({ where: { AND: [{ id: r.id }, filtroAcessoRnc(colaborador)] } }));
+  });
+  await caso("análise de causa com estrutura inválida é rejeitada (B5)", async () => {
+    await assert.rejects(
+      salvarCausaRaiz(qualidade, rncColab, { metodo: "CINCO_PORQUES", analise: { porques: ["x".repeat(3000)] }, causaRaiz: "c" }),
+      /excede/,
+    );
+  });
+
+  console.log("Interações:");
+  await caso("quem do item e responsável sem RNC_TRATAR conversam; mensagem criada, recebida e lida", async () => {
+    const itemColab = (await rncDb(id)).planoAcao!.itens.find((i) => i.quemId === colaborador.usuarioId)!;
+    const t = { tipo: "ITEM_ACAO" as const, entidadeId: itemColab.id };
+    const antes = await contarNaoLidas(inspetor);
+    const m = await criarInteracao(colaborador, t, "Concluí o treinamento, segue lista.");
+    assert.equal(m.destinatarioId, inspetor.usuarioId); // padrão: responsável da RNC
+    assert.equal(await contarNaoLidas(inspetor), antes + 1);
+    assert.ok((await listarNaoLidas(inspetor)).some((x) => x.id === m.id));
+    await criarInteracao(inspetor, t, "Obrigado!"); // responsável responde ao quem
+    assert.ok((await listarInteracoes(colaborador, t)).length >= 2);
+    assert.equal(await marcarLidas(inspetor, t), 1);
+    assert.equal(await contarNaoLidas(inspetor), antes);
+    assert.equal(await marcarLidas(colaborador, t), 1);
+    // responsável sem RNC_TRATAR lê e responde a thread da RNC
+    const tr = { tipo: "RNC" as const, entidadeId: rncColab };
+    const r = await criarInteracao(colaborador, tr, "Preciso de apoio na análise.");
+    assert.equal(r.destinatarioId, inspetor.usuarioId); // padrão: quem abriu
+    await assert.rejects(criarInteracao(colaborador, tr, "   "), /Escreva/);
+  });
+
+  console.log("Rate limit de login (M2):");
+  await caso("5 falhas por e-mail bloqueiam (inclusive e-mail inexistente) e tentativas são registradas", async () => {
+    const ip = `test-${Date.now()}`;
+    // e-mail inexistente: mesma regra (sem enumeração)
+    const email = `naoexiste-${Date.now()}@teste.local`;
+    for (let i = 0; i < LIMITE_LOGIN.falhasPorEmail; i++) {
+      assert.deepEqual(await autenticar(admin, email, "errada", `${ip}-${i}`), { ok: false, motivo: "credenciais" });
+    }
+    assert.deepEqual(await autenticar(admin, email, "errada", `${ip}-x`), { ok: false, motivo: "bloqueado" });
+    const tentativas = await admin.tentativaLogin.count({ where: { email } });
+    assert.equal(tentativas, LIMITE_LOGIN.falhasPorEmail + 1);
+    await admin.tentativaLogin.deleteMany({ where: { email } });
+  });
+  await caso("falhas por IP bloqueiam outros e-mails do mesmo IP; login válido de outro IP segue ok", async () => {
+    const ip = `ip-${Date.now()}`;
+    for (let i = 0; i < LIMITE_LOGIN.falhasPorIp; i++) await autenticar(admin, `x${i}-${ip}@teste.local`, "errada", ip);
+    assert.deepEqual(await autenticar(admin, "colaborador@monto.com.br", "vigen123", ip), { ok: false, motivo: "bloqueado" });
+    const ok = await autenticar(admin, "colaborador@monto.com.br", "vigen123", `${ip}-outro`);
+    assert.equal(ok.ok, true);
+    await admin.tentativaLogin.deleteMany({ where: { ip: { startsWith: ip } } });
   });
 
   console.log(`\n${ok} casos OK`);

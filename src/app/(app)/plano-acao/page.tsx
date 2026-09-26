@@ -1,26 +1,33 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { ItemAcoes } from "@/components/item-acoes";
 import { Badge, Cabecalho, cls } from "@/components/ui";
 import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso, paraDataDb, somarDias } from "@/lib/datas";
+import { enumUrl, uuidUrl } from "@/lib/filtros-url";
 import { statusEfetivoItem } from "@/lib/plano-acao/status";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { COR_STATUS_ITEM, ROTULO_STATUS_ITEM } from "@/lib/rnc/rotulos";
-import { filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/rnc/servico";
+import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/rnc/servico";
 
-const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || "";
+const esquemaFiltros = z.object({
+  escopo: enumUrl(["meus", "todos"]),
+  status: enumUrl(["PENDENTE", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO", "ATRASADO"]),
+  responsavel: uuidUrl,
+  prazo: enumUrl(["vencidos", "7dias"]),
+});
 
 export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao">) {
-  const sp = await searchParams;
+  const sp = esquemaFiltros.parse(await searchParams);
   const a = await getAtor();
   const podeTodos = atorTem(a, "PLANO_GERENCIAR");
   const f = {
-    escopo: podeTodos && um(sp.escopo) === "todos" ? "todos" : "meus",
-    status: um(sp.status),
-    responsavel: um(sp.responsavel),
-    prazo: um(sp.prazo),
+    escopo: podeTodos && sp.escopo === "todos" ? "todos" : "meus",
+    status: sp.status,
+    responsavel: sp.responsavel,
+    prazo: sp.prazo,
   };
   const fuso = await fusoDaEmpresa(a);
   const hoje = hojeNoFuso(fuso);
@@ -30,13 +37,12 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
 
   const where: Prisma.ItemAcaoWhereInput = {
     AND: [
-      f.escopo === "meus" ? { quemId: a.usuarioId } : {},
-      // Itens de RNC só se a RNC for visível ao usuário (quem do item sempre é envolvido).
-      { planoAcao: { OR: [{ rnc: { is: null } }, { rnc: { is: filtroAcessoRnc(a) } }] } },
+      // "Meus": todos os itens em que sou o quem, mesmo de RNC que não vejo (B4).
+      f.escopo === "meus" ? { quemId: a.usuarioId } : filtroAcessoItem(a),
       f.status === "ATRASADO"
         ? { ...abertos, quando: { lt: hojeDb } }
         : f.status
-          ? { status: f.status as Prisma.EnumStatusItemAcaoFilter["equals"] }
+          ? { status: f.status }
           : f.escopo === "meus"
             ? abertos
             : {},
@@ -64,6 +70,13 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
     }),
     a.db.usuario.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
   ]);
+
+  const idsRnc = [...new Set(itens.flatMap((i) => (i.planoAcao.rnc ? [i.planoAcao.rnc.id] : [])))];
+  const rncsVisiveis = new Set(
+    idsRnc.length
+      ? (await a.db.rnc.findMany({ where: { AND: [{ id: { in: idsRnc } }, filtroAcessoRnc(a)] }, select: { id: true } })).map((r) => r.id)
+      : [],
+  );
 
   const link = (p: Record<string, string>) => `?${new URLSearchParams({ ...f, ...p }).toString()}`;
 
@@ -107,17 +120,24 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
             {itens.map((i) => {
               const st = statusEfetivoItem(i, hoje);
               const rnc = i.planoAcao.rnc;
+              const rncVisivel = !!rnc && rncsVisiveis.has(rnc.id);
               const atual = !rnc || i.ciclo === cicloAtual(rnc.verificacoes);
               return (
                 <tr key={i.id} className="align-top hover:bg-slate-50">
                   <td className={`${cls.td} whitespace-nowrap`}>
                     {rnc ? (
-                      <Link href={`/rncs/${rnc.id}?aba=plano`} className="font-mono text-xs font-medium text-emerald-700 hover:underline">{rnc.codigo}</Link>
+                      rncVisivel ? (
+                        <Link href={`/rncs/${rnc.id}?aba=plano`} className="font-mono text-xs font-medium text-emerald-700 hover:underline">{rnc.codigo}</Link>
+                      ) : (
+                        <span className="font-mono text-xs text-slate-500">{rnc.codigo}</span>
+                      )
                     ) : (
                       <span className="text-xs text-slate-500">{i.planoAcao.titulo}</span>
                     )}
                   </td>
-                  <td className={`${cls.td} text-slate-900`}>{i.oQue}</td>
+                  <td className={`${cls.td} text-slate-900`}>
+                    <Link href={`/plano-acao/${i.id}`} className="hover:underline">{i.oQue}</Link>
+                  </td>
                   <td className={`${cls.td} whitespace-nowrap`}>{i.quem.nome}</td>
                   <td className={`${cls.td} whitespace-nowrap`}>{formatarData(i.quando)}</td>
                   <td className={cls.td}><Badge cor={COR_STATUS_ITEM[st]}>{ROTULO_STATUS_ITEM[st]}</Badge></td>
@@ -125,13 +145,13 @@ export default async function PlanoAcao({ searchParams }: PageProps<"/plano-acao
                     {atual ? (
                       <ItemAcoes
                         item={i}
-                        rncId={rnc?.id}
+                        rncId={rncVisivel ? rnc?.id : undefined}
                         hoje={hoje}
                         usuarios={usuarios}
                         podeExecutar={i.quemId === a.usuarioId && (!rnc || rnc.status === "PLANO_EM_EXECUCAO")}
                         podeGerenciar={
                           rnc
-                            ? podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
+                            ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
                             : podeTodos
                         }
                       />

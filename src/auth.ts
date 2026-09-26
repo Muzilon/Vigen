@@ -1,38 +1,31 @@
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { authConfig } from "@/auth.config";
+import { autenticar, ipDaRequisicao } from "@/lib/auth/limite-login";
 import { prismaAdmin } from "@/lib/prisma";
-import { carregarDadosSessao } from "@/lib/usuario-sessao";
-
-const REVALIDAR_MS = 5 * 60 * 1000;
+import { carregarDadosSessao, sessaoValida } from "@/lib/usuario-sessao";
 
 const credenciaisSchema = z.object({
-  email: z.string().trim().toLowerCase().email(),
-  senha: z.string().min(1),
+  email: z.string().trim().toLowerCase().email().max(254),
+  senha: z.string().min(1).max(200),
 });
 
-// Hash fixo para igualar tempo de resposta quando o e-mail não existe.
-const HASH_DUMMY = bcrypt.hashSync("vigen-dummy", 10);
+class LoginBloqueado extends CredentialsSignin {
+  code = "bloqueado";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
       credentials: { email: {}, senha: {} },
-      async authorize(raw) {
+      async authorize(raw, request) {
         const parsed = credenciaisSchema.safeParse(raw);
         if (!parsed.success) throw new CredentialsSignin();
-        const { email, senha } = parsed.data;
-        const u = await prismaAdmin.usuario.findUnique({
-          where: { email },
-          select: { id: true, senhaHash: true, ativo: true, empresa: { select: { ativo: true } } },
-        });
-        const ok = await bcrypt.compare(senha, u?.senhaHash ?? HASH_DUMMY);
-        if (!u || !ok || !u.ativo || !u.empresa.ativo) throw new CredentialsSignin();
-        await prismaAdmin.usuario.update({ where: { id: u.id }, data: { ultimoLogin: new Date() } });
-        return { id: u.id };
+        const r = await autenticar(prismaAdmin, parsed.data.email, parsed.data.senha, ipDaRequisicao(request));
+        if (!r.ok) throw r.motivo === "bloqueado" ? new LoginBloqueado() : new CredentialsSignin();
+        return { id: r.usuarioId };
       },
     }),
   ],
@@ -42,15 +35,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user?.id) {
         const dados = await carregarDadosSessao(user.id);
         if (!dados) return null;
-        return { ...token, ...dados, name: dados.nome, verificadoEm: Date.now() };
+        return {
+          ...token,
+          userId: dados.userId,
+          nome: dados.nome,
+          name: dados.nome,
+          empresaNome: dados.empresaNome,
+          tokenVersao: dados.tokenVersao,
+        };
       }
       if (!token.userId) return null;
-      if (Date.now() - (token.verificadoEm ?? 0) > REVALIDAR_MS) {
-        const dados = await carregarDadosSessao(token.userId);
-        // Inativo, removido ou tokenVersao alterada → invalida a sessão.
-        if (!dados || dados.tokenVersao !== token.tokenVersao) return null;
-        return { ...token, ...dados, name: dados.nome, verificadoEm: Date.now() };
-      }
+      // Toda leitura de sessão no servidor confere ativo + tokenVersao no banco (M3).
+      if (!(await sessaoValida(token.userId, token.tokenVersao ?? -1))) return null;
       return token;
     },
   },

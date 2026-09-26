@@ -4,15 +4,16 @@ import { anoNoFuso } from "@/lib/datas";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { avaliarTransicao, cicloAtual, STATUS_FINAIS, type AcaoRnc } from "@/lib/rnc/estados";
 import { formatarCodigoRnc, proximaSequenciaRnc } from "@/lib/rnc/numeracao";
+import { MAX_CAUSA_RAIZ, validarAnalise } from "@/lib/rnc/analise";
 
 // ---------------------------------------------------------------- visibilidade
 
+/**
+ * Envolvidos com acesso ao detalhe da RNC: quem abriu e o responsável.
+ * (B4) O "quem" de um item NÃO ganha acesso à RNC: vê apenas os próprios itens (filtroAcessoItem).
+ */
 function condicoesEnvolvido(a: Ator): Prisma.RncWhereInput[] {
-  return [
-    { abertoPorId: a.usuarioId },
-    { responsavelId: a.usuarioId },
-    { planoAcao: { is: { itens: { some: { quemId: a.usuarioId } } } } },
-  ];
+  return [{ abertoPorId: a.usuarioId }, { responsavelId: a.usuarioId }];
 }
 
 /** Restrição de RNCs restritas (sem filtro de obra). */
@@ -30,27 +31,38 @@ export function filtroAcessoRnc(a: Ator): Prisma.RncWhereInput {
   return { AND: and };
 }
 
-type RncEnvolvimento = {
-  abertoPorId: string;
-  responsavelId: string | null;
-  planoAcao?: { itens: { quemId: string }[] } | null;
-};
-
-export function ehEnvolvido(a: Ator, rnc: RncEnvolvimento) {
-  return (
-    rnc.abertoPorId === a.usuarioId ||
-    rnc.responsavelId === a.usuarioId ||
-    !!rnc.planoAcao?.itens.some((i) => i.quemId === a.usuarioId)
-  );
+/**
+ * Itens de ação visíveis: os próprios (quem), os de RNC acessível e, sem RNC de origem,
+ * os de planos que o usuário criou ou todos se tiver PLANO_GERENCIAR.
+ */
+export function filtroAcessoItem(a: Ator): Prisma.ItemAcaoWhereInput {
+  return {
+    OR: [
+      { quemId: a.usuarioId },
+      { planoAcao: { rnc: { is: filtroAcessoRnc(a) } } },
+      atorTem(a, "PLANO_GERENCIAR")
+        ? { planoAcao: { rnc: { is: null } } }
+        : { planoAcao: { rnc: { is: null }, criadoPorId: a.usuarioId } },
+    ],
+  };
 }
 
-export function podeVerDadosSensiveis(a: Ator, rnc: RncEnvolvimento) {
-  return atorTem(a, "RNC_VER_RESTRITAS") || ehEnvolvido(a, rnc);
+/** Dados sensíveis (LGPD): somente com RNC_VER_RESTRITAS (B4). */
+export function podeVerDadosSensiveis(a: Pick<Ator, "permissoes">) {
+  return atorTem(a, "RNC_VER_RESTRITAS");
 }
 
-/** Pode tratar (causa raiz, plano, transições de execução): responsável da RNC ou PLANO_GERENCIAR. */
-export function podeGerenciarPlanoRnc(a: Ator, rnc: { responsavelId: string | null }) {
-  return atorTem(a, "PLANO_GERENCIAR") || rnc.responsavelId === a.usuarioId;
+/**
+ * Tratar a RNC (causa raiz, iniciar execução, enviar para verificação) exige RNC_TRATAR (B3)
+ * e ser o responsável — ou ter também PLANO_GERENCIAR. Ser responsável sem a permissão não basta.
+ */
+export function podeTratarRnc(a: Pick<Ator, "permissoes" | "usuarioId">, rnc: { responsavelId: string | null }) {
+  return atorTem(a, "RNC_TRATAR") && (rnc.responsavelId === a.usuarioId || atorTem(a, "PLANO_GERENCIAR"));
+}
+
+/** Gerenciar itens do plano da RNC: PLANO_GERENCIAR ou quem pode tratar a RNC. */
+export function podeGerenciarPlanoRnc(a: Pick<Ator, "permissoes" | "usuarioId">, rnc: { responsavelId: string | null }) {
+  return atorTem(a, "PLANO_GERENCIAR") || podeTratarRnc(a, rnc);
 }
 
 // ---------------------------------------------------------------- leitura
@@ -101,6 +113,19 @@ async function transicionar(
       metadados,
     },
   });
+}
+
+/**
+ * Trava otimista da RNC para escritas em itens do plano (M1): incrementa a versão exigindo
+ * a mesma versão e status lidos. Serializa com transições (que também exigem a versão),
+ * evitando p.ex. "enviar para verificação" concorrente com inclusão/cancelamento de item.
+ */
+export async function travarRnc(tx: Tx, rnc: { id: string; versao: number; status: StatusRnc }, extra: Prisma.RncUncheckedUpdateManyInput = {}) {
+  const r = await tx.rnc.updateMany({
+    where: { id: rnc.id, versao: rnc.versao, status: rnc.status },
+    data: { ...extra, versao: { increment: 1 } },
+  });
+  if (r.count === 0) throw new ErroConflito();
 }
 
 type RncCarregada = Awaited<ReturnType<typeof carregar>>;
@@ -218,21 +243,24 @@ export async function assumirAnalise(a: Ator, id: string, versao?: number) {
 
 export interface DadosCausa {
   metodo: MetodoCausaRaiz;
-  analise: Prisma.InputJsonValue;
+  analise: unknown;
   causaRaiz: string;
 }
 
 export async function salvarCausaRaiz(a: Ator, id: string, d: DadosCausa, versao?: number) {
   const rnc = await carregar(a.db, a, id);
   exigirVersao(rnc, versao);
-  if (!podeGerenciarPlanoRnc(a, rnc)) {
-    throw new ErroNegocio("Somente o responsável ou gestor do plano pode registrar a causa raiz.");
+  if (!podeTratarRnc(a, rnc)) {
+    throw new ErroNegocio("Sem permissão para registrar a causa raiz (requer RNC_TRATAR e ser o responsável).");
   }
   if (rnc.status !== "EM_ANALISE") throw new ErroNegocio("A causa raiz só pode ser registrada em análise.");
-  if (!d.causaRaiz.trim()) throw new ErroNegocio("Informe a causa raiz.");
+  const causaRaiz = d.causaRaiz.trim();
+  if (!causaRaiz) throw new ErroNegocio("Informe a causa raiz.");
+  if (causaRaiz.length > MAX_CAUSA_RAIZ) throw new ErroNegocio(`Causa raiz excede ${MAX_CAUSA_RAIZ} caracteres.`);
+  const analise = validarAnalise(d.metodo, d.analise);
   const r = await a.db.rnc.updateMany({
     where: { id, versao: rnc.versao, status: "EM_ANALISE" },
-    data: { metodoCausaRaiz: d.metodo, analiseCausa: d.analise, causaRaiz: d.causaRaiz.trim(), versao: { increment: 1 } },
+    data: { metodoCausaRaiz: d.metodo, analiseCausa: analise, causaRaiz, versao: { increment: 1 } },
   });
   if (r.count === 0) throw new ErroConflito();
 }
@@ -241,7 +269,7 @@ export async function iniciarExecucao(a: Ator, id: string, versao?: number) {
   return a.db.$transaction(async (tx) => {
     const rnc = await carregar(tx, a, id);
     exigirVersao(rnc, versao);
-    if (!podeGerenciarPlanoRnc(a, rnc)) throw new ErroNegocio("Sem permissão para executar o plano.");
+    if (!podeTratarRnc(a, rnc)) throw new ErroNegocio("Sem permissão para executar o plano.");
     await transicionar(tx, a, rnc, checar(rnc, "INICIAR_EXECUCAO"));
   });
 }
@@ -250,7 +278,7 @@ export async function enviarParaVerificacao(a: Ator, id: string, versao?: number
   return a.db.$transaction(async (tx) => {
     const rnc = await carregar(tx, a, id);
     exigirVersao(rnc, versao);
-    if (!podeGerenciarPlanoRnc(a, rnc)) throw new ErroNegocio("Sem permissão para enviar à verificação.");
+    if (!podeTratarRnc(a, rnc)) throw new ErroNegocio("Sem permissão para enviar à verificação.");
     await transicionar(tx, a, rnc, checar(rnc, "ENVIAR_VERIFICACAO"));
   });
 }

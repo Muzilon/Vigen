@@ -3,7 +3,7 @@ import { atorTem, type Ator, type Tx } from "@/lib/ator";
 import { paraDataDb } from "@/lib/datas";
 import { ErroNegocio } from "@/lib/erros";
 import { cicloAtual } from "@/lib/rnc/estados";
-import { filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/rnc/servico";
+import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, travarRnc } from "@/lib/rnc/servico";
 
 export interface DadosItem {
   oQue: string;
@@ -42,6 +42,7 @@ function dadosItem(d: DadosItem) {
 /** Adiciona vários itens ao plano da RNC (cria o plano se necessário) no ciclo atual. */
 export async function adicionarItensRnc(a: Ator, rncId: string, itens: DadosItem[]) {
   if (itens.length === 0) throw new ErroNegocio("Informe ao menos um item.");
+  if (itens.length > 50) throw new ErroNegocio("No máximo 50 itens por vez.");
   return a.db.$transaction(async (tx) => {
     const rnc = await tx.rnc.findFirst({
       where: { AND: [{ id: rncId }, filtroAcessoRnc(a)] },
@@ -67,8 +68,9 @@ export async function adicionarItensRnc(a: Ator, rncId: string, itens: DadosItem
         },
       });
       planoId = plano.id;
-      await tx.rnc.update({ where: { id: rnc.id }, data: { planoAcaoId: planoId } });
     }
+    // M1: trava/incrementa a versão da RNC na mesma transação.
+    await travarRnc(tx, rnc, rnc.planoAcaoId ? {} : { planoAcaoId: planoId });
     const ciclo = cicloAtual(rnc.verificacoes);
     const base = Math.max(0, ...(rnc.planoAcao?.itens.map((i) => i.ordem) ?? []));
     await tx.itemAcao.createMany({
@@ -80,24 +82,21 @@ export async function adicionarItensRnc(a: Ator, rncId: string, itens: DadosItem
 
 async function carregarItem(tx: Tx, a: Ator, itemId: string) {
   const item = await tx.itemAcao.findFirst({
-    where: { id: itemId },
+    where: { AND: [{ id: itemId }, filtroAcessoItem(a)] },
     include: { planoAcao: { include: { rnc: { include: { verificacoes: true } } } } },
   });
   if (!item) throw new ErroNegocio("Item não encontrado.");
   const rnc = item.planoAcao.rnc;
-  if (rnc) {
-    // Garante visibilidade da RNC de origem (quem do item é sempre envolvido).
-    const visivel = await tx.rnc.count({ where: { AND: [{ id: rnc.id }, filtroAcessoRnc(a)] } });
-    if (!visivel) throw new ErroNegocio("Item não encontrado.");
-  }
-  return item;
+  // O "quem" enxerga o próprio item mesmo sem acesso à RNC (B4); gerenciar exige acesso à RNC.
+  const rncVisivel = !rnc || (await tx.rnc.count({ where: { AND: [{ id: rnc.id }, filtroAcessoRnc(a)] } })) > 0;
+  return { ...item, rncVisivel };
 }
 
 type ItemCarregado = Awaited<ReturnType<typeof carregarItem>>;
 
 function exigirGerenciar(a: Ator, item: ItemCarregado) {
   const rnc = item.planoAcao.rnc;
-  const pode = rnc ? podeGerenciarPlanoRnc(a, rnc) : atorTem(a, "PLANO_GERENCIAR");
+  const pode = rnc ? item.rncVisivel && podeGerenciarPlanoRnc(a, rnc) : atorTem(a, "PLANO_GERENCIAR");
   if (!pode) throw new ErroNegocio("Sem permissão para editar o plano de ação.");
   if (rnc) {
     if (!(STATUS_EDICAO_PLANO as readonly string[]).includes(rnc.status)) {
@@ -116,12 +115,19 @@ function exigirExecucao(a: Ator, item: ItemCarregado) {
   }
 }
 
+/** M1: toda escrita em item vinculado a RNC trava a RNC (versão + status lidos). */
+async function travarRncDoItem(tx: Tx, item: ItemCarregado) {
+  const rnc = item.planoAcao.rnc;
+  if (rnc) await travarRnc(tx, rnc);
+}
+
 export async function editarItem(a: Ator, itemId: string, d: DadosItem) {
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirGerenciar(a, item);
     const dados = dadosItem(d);
     await validarUsuarios(tx, [dados.quemId]);
+    await travarRncDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
       data: dados as Prisma.ItemAcaoUncheckedUpdateManyInput,
@@ -134,6 +140,7 @@ export async function cancelarItem(a: Ator, itemId: string) {
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirGerenciar(a, item);
+    await travarRncDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
       data: { status: "CANCELADO" },
@@ -146,6 +153,7 @@ export async function marcarEmAndamento(a: Ator, itemId: string) {
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirExecucao(a, item);
+    await travarRncDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({ where: { id: itemId, status: "PENDENTE" }, data: { status: "EM_ANDAMENTO" } });
     if (r.count === 0) throw new ErroNegocio("Item não está pendente.");
   });
@@ -153,10 +161,12 @@ export async function marcarEmAndamento(a: Ator, itemId: string) {
 
 export async function concluirItem(a: Ator, itemId: string, d: { dataConclusao: string; evidencia: string }) {
   if (!d.evidencia.trim()) throw new ErroNegocio("Descreva a evidência de conclusão.");
+  if (d.evidencia.length > 5000) throw new ErroNegocio("Evidência excede 5000 caracteres.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.dataConclusao)) throw new ErroNegocio("Data de conclusão inválida.");
   return a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirExecucao(a, item);
+    await travarRncDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
       data: { status: "CONCLUIDO", dataConclusao: paraDataDb(d.dataConclusao), evidenciaConclusao: d.evidencia.trim() },

@@ -22,7 +22,8 @@ import {
   ROTULO_TIPO,
   SEIS_M,
 } from "@/lib/rnc/rotulos";
-import { filtroAcessoRnc, podeGerenciarPlanoRnc, podeVerDadosSensiveis, verificadorExecutouItens } from "@/lib/rnc/servico";
+import { filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis, verificadorExecutouItens } from "@/lib/rnc/servico";
+import { Interacoes } from "@/components/interacoes";
 import {
   assumirAcao,
   decidirCancelamentoAcao,
@@ -41,6 +42,7 @@ const ABAS = [
   ["verificacao", "Verificação de eficácia"],
   ["historico", "Histórico"],
   ["cancelamento", "Cancelamento"],
+  ["interacoes", "Interações"],
 ] as const;
 type Aba = (typeof ABAS)[number][0];
 
@@ -66,7 +68,8 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
       setor: true,
       abertoPor: { select: { nome: true } },
       responsavel: { select: { nome: true } },
-      dadosSensiveis: true,
+      // B4: dados sensíveis só são lidos com RNC_VER_RESTRITAS.
+      dadosSensiveis: podeVerDadosSensiveis(a),
       planoAcao: { include: { itens: { include: { quem: { select: { nome: true } } }, orderBy: [{ ciclo: "asc" }, { ordem: "asc" }] } } },
       verificacoes: { include: { verificador: { select: { nome: true } } }, orderBy: { tentativa: "asc" } },
       historicoStatus: { include: { usuario: { select: { nome: true } } }, orderBy: { criadoEm: "asc" } },
@@ -83,6 +86,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
   const ciclo = cicloAtual(rnc.verificacoes);
   const itensCiclo = itens.filter((i) => i.ciclo === ciclo);
   const gerenciar = podeGerenciarPlanoRnc(a, rnc);
+  const tratar = podeTratarRnc(a, rnc);
   const snap = { status: rnc.status, causaRaiz: rnc.causaRaiz, itensCicloAtual: itensCiclo.map((i) => i.status) };
   const podeAssumir =
     avaliarTransicao(snap, "ASSUMIR").ok &&
@@ -118,8 +122,8 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
         acoes={
           <>
             {podeAssumir && transicao(assumirAcao, rnc.status === "REABERTO" ? "Retomar análise" : "Assumir análise")}
-            {gerenciar && rnc.status === "EM_ANALISE" && transicao(iniciarExecucaoAcao, "Iniciar execução do plano")}
-            {gerenciar && rnc.status === "PLANO_EM_EXECUCAO" && transicao(enviarVerificacaoAcao, "Enviar para verificação")}
+            {tratar && rnc.status === "EM_ANALISE" && transicao(iniciarExecucaoAcao, "Iniciar execução do plano")}
+            {tratar && rnc.status === "PLANO_EM_EXECUCAO" && transicao(enviarVerificacaoAcao, "Enviar para verificação")}
           </>
         }
       />
@@ -146,7 +150,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
             </Cartao>
             {rnc.contemDadosPessoais && (
               <Cartao titulo="Dados sensíveis (LGPD)">
-                {podeVerDadosSensiveis(a, rnc) ? (
+                {podeVerDadosSensiveis(a) ? (
                   rnc.dadosSensiveis ? (
                     <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       <Campo rotulo="Envolvido">{rnc.dadosSensiveis.nomeEnvolvido ?? "—"}</Campo>
@@ -185,7 +189,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
 
       {aba === "causa" && (
         <Cartao titulo="Análise de causa raiz">
-          {gerenciar && rnc.status === "EM_ANALISE" ? (
+          {tratar && rnc.status === "EM_ANALISE" ? (
             <CausaForm
               rncId={rnc.id}
               versao={rnc.versao}
@@ -250,7 +254,7 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
                         <tr key={i.id} className={`align-top ${atual ? "" : "opacity-60"}`}>
                           <td className={cls.td}>{i.ciclo}</td>
                           <td className={`${cls.td} min-w-48 text-slate-900`}>
-                            {i.oQue}
+                            <Link href={`/plano-acao/${i.id}`} className="hover:underline">{i.oQue}</Link>
                             {i.evidenciaConclusao && (
                               <p className="mt-1 text-xs text-emerald-700">Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}</p>
                             )}
@@ -431,6 +435,10 @@ export default async function DetalheRnc({ params, searchParams }: PageProps<"/r
             )}
           </Cartao>
         </div>
+      )}
+
+      {aba === "interacoes" && (
+        <Interacoes a={a} tipo="RNC" entidadeId={rnc.id} usuarios={usuarios} fuso={fuso} />
       )}
     </div>
   );

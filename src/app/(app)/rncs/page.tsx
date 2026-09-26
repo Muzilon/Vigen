@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { Gravidade, Prisma, StatusRnc, TipoRnc } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { Badge, Cabecalho, cls } from "@/components/ui";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
@@ -11,21 +12,21 @@ import {
   ROTULO_STATUS_RNC,
   ROTULO_TIPO,
 } from "@/lib/rnc/rotulos";
-import { filtroRestricaoRnc } from "@/lib/rnc/servico";
-import { filtroObras, getContexto, temPermissao } from "@/lib/tenant";
+import { enumUrl, textoUrl, uuidUrl } from "@/lib/filtros-url";
+import { filtroAcessoRnc } from "@/lib/rnc/servico";
+import { getContexto, temPermissao } from "@/lib/tenant";
 
-const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || "";
+const esquemaFiltros = z.object({
+  status: enumUrl(["ABERTO", "EM_ANALISE", "PLANO_EM_EXECUCAO", "EM_VERIFICACAO", "ENCERRADO", "REABERTO", "CANCELADO"]),
+  obra: uuidUrl,
+  tipo: enumUrl(["QUALIDADE", "MEIO_AMBIENTE", "SSO"]),
+  responsavel: uuidUrl,
+  gravidade: enumUrl(["BAIXA", "MEDIA", "ALTA", "CRITICA"]),
+  q: textoUrl,
+});
 
 export default async function ListaRncs({ searchParams }: PageProps<"/rncs">) {
-  const sp = await searchParams;
-  const f = {
-    status: um(sp.status),
-    obra: um(sp.obra),
-    tipo: um(sp.tipo),
-    responsavel: um(sp.responsavel),
-    gravidade: um(sp.gravidade),
-    q: um(sp.q).trim(),
-  };
+  const f = esquemaFiltros.parse(await searchParams);
   const ctx = await getContexto();
   const a = await getAtor();
   const fuso = await fusoDaEmpresa(a);
@@ -33,13 +34,13 @@ export default async function ListaRncs({ searchParams }: PageProps<"/rncs">) {
 
   const where: Prisma.RncWhereInput = {
     AND: [
-      filtroObras(ctx),
-      filtroRestricaoRnc(a),
-      f.status ? { status: f.status as StatusRnc } : {},
+      // B7: mesma regra do detalhe (obra permitida ou abridor/responsável; restritas).
+      filtroAcessoRnc(a),
+      f.status ? { status: f.status } : {},
       f.obra ? { obraId: f.obra } : {},
-      f.tipo ? { tipo: f.tipo as TipoRnc } : {},
+      f.tipo ? { tipo: f.tipo } : {},
       f.responsavel ? { responsavelId: f.responsavel } : {},
-      f.gravidade ? { gravidade: f.gravidade as Gravidade } : {},
+      f.gravidade ? { gravidade: f.gravidade } : {},
       f.q
         ? { OR: [{ codigo: { contains: f.q, mode: "insensitive" } }, { titulo: { contains: f.q, mode: "insensitive" } }] }
         : {},

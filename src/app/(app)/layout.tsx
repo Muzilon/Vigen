@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { signOut } from "@/auth";
+import { getAtor } from "@/lib/ator-servidor";
+import { contarNaoLidas } from "@/lib/interacoes/servico";
 import { getContexto, temPermissao } from "@/lib/tenant";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const ctx = await getContexto();
+  const naoLidas = await contarNaoLidas(await getAtor());
   const itens = [
     { href: "/", label: "Início" },
     { href: "/rncs", label: "RNCs" },
     { href: "/plano-acao", label: "Plano de Ação" },
+    { href: "/mensagens", label: naoLidas > 0 ? `Mensagens (${naoLidas})` : "Mensagens" },
     ...(temPermissao(ctx, "ADMIN_CONFIG") ? [{ href: "/configuracoes", label: "Configurações" }] : []),
   ];
 

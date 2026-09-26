@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import type { ResultadoAcao } from "@/components/form-acao";
 import { getAtor } from "@/lib/ator-servidor";
-import { ErroNegocio } from "@/lib/erros";
+import { ErroConflito, ErroNegocio } from "@/lib/erros";
+import * as interacoes from "@/lib/interacoes/servico";
 import * as plano from "@/lib/plano-acao/servico";
 import * as rnc from "@/lib/rnc/servico";
 import { ErroPermissao } from "@/lib/tenant";
@@ -15,10 +17,13 @@ async function executar(fn: () => Promise<ResultadoAcao | void>, caminhos: strin
     const r = await fn();
     for (const c of caminhos) revalidatePath(c);
     revalidatePath("/plano-acao");
+    revalidatePath("/plano-acao/[id]", "page");
     revalidatePath("/");
     return r ?? { ok: "Salvo." };
   } catch (e) {
     if (e instanceof ErroNegocio || e instanceof ErroPermissao) return { erro: e.message };
+    // B2: violação de unicidade por concorrência (ex.: duas verificações simultâneas).
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return { erro: new ErroConflito().message };
     if (e instanceof z.ZodError) return { erro: e.issues.map((i) => i.message).join(" ") };
     throw e;
   }
@@ -115,15 +120,15 @@ const esquemaCausa = z.object({
   id: uuid,
   versao,
   metodo: z.enum(["CINCO_PORQUES", "ISHIKAWA", "OUTRO"]),
-  analise: z.string().transform((s, ctx) => {
+  analise: z.string().max(60000, "Análise muito longa.").transform((s, ctx) => {
     try {
-      return JSON.parse(s) as Record<string, unknown>;
+      return JSON.parse(s) as unknown;
     } catch {
       ctx.addIssue({ code: "custom", message: "Análise inválida." });
       return z.NEVER;
     }
   }),
-  causaRaiz: z.string().trim().min(3, "Informe a causa raiz."),
+  causaRaiz: z.string().trim().min(3, "Informe a causa raiz.").max(5000, "Causa raiz muito longa."),
 });
 
 export async function salvarCausaAcao(_: ResultadoAcao, fd: FormData) {
@@ -132,7 +137,7 @@ export async function salvarCausaAcao(_: ResultadoAcao, fd: FormData) {
     await rnc.salvarCausaRaiz(
       await getAtor(),
       d.id,
-      { metodo: d.metodo, analise: d.analise as never, causaRaiz: d.causaRaiz },
+      { metodo: d.metodo, analise: d.analise, causaRaiz: d.causaRaiz },
       d.versao,
     );
     return { ok: "Causa raiz salva." };
@@ -249,4 +254,23 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
     await plano.concluirItem(await getAtor(), d.itemId, d);
     return { ok: "Item concluído." };
   }, [`/rncs/${fd.get("rncId") ?? ""}`]);
+}
+
+// ---------------------------------------------------------------- interações
+
+export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
+  const d = z
+    .object({
+      entidadeTipo: z.enum(["RNC", "ITEM_ACAO"]),
+      entidadeId: uuid,
+      mensagem: z.string().trim().min(1, "Escreva a mensagem.").max(interacoes.MAX_MENSAGEM, "Mensagem muito longa."),
+      destinatarioId: uuidOpcional,
+    })
+    .safeParse(obj(fd));
+  if (!d.success) return { erro: d.error.issues.map((i) => i.message).join(" ") };
+  const { entidadeTipo, entidadeId } = d.data;
+  return executar(async () => {
+    await interacoes.criarInteracao(await getAtor(), { tipo: entidadeTipo, entidadeId }, d.data.mensagem, d.data.destinatarioId);
+    return { ok: "Mensagem enviada." };
+  }, [entidadeTipo === "RNC" ? `/rncs/${entidadeId}` : `/plano-acao/${entidadeId}`, "/mensagens"]);
 }
