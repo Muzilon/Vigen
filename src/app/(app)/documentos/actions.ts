@@ -7,6 +7,7 @@ import type { Ator } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import * as anexos from "@/lib/anexos/servico";
 import "@/lib/aprovacao/handlers";
+import { montarPerguntasCiencia } from "@/lib/documentos/regras";
 import * as doc from "@/lib/documentos/servico";
 import { executar, obj, opcional, uuid, uuidOpcional, valoresDoForm, versao } from "../acoes-comuns";
 
@@ -98,10 +99,20 @@ export async function enviarAprovacaoAcao(_: ResultadoAcao, fd: FormData): Promi
 
 const ids = (fd: FormData, k: string) => fd.getAll(k).map(String).filter(Boolean).map((x) => uuid.parse(x));
 
+/** Blocos crus do quiz (até 3): pergunta{n}, opcao{n}_1..3, correta{n}. */
+function blocosQuizDe(fd: FormData) {
+  return [1, 2, 3].map((n) => ({
+    pergunta: String(fd.get(`pergunta${n}`) ?? ""),
+    opcoes: [1, 2, 3].map((o) => String(fd.get(`opcao${n}_${o}`) ?? "")),
+    correta: fd.get(`correta${n}`) as string | null,
+  }));
+}
+
 export async function publicarAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   const d = z.object({ id: uuid, versao }).safeParse(obj(fd));
   if (!d.success) return { erro: "Dados inválidos." };
   return executar(async () => {
+    const perguntasCiencia = montarPerguntasCiencia(blocosQuizDe(fd));
     const r = await doc.publicar(
       await getAtor(),
       d.data.id,
@@ -113,6 +124,7 @@ export async function publicarAcao(_: ResultadoAcao, fd: FormData): Promise<Resu
         usuarioIds: ids(fd, "usuarioIds"),
         notificar: fd.get("notificar") === "on",
         exigirCiencia: fd.get("exigirCiencia") === "on",
+        perguntasCiencia,
       },
       d.data.versao,
     );
@@ -143,6 +155,19 @@ export async function registrarCienciaAcao(_: ResultadoAcao, fd: FormData): Prom
   if (!d.success) return { erro: "Dados inválidos." };
   return executar(async () => {
     await doc.registrarCiencia(await getAtor(), d.data.id);
+    return { ok: "Ciência registrada. Obrigado!" };
+  }, caminhos(d.data.id));
+}
+
+export async function registrarCienciaComQuizAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const d = z.object({ id: uuid }).safeParse(obj(fd));
+  if (!d.success) return { erro: "Dados inválidos." };
+  return executar(async () => {
+    const respostas = [0, 1, 2].map((n) => {
+      const v = fd.get(`resposta${n}`);
+      return v === null || v === "" ? null : Number(v);
+    });
+    await doc.registrarCienciaComQuiz(await getAtor(), d.data.id, respostas);
     return { ok: "Ciência registrada. Obrigado!" };
   }, caminhos(d.data.id));
 }

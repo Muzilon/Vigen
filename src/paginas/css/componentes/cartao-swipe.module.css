@@ -1,0 +1,39 @@
+/* Progressive enhancement: affordance visual de swipe só em telas estreitas (< 768px, spec 02-documentos-inspecoes). */
+.cartaoSwipe {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.overlay {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .cartaoSwipe {
+    transition: transform 0.05s linear;
+  }
+  .overlay {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0.35;
+    z-index: 1;
+  }
+  .overlayAtivo {
+    opacity: 0.75;
+  }
+  .overlayDireita {
+    background: #1c8a4b;
+    color: #fff;
+  }
+  .overlayEsquerda {
+    background: #b3261e;
+    color: #fff;
+  }
+}

@@ -1639,6 +1639,8 @@ model PublicacaoDocumento {
   usuarioIds     String[] @map("usuario_ids") @db.Uuid
   notificar      Boolean  @default(true)
   exigirCiencia  Boolean  @default(false) @map("exigir_ciencia")
+  /// Micro-quiz de ciência de leitura (opcional, até 3 perguntas): Array<{ pergunta, opcoes: string[], correta: number }>.
+  perguntasCiencia Json?  @map("perguntas_ciencia")
   publicadoPorId String   @map("publicado_por_id") @db.Uuid
   publicadoEm    DateTime @default(now()) @map("publicado_em")
 

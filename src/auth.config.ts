@@ -13,6 +13,8 @@ export const authConfig = {
       if (pathname === "/login") {
         return logado ? Response.redirect(new URL("/", request.nextUrl)) : true;
       }
+      // Página pública do QR Code da cópia controlada: precisa funcionar para quem não tem sessão.
+      if (pathname.startsWith("/validar-doc/")) return true;
       return logado; // false → redireciona para /login
     },
     session({ session, token }) {

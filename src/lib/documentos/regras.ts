@@ -125,6 +125,45 @@ export interface UsuarioPublico {
   obraIds: readonly string[];
 }
 
+// ---------------------------------------------------------------- micro-quiz de ciência de leitura
+
+export interface PerguntaCiencia {
+  pergunta: string;
+  opcoes: string[];
+  correta: number;
+}
+
+export const MAX_PERGUNTAS_CIENCIA = 3;
+
+/**
+ * Monta o array de perguntas do quiz a partir de campos crus da publicação (até 3 blocos:
+ * pergunta1/opcao1_1..3/correta1, pergunta2/..., pergunta3/...). Perguntas com texto vazio são
+ * ignoradas; uma pergunta incluída exige ao menos 2 opções não vazias e um índice `correta` válido.
+ */
+export function montarPerguntasCiencia(
+  blocos: readonly { pergunta: string; opcoes: string[]; correta: string | number | null | undefined }[],
+): PerguntaCiencia[] {
+  const out: PerguntaCiencia[] = [];
+  for (const b of blocos.slice(0, MAX_PERGUNTAS_CIENCIA)) {
+    const pergunta = b.pergunta.trim();
+    if (!pergunta) continue;
+    const opcoes = b.opcoes.map((o) => o.trim()).filter(Boolean);
+    if (opcoes.length < 2) throw new ErroNegocio(`Pergunta "${pergunta}": informe ao menos 2 opções.`);
+    const correta = Number(b.correta);
+    if (!Number.isInteger(correta) || correta < 0 || correta >= opcoes.length) {
+      throw new ErroNegocio(`Pergunta "${pergunta}": marque a opção correta.`);
+    }
+    out.push({ pergunta: pergunta.slice(0, 500), opcoes: opcoes.slice(0, 10).map((o) => o.slice(0, 200)), correta });
+  }
+  return out;
+}
+
+/** Valida as respostas do quiz contra o gabarito (nunca confiar no cliente). */
+export function respostasCorretas(perguntas: readonly PerguntaCiencia[], respostas: readonly (number | null)[]): boolean {
+  if (respostas.length !== perguntas.length) return false;
+  return perguntas.every((p, i) => respostas[i] === p.correta);
+}
+
 /** Público vazio (nenhum critério) é inválido. */
 export function validarPublico(p: PublicoDocumento) {
   if (p.publicoTodos) return;

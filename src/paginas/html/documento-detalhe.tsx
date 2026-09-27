@@ -7,13 +7,14 @@ import {
   obsoletarDocumentoAcao,
   publicarAcao,
   registrarCienciaAcao,
+  registrarCienciaComQuizAcao,
   substituirArquivoAcao,
 } from "@/app/(app)/documentos/actions";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { dataIso, formatarData, formatarDataHora, hojeNoFuso } from "@/lib/datas";
 import { podeElaborarDocumentos, podeGerenciarDocumentos } from "@/lib/documentos/acesso";
-import { formatarRevisao, revisaoVencida, ROTULO_ACAO_DOCUMENTO, ROTULO_STATUS_DOCUMENTO, ROTULO_STATUS_VERSAO, rotuloRevisao } from "@/lib/documentos/regras";
+import { formatarRevisao, revisaoVencida, ROTULO_ACAO_DOCUMENTO, ROTULO_STATUS_DOCUMENTO, ROTULO_STATUS_VERSAO, rotuloRevisao, type PerguntaCiencia } from "@/lib/documentos/regras";
 import {
   listarHistorico,
   listarVersoes,
@@ -95,7 +96,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
           </p>
         </div>
         {vigente?.anexo && !vigente.anexo.excluidoEm && (
-          <a href={`/api/anexos/${vigente.anexo.id}`} className={styles.botaoBaixar}>Baixar {rotuloRevisao(vigente.numero)}</a>
+          <a href={`/api/documentos/versoes/${vigente.id}/pdf-controlado`} className={styles.botaoBaixar}>Baixar {rotuloRevisao(vigente.numero)}</a>
         )}
       </header>
 
@@ -106,11 +107,36 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
           ) : (
             <>
               <span>Esta revisão exige ciência: leia o documento e confirme.</span>
-              {podeCiencia && (
-                <FormAcao acao={registrarCienciaAcao} botao="Li e estou ciente" tamanho="pequeno">
-                  <input type="hidden" name="id" value={d.id} />
-                </FormAcao>
-              )}
+              {podeCiencia && (() => {
+                const perguntas = (pub?.perguntasCiencia as unknown as PerguntaCiencia[] | null) ?? [];
+                if (perguntas.length === 0) {
+                  return (
+                    <FormAcao acao={registrarCienciaAcao} botao="Li e estou ciente" tamanho="pequeno">
+                      <input type="hidden" name="id" value={d.id} />
+                    </FormAcao>
+                  );
+                }
+                return (
+                  <details className={styles.editar}>
+                    <summary>Li e estou ciente — responda para confirmar</summary>
+                    <FormAcao acao={registrarCienciaComQuizAcao} botao="Confirmar respostas" tamanho="pequeno" className={styles.formulario}>
+                      <input type="hidden" name="id" value={d.id} />
+                      {perguntas.map((p, n) => (
+                        <fieldset key={n} className={styles.grupoMarcar}>
+                          <legend>{p.pergunta}</legend>
+                          <div className={styles.opcoes}>
+                            {p.opcoes.map((o, i) => (
+                              <label key={i} className={styles.opcao}>
+                                <input type="radio" name={`resposta${n}`} value={i} required /> {o}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      ))}
+                    </FormAcao>
+                  </details>
+                );
+              })()}
             </>
           )}
         </div>
@@ -159,7 +185,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
               <p className={styles.texto}><strong>Motivo:</strong> {trabalho.motivo}</p>
               <p className={styles.texto}>
                 <strong>Arquivo:</strong>{" "}
-                {trabalho.anexo ? <a href={`/api/anexos/${trabalho.anexo.id}`}>{trabalho.anexo.nomeArquivo}</a> : "—"}
+                {trabalho.anexo ? <a href={`/api/documentos/versoes/${trabalho.id}/pdf-controlado`}>{trabalho.anexo.nomeArquivo}</a> : "—"}
                 {trabalho.anexo && <span className={styles.suave}> · {tamanho(trabalho.anexo.tamanhoBytes)} · elaborado por {trabalho.elaborador.nome}</span>}
               </p>
 
@@ -221,6 +247,23 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
                     <GrupoMarcar titulo="Usuários" nome="usuarioIds" itens={op.usuarios} />
                     <label className={styles.opcao}><input type="checkbox" name="notificar" defaultChecked /> Notificar o público (sino e e-mail)</label>
                     <label className={styles.opcao}><input type="checkbox" name="exigirCiencia" /> Exigir ciência (&quot;Li e estou ciente&quot;)</label>
+                    <details className={styles.editar}>
+                      <summary>Perguntas de verificação de leitura (opcional, até 3)</summary>
+                      {[1, 2, 3].map((n) => (
+                        <fieldset key={n} className={styles.grupoMarcar}>
+                          <legend>Pergunta {n}</legend>
+                          <label className={styles.campoLargo}>
+                            Enunciado <input name={`pergunta${n}`} maxLength={500} className={styles.entrada} />
+                          </label>
+                          {[1, 2, 3].map((o) => (
+                            <label key={o} className={styles.opcao}>
+                              <input type="radio" name={`correta${n}`} value={o - 1} /> Opção {o}:{" "}
+                              <input name={`opcao${n}_${o}`} maxLength={200} className={styles.entrada} />
+                            </label>
+                          ))}
+                        </fieldset>
+                      ))}
+                    </details>
                   </FormAcao>
                 </div>
               )}
@@ -277,7 +320,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
                         <td>{ROTULO_STATUS_VERSAO[v.status]}</td>
                         <td>
                           {v.anexo ? (
-                            <a href={`/api/anexos/${v.anexo.id}`}>{v.anexo.nomeArquivo}</a>
+                            <a href={`/api/documentos/versoes/${v.id}/pdf-controlado`}>{v.anexo.nomeArquivo}</a>
                           ) : v.conteudo ? (
                             <a href={`/documentos/${d.id}/versoes/${v.id}/conteudo`}>snapshot.json</a>
                           ) : (

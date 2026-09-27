@@ -28,6 +28,7 @@ import { ROTULO_GRAVIDADE, ROTULO_STATUS_RNC as ROTULO_STATUS, ROTULO_TIPO } fro
 import { getContexto } from "@/lib/tenant";
 import { GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { CampoArquivos } from "@/paginas/html/componentes/campo-arquivos";
+import { CartaoSwipe } from "@/paginas/html/componentes/cartao-swipe";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
@@ -144,15 +145,17 @@ export default async function InspecaoDetalhe({ params }: PageProps<"/inspecoes/
                   ) : r.tipoResposta === "TEXTO" ? (
                     <textarea name="texto" rows={2} defaultValue={r.texto ?? ""} required maxLength={4000} aria-label="Resposta" className={styles.area} />
                   ) : (
-                    <fieldset className={styles.segmentado}>
-                      <legend className={styles.oculto}>Resposta</legend>
-                      {OPCOES_POR_TIPO[r.tipoResposta].map((v) => (
-                        <label key={v} className={v === "NAO_CONFORME" || v === "NAO" ? styles.opcaoRuim : undefined}>
-                          <input type="radio" name="resposta" value={v} defaultChecked={r.resposta === v} required />
-                          <span>{ROTULO_VALOR[v]}</span>
-                        </label>
-                      ))}
-                    </fieldset>
+                    <CartaoSwipe valorDireita={r.tipoResposta === "SIM_NAO" ? "SIM" : "CONFORME"} valorEsquerda={r.tipoResposta === "SIM_NAO" ? "NAO" : "NAO_CONFORME"}>
+                      <fieldset className={styles.segmentado}>
+                        <legend className={styles.oculto}>Resposta</legend>
+                        {OPCOES_POR_TIPO[r.tipoResposta].map((v) => (
+                          <label key={v} className={v === "NAO_CONFORME" || v === "NAO" ? styles.opcaoRuim : undefined}>
+                            <input type="radio" name="resposta" value={v} defaultChecked={r.resposta === v} required />
+                            <span>{ROTULO_VALOR[v]}</span>
+                          </label>
+                        ))}
+                      </fieldset>
+                    </CartaoSwipe>
                   )}
                   <input name="comentario" defaultValue={r.comentario ?? ""} maxLength={4000} placeholder="Comentário (opcional)" aria-label="Comentário" className={styles.entrada} />
                   {r.tipoResposta !== "TEXTO" && (

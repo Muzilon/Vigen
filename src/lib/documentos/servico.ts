@@ -35,6 +35,7 @@ import {
   montarSignatarios,
   normalizarMotivo,
   normalizarSigla,
+  respostasCorretas,
   revisaoVencida,
   rotuloRevisao,
   situacaoCiencias,
@@ -43,6 +44,7 @@ import {
   STATUS_EM_TRAMITACAO,
   validarPeriodicidade,
   validarPublico,
+  type PerguntaCiencia,
   type PublicoDocumento,
 } from "./regras";
 
@@ -400,6 +402,8 @@ export async function devolverRevisao(tx: Tx, fluxo: FluxoAprovacao, ator: Quem,
 export interface DadosPublicacao extends PublicoDocumento {
   notificar: boolean;
   exigirCiencia: boolean;
+  /** Micro-quiz de ciência de leitura (opcional, até 3 perguntas). */
+  perguntasCiencia?: PerguntaCiencia[];
 }
 
 async function validarIdsPublico(tx: Tx, p: PublicoDocumento) {
@@ -442,7 +446,17 @@ export async function publicar(a: Ator, documentoId: string, d: DadosPublicacao,
     const u = await tx.versaoDocumento.updateMany({ where: { id: v.id, status: "APROVADA" }, data: { status: "PUBLICADA", publicadoEm: agora, publicadoPorId: a.usuarioId } });
     if (u.count === 0) throw new ErroConflito();
     await tx.publicacaoDocumento.create({
-      data: { empresaId: a.empresaId, documentoId: doc.id, versaoId: v.id, ...publico, notificar: d.notificar, exigirCiencia: d.exigirCiencia, publicadoPorId: a.usuarioId, publicadoEm: agora },
+      data: {
+        empresaId: a.empresaId,
+        documentoId: doc.id,
+        versaoId: v.id,
+        ...publico,
+        notificar: d.notificar,
+        exigirCiencia: d.exigirCiencia,
+        perguntasCiencia: d.perguntasCiencia?.length ? (d.perguntasCiencia as unknown as Prisma.InputJsonValue) : undefined,
+        publicadoPorId: a.usuarioId,
+        publicadoEm: agora,
+      },
     });
     await travar(tx, doc, {
       status: "PUBLICADO",
@@ -548,6 +562,25 @@ export async function registrarCiencia(a: Ator, documentoId: string) {
     throw e;
   }
   await a.db.notificacao.updateMany({ where: { usuarioId: a.usuarioId, entidadeTipo: "DOCUMENTO", entidadeId: documentoId, tipo: "CIENCIA_PENDENTE", lidaEm: null }, data: { lidaEm: new Date() } });
+}
+
+/**
+ * "Li e estou ciente" com micro-quiz de leitura: só registra a ciência (mesma regra de
+ * `registrarCiencia`) se a publicação tiver perguntas e TODAS as respostas estiverem corretas —
+ * o gabarito nunca é confiado ao cliente, é revalidado aqui a partir de `perguntasCiencia`.
+ */
+export async function registrarCienciaComQuiz(a: Ator, documentoId: string, respostas: readonly (number | null)[]) {
+  await exigirModuloDocumentos(a);
+  const doc = await a.db.documento.findFirst({
+    where: { id: documentoId, status: { notIn: ["OBSOLETO", "CANCELADO"] } },
+    select: { versaoVigenteId: true, versaoVigente: { select: { publicacao: true } } },
+  });
+  const pub = doc?.versaoVigente?.publicacao;
+  if (!doc?.versaoVigenteId || !pub) throw new ErroNegocio("Documento sem revisão vigente publicada.");
+  const perguntas = (pub.perguntasCiencia as unknown as PerguntaCiencia[] | null) ?? [];
+  if (perguntas.length === 0) return registrarCiencia(a, documentoId);
+  if (!respostasCorretas(perguntas, respostas.slice(0, perguntas.length))) throw new ErroNegocio("Revise suas respostas — pelo menos uma está incorreta.");
+  return registrarCiencia(a, documentoId);
 }
 
 // ---------------------------------------------------------------- leitura
