@@ -27,9 +27,18 @@ as ideias aqui eram melhorias de UX sobre módulos prontos, não módulos novos.
   usam planilha densa filtrável (obra/setor/processo/faixa/status), não árvore sanfona. É uma
   mudança de layout maior (navegação em duas colunas) que merece sua própria rodada, com
   validação de UX antes de mexer nas telas de lista existentes.
-- **Item 4 (Clone Inteligente entre unidades):** não implementado. Precisa de uma ação de
-  servidor nova (duplicar em lote todas as linhas de uma obra para outra, com status
-  "Em Revisão") e uma decisão de UX sobre onde entra o botão. Fica para uma próxima entrega.
+**Implementado (2026-09-27, segunda rodada):**
+- **Item 4 (Clone Inteligente entre unidades):** botão "Duplicar matriz para nova unidade" na
+  lista de HIRA (só aparece com mais de uma obra cadastrada). `clonarHiraParaObra`
+  (`src/lib/hira/servico.ts`) reaproveita `incluirHira` linha a linha: copia todas as linhas
+  vigentes da obra origem para a obra destino, preservando perigo/risco/P×S/controles, zerando
+  o responsável (o time da obra destino costuma ser outro) e recalculando o nível pela escala
+  da obra destino. **Decisão de design:** não criamos um status "Em Revisão" novo — cada cópia
+  passa pela mesma política de aprovação já configurada para HIRA na empresa (nasce
+  `PENDENTE_APROVACAO` se a empresa exigir aprovação, `VIGENTE` senão), em vez de abrir uma
+  exceção só para o clone. Isso cobre a intenção do rascunho ("gestor da Unidade B só precisa
+  ler e confirmar") sem inventar um enum/fluxo paralelo. LAIA e Riscos e Oportunidades ainda
+  não têm o botão equivalente — o padrão está pronto para replicar.
 
 ## 02-documentos-inspecoes.md (2026-09-27)
 

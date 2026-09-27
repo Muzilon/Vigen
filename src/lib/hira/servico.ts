@@ -335,6 +335,59 @@ export async function incluirHira(a: Ator, d: DadosHira): Promise<ResultadoOpera
   return r;
 }
 
+export interface ResultadoClonagemHira {
+  total: number;
+  criadas: number;
+  erros: { atividade: string; mensagem: string }[];
+}
+
+/**
+ * Clona todas as linhas HIRA vigentes de uma obra/unidade para outra (docs/ideias-implantadas/
+ * 01-riscos-hira-laia.md, item 4 — "Clone Inteligente"). Reaproveita `incluirHira` linha a linha,
+ * preservando perigo/risco/P×S/controles e trocando a obra; cada cópia nasce sujeita à mesma
+ * política de aprovação já configurada para HIRA (fica PENDENTE_APROVACAO se a empresa exigir),
+ * dando ao gestor da obra destino a chance de ler e confirmar antes de virar vigente. O responsável
+ * não é copiado (o time da obra destino normalmente é outro).
+ */
+export async function clonarHiraParaObra(a: Ator, origemObraId: string, destinoObraId: string): Promise<ResultadoClonagemHira> {
+  await exigirGestao(a);
+  if (origemObraId === destinoObraId) throw new ErroNegocio("Escolha uma obra de destino diferente da origem.");
+  if (!obraNoEscopo(a, origemObraId) || !obraNoEscopo(a, destinoObraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  const linhas = await a.db.linhaHira.findMany({ where: { empresaId: a.empresaId, obraId: origemObraId, status: "VIGENTE" } });
+  const erros: ResultadoClonagemHira["erros"] = [];
+  let criadas = 0;
+  for (const l of linhas) {
+    const dados: DadosHira = {
+      obraId: destinoObraId,
+      setor: l.setor,
+      processoId: l.processoId,
+      atividade: l.atividade,
+      rotineira: l.rotineira,
+      perigo: l.perigo,
+      risco: l.risco,
+      condicao: l.condicao,
+      controlesExistentes: l.controlesExistentes,
+      hierarquiaControle: l.hierarquiaControle,
+      controlesPropostos: l.controlesPropostos,
+      probabilidade: l.probabilidade,
+      severidade: l.severidade,
+      probabilidadeResidual: l.probabilidadeResidual,
+      severidadeResidual: l.severidadeResidual,
+      requisitoLegal: l.requisitoLegal,
+      responsavelId: null,
+      modoReavaliacao: l.modoReavaliacao,
+      periodicidadeMeses: l.periodicidadeMeses,
+    };
+    try {
+      await incluirHira(a, dados);
+      criadas++;
+    } catch (e) {
+      erros.push({ atividade: l.atividade, mensagem: e instanceof ErroNegocio ? e.message : "Falha ao clonar." });
+    }
+  }
+  return { total: linhas.length, criadas, erros };
+}
+
 /** Aplica a alteração na transação (edição direta ou handler de aprovação). `versao` = trava otimista. */
 export async function aplicarAlteracaoHira(tx: Tx, q: Quem, id: string, d: DadosHira, versao?: number, observacao?: string | null) {
   const l = await carregar(tx, q, id);
