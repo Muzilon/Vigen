@@ -1,0 +1,25 @@
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.linkLimpar {
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.linkLimpar:hover { color: var(--cor-texto); }

@@ -25,8 +25,8 @@ import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { Heatmap } from "@/paginas/html/componentes/heatmap";
+import { ClonarObraForm } from "@/paginas/html/componentes/clonar-obra";
 import { HiraArvore } from "@/paginas/html/hira-arvore";
-import { HiraClonarObra } from "@/paginas/html/hira-clonar-obra";
 import { clonarHiraObraAcao } from "@/app/(app)/hira/actions";
 import styles from "@/paginas/css/hira-lista.module.css";
 
@@ -89,7 +89,7 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
                 {nPendentes} pendente{nPendentes > 1 ? "s" : ""} de aprovação
               </Link>
             )}
-            {gerencia && opcoes.obras.length > 1 && <HiraClonarObra acao={clonarHiraObraAcao} obras={opcoes.obras} />}
+            {gerencia && opcoes.obras.length > 1 && <ClonarObraForm acao={clonarHiraObraAcao} obras={opcoes.obras} />}
             {gerencia && <LinkBotao href={`/hira/revisao-geral${f.obra ? `?obra=${f.obra}` : ""}`} variante="secundario">Revisão geral</LinkBotao>}
             {gerencia && <LinkBotao href={`/hira/novo${f.obra ? `?obra=${f.obra}` : ""}`}>Nova linha</LinkBotao>}
           </>

@@ -24,8 +24,11 @@ import { BadgeFaixa } from "@/paginas/html/componentes/badge";
 import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
+import { ClonarObraForm } from "@/paginas/html/componentes/clonar-obra";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { Heatmap } from "@/paginas/html/componentes/heatmap";
+import { LaiaArvore } from "@/paginas/html/laia-arvore";
+import { clonarLaiaObraAcao } from "@/app/(app)/laia/actions";
 import styles from "@/paginas/css/laia-lista.module.css";
 
 const nota = z.preprocess((v) => (Array.isArray(v) ? v[0] : v), z.coerce.number().int().min(1).max(10).optional()).catch(undefined);
@@ -38,6 +41,7 @@ const esquema = z.object({
   sig: enumUrl(["1"]),
   s: nota,
   f: nota,
+  vista: enumUrl(["arvore"]),
 });
 
 /** Planilha LAIA (ISO 14001): filtros (inclui "somente significativos"), heatmap severidade × frequência e planilha densa. */
@@ -66,6 +70,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
   const eA = eixoLaia(config, "abrangencia");
   const celulas = celulasHeatmapLaia(config, vigentes).map((c) => ({ ...c, href: href({ s: String(c.linha), f: String(c.coluna) }) }));
   const gerencia = podeGerenciarLaia(a);
+  const emArvore = q.vista === "arvore";
 
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>
@@ -80,6 +85,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
                 {nPendentes} pendente{nPendentes > 1 ? "s" : ""} de aprovação
               </Link>
             )}
+            {gerencia && opcoes.obras.length > 1 && <ClonarObraForm acao={clonarLaiaObraAcao} obras={opcoes.obras} />}
             {gerencia && <LinkBotao href={`/laia/revisao-geral${q.obra ? `?obra=${q.obra}` : ""}`} variante="secundario">Revisão geral</LinkBotao>}
             {gerencia && <LinkBotao href={`/laia/novo${q.obra ? `?obra=${q.obra}` : ""}`}>Nova linha</LinkBotao>}
           </>
@@ -150,8 +156,18 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
         </p>
       )}
 
+      <p className={styles.filtroCelula}>
+        {emArvore ? (
+          <Link href={href({ vista: "" })} className={styles.linkLimpar}>Ver planilha</Link>
+        ) : (
+          <Link href={href({ vista: "arvore" })} className={styles.linkLimpar}>Ver em árvore (Obra › Processo › Atividade)</Link>
+        )}
+      </p>
+
       {linhas.length === 0 ? (
         <EstadoVazio>Nenhuma linha LAIA com estes filtros.</EstadoVazio>
+      ) : emArvore ? (
+        <LaiaArvore linhas={linhas} />
       ) : (
         <div className={styles.quadroPlanilha} role="region" aria-label="Planilha LAIA" tabIndex={0}>
           <table className={styles.planilha}>

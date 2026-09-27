@@ -108,3 +108,16 @@ export async function revisaoGeralLaiaAcao(_: ResultadoAcao, fd: FormData): Prom
     return { ok: `Revisão geral registrada: ${r.revisados} linha(s) reavaliada(s).` };
   }, caminhos());
 }
+
+/** "Clone Inteligente": duplica a planilha LAIA vigente de uma obra para outra (docs/ideias-implantadas). */
+export async function clonarLaiaObraAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const d = z.object({ origemObraId: uuid, destinoObraId: uuid }).safeParse(obj(fd));
+  if (!d.success) return { erro: "Escolha a obra de origem e a de destino." };
+  return executar(async () => {
+    const r = await laia.clonarLaiaParaObra(await getAtor(), d.data.origemObraId, d.data.destinoObraId);
+    if (r.erros.length > 0) {
+      return { erro: `${r.criadas} de ${r.total} linha(s) clonada(s). Falhas: ${r.erros.map((e) => `"${e.atividade}" — ${e.mensagem}`).join("; ")}` };
+    }
+    return { ok: `${r.criadas} linha(s) clonada(s) para a obra destino.` };
+  }, caminhos());
+}

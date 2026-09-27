@@ -29,8 +29,15 @@ as ideias aqui eram melhorias de UX sobre módulos prontos, não módulos novos.
   Obra > Processo > Atividade à esquerda, cards de perigo (perigo/risco/nível/hierarquia) à
   direita para a atividade selecionada. **Decisão de design:** não substitui a planilha densa
   (continua sendo a visão padrão) — é uma visão alternativa, com toggle, para reduzir o risco de
-  quebrar a tela existente. LAIA ainda não tem o equivalente (mesmo padrão de dados,
-  reaproveitável).
+  quebrar a tela existente.
+
+**Implementado (2026-09-27, quarta rodada — replicação HIRA → LAIA):**
+- **Item 2 e item 4 no LAIA também:** `clonarLaiaParaObra` (`src/lib/laia/servico.ts`) e
+  `LaiaArvore` (`src/paginas/html/laia-arvore.tsx`) replicam os dois recursos acima para o
+  módulo LAIA (aspectos/impactos em vez de perigos/riscos, sem hierarquia de controle — LAIA
+  não tem esse campo). O componente de clonagem (`ClonarObraForm`) foi generalizado de
+  `hira-clonar-obra.tsx` para `src/paginas/html/componentes/clonar-obra.tsx`, reaproveitado por
+  HIRA e LAIA em vez de duplicado.
 **Implementado (2026-09-27, segunda rodada):**
 - **Item 4 (Clone Inteligente entre unidades):** botão "Duplicar matriz para nova unidade" na
   lista de HIRA (só aparece com mais de uma obra cadastrada). `clonarHiraParaObra`

@@ -332,6 +332,55 @@ export async function incluirLaia(a: Ator, d: DadosLaia): Promise<ResultadoOpera
   return r;
 }
 
+export interface ResultadoClonagemLaia {
+  total: number;
+  criadas: number;
+  erros: { atividade: string; mensagem: string }[];
+}
+
+/**
+ * Clona todas as linhas LAIA vigentes de uma obra/unidade para outra (docs/ideias-implantadas/
+ * 01-riscos-hira-laia.md, item 4 — "Clone Inteligente", mesmo padrão do HIRA). Reaproveita
+ * `incluirLaia` linha a linha; cada cópia nasce sujeita à mesma política de aprovação já
+ * configurada para LAIA. O responsável não é copiado.
+ */
+export async function clonarLaiaParaObra(a: Ator, origemObraId: string, destinoObraId: string): Promise<ResultadoClonagemLaia> {
+  await exigirGestao(a);
+  if (origemObraId === destinoObraId) throw new ErroNegocio("Escolha uma obra de destino diferente da origem.");
+  if (!obraNoEscopo(a, origemObraId) || !obraNoEscopo(a, destinoObraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  const linhas = await a.db.linhaLaia.findMany({ where: { empresaId: a.empresaId, obraId: origemObraId, status: "VIGENTE" } });
+  const erros: ResultadoClonagemLaia["erros"] = [];
+  let criadas = 0;
+  for (const l of linhas) {
+    const dados: DadosLaia = {
+      obraId: destinoObraId,
+      processoId: l.processoId,
+      atividade: l.atividade,
+      aspecto: l.aspecto,
+      impacto: l.impacto,
+      situacao: l.situacao,
+      temporalidade: l.temporalidade,
+      incidencia: l.incidencia,
+      severidade: l.severidade,
+      frequencia: l.frequencia,
+      abrangencia: l.abrangencia,
+      requisitoLegal: l.requisitoLegal,
+      partesInteressadas: l.partesInteressadas,
+      controles: l.controles,
+      responsavelId: null,
+      modoReavaliacao: l.modoReavaliacao,
+      periodicidadeMeses: l.periodicidadeMeses,
+    };
+    try {
+      await incluirLaia(a, dados);
+      criadas++;
+    } catch (e) {
+      erros.push({ atividade: l.atividade, mensagem: e instanceof ErroNegocio ? e.message : "Falha ao clonar." });
+    }
+  }
+  return { total: linhas.length, criadas, erros };
+}
+
 /** Aplica a alteração na transação (edição direta ou handler de aprovação). `versao` = trava otimista. */
 export async function aplicarAlteracaoLaia(tx: Tx, q: Quem, id: string, d: DadosLaia, versao?: number, observacao?: string | null) {
   const l = await carregar(tx, q, id);

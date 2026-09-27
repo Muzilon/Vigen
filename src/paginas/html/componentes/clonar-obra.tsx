@@ -3,14 +3,14 @@
 import { useId, useState } from "react";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { FormAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
-import styles from "@/paginas/css/hira-lista.module.css";
+import styles from "@/paginas/css/componentes/clonar-obra.module.css";
 
 /**
  * "Clone Inteligente" (docs/ideias-implantadas/01-riscos-hira-laia.md, item 4): duplica a
- * planilha HIRA vigente de uma obra para outra. As linhas nascem sujeitas à mesma política de
- * aprovação do HIRA — o gestor da obra destino só precisa ler e confirmar.
+ * planilha (HIRA ou LAIA) vigente de uma obra para outra. As linhas nascem sujeitas à mesma
+ * política de aprovação do módulo — o gestor da obra destino só precisa ler e confirmar.
  */
-export function HiraClonarObra({ acao, obras }: { acao: AcaoServidor; obras: { id: string; nome: string }[] }) {
+export function ClonarObraForm({ acao, obras }: { acao: AcaoServidor; obras: { id: string; nome: string }[] }) {
   const idOrigem = useId();
   const idDestino = useId();
   const [aberto, setAberto] = useState(false);
