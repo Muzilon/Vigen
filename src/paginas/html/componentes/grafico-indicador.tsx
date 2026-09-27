@@ -19,7 +19,7 @@ export interface PontoIndicador {
 export function GraficoIndicador({ pontos, unidade }: { pontos: PontoIndicador[]; unidade: string }) {
   const comValor = pontos.filter((p): p is PontoIndicador & { valor: number } => p.valor !== null);
   if (pontos.length === 0) return <p className={styles.vazio}>Sem períodos para exibir.</p>;
-  const W = 640, H = 220, ml = 56, mr = 16, mt = 16, mb = 34;
+  const W = 640, H = 220, ml = 56, mr = 28, mt = 16, mb = 34;
   const valores = [...comValor.map((p) => p.valor), ...pontos.map((p) => p.meta)];
   let min = Math.min(...valores);
   let max = Math.max(...valores);

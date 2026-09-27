@@ -72,9 +72,6 @@
 .sub { display: block; font-size: 12px; color: var(--cor-texto-secundario); }
 .mono { font-family: var(--fonte-mono); white-space: nowrap; }
 .linhaPendente td:first-child { box-shadow: inset 3px 0 0 var(--cor-atrasado-texto); }
-.vencida {
-  display: inline-block;
-  margin-left: 6px;
 
 /* ==========================================================
    04. RESULTADOS E SELOS

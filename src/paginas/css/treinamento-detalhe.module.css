@@ -55,7 +55,7 @@
   color: var(--cor-texto);
   min-width: 0;
 }
-.entradaPequena { font-size: 13px; padding: 5px 7px; width: 100%; }
+.entradaPequena { font-size: 13px; padding: 5px 7px; width: 100%; min-width: 112px; }
 .dados { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: var(--espaco-2) var(--espaco-3); margin: 0; font-size: 13px; }
 .dados dt { color: var(--cor-texto-secundario); font-weight: 500; }
 .dados dd { margin: 0; white-space: pre-line; }
