@@ -25,6 +25,7 @@ import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { Heatmap } from "@/paginas/html/componentes/heatmap";
+import { HiraArvore } from "@/paginas/html/hira-arvore";
 import { HiraClonarObra } from "@/paginas/html/hira-clonar-obra";
 import { clonarHiraObraAcao } from "@/app/(app)/hira/actions";
 import styles from "@/paginas/css/hira-lista.module.css";
@@ -41,6 +42,7 @@ const esquema = z.object({
   p: nota,
   s: nota,
   res: enumUrl(["1"]),
+  vista: enumUrl(["arvore"]),
 });
 
 /** Planilha HIRA (ISO 45001): filtros, heatmaps P×S inicial e residual e a planilha densa por obra. */
@@ -66,6 +68,7 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
   const base: Record<string, string> = {};
   for (const k of ["obra", "setor", "processo", "faixa", "status"] as const) if (f[k]) base[k] = String(f[k]);
   const href = (extra: Record<string, string>) => `/hira?${new URLSearchParams({ ...base, ...extra }).toString()}`;
+  const emArvore = f.vista === "arvore";
   const { eixoP, eixoS } = eixosPS(config);
   const eixoColuna = { rotulo: eixoP.rotulo, valores: eixoP.niveis };
   const eixoLinha = { rotulo: eixoS.rotulo, valores: eixoS.niveis };
@@ -148,8 +151,18 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
         </p>
       )}
 
+      <p className={styles.filtroCelula}>
+        {emArvore ? (
+          <Link href={href({ vista: "" })} className={styles.linkLimpar}>Ver planilha</Link>
+        ) : (
+          <Link href={href({ vista: "arvore" })} className={styles.linkLimpar}>Ver em árvore (Obra › Processo › Atividade)</Link>
+        )}
+      </p>
+
       {linhas.length === 0 ? (
         <EstadoVazio>Nenhuma linha HIRA com estes filtros.</EstadoVazio>
+      ) : emArvore ? (
+        <HiraArvore linhas={linhas} />
       ) : (
         <div className={styles.quadroPlanilha} role="region" aria-label="Planilha HIRA" tabIndex={0}>
           <table className={styles.planilha}>

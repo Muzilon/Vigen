@@ -1,0 +1,110 @@
+/* ==========================================================
+   ÍNDICE
+   01. Layout master-detail
+   02. Árvore (esquerda)
+   03. Cartões de perigo (direita)
+   ========================================================== */
+
+/* ==========================================================
+   01. LAYOUT MASTER-DETAIL
+   ========================================================== */
+.envoltorio {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: var(--espaco-4);
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .envoltorio { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================
+   02. ÁRVORE
+   ========================================================== */
+.arvore {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-2);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.obra {
+  border-bottom: 1px solid var(--cor-borda);
+}
+.obra:last-child { border-bottom: none; }
+.botaoObra, .botaoProcesso, .botaoAtividade {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--cor-texto);
+  border-radius: var(--raio-padrao);
+}
+.botaoObra { padding: var(--espaco-2); font-weight: 600; }
+.botaoProcesso { padding: 6px var(--espaco-2) 6px calc(var(--espaco-2) + 12px); font-weight: 500; font-size: 14px; }
+.botaoAtividade { padding: 6px var(--espaco-2) 6px calc(var(--espaco-2) + 24px); font-size: 13px; color: var(--cor-texto-secundario); }
+.botaoObra:hover, .botaoProcesso:hover, .botaoAtividade:hover { background: var(--cor-fundo); }
+.atividadeSelecionada { background: var(--cor-fundo); color: var(--cor-texto); font-weight: 600; }
+.contador {
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-fundo);
+  border-radius: var(--raio-pill);
+  padding: 1px 8px;
+}
+
+/* ==========================================================
+   03. CARTÕES DE PERIGO
+   ========================================================== */
+.detalhe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+.tituloDetalhe {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+.cartoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--espaco-3);
+}
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.linkCartao {
+  color: var(--cor-texto);
+  text-decoration: none;
+  font-weight: 600;
+}
+.linhaCartao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+.textoSecundario { color: var(--cor-texto-secundario); font-size: 13px; }
+.vazio {
+  color: var(--cor-texto-secundario);
+  font-size: 14px;
+  padding: var(--espaco-4);
+  text-align: center;
+}

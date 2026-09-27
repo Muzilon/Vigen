@@ -23,10 +23,14 @@ as ideias aqui eram melhorias de UX sobre módulos prontos, não módulos novos.
   (`src/paginas/html/hira-lista.tsx`). Um toggle animado ("bolinhas caindo") foi avaliado
   como redundante frente a isso — mesmo ganho de comparação, mais complexidade e risco.
   Riscos e Oportunidades (`riscos-lista.tsx`) segue o mesmo padrão.
-- **Item 2 (Master-Detail Obra > Processo > Atividade):** não implementado. Hoje HIRA/LAIA
-  usam planilha densa filtrável (obra/setor/processo/faixa/status), não árvore sanfona. É uma
-  mudança de layout maior (navegação em duas colunas) que merece sua própria rodada, com
-  validação de UX antes de mexer nas telas de lista existentes.
+**Implementado (2026-09-27, terceira rodada):**
+- **Item 2 (Master-Detail Obra > Processo > Atividade):** link "Ver em árvore" na lista de
+  HIRA (`?vista=arvore`) abre `HiraArvore` (`src/paginas/html/hira-arvore.tsx`) — árvore sanfona
+  Obra > Processo > Atividade à esquerda, cards de perigo (perigo/risco/nível/hierarquia) à
+  direita para a atividade selecionada. **Decisão de design:** não substitui a planilha densa
+  (continua sendo a visão padrão) — é uma visão alternativa, com toggle, para reduzir o risco de
+  quebrar a tela existente. LAIA ainda não tem o equivalente (mesmo padrão de dados,
+  reaproveitável).
 **Implementado (2026-09-27, segunda rodada):**
 - **Item 4 (Clone Inteligente entre unidades):** botão "Duplicar matriz para nova unidade" na
   lista de HIRA (só aparece com mais de uma obra cadastrada). `clonarHiraParaObra`
