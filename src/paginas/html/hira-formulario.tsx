@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import type { ConfigEscala } from "@/lib/escala/tipos";
-import { avaliarPS, eixosPS, ROTULO_CONDICAO, ROTULO_HIERARQUIA, type AvaliacaoPS } from "@/lib/hira/regras";
+import { avaliarPS, eixosPS, HIERARQUIAS, ROTULO_CONDICAO, ROTULO_HIERARQUIA, type AvaliacaoPS } from "@/lib/hira/regras";
 import { BadgeFaixa } from "@/paginas/html/componentes/badge";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
@@ -78,6 +78,8 @@ export function HiraFormulario({
   const aval = tentar(config, v.probabilidade, v.severidade);
   const residual = v.probabilidadeResidual && v.severidadeResidual ? tentar(config, Number(v.probabilidadeResidual), Number(v.severidadeResidual)) : null;
   const valor = (k: keyof ValoresHira) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => set(k, e.target.value as never);
+  const riscoAltoOuCritico = aval?.faixa === "ALTO" || aval?.faixa === "CRITICO";
+  const avisoHierarquiaBaixa = riscoAltoOuCritico && v.hierarquiaControle === "EPI";
 
   return (
     <form action={executar} className={styles.formulario}>
@@ -172,13 +174,28 @@ export function HiraFormulario({
 
       <fieldset className={styles.bloco}>
         <legend className={styles.rotuloBloco}>Controles e risco residual</legend>
-        <label className={styles.campo}>
-          <span className={styles.rotulo}>Hierarquia do controle proposto</span>
-          <select name="hierarquiaControle" value={v.hierarquiaControle} onChange={valor("hierarquiaControle")} className={styles.entrada}>
-            <option value="">—</option>
-            {(Object.keys(ROTULO_HIERARQUIA) as (keyof typeof ROTULO_HIERARQUIA)[]).map((h) => <option key={h} value={h}>{ROTULO_HIERARQUIA[h]}</option>)}
-          </select>
-        </label>
+        <fieldset className={styles.campoLargo}>
+          <legend className={styles.rotulo}>Hierarquia do controle proposto</legend>
+          <input type="hidden" name="hierarquiaControle" value={v.hierarquiaControle} />
+          <div className={styles.segmentado}>
+            {HIERARQUIAS.map((h, i) => (
+              <button
+                key={h}
+                type="button"
+                className={v.hierarquiaControle === h ? styles.opcaoMarcada : styles.opcao}
+                onClick={() => set("hierarquiaControle", h)}
+              >
+                {i + 1}. {ROTULO_HIERARQUIA[h]}
+              </button>
+            ))}
+          </div>
+          {avisoHierarquiaBaixa && (
+            <p className={styles.avisoAprovacao}>
+              Atenção: este risco é {aval?.faixa === "CRITICO" ? "crítico" : "alto"}. A ISO 45001 recomenda buscar
+              controles superiores (eliminação, substituição, engenharia ou administrativo) antes de recorrer só a EPI.
+            </p>
+          )}
+        </fieldset>
         <label className={styles.campo}>
           <span className={styles.rotulo}>Controles propostos</span>
           <textarea name="controlesPropostos" rows={2} value={v.controlesPropostos} onChange={valor("controlesPropostos")} className={styles.entrada} />
