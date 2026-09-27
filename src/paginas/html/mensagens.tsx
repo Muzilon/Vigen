@@ -33,7 +33,7 @@ export default async function Mensagens() {
                     <span className={styles.linhaAutor}>
                       <span className={styles.autor}>{m.autor.nome}</span>
                       <span className={styles.meta}>
-                        {m.entidadeTipo === "RNC" ? "RNC" : m.entidadeTipo === "PROCESSO" ? "Processo" : m.entidadeTipo === "RISCO_OPORTUNIDADE" ? "Risco/oportunidade" : m.entidadeTipo === "HIRA" ? "HIRA" : m.entidadeTipo === "LAIA" ? "LAIA" : m.entidadeTipo === "DOCUMENTO" ? "Documento" : "Item de ação"} · <span className={styles.data}>{formatarDataHora(m.criadoEm, fuso)}</span>
+                        {m.entidadeTipo === "RNC" ? "RNC" : m.entidadeTipo === "PROCESSO" ? "Processo" : m.entidadeTipo === "RISCO_OPORTUNIDADE" ? "Risco/oportunidade" : m.entidadeTipo === "HIRA" ? "HIRA" : m.entidadeTipo === "LAIA" ? "LAIA" : m.entidadeTipo === "DOCUMENTO" ? "Documento" : m.entidadeTipo === "REQUISITO_LEGAL" ? "Requisito legal" : "Item de ação"} · <span className={styles.data}>{formatarDataHora(m.criadoEm, fuso)}</span>
                       </span>
                     </span>
                     <span className={styles.texto}>{m.mensagem}</span>

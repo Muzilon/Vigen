@@ -72,6 +72,7 @@ enum Permissao {
   INSPECAO_REALIZAR
   AUDITORIA_GERENCIAR
   AUDITORIA_REALIZAR
+  REQUISITO_LEGAL_GERENCIAR
 }
 
 enum EscopoObras {
@@ -135,6 +136,7 @@ enum OrigemPlanoAcao {
   RISCO_OPORTUNIDADE
   HIRA
   LAIA
+  REQUISITO_LEGAL
 }
 
 enum StatusItemAcao {
@@ -157,6 +159,7 @@ enum TipoEntidadeAnexo {
   DOCUMENTO_VERSAO
   RESPOSTA_INSPECAO
   CONSTATACAO_AUDITORIA
+  REQUISITO_LEGAL
 }
 
 enum TipoEntidadeInteracao {
@@ -169,6 +172,7 @@ enum TipoEntidadeInteracao {
   DOCUMENTO
   INSPECAO
   AUDITORIA
+  REQUISITO_LEGAL
 }
 
 enum TipoNotificacao {
@@ -201,6 +205,7 @@ enum TipoEntidadeNotificacao {
   DOCUMENTO
   INSPECAO
   AUDITORIA
+  REQUISITO_LEGAL
 }
 
 enum StatusEmailNotificacao {
@@ -368,6 +373,7 @@ enum TipoSequencia {
   DOCUMENTO
   INSPECAO
   AUDITORIA
+  REQUISITO_LEGAL
 }
 
 model Empresa {
@@ -432,6 +438,8 @@ model Empresa {
   auditorias               Auditoria[]
   itensAuditoria           ItemAuditoria[]
   constatacoes             Constatacao[]
+  requisitosLegais         RequisitoLegal[]
+  historicosRequisitoLegal HistoricoRequisitoLegal[]
 
   @@map("empresa")
 }
@@ -458,6 +466,7 @@ model ObraUnidade {
   documentos          Documento[]
   inspecoes           Inspecao[]
   auditorias          Auditoria[]
+  requisitosLegais    RequisitoLegal[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -564,6 +573,9 @@ model Usuario {
   auditoriasLider           Auditoria[]                  @relation("AuditoriaLider")
   auditoriasCriadas         Auditoria[]                  @relation("AuditoriaCriadoPor")
   constatacoesCriadas       Constatacao[]                @relation("ConstatacaoCriadoPor")
+  requisitosResponsavel     RequisitoLegal[]             @relation("RequisitoResponsavel")
+  requisitosCriados         RequisitoLegal[]             @relation("RequisitoCriadoPor")
+  historicosRequisito       HistoricoRequisitoLegal[]    @relation("HistoricoRequisitoUsuario")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -762,15 +774,16 @@ model PlanoAcao {
   criadoEm     DateTime        @default(now()) @map("criado_em")
   atualizadoEm DateTime        @updatedAt @map("atualizado_em")
 
-  empresa   Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  obra      ObraUnidade?       @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
-  criadoPor Usuario            @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
-  rnc       Rnc?
-  itens     ItemAcao[]
-  risco     RiscoOportunidade?
-  linhaHira LinhaHira?
-  linhaLaia LinhaLaia?
-  inspecao  Inspecao?
+  empresa        Empresa            @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra           ObraUnidade?       @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor      Usuario            @relation("PlanoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  rnc            Rnc?
+  itens          ItemAcao[]
+  risco          RiscoOportunidade?
+  linhaHira      LinhaHira?
+  linhaLaia      LinhaLaia?
+  inspecao       Inspecao?
+  requisitoLegal RequisitoLegal?
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
@@ -1050,6 +1063,7 @@ model Processo {
   documentos        Documento[]
   inspecoes         Inspecao[]
   auditorias        Auditoria[]
+  requisitosLegais  RequisitoLegal[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -1916,4 +1930,114 @@ model Constatacao {
   @@unique([empresaId, geradaRncId])
   @@index([empresaId, auditoriaId, tipo])
   @@map("constatacao")
+}
+
+// ---------------------------------------------------------------- P6 — Requisitos legais
+
+enum TipoRequisitoLegal {
+  LEI
+  NORMA
+  PORTARIA
+  RESOLUCAO
+  OUTRO
+}
+
+enum EsferaRequisito {
+  FEDERAL
+  ESTADUAL
+  MUNICIPAL
+}
+
+enum TemaRequisito {
+  QUALIDADE
+  SSO
+  MEIO_AMBIENTE
+}
+
+enum StatusRequisitoLegal {
+  ATENDE
+  ATENDE_PARCIAL
+  NAO_ATENDE
+  NAO_APLICAVEL
+  EM_ANALISE
+}
+
+enum AcaoHistoricoRequisito {
+  CRIACAO
+  ALTERACAO
+  VERIFICACAO
+  REVISAO_GERAL
+  PLANO
+  EXCLUSAO
+}
+
+/// Requisito legal/normativo aplicável (ISO 9001 4.2, 14001 6.1.3, 45001 6.1.3). Código LEG-NNN-AA.
+/// obraId nulo = aplicável à empresa toda.
+model RequisitoLegal {
+  id                   String               @id @default(uuid()) @db.Uuid
+  empresaId            String               @map("empresa_id") @db.Uuid
+  ano                  Int
+  sequencia            Int
+  codigo               String
+  tipo                 TipoRequisitoLegal
+  numero               String
+  titulo               String
+  esfera               EsferaRequisito
+  tema                 TemaRequisito
+  orgaoEmissor         String?              @map("orgao_emissor")
+  resumo               String?
+  aplicabilidade       String?
+  dataPublicacao       DateTime?            @map("data_publicacao") @db.Date
+  processoId           String?              @map("processo_id") @db.Uuid
+  obraId               String?              @map("obra_id") @db.Uuid
+  status               StatusRequisitoLegal @default(EM_ANALISE)
+  responsavelId        String?              @map("responsavel_id") @db.Uuid
+  periodicidadeMeses   Int                  @default(12) @map("periodicidade_meses")
+  ultimaVerificacaoEm  DateTime?            @map("ultima_verificacao_em") @db.Date
+  proximaVerificacaoEm DateTime?            @map("proxima_verificacao_em") @db.Date
+  planoAcaoId          String?              @map("plano_acao_id") @db.Uuid
+  versao               Int                  @default(0)
+  ativo                Boolean              @default(true)
+  criadoPorId          String               @map("criado_por_id") @db.Uuid
+  criadoEm             DateTime             @default(now()) @map("criado_em")
+  atualizadoEm         DateTime             @updatedAt @map("atualizado_em")
+
+  empresa     Empresa                   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  processo    Processo?                 @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  obra        ObraUnidade?              @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  responsavel Usuario?                  @relation("RequisitoResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor   Usuario                   @relation("RequisitoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao   PlanoAcao?                @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  historico   HistoricoRequisitoLegal[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano, sequencia])
+  @@unique([empresaId, codigo])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, status])
+  @@index([empresaId, processoId])
+  @@index([empresaId, proximaVerificacaoEm])
+  @@map("requisito_legal")
+}
+
+/// Evidência de atendimento ao longo do tempo: cada verificação/mudança de status. Append-only (trigger).
+model HistoricoRequisitoLegal {
+  id              String                 @id @default(uuid()) @db.Uuid
+  empresaId       String                 @map("empresa_id") @db.Uuid
+  requisitoId     String                 @map("requisito_id") @db.Uuid
+  acao            AcaoHistoricoRequisito
+  statusAnterior  StatusRequisitoLegal?  @map("status_anterior")
+  statusNovo      StatusRequisitoLegal   @map("status_novo")
+  dataVerificacao DateTime?              @map("data_verificacao") @db.Date
+  observacao      String?
+  usuarioId       String                 @map("usuario_id") @db.Uuid
+  criadoEm        DateTime               @default(now()) @map("criado_em")
+
+  empresa   Empresa        @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  requisito RequisitoLegal @relation(fields: [empresaId, requisitoId], references: [empresaId, id], onDelete: Restrict)
+  usuario   Usuario        @relation("HistoricoRequisitoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, requisitoId, criadoEm])
+  @@map("historico_requisito_legal")
 }

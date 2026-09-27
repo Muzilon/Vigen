@@ -20,7 +20,7 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/plano-acao-lista.module.css";
 
 /** Rótulo curto da origem de planos sem RNC (lista de itens). */
-const ROTULO_ORIGEM_PLANO: Partial<Record<string, string>> = { MANUAL: "Manual", RISCO_OPORTUNIDADE: "Risco", HIRA: "HIRA", LAIA: "LAIA", INSPECAO: "Inspeção", AUDITORIA: "Auditoria" };
+const ROTULO_ORIGEM_PLANO: Partial<Record<string, string>> = { MANUAL: "Manual", RISCO_OPORTUNIDADE: "Risco", HIRA: "HIRA", LAIA: "LAIA", INSPECAO: "Inspeção", AUDITORIA: "Auditoria", REQUISITO_LEGAL: "Requisito legal" };
 
 const esquemaFiltros = z.object({
   escopo: enumUrl(["meus", "todos"]),

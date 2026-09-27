@@ -28,7 +28,9 @@ import { listarLaiaDoProcesso, podeGerenciarLaia } from "@/lib/laia/servico";
 import { podeElaborarDocumentos } from "@/lib/documentos/acesso";
 import { formatarRevisao, ROTULO_STATUS_DOCUMENTO } from "@/lib/documentos/regras";
 import { listarDocumentosDoProcesso } from "@/lib/documentos/servico";
-import { BadgeStatusDocumento } from "@/paginas/html/componentes/badge";
+import { BadgeStatusDocumento, BadgeStatusRequisito } from "@/paginas/html/componentes/badge";
+import { ROTULO_STATUS_REQUISITO } from "@/lib/requisitos-legais/regras";
+import { listarRequisitosDoProcesso, podeGerenciarRequisitos } from "@/lib/requisitos-legais/servico";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -53,7 +55,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   const p = await obterProcesso(a, id);
   if (!p) notFound();
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos, requisitos] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -64,6 +66,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     listarHiraDoProcesso(a, id),
     listarLaiaDoProcesso(a, id),
     listarDocumentosDoProcesso(a, id),
+    listarRequisitosDoProcesso(a, id),
   ]);
   const g = podeGerenciarProcessos(a) && p.ativo;
   const candidatos = outros.filter((o) => o.id !== p.id);
@@ -343,13 +346,42 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
-          {(!riscos || !linhasHira || !linhasLaia || !documentos) && (
+          {requisitos && (
+            <Cartao
+              titulo={`Requisitos legais · ${requisitos.length}`}
+              acoes={podeGerenciarRequisitos(a) ? <Link href={`/requisitos-legais/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Novo</Link> : undefined}
+            >
+              {requisitos.length === 0 ? (
+                <p className={styles.vazio}>Nenhum requisito legal vinculado a este processo.</p>
+              ) : (
+                <table className={styles.tabela}>
+                  <thead>
+                    <tr><th>Código</th><th>Requisito</th><th>Status</th><th>Próx. verificação</th></tr>
+                  </thead>
+                  <tbody>
+                    {requisitos.map((r) => (
+                      <tr key={r.id}>
+                        <td><Link href={`/requisitos-legais/${r.id}`} className={styles.linkProcesso}>{r.codigo}</Link></td>
+                        <td>{r.numero} — {r.titulo}</td>
+                        <td><BadgeStatusRequisito status={r.status} rotulo={ROTULO_STATUS_REQUISITO[r.status]} /></td>
+                        <td>{r.status === "NAO_APLICAVEL" ? "—" : formatarData(r.proximaVerificacaoEm)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className={styles.rodapeCartao}><Link href={`/requisitos-legais?processo=${p.id}`} className={styles.linkProcesso}>Ver no registro de requisitos →</Link></p>
+            </Cartao>
+          )}
+
+          {(!riscos || !linhasHira || !linhasLaia || !documentos || !requisitos) && (
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
               {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasHira && <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasLaia && <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!documentos && <li>Documentos vinculados <span className={styles.emBreve}>módulo não contratado</span></li>}
+              {!requisitos && <li>Requisitos legais <span className={styles.emBreve}>módulo não contratado</span></li>}
             </ul>
           </Cartao>
           )}

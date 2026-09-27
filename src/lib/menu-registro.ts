@@ -35,7 +35,7 @@ export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
   { modulo: "AUDITORIAS", href: "/auditorias", label: "Auditorias internas", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },
   { modulo: "DOCUMENTOS", href: "/documentos", label: "Documentos (lista mestra)", grupo: GRUPO_MODULO.QUALIDADE, implementado: true, permissao: ["DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR"] },
   { modulo: "DOCUMENTOS", href: "/documentos/meus", label: "Meus documentos", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },
-  { modulo: "REQUISITOS_LEGAIS", href: "/requisitos-legais", label: "Requisitos legais", grupo: GRUPO_MODULO.MEIO_AMBIENTE, implementado: false },
+  { modulo: "REQUISITOS_LEGAIS", href: "/requisitos-legais", label: "Requisitos legais", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "INCIDENTES", href: "/incidentes", label: "Incidentes e acidentes", grupo: GRUPO_MODULO.SEGURANCA, implementado: false },
   { modulo: "INDICADORES", href: "/indicadores", label: "Indicadores", grupo: GRUPO_MODULO.GESTAO, implementado: false },
   { modulo: "TREINAMENTOS", href: "/treinamentos", label: "Treinamentos", grupo: GRUPO_MODULO.GESTAO, implementado: false },

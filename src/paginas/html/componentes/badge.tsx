@@ -75,3 +75,17 @@ const COR_STATUS_DOCUMENTO: Record<StatusDocumentoBadge, StatusRncBadge> = {
 export function BadgeStatusDocumento({ status, rotulo }: { status: StatusDocumentoBadge; rotulo: string }) {
   return <BadgeStatusRnc status={COR_STATUS_DOCUMENTO[status]} rotulo={rotulo} />;
 }
+
+/** Status de atendimento de requisito legal (P6) — reaproveita as cores de status da RNC. */
+export type StatusRequisitoBadge = "ATENDE" | "ATENDE_PARCIAL" | "NAO_ATENDE" | "NAO_APLICAVEL" | "EM_ANALISE";
+const COR_STATUS_REQUISITO: Record<StatusRequisitoBadge, StatusRncBadge> = {
+  ATENDE: "ENCERRADO",
+  ATENDE_PARCIAL: "PLANO_EM_EXECUCAO",
+  NAO_ATENDE: "REABERTO",
+  NAO_APLICAVEL: "CANCELADO",
+  EM_ANALISE: "EM_ANALISE",
+};
+
+export function BadgeStatusRequisito({ status, rotulo }: { status: StatusRequisitoBadge; rotulo: string }) {
+  return <BadgeStatusRnc status={COR_STATUS_REQUISITO[status]} rotulo={rotulo} />;
+}

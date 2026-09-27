@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { OrigemPlanoAcao, Prisma } from "@prisma/client";
 import { atorTem, fusoDaEmpresa, type Ator, type Tx } from "@/lib/ator";
 import { hojeNoFuso, paraDataDb } from "@/lib/datas";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
@@ -270,7 +270,7 @@ export async function criarPlanoNaTransacao(
   tx: Tx,
   a: Ator,
   d: DadosPlanoManual,
-  origem: { tipo: "MANUAL" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "INSPECAO" | "AUDITORIA"; id: string | null },
+  origem: { tipo: Exclude<OrigemPlanoAcao, "RNC">; id: string | null },
 ) {
   const cab = cabecalhoPlano(d);
   validarQuantidadeItens(d.itens);

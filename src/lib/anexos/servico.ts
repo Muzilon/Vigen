@@ -11,6 +11,7 @@ import { filtroObras } from "@/lib/escopo-obras";
 import { moduloInspecoesAtivo, podeExecutarInspecao } from "@/lib/inspecoes/acesso";
 import { filtroObraAuditoria, moduloAuditoriasAtivo, podeExecutarAuditoria } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
+import { filtroObraRequisito, moduloRequisitosAtivo, podeGerenciarRequisitos, podeVerificarRequisito } from "@/lib/requisitos-legais/acesso";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
 import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
@@ -165,6 +166,13 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
         rncFinal: false,
         imutavel: aberta ? undefined : "Evidências de auditoria concluída ou cancelada não podem ser excluídas.",
       };
+    }
+    case "REQUISITO_LEGAL": {
+      // Evidência de atendimento: leitura com o módulo e escopo; envio por quem gerencia ou pelo responsável.
+      if (!(await moduloRequisitosAtivo(a))) return NEGADO;
+      const r = await a.db.requisitoLegal.findFirst({ where: { AND: [{ id: alvo.entidadeId, ativo: true }, filtroObraRequisito(a)] }, select: { responsavelId: true } });
+      if (!r) return NEGADO;
+      return { podeLer: true, podeEnviar: podeVerificarRequisito(a, r), podeGerir: podeGerenciarRequisitos(a), rncId: null, rncFinal: false };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({

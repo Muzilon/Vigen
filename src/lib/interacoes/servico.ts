@@ -10,6 +10,7 @@ import { acessoDocumento } from "@/lib/documentos/acesso";
 import { moduloInspecoesAtivo } from "@/lib/inspecoes/acesso";
 import { filtroObraAuditoria, moduloAuditoriasAtivo } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
+import { filtroObraRequisito, moduloRequisitosAtivo } from "@/lib/requisitos-legais/acesso";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
@@ -81,6 +82,14 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     const au = await a.db.auditoria.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroObraAuditoria(a)] }, select: { auditorLiderId: true } });
     if (!au) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     return { destinatarioPadrao: au.auditorLiderId !== a.usuarioId ? au.auditorLiderId : null };
+  }
+  if (t.tipo === "REQUISITO_LEGAL") {
+    // Requisitos legais: usuários com o módulo e escopo (sem obra = todos); fala com o responsável.
+    if (!(await moduloRequisitosAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const r = await a.db.requisitoLegal.findFirst({ where: { AND: [{ id: t.entidadeId, ativo: true }, filtroObraRequisito(a)] }, select: { responsavelId: true, criadoPorId: true } });
+    if (!r) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const padrao = r.responsavelId ?? r.criadoPorId;
+    return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
   }
   if (t.tipo === "DOCUMENTO") {
     // Documentos: comentários para quem tem acesso completo (lista mestra, responsável, signatários); fala com o responsável.
@@ -211,5 +220,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "DOCUMENTO") return `/documentos/${t.entidadeId}`;
   if (t.entidadeTipo === "INSPECAO") return `/inspecoes/${t.entidadeId}`;
   if (t.entidadeTipo === "AUDITORIA") return `/auditorias/${t.entidadeId}`;
+  if (t.entidadeTipo === "REQUISITO_LEGAL") return `/requisitos-legais/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

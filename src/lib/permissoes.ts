@@ -20,6 +20,7 @@ export const TODAS_PERMISSOES = [
   "INSPECAO_REALIZAR",
   "AUDITORIA_GERENCIAR",
   "AUDITORIA_REALIZAR",
+  "REQUISITO_LEGAL_GERENCIAR",
   "ADMIN_CONFIG",
   "VER_TODAS_OBRAS",
 ] as const satisfies readonly Permissao[];

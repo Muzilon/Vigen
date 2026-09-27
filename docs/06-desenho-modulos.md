@@ -360,3 +360,40 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 - **Seed**: programa 2026, AUD-001 interna concluída (5 itens, 4 constatações, NC → RNC real com evidência) e AUD-002
   externa planejada.
 - **Testes**: `tests/auditorias.test.ts` e `npm run test:auditorias` (7 casos).
+
+## P6 — Requisitos Legais entregue (2026-09-26)
+
+- **Schema** (migração `20260927200000_requisitos_legais`): `RequisitoLegal` (código `LEG-NNN-AA` via `proximaSequencia` com novo
+  `TipoSequencia.REQUISITO_LEGAL`; `TipoRequisitoLegal` LEI/NORMA/PORTARIA/RESOLUCAO/OUTRO, número, título, `EsferaRequisito`,
+  `TemaRequisito` QUALIDADE/SSO/MEIO_AMBIENTE, órgão emissor, resumo, aplicabilidade, data de publicação, processo e obra opcionais
+  — sem obra = empresa toda —, `StatusRequisitoLegal` ATENDE/ATENDE_PARCIAL/NAO_ATENDE/NAO_APLICAVEL/EM_ANALISE, responsável,
+  periodicidade em meses, última/próxima verificação, `planoAcaoId` único, `versao` = trava otimista, `ativo` = exclusão lógica) e
+  `HistoricoRequisitoLegal` (**append-only** por trigger: ação, status anterior → novo, data da verificação, observação). CHECKs de
+  sequência, textos e periodicidade 1–60. Permissão `REQUISITO_LEGAL_GERENCIAR` (perfis Qualidade, Segurança e Meio Ambiente do seed).
+  `OrigemPlanoAcao`, Anexo (evidência de atendimento), Interação e Notificação += `REQUISITO_LEGAL`. `proximaSequencia` passou a
+  aceitar qualquer `TipoSequencia` e `criarPlanoNaTransacao` qualquer origem ≠ RNC (tipos derivados do Prisma).
+- **Regras** (`src/lib/requisitos-legais/regras.ts`, puro): **NAO_ATENDE/ATENDE_PARCIAL exigem plano de ação** (no cadastro ou na
+  verificação sem plano, informa-se a primeira ação e o plano origem REQUISITO_LEGAL é criado na mesma transação — mesmo padrão do
+  tratamento de riscos); verificação vencida = próxima < hoje (não aplicável nunca vence); **% de atendimento = atende ÷ (atende +
+  parcial + não atende)** — não aplicável e em análise ficam fora.
+- **Acesso** (`acesso.ts`): leitura = módulo + escopo (sem obra = todos). Cadastro/edição/exclusão/revisão geral =
+  `REQUISITO_LEGAL_GERENCIAR`; registrar verificação, gerar plano e anexar evidência = GERENCIAR **ou o responsável**.
+- **Verificação** (`registrarVerificacao`): status + data (não futura) + observação; grava histórico VERIFICACAO (evidência de
+  atendimento ao longo do tempo) e recalcula a próxima pela periodicidade (`calcularProximaReavaliacao`). **Decisão**: o status só
+  muda por verificação (a edição dos dados não altera status), para que toda mudança de atendimento fique no histórico.
+  **Revisão geral** (`/requisitos-legais/revisao-geral`, filtro por tema): marca um lote (checkboxes) como revisado numa data,
+  mantém o status, histórico REVISAO_GERAL em cada um, tudo numa transação. Fonte de reavaliação `src/lib/requisitos-legais/reavaliacao.ts`
+  (importada pelo cron): alerta REAVALIACAO_PROXIMA por requisito ao responsável (ou quem cadastrou).
+- **Telas**: `/requisitos-legais` (planilha densa com cabeçalho fixo e rolagem própria; filtros tema/esfera/status/obra/processo/"só
+  vencidas"; badge de status colorido — `BadgeStatusRequisito` em `componentes/badge.tsx`; marca "vencida" e barra lateral na linha;
+  resumo com % de atendimento e nº de vencidas), `/requisitos-legais/novo` (dados + avaliação inicial + primeira ação;
+  `?processo=` pré-seleciona), `/requisitos-legais/[id]` (dados/editar, verificação, plano 5W2H, histórico, evidências, comentários),
+  `/requisitos-legais/revisao-geral`. Detalhe do processo: cartão "Requisitos legais" (+ Novo). Dashboard: painel com % de
+  atendimento, não atende/parcial e verificação vencida. Menu: grupo **Gestão** (`GRUPO_POR_MODULO` atualizado).
+- **Seed** (`prisma/seed-requisitos-legais.ts`, via serviço): 13 requisitos da Monto (NR-18, NR-35, NR-06, NR-07, NR-01, NR-10, NR-22,
+  Lei 12.305/2010, CONAMA 307/2002, licença de instalação estadual, CLT 157/158, NBR 15575, Código Civil 618): NR-35 atende
+  parcialmente e CONAMA 307 **não atende**, ambos com plano de ação real; NR-22 não aplicável; 2 em análise; NR-07 e a licença com
+  verificação vencida; NR-06 com verificação posterior no histórico.
+- **Testes**: `tests/requisitos-legais.test.ts` (regras) e `npm run test:requisitos-legais` (10 casos: gating, permissão/responsável,
+  escopo por obra, plano obrigatório e gerado, histórico e revisão geral, trigger de imutabilidade, evidência por anexo, isolamento,
+  código sequencial em paralelo, resumo do dashboard).

@@ -23,7 +23,8 @@
     "test:laia": "tsx scripts/teste-laia.ts",
     "test:documentos": "tsx scripts/teste-documentos.ts",
     "test:inspecoes": "tsx scripts/teste-inspecoes.ts",
-    "test:auditorias": "tsx scripts/teste-auditorias.ts"
+    "test:auditorias": "tsx scripts/teste-auditorias.ts",
+    "test:requisitos-legais": "tsx scripts/teste-requisitos-legais.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

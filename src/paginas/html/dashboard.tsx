@@ -11,6 +11,7 @@ import { resumoLaia } from "@/lib/laia/servico";
 import { resumoDocumentos } from "@/lib/documentos/servico";
 import { resumoInspecoes } from "@/lib/inspecoes/servico";
 import { resumoAuditorias } from "@/lib/auditorias/servico";
+import { resumoRequisitos } from "@/lib/requisitos-legais/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -35,7 +36,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -51,6 +52,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoDocumentos(a),
     resumoInspecoes(a),
     resumoAuditorias(a),
+    resumoRequisitos(a),
   ]);
   const k = ind.kpis;
 
@@ -175,6 +177,22 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
               ))}
             </ul>
           )}
+        </Painel>
+      )}
+
+      {requisitos && (
+        <Painel titulo="Requisitos legais — atendimento" subtitulo={`${requisitos.total} requisito(s) no seu escopo · ${requisitos.porStatus.NAO_APLICAVEL} não aplicável(is)`}>
+          <div className={styles.gradeKpis}>
+            <Link href="/requisitos-legais" className={styles.linkKpi}>
+              <Kpi titulo="Atendimento" valor={requisitos.percentual === null ? "—" : `${requisitos.percentual}%`} dica="Atende ÷ (atende + parcial + não atende)" />
+            </Link>
+            <Link href="/requisitos-legais?status=NAO_ATENDE" className={styles.linkKpi}>
+              <Kpi titulo="Não atende / parcial" valor={requisitos.porStatus.NAO_ATENDE + requisitos.porStatus.ATENDE_PARCIAL} dica={`${requisitos.porStatus.NAO_ATENDE} não atende · ${requisitos.porStatus.ATENDE_PARCIAL} parcial`} alerta={requisitos.porStatus.NAO_ATENDE > 0} />
+            </Link>
+            <Link href="/requisitos-legais?vencidos=1" className={styles.linkKpi}>
+              <Kpi titulo="Verificação vencida" valor={requisitos.vencidos} dica={`${requisitos.porStatus.EM_ANALISE} em análise`} alerta={requisitos.vencidos > 0} />
+            </Link>
+          </div>
         </Painel>
       )}
 

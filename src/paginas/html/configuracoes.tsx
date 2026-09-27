@@ -77,6 +77,7 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   INSPECAO_REALIZAR: "Realizar inspeções de campo",
   AUDITORIA_GERENCIAR: "Planejar auditorias (programa, auditorias, cancelar)",
   AUDITORIA_REALIZAR: "Executar auditorias como auditor líder",
+  REQUISITO_LEGAL_GERENCIAR: "Gerenciar requisitos legais (cadastro, verificação, revisão geral)",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };
