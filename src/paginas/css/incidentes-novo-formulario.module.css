@@ -1,0 +1,84 @@
+/* ==========================================================
+   ÍNDICE
+   01. Formulário e grupos
+   02. Campos
+   03. Segmentado do envolvido
+   04. Bloco de dados sensíveis
+   ========================================================== */
+
+/* ==========================================================
+   01. FORMULÁRIO E GRUPOS
+   ========================================================== */
+.formulario { display: flex; flex-direction: column; gap: var(--espaco-4); }
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  margin: 0;
+  padding: var(--espaco-4);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.grupo legend { font-size: 14px; font-weight: 600; padding: 0 4px; }
+
+/* ==========================================================
+   02. CAMPOS
+   ========================================================== */
+.grade {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--espaco-3);
+  align-items: end;
+}
+.campo, .campoLargo { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.campoLargo { grid-column: 1 / -1; }
+.entrada {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  min-height: 40px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+.caixa { display: flex; align-items: center; gap: 8px; font-size: 13.5px; min-height: 40px; }
+.nota { margin: 0; font-size: 12px; color: var(--cor-texto-secundario); }
+@media (max-width: 900px) {
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==========================================================
+   03. SEGMENTADO DO ENVOLVIDO (alvo de toque ≥ 44px)
+   ========================================================== */
+.segmentado { display: flex; flex-wrap: wrap; gap: var(--espaco-2); }
+.opcao {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.opcaoAtiva { background: var(--cor-destaque-escuro); color: var(--cor-destaque-escuro-texto); border-color: var(--cor-destaque-escuro); }
+.opcao:focus-within { outline: 2px solid var(--cor-acento); outline-offset: 2px; }
+.radioOculto { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+/* ==========================================================
+   04. BLOCO DE DADOS SENSÍVEIS
+   ========================================================== */
+.blocoSensivel {
+  padding: var(--espaco-3);
+  border: 1px dashed var(--cor-perigo-texto);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-perigo-fundo);
+}
+.tituloSensivel { margin: 0 0 var(--espaco-2); font-size: 12.5px; font-weight: 700; color: var(--cor-perigo-texto); }

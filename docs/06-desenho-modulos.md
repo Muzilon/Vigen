@@ -397,3 +397,35 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 - **Testes**: `tests/requisitos-legais.test.ts` (regras) e `npm run test:requisitos-legais` (10 casos: gating, permissão/responsável,
   escopo por obra, plano obrigatório e gerado, histórico e revisão geral, trigger de imutabilidade, evidência por anexo, isolamento,
   código sequencial em paralelo, resumo do dashboard).
+
+## P6 — Incidentes e Acidentes entregue (2026-09-26) — P6 completo
+
+- **Schema** (migração `20260927300000_incidentes`): `Incidente` (código `INC-NNN-AA`, `TipoSequencia.INCIDENTE`; `TipoIncidente`
+  ACIDENTE_TIPICO/ACIDENTE_TRAJETO/QUASE_ACIDENTE/DOENCA_OCUPACIONAL, `GravidadeIncidente` SEM_AFASTAMENTO/COM_AFASTAMENTO/FATALIDADE,
+  data/hora, obra obrigatória = escopo, setor e local opcionais, descrição dos fatos, envolvido usuário **ou** terceiro (CHECK),
+  testemunhas, status ABERTO/EM_INVESTIGACAO/CONCLUIDO, responsável pela investigação, `causaRaiz` + `metodoCausaRaiz` +
+  `analiseCausa` (mesmo formato validado da RNC), conclusão, `planoAcaoId` único, `restrita`, `contemDadosPessoais` (CHECK: dados
+  pessoais ⇒ restrita), dias perdidos, `geraCat` + nº da CAT (só registro, sem integração), versão), `IncidenteDadosSensiveis` (1:1,
+  mesmo padrão de `RncDadosSensiveis` + relato das testemunhas) e `HistoricoIncidente` (**append-only** por trigger). Permissões
+  `INCIDENTE_GERENCIAR` (Qualidade e Segurança) e `INCIDENTE_VER_RESTRITOS` (Segurança). `OrigemPlanoAcao`, Interação, Notificação
+  += `INCIDENTE`; Anexo += `INCIDENTE` e `INCIDENTE_DADOS_SENSIVEIS`; notificações `INCIDENTE_REGISTRADO` e `INCIDENTE_ATRIBUIDO`.
+- **LGPD** (mesma lógica da RNC restrita): envolvido, terceiro, testemunhas ou dados sensíveis ⇒ restrito automaticamente.
+  Restrito só aparece para `INCIDENTE_VER_RESTRITOS`, quem registrou e o responsável (que precisa da permissão). Envolvido,
+  testemunhas, dados sensíveis e anexos sensíveis só com `INCIDENTE_VER_RESTRITOS`: sem ela o serviço devolve esses campos como null
+  e `contemDadosPessoais=false` — o usuário não sabe que existem. Anexo sensível passou a ser checado pela permissão do tipo
+  (`podeVerSensivel` em `anexos/servico.ts`). Notificações e título do plano (neutro "Investigação do incidente INC-…" quando
+  restrito) nunca levam dados pessoais.
+- **Decisões**: registrar é aberto a qualquer usuário com o módulo e a obra no escopo (participação dos trabalhadores, ISO 45001
+  5.4); investigar/editar/plano/concluir = `INCIDENTE_GERENCIAR` ou responsável; concluir exige causa raiz; concluído é imutável;
+  dias perdidos não se aplicam a "sem afastamento". A análise de causa reaproveita o componente `CausaForm` da RNC (nova prop `acao`).
+  Planos de origem INCIDENTE seguem a visibilidade de planos sem RNC (PLANO_GERENCIAR + obra) — por isso o título neutro.
+- **Telas**: `/incidentes` (filtros obra/tipo/gravidade/status, cadeado nos restritos, badges `BadgeGravidadeIncidente`/
+  `BadgeStatusIncidente`), `/incidentes/novo` (celular primeiro: segmentado de envolvido ≥44px, toggle de dados sensíveis, fotos de
+  evidência e anexos sensíveis para quem pode ver), `/incidentes/[id]` (registro/editar, cartão restrito de envolvidos e dados
+  sensíveis, investigação com responsável e causa raiz, concluir, plano 5W2H, evidências, comentários, histórico). Menu (Segurança).
+  Dashboard: taxa de frequência simples (incidentes/mês em 12 meses), quase-acidentes, com afastamento e barras por gravidade — só o
+  que o usuário pode ver.
+- **Seed** (`prisma/seed-incidentes.ts`): 6 incidentes (3 quase-acidentes, 2 típicos — 1 com afastamento e CAT —, 1 de trajeto; sem
+  fatalidade); INC-003 restrito com dados sensíveis reais; INC-004 com plano de ação de investigação; 2 concluídos com causa raiz.
+- **Testes**: `tests/incidentes.test.ts` e `npm run test:incidentes` (9 casos: gating, escopo, permissão, LGPD — inclusive
+  anexos, comentários, notificações e responsável —, ciclo com plano, trigger, isolamento, sequência em paralelo, dashboard).

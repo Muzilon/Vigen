@@ -73,6 +73,8 @@ enum Permissao {
   AUDITORIA_GERENCIAR
   AUDITORIA_REALIZAR
   REQUISITO_LEGAL_GERENCIAR
+  INCIDENTE_GERENCIAR
+  INCIDENTE_VER_RESTRITOS
 }
 
 enum EscopoObras {
@@ -137,6 +139,7 @@ enum OrigemPlanoAcao {
   HIRA
   LAIA
   REQUISITO_LEGAL
+  INCIDENTE
 }
 
 enum StatusItemAcao {
@@ -160,6 +163,8 @@ enum TipoEntidadeAnexo {
   RESPOSTA_INSPECAO
   CONSTATACAO_AUDITORIA
   REQUISITO_LEGAL
+  INCIDENTE
+  INCIDENTE_DADOS_SENSIVEIS
 }
 
 enum TipoEntidadeInteracao {
@@ -173,6 +178,7 @@ enum TipoEntidadeInteracao {
   INSPECAO
   AUDITORIA
   REQUISITO_LEGAL
+  INCIDENTE
 }
 
 enum TipoNotificacao {
@@ -192,6 +198,8 @@ enum TipoNotificacao {
   CIENCIA_PENDENTE
   REVISAO_DOCUMENTO_PROXIMA
   AUDITORIA_ATRIBUIDA
+  INCIDENTE_REGISTRADO
+  INCIDENTE_ATRIBUIDO
 }
 
 enum TipoEntidadeNotificacao {
@@ -206,6 +214,7 @@ enum TipoEntidadeNotificacao {
   INSPECAO
   AUDITORIA
   REQUISITO_LEGAL
+  INCIDENTE
 }
 
 enum StatusEmailNotificacao {
@@ -374,6 +383,7 @@ enum TipoSequencia {
   INSPECAO
   AUDITORIA
   REQUISITO_LEGAL
+  INCIDENTE
 }
 
 model Empresa {
@@ -440,6 +450,9 @@ model Empresa {
   constatacoes             Constatacao[]
   requisitosLegais         RequisitoLegal[]
   historicosRequisitoLegal HistoricoRequisitoLegal[]
+  incidentes               Incidente[]
+  incidentesDadosSensiveis IncidenteDadosSensiveis[]
+  historicosIncidente      HistoricoIncidente[]
 
   @@map("empresa")
 }
@@ -467,6 +480,7 @@ model ObraUnidade {
   inspecoes           Inspecao[]
   auditorias          Auditoria[]
   requisitosLegais    RequisitoLegal[]
+  incidentes          Incidente[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -486,6 +500,7 @@ model Setor {
   rncs       Rnc[]
   documentos Documento[]
   inspecoes  Inspecao[]
+  incidentes Incidente[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -576,6 +591,10 @@ model Usuario {
   requisitosResponsavel     RequisitoLegal[]             @relation("RequisitoResponsavel")
   requisitosCriados         RequisitoLegal[]             @relation("RequisitoCriadoPor")
   historicosRequisito       HistoricoRequisitoLegal[]    @relation("HistoricoRequisitoUsuario")
+  incidentesEnvolvido       Incidente[]                  @relation("IncidenteEnvolvido")
+  incidentesResponsavel     Incidente[]                  @relation("IncidenteResponsavel")
+  incidentesRegistrados     Incidente[]                  @relation("IncidenteRegistradoPor")
+  historicosIncidente       HistoricoIncidente[]         @relation("HistoricoIncidenteUsuario")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -784,6 +803,7 @@ model PlanoAcao {
   linhaLaia      LinhaLaia?
   inspecao       Inspecao?
   requisitoLegal RequisitoLegal?
+  incidente      Incidente?
 
   @@unique([empresaId, id])
   @@index([empresaId, origemTipo, origemId])
@@ -2040,4 +2060,135 @@ model HistoricoRequisitoLegal {
   @@unique([empresaId, id])
   @@index([empresaId, requisitoId, criadoEm])
   @@map("historico_requisito_legal")
+}
+
+// ---------------------------------------------------------------- P6 — Incidentes e acidentes (ISO 45001 10.2)
+
+enum TipoIncidente {
+  ACIDENTE_TIPICO
+  ACIDENTE_TRAJETO
+  QUASE_ACIDENTE
+  DOENCA_OCUPACIONAL
+}
+
+enum GravidadeIncidente {
+  SEM_AFASTAMENTO
+  COM_AFASTAMENTO
+  FATALIDADE
+}
+
+enum StatusIncidente {
+  ABERTO
+  EM_INVESTIGACAO
+  CONCLUIDO
+}
+
+enum AcaoHistoricoIncidente {
+  REGISTRO
+  ALTERACAO
+  INVESTIGACAO
+  STATUS
+  PLANO
+  RESPONSAVEL
+}
+
+/// Incidente/acidente de trabalho. Código INC-NNN-AA. Obra obrigatória (escopo). restrita (LGPD) = true quando há
+/// envolvido/terceiro/testemunhas/dados sensíveis: só quem tem INCIDENTE_VER_RESTRITOS (ou registrou/investiga) vê.
+model Incidente {
+  id                  String             @id @default(uuid()) @db.Uuid
+  empresaId           String             @map("empresa_id") @db.Uuid
+  ano                 Int
+  sequencia           Int
+  codigo              String
+  tipo                TipoIncidente
+  gravidade           GravidadeIncidente
+  dataHora            DateTime           @map("data_hora")
+  obraId              String             @map("obra_id") @db.Uuid
+  setorId             String?            @map("setor_id") @db.Uuid
+  local               String?
+  descricaoFatos      String             @map("descricao_fatos")
+  /// Envolvido usuário do sistema OU terceiro (nome/função em texto) — nunca os dois (CHECK).
+  envolvidoId         String?            @map("envolvido_id") @db.Uuid
+  terceiroNome        String?            @map("terceiro_nome")
+  terceiroFuncao      String?            @map("terceiro_funcao")
+  testemunhas         String?
+  status              StatusIncidente    @default(ABERTO)
+  responsavelId       String?            @map("responsavel_id") @db.Uuid
+  causaRaiz           String?            @map("causa_raiz")
+  metodoCausaRaiz     MetodoCausaRaiz?   @map("metodo_causa_raiz")
+  analiseCausa        Json?              @map("analise_causa")
+  conclusao           String?
+  planoAcaoId         String?            @map("plano_acao_id") @db.Uuid
+  restrita            Boolean            @default(false)
+  contemDadosPessoais Boolean            @default(false) @map("contem_dados_pessoais")
+  diasPerdidos        Int?               @map("dias_perdidos")
+  geraCat             Boolean            @default(false) @map("gera_cat")
+  numeroCat           String?            @map("numero_cat")
+  versao              Int                @default(0)
+  registradoPorId     String             @map("registrado_por_id") @db.Uuid
+  concluidoEm         DateTime?          @map("concluido_em")
+  criadoEm            DateTime           @default(now()) @map("criado_em")
+  atualizadoEm        DateTime           @updatedAt @map("atualizado_em")
+
+  empresa        Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  obra           ObraUnidade              @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  setor          Setor?                   @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
+  envolvido      Usuario?                 @relation("IncidenteEnvolvido", fields: [empresaId, envolvidoId], references: [empresaId, id], onDelete: Restrict)
+  responsavel    Usuario?                 @relation("IncidenteResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  registradoPor  Usuario                  @relation("IncidenteRegistradoPor", fields: [empresaId, registradoPorId], references: [empresaId, id], onDelete: Restrict)
+  planoAcao      PlanoAcao?               @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
+  dadosSensiveis IncidenteDadosSensiveis?
+  historico      HistoricoIncidente[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, ano, sequencia])
+  @@unique([empresaId, codigo])
+  @@unique([empresaId, planoAcaoId])
+  @@index([empresaId, obraId, status])
+  @@index([empresaId, dataHora])
+  @@index([empresaId, restrita])
+  @@map("incidente")
+}
+
+/// Dados pessoais do incidente (LGPD) — mesmo padrão de RncDadosSensiveis; só com INCIDENTE_VER_RESTRITOS.
+model IncidenteDadosSensiveis {
+  id                 String   @id @default(uuid()) @db.Uuid
+  empresaId          String   @map("empresa_id") @db.Uuid
+  incidenteId        String   @map("incidente_id") @db.Uuid
+  nomeEnvolvido      String?  @map("nome_envolvido")
+  documentoEnvolvido String?  @map("documento_envolvido")
+  funcaoEnvolvido    String?  @map("funcao_envolvido")
+  relato             String?
+  lesaoDescricao     String?  @map("lesao_descricao")
+  testemunhasRelato  String?  @map("testemunhas_relato")
+  criadoEm           DateTime @default(now()) @map("criado_em")
+  atualizadoEm       DateTime @updatedAt @map("atualizado_em")
+
+  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  incidente Incidente @relation(fields: [empresaId, incidenteId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, incidenteId])
+  @@map("incidente_dados_sensiveis")
+}
+
+/// Append-only (trigger). Observações nunca levam dados pessoais.
+model HistoricoIncidente {
+  id             String                 @id @default(uuid()) @db.Uuid
+  empresaId      String                 @map("empresa_id") @db.Uuid
+  incidenteId    String                 @map("incidente_id") @db.Uuid
+  acao           AcaoHistoricoIncidente
+  statusAnterior StatusIncidente?       @map("status_anterior")
+  statusNovo     StatusIncidente        @map("status_novo")
+  observacao     String?
+  usuarioId      String                 @map("usuario_id") @db.Uuid
+  criadoEm       DateTime               @default(now()) @map("criado_em")
+
+  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  incidente Incidente @relation(fields: [empresaId, incidenteId], references: [empresaId, id], onDelete: Restrict)
+  usuario   Usuario   @relation("HistoricoIncidenteUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, incidenteId, criadoEm])
+  @@map("historico_incidente")
 }

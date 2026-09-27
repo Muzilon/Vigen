@@ -11,6 +11,7 @@ import { moduloInspecoesAtivo } from "@/lib/inspecoes/acesso";
 import { filtroObraAuditoria, moduloAuditoriasAtivo } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRequisito, moduloRequisitosAtivo } from "@/lib/requisitos-legais/acesso";
+import { filtroAcessoIncidente, moduloIncidentesAtivo } from "@/lib/incidentes/acesso";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
@@ -82,6 +83,14 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     const au = await a.db.auditoria.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroObraAuditoria(a)] }, select: { auditorLiderId: true } });
     if (!au) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     return { destinatarioPadrao: au.auditorLiderId !== a.usuarioId ? au.auditorLiderId : null };
+  }
+  if (t.tipo === "INCIDENTE") {
+    // Incidentes: visível (escopo + restrição LGPD); fala com o responsável pela investigação (ou quem registrou).
+    if (!(await moduloIncidentesAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const i = await a.db.incidente.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroAcessoIncidente(a)] }, select: { responsavelId: true, registradoPorId: true } });
+    if (!i) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const padrao = i.responsavelId && i.responsavelId !== a.usuarioId ? i.responsavelId : i.registradoPorId;
+    return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
   }
   if (t.tipo === "REQUISITO_LEGAL") {
     // Requisitos legais: usuários com o módulo e escopo (sem obra = todos); fala com o responsável.
@@ -221,5 +230,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "INSPECAO") return `/inspecoes/${t.entidadeId}`;
   if (t.entidadeTipo === "AUDITORIA") return `/auditorias/${t.entidadeId}`;
   if (t.entidadeTipo === "REQUISITO_LEGAL") return `/requisitos-legais/${t.entidadeId}`;
+  if (t.entidadeTipo === "INCIDENTE") return `/incidentes/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

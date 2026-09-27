@@ -89,3 +89,19 @@ const COR_STATUS_REQUISITO: Record<StatusRequisitoBadge, StatusRncBadge> = {
 export function BadgeStatusRequisito({ status, rotulo }: { status: StatusRequisitoBadge; rotulo: string }) {
   return <BadgeStatusRnc status={COR_STATUS_REQUISITO[status]} rotulo={rotulo} />;
 }
+
+/** Gravidade de incidente (P6) — sem afastamento / com afastamento / fatalidade nas cores de gravidade. */
+export type GravidadeIncidenteBadge = "SEM_AFASTAMENTO" | "COM_AFASTAMENTO" | "FATALIDADE";
+const COR_GRAVIDADE_INCIDENTE: Record<GravidadeIncidenteBadge, GravidadeBadge> = { SEM_AFASTAMENTO: "MEDIA", COM_AFASTAMENTO: "ALTA", FATALIDADE: "CRITICA" };
+
+export function BadgeGravidadeIncidente({ gravidade, rotulo }: { gravidade: GravidadeIncidenteBadge; rotulo: string }) {
+  return <BadgeGravidade gravidade={COR_GRAVIDADE_INCIDENTE[gravidade]} rotulo={rotulo} />;
+}
+
+/** Status de incidente (P6) — aberto / em investigação / concluído nas cores de status da RNC. */
+export type StatusIncidenteBadge = "ABERTO" | "EM_INVESTIGACAO" | "CONCLUIDO";
+const COR_STATUS_INCIDENTE: Record<StatusIncidenteBadge, StatusRncBadge> = { ABERTO: "ABERTO", EM_INVESTIGACAO: "EM_ANALISE", CONCLUIDO: "ENCERRADO" };
+
+export function BadgeStatusIncidente({ status, rotulo }: { status: StatusIncidenteBadge; rotulo: string }) {
+  return <BadgeStatusRnc status={COR_STATUS_INCIDENTE[status]} rotulo={rotulo} />;
+}

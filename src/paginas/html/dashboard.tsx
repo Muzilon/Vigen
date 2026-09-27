@@ -12,6 +12,7 @@ import { resumoDocumentos } from "@/lib/documentos/servico";
 import { resumoInspecoes } from "@/lib/inspecoes/servico";
 import { resumoAuditorias } from "@/lib/auditorias/servico";
 import { resumoRequisitos } from "@/lib/requisitos-legais/servico";
+import { resumoIncidentes } from "@/lib/incidentes/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -36,7 +37,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -53,6 +54,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoInspecoes(a),
     resumoAuditorias(a),
     resumoRequisitos(a),
+    resumoIncidentes(a),
   ]);
   const k = ind.kpis;
 
@@ -177,6 +179,33 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
               ))}
             </ul>
           )}
+        </Painel>
+      )}
+
+      {incidentes && (
+        <Painel titulo="Incidentes e acidentes" subtitulo={`Últimos 12 meses, obras do seu escopo · ${incidentes.abertos} em aberto · ${incidentes.diasPerdidos} dia(s) perdido(s)`}>
+          <div className={styles.gradeKpis}>
+            <Link href="/incidentes" className={styles.linkKpi}>
+              <Kpi titulo="Taxa de frequência" valor={incidentes.taxaMensal.toLocaleString("pt-BR")} dica={`incidente(s) por mês · ${incidentes.total} no período`} />
+            </Link>
+            <Link href="/incidentes?tipo=QUASE_ACIDENTE" className={styles.linkKpi}>
+              <Kpi titulo="Quase-acidentes" valor={incidentes.porTipo.QUASE_ACIDENTE} dica="Registros preventivos" />
+            </Link>
+            <Link href="/incidentes?gravidade=COM_AFASTAMENTO" className={styles.linkKpi}>
+              <Kpi titulo="Com afastamento" valor={incidentes.porGravidade.COM_AFASTAMENTO} dica={`${incidentes.porGravidade.FATALIDADE} fatalidade(s)`} alerta={incidentes.porGravidade.COM_AFASTAMENTO + incidentes.porGravidade.FATALIDADE > 0} />
+            </Link>
+          </div>
+          <Barras
+            paleta="gravidade"
+            vazio="Nenhum incidente no período."
+            dados={(
+              [
+                ["CRITICA", "Fatalidade", incidentes.porGravidade.FATALIDADE],
+                ["ALTA", "Com afastamento", incidentes.porGravidade.COM_AFASTAMENTO],
+                ["MEDIA", "Sem afastamento", incidentes.porGravidade.SEM_AFASTAMENTO],
+              ] as const
+            ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
+          />
         </Painel>
       )}
 

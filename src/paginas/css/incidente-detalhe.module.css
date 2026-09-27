@@ -1,0 +1,194 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, trilha e cabeçalho
+   02. Grade de duas colunas
+   03. Dados (dl) e formulários
+   04. Investigação e plano
+   05. Histórico
+   06. Dados sensíveis (LGPD)
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, TRILHA E CABEÇALHO
+   ========================================================== */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+}
+.trilha { font-size: 13px; }
+.linkVoltar { color: var(--cor-texto-secundario); text-decoration: none; }
+.linkVoltar:hover { color: var(--cor-texto); }
+
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+}
+.codigo {
+  margin: 0;
+  font-family: var(--fonte-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cor-texto-secundario);
+}
+.titulo {
+  margin: 2px 0 var(--espaco-2);
+  font-size: 22px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-secundario);
+}
+
+/* ==========================================================
+   02. GRADE
+   ========================================================== */
+.grade {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--espaco-4);
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  min-width: 0;
+}
+
+/* ==========================================================
+   03. DADOS E FORMULÁRIOS
+   ========================================================== */
+.dados {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: var(--espaco-2) var(--espaco-3);
+  margin: 0;
+  font-size: 13px;
+}
+.dados dt { color: var(--cor-texto-secundario); font-weight: 500; }
+.dados dd { margin: 0; white-space: pre-line; }
+.textoVencido { color: var(--cor-atrasado-texto); font-weight: 600; }
+.vencida {
+  padding: 1px 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-atrasado-fundo);
+  color: var(--cor-atrasado-texto);
+  font-weight: 600;
+  font-size: 12px;
+}
+.dica { margin: var(--espaco-2) 0 0; font-size: 12px; color: var(--cor-texto-secundario); }
+
+.editar { margin-top: var(--espaco-3); font-size: 13px; }
+.editar summary { cursor: pointer; color: var(--cor-acento); font-weight: 500; margin-bottom: var(--espaco-3); }
+
+.formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--espaco-2) var(--espaco-3);
+  align-items: end;
+}
+.campo, .campoLargo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--cor-texto-secundario); }
+.campoLargo { grid-column: 1 / -1; }
+.caixa { display: flex; align-items: center; gap: 6px; font-size: 13px; min-height: 36px; }
+.entrada {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: 4px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+.formLinha { display: flex; flex-wrap: wrap; gap: var(--espaco-2); align-items: center; margin-top: var(--espaco-3); }
+.formLinha .entrada { flex: 1 1 200px; }
+.lista { margin: 0; padding-left: 18px; }
+.mono { font-family: var(--fonte-mono); }
+@media (max-width: 640px) {
+  .formulario { grid-template-columns: minmax(0, 1fr); }
+  .dados { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==========================================================
+   04. AVALIAÇÃO, TRATAMENTO E PLANO
+   ========================================================== */
+.detalhe { font-size: 12px; color: var(--cor-texto-secundario); }
+.texto { margin: 0; font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-fraco); }
+.linkForte { font-weight: 600; color: var(--cor-texto); }
+
+.itensPlano {
+  list-style: none;
+  margin: var(--espaco-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+}
+.itemPlano {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--espaco-3);
+  align-items: center;
+  font-size: 13px;
+  padding-bottom: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+
+/* ==========================================================
+   05. HISTÓRICO
+   ========================================================== */
+.historico {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+}
+.eventoHistorico {
+  font-size: 13px;
+  padding-left: var(--espaco-3);
+  border-left: 2px solid var(--cor-borda-forte);
+}
+.cabecalhoEvento {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espaco-2);
+  color: var(--cor-texto-secundario);
+  font-size: 12px;
+}
+.cabecalhoEvento strong { color: var(--cor-texto); font-size: 13px; }
+.linhaEvento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--espaco-3);
+  margin-top: 2px;
+  color: var(--cor-texto);
+}
+.observacao { margin: 4px 0 0; color: var(--cor-texto-secundario); }
+
+/* ==========================================================
+   06. DADOS SENSÍVEIS (LGPD)
+   ========================================================== */
+.restrito {
+  padding: 1px 8px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-perigo-texto);
+  font-weight: 600;
+  font-size: 12px;
+}
+.cartaoSensivel { border-color: var(--cor-perigo-texto); }
+.blocoAnexos { margin-top: var(--espaco-3); padding-top: var(--espaco-3); border-top: 1px solid var(--cor-borda-sutil); }

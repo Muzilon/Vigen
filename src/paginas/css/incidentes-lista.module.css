@@ -1,0 +1,50 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página
+   02. Filtros
+   03. Tabela
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-4); min-width: 0; }
+
+/* ==========================================================
+   02. FILTROS
+   ========================================================== */
+.barraFiltros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
+.campoFiltro { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.acoesFiltro { display: flex; align-items: center; gap: var(--espaco-3); margin-left: auto; }
+.linkLimpar { font-size: 13px; color: var(--cor-texto-secundario); }
+
+/* ==========================================================
+   03. TABELA
+   ========================================================== */
+.quadro { overflow-x: auto; background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio-padrao); }
+.tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabela th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-fundo-sutil);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--cor-borda-forte);
+  white-space: nowrap;
+}
+.tabela td { padding: 9px 10px; border-bottom: 1px solid var(--cor-borda-sutil); vertical-align: top; }
+.codigo { font-family: var(--fonte-mono); font-weight: 700; white-space: nowrap; }
+.codigo a { color: var(--cor-texto); }
+.iconeRestrito { margin-left: 6px; vertical-align: -2px; color: var(--cor-perigo-texto); }
+.mono { font-family: var(--fonte-mono); white-space: nowrap; }
+.sub { display: block; font-size: 12px; color: var(--cor-texto-secundario); }

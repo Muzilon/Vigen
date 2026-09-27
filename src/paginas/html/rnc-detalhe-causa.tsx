@@ -3,22 +3,26 @@
 import { useActionState, useState } from "react";
 import { ROTULO_METODO, SEIS_M } from "@/lib/rnc/rotulos";
 import { salvarCausaAcao } from "@/app/(app)/rncs/actions";
-import { RetornoAcao } from "@/paginas/html/componentes/form-acao";
+import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import { Botao } from "@/paginas/html/componentes/botao";
 import styles from "@/paginas/css/rnc-detalhe-causa.module.css";
 
 type Metodo = keyof typeof ROTULO_METODO;
 type Analise = { porques?: string[]; ishikawa?: Record<string, string>; texto?: string };
 
-/** Formulário da análise de causa raiz (5 Porquês / Ishikawa 6M / texto livre) — aba "Causa raiz" do detalhe. */
+/**
+ * Formulário da análise de causa raiz (5 Porquês / Ishikawa 6M / texto livre) — aba "Causa raiz" do detalhe.
+ * Reaproveitado pela investigação de incidentes (P6): `acao` troca a server action (campos id/versao/metodo/analise/causaRaiz).
+ */
 export function CausaForm(props: {
+  acao?: AcaoServidor;
   rncId: string;
   versao: number;
   metodo: Metodo | null;
   analise: Analise | null;
   causaRaiz: string | null;
 }) {
-  const [res, acao, pendente] = useActionState(salvarCausaAcao, null);
+  const [res, acao, pendente] = useActionState(props.acao ?? salvarCausaAcao, null);
   const [metodo, setMetodo] = useState<Metodo>(props.metodo ?? "CINCO_PORQUES");
   const [porques, setPorques] = useState<string[]>(props.analise?.porques ?? ["", "", "", "", ""]);
   const [ishikawa, setIshikawa] = useState<Record<string, string>>(props.analise?.ishikawa ?? {});

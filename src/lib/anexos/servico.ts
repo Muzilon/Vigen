@@ -12,6 +12,7 @@ import { moduloInspecoesAtivo, podeExecutarInspecao } from "@/lib/inspecoes/aces
 import { filtroObraAuditoria, moduloAuditoriasAtivo, podeExecutarAuditoria } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRequisito, moduloRequisitosAtivo, podeGerenciarRequisitos, podeVerificarRequisito } from "@/lib/requisitos-legais/acesso";
+import { filtroAcessoIncidente, moduloIncidentesAtivo, podeTratarIncidente, podeVerRestritosIncidente } from "@/lib/incidentes/acesso";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
 import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
@@ -41,6 +42,14 @@ interface AcessoEntidade {
 }
 
 const NEGADO: AcessoEntidade = { podeLer: false, podeEnviar: false, podeGerir: false, rncId: null, rncFinal: false };
+
+/** Tipos de anexo marcados como sensíveis (LGPD). */
+const TIPOS_SENSIVEIS: readonly TipoEntidadeAnexo[] = ["RNC_DADOS_SENSIVEIS", "INCIDENTE_DADOS_SENSIVEIS"];
+
+/** Quem vê anexo sensível: RNC → RNC_VER_RESTRITAS; incidente → INCIDENTE_VER_RESTRITOS. */
+function podeVerSensivel(a: Ator, tipo: TipoEntidadeAnexo) {
+  return tipo === "INCIDENTE" || tipo === "INCIDENTE_DADOS_SENSIVEIS" ? podeVerRestritosIncidente(a) : podeVerDadosSensiveis(a);
+}
 const finalizada = (rnc: { status: StatusRnc } | null | undefined) => !!rnc && STATUS_FINAIS.includes(rnc.status);
 
 function gestorRnc(a: Ator, rnc: { responsavelId: string | null }) {
@@ -174,6 +183,23 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       if (!r) return NEGADO;
       return { podeLer: true, podeEnviar: podeVerificarRequisito(a, r), podeGerir: podeGerenciarRequisitos(a), rncId: null, rncFinal: false };
     }
+    case "INCIDENTE":
+    case "INCIDENTE_DADOS_SENSIVEIS": {
+      // Incidente: leitura = incidente visível (escopo + restrição LGPD). Fotos/evidências: quem registrou enquanto
+      // aberto, ou quem trata (GERENCIAR/responsável) até a conclusão. Dados sensíveis: só INCIDENTE_VER_RESTRITOS.
+      const sensivel = alvo.tipo === "INCIDENTE_DADOS_SENSIVEIS";
+      if (sensivel && !podeVerRestritosIncidente(a)) return NEGADO;
+      if (!(await moduloIncidentesAtivo(a))) return NEGADO;
+      const i = await a.db.incidente.findFirst({
+        where: { AND: [{ id: alvo.entidadeId }, filtroAcessoIncidente(a)] },
+        select: { status: true, responsavelId: true, registradoPorId: true, contemDadosPessoais: true },
+      });
+      if (!i) return NEGADO;
+      const trata = podeTratarIncidente(a, i);
+      const aberto = i.status !== "CONCLUIDO";
+      const podeEnviar = aberto && (trata || (i.registradoPorId === a.usuarioId && i.status === "ABERTO")) && (!sensivel || i.contemDadosPessoais);
+      return { podeLer: true, podeEnviar, podeGerir: trata, rncId: null, rncFinal: false, imutavel: aberto ? undefined : "Evidências de incidente concluído não podem ser excluídas." };
+    }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({
         where: { id: alvo.entidadeId },
@@ -247,7 +273,7 @@ export async function enviarAnexos(a: Ator, alvo: Alvo, arquivos: ArquivoEnviado
   if (!acesso.podeEnviar) throw new ErroNegocio("Sem permissão para anexar arquivos neste registro.");
   const validados = await validarArquivos(a, arquivos);
   const armazenamento = getArmazenamento();
-  const sensivel = alvo.tipo === "RNC_DADOS_SENSIVEIS";
+  const sensivel = TIPOS_SENSIVEIS.includes(alvo.tipo);
   const criados: Anexo[] = [];
   for (const { dados, v } of validados) {
     const chave = await armazenamento.salvar(montarChave(a.empresaId, alvo.tipo, v.nomeSanitizado), dados, v.mimeType);
@@ -306,7 +332,7 @@ export async function listarAnexos(a: Ator, alvo: Alvo): Promise<AnexoListado[]>
       entidadeTipo: alvo.tipo,
       entidadeId: alvo.entidadeId,
       excluidoEm: null,
-      ...(podeVerDadosSensiveis(a) ? {} : { sensivel: false }),
+      ...(podeVerSensivel(a, alvo.tipo) ? {} : { sensivel: false }),
     },
     select: selecao,
     orderBy: { criadoEm: "asc" },
@@ -325,7 +351,7 @@ export async function listarAnexosDe(a: Ator, tipo: TipoEntidadeAnexo, ids: stri
 export async function abrirAnexo(a: Ator, anexoId: string) {
   const anexo = await a.db.anexo.findFirst({ where: { id: anexoId, excluidoEm: null } });
   if (!anexo) return null;
-  if (anexo.sensivel && !podeVerDadosSensiveis(a)) return null;
+  if (anexo.sensivel && !podeVerSensivel(a, anexo.entidadeTipo)) return null;
   const acesso = await acessoEntidade(a, { tipo: anexo.entidadeTipo, entidadeId: anexo.entidadeId });
   if (!acesso.podeLer) return null;
   const stream = await getArmazenamento().ler(anexo.chaveArmazenamento);
@@ -336,7 +362,7 @@ export async function abrirAnexo(a: Ator, anexoId: string) {
 /** Soft delete: somente o autor ou um gestor. Anexos de RNC registram evento no histórico. */
 export async function excluirAnexo(a: Ator, anexoId: string) {
   const anexo = await a.db.anexo.findFirst({ where: { id: anexoId, excluidoEm: null } });
-  if (!anexo || (anexo.sensivel && !podeVerDadosSensiveis(a))) throw new ErroNegocio("Anexo não encontrado.");
+  if (!anexo || (anexo.sensivel && !podeVerSensivel(a, anexo.entidadeTipo))) throw new ErroNegocio("Anexo não encontrado.");
   const acesso = await acessoEntidade(a, { tipo: anexo.entidadeTipo, entidadeId: anexo.entidadeId });
   if (!acesso.podeLer) throw new ErroNegocio("Anexo não encontrado.");
   if (acesso.rncFinal) throw new ErroNegocio("Anexos de RNC encerrada ou cancelada não podem ser excluídos.");

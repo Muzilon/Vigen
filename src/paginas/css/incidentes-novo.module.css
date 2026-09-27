@@ -1,0 +1,13 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página e trilha
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA E TRILHA
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-3); max-width: 980px; }
+.trilha { font-size: 13px; }
+.trilha a { color: var(--cor-texto-secundario); text-decoration: none; }
+.titulo { margin: 0; font-size: 22px; }
+.descricao { margin: 0; font-size: 13px; color: var(--cor-texto-secundario); }
