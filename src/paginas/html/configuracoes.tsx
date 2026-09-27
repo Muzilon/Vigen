@@ -81,6 +81,7 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   INCIDENTE_GERENCIAR: "Gerenciar incidentes (investigação, responsável, plano, conclusão)",
   INCIDENTE_VER_RESTRITOS: "Ver incidentes restritos e dados pessoais de envolvidos (LGPD)",
   INDICADOR_GERENCIAR: "Cadastrar indicadores e lançar resultados de qualquer indicador",
+  TREINAMENTO_GERENCIAR: "Cadastrar treinamentos e sessões, lançar presença/certificados e ver a matriz de competências",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };

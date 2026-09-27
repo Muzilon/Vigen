@@ -262,7 +262,7 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
 export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
   const d = z
     .object({
-      entidadeTipo: z.enum(["RNC", "ITEM_ACAO", "PROCESSO", "RISCO_OPORTUNIDADE", "HIRA", "LAIA", "DOCUMENTO", "INSPECAO", "AUDITORIA", "REQUISITO_LEGAL", "INCIDENTE", "INDICADOR"]),
+      entidadeTipo: z.enum(["RNC", "ITEM_ACAO", "PROCESSO", "RISCO_OPORTUNIDADE", "HIRA", "LAIA", "DOCUMENTO", "INSPECAO", "AUDITORIA", "REQUISITO_LEGAL", "INCIDENTE", "INDICADOR", "TREINAMENTO"]),
       entidadeId: uuid,
       mensagem: z.string().trim().min(1, "Escreva a mensagem.").max(interacoes.MAX_MENSAGEM, "Mensagem muito longa."),
       destinatarioId: uuidOpcional,
@@ -278,7 +278,7 @@ export async function enviarInteracaoAcao(_: ResultadoAcao, fd: FormData) {
 
 // ---------------------------------------------------------------- anexos
 
-const TIPOS_ANEXO = ["RNC", "RNC_DADOS_SENSIVEIS", "VERIFICACAO_EFICACIA", "PLANO_ACAO", "ITEM_ACAO", "PROCESSO", "RISCO_OPORTUNIDADE", "HIRA", "LAIA", "RESPOSTA_INSPECAO", "CONSTATACAO_AUDITORIA", "REQUISITO_LEGAL", "INCIDENTE", "INCIDENTE_DADOS_SENSIVEIS"] as const;
+const TIPOS_ANEXO = ["RNC", "RNC_DADOS_SENSIVEIS", "VERIFICACAO_EFICACIA", "PLANO_ACAO", "ITEM_ACAO", "PROCESSO", "RISCO_OPORTUNIDADE", "HIRA", "LAIA", "RESPOSTA_INSPECAO", "CONSTATACAO_AUDITORIA", "REQUISITO_LEGAL", "INCIDENTE", "INCIDENTE_DADOS_SENSIVEIS", "CERTIFICADO_TREINAMENTO"] as const;
 
 function revalidarAnexos() {
   revalidatePath("/rncs/[id]", "page");

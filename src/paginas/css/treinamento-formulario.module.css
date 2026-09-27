@@ -1,0 +1,34 @@
+/* ==========================================================
+   ÍNDICE
+   01. Grade de campos do treinamento
+   02. Obrigatoriedade (todos / setores)
+   ========================================================== */
+
+/* ==========================================================
+   01. GRADE DE CAMPOS
+   ========================================================== */
+.grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--espaco-3); align-items: start; }
+.campo, .campoLargo { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.campoLargo { grid-column: 1 / -1; }
+.entrada {
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 9px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==========================================================
+   02. OBRIGATORIEDADE
+   ========================================================== */
+fieldset.campoLargo { border: 1px solid var(--cor-borda); border-radius: var(--raio-padrao); padding: var(--espaco-3); margin: 0; }
+.legenda { padding: 0 4px; font-size: 12.5px; color: var(--cor-texto-secundario); }
+.setores { display: flex; flex-wrap: wrap; gap: var(--espaco-2) var(--espaco-4); }
+.opcao { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--cor-texto); min-height: 32px; }
+.dica { font-size: 11.5px; color: var(--cor-texto-fraco); }

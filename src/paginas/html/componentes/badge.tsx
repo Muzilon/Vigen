@@ -113,3 +113,11 @@ const COR_SITUACAO_INDICADOR: Record<SituacaoIndicadorBadge, StatusRncBadge> = {
 export function BadgeSituacaoIndicador({ situacao, rotulo }: { situacao: SituacaoIndicadorBadge; rotulo: string }) {
   return <BadgeStatusRnc status={COR_SITUACAO_INDICADOR[situacao]} rotulo={rotulo} />;
 }
+
+/** Status de competência (P7 — treinamentos): em dia verde, a vencer âmbar, vencido vermelho, não realizado cinza. */
+export type StatusCompetenciaBadge = "EM_DIA" | "A_VENCER" | "VENCIDO" | "NAO_REALIZADO";
+const COR_STATUS_COMPETENCIA: Record<StatusCompetenciaBadge, StatusRncBadge> = { EM_DIA: "ENCERRADO", A_VENCER: "PLANO_EM_EXECUCAO", VENCIDO: "REABERTO", NAO_REALIZADO: "CANCELADO" };
+
+export function BadgeStatusCompetencia({ status, rotulo }: { status: StatusCompetenciaBadge; rotulo: string }) {
+  return <BadgeStatusRnc status={COR_STATUS_COMPETENCIA[status]} rotulo={rotulo} />;
+}

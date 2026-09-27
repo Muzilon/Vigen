@@ -13,6 +13,7 @@ import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRequisito, moduloRequisitosAtivo } from "@/lib/requisitos-legais/acesso";
 import { filtroAcessoIncidente, moduloIncidentesAtivo } from "@/lib/incidentes/acesso";
 import { moduloIndicadoresAtivo } from "@/lib/indicadores/acesso";
+import { moduloTreinamentosAtivo } from "@/lib/treinamentos/acesso";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
@@ -92,6 +93,13 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     if (!i) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = i.responsavelId && i.responsavelId !== a.usuarioId ? i.responsavelId : i.registradoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
+  }
+  if (t.tipo === "TREINAMENTO") {
+    // Treinamentos: todos com o módulo (catálogo da empresa); fala com quem cadastrou.
+    if (!(await moduloTreinamentosAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const tr = await a.db.treinamento.findFirst({ where: { id: t.entidadeId }, select: { criadoPorId: true } });
+    if (!tr) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    return { destinatarioPadrao: tr.criadoPorId !== a.usuarioId ? tr.criadoPorId : null };
   }
   if (t.tipo === "INDICADOR") {
     // Indicadores: todos com o módulo (indicador é da empresa); fala com o responsável (ou quem cadastrou).
@@ -241,5 +249,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "REQUISITO_LEGAL") return `/requisitos-legais/${t.entidadeId}`;
   if (t.entidadeTipo === "INCIDENTE") return `/incidentes/${t.entidadeId}`;
   if (t.entidadeTipo === "INDICADOR") return `/indicadores/${t.entidadeId}`;
+  if (t.entidadeTipo === "TREINAMENTO") return `/treinamentos/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

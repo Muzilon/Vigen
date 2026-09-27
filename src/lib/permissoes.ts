@@ -24,6 +24,7 @@ export const TODAS_PERMISSOES = [
   "INCIDENTE_GERENCIAR",
   "INCIDENTE_VER_RESTRITOS",
   "INDICADOR_GERENCIAR",
+  "TREINAMENTO_GERENCIAR",
   "ADMIN_CONFIG",
   "VER_TODAS_OBRAS",
 ] as const satisfies readonly Permissao[];

@@ -76,6 +76,7 @@ enum Permissao {
   INCIDENTE_GERENCIAR
   INCIDENTE_VER_RESTRITOS
   INDICADOR_GERENCIAR
+  TREINAMENTO_GERENCIAR
 }
 
 enum EscopoObras {
@@ -166,6 +167,7 @@ enum TipoEntidadeAnexo {
   REQUISITO_LEGAL
   INCIDENTE
   INCIDENTE_DADOS_SENSIVEIS
+  CERTIFICADO_TREINAMENTO
 }
 
 enum TipoEntidadeInteracao {
@@ -181,6 +183,7 @@ enum TipoEntidadeInteracao {
   REQUISITO_LEGAL
   INCIDENTE
   INDICADOR
+  TREINAMENTO
 }
 
 enum TipoNotificacao {
@@ -203,6 +206,7 @@ enum TipoNotificacao {
   INCIDENTE_REGISTRADO
   INCIDENTE_ATRIBUIDO
   INDICADOR_SEM_LANCAMENTO
+  TREINAMENTO_VENCENDO
 }
 
 enum TipoEntidadeNotificacao {
@@ -219,6 +223,7 @@ enum TipoEntidadeNotificacao {
   REQUISITO_LEGAL
   INCIDENTE
   INDICADOR
+  TREINAMENTO
 }
 
 enum StatusEmailNotificacao {
@@ -459,6 +464,9 @@ model Empresa {
   historicosIncidente      HistoricoIncidente[]
   indicadores              Indicador[]
   resultadosIndicador      ResultadoIndicador[]
+  treinamentos             Treinamento[]
+  sessoesTreinamento       SessaoTreinamento[]
+  participacoesTreinamento ParticipacaoTreinamento[]
 
   @@map("empresa")
 }
@@ -487,6 +495,7 @@ model ObraUnidade {
   auditorias          Auditoria[]
   requisitosLegais    RequisitoLegal[]
   incidentes          Incidente[]
+  sessoesTreinamento  SessaoTreinamento[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -604,6 +613,10 @@ model Usuario {
   indicadoresResponsavel    Indicador[]                  @relation("IndicadorResponsavel")
   indicadoresCriados        Indicador[]                  @relation("IndicadorCriadoPor")
   resultadosIndicador       ResultadoIndicador[]         @relation("ResultadoIndicadorRegistradoPor")
+  treinamentosCriados       Treinamento[]                @relation("TreinamentoCriadoPor")
+  sessoesTreinamentoCriadas SessaoTreinamento[]          @relation("SessaoTreinamentoCriadoPor")
+  participacoesTreinamento  ParticipacaoTreinamento[]    @relation("ParticipacaoUsuario")
+  participacoesRegistradas  ParticipacaoTreinamento[]    @relation("ParticipacaoRegistradoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -869,10 +882,11 @@ model Anexo {
   excluidoPorId      String?           @map("excluido_por_id") @db.Uuid
   criadoEm           DateTime          @default(now()) @map("criado_em")
 
-  empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  enviadoPor       Usuario           @relation("AnexoEnviadoPor", fields: [empresaId, enviadoPorId], references: [empresaId, id], onDelete: Restrict)
-  excluidoPor      Usuario?          @relation("AnexoExcluidoPor", fields: [empresaId, excluidoPorId], references: [empresaId, id], onDelete: Restrict)
-  versoesDocumento VersaoDocumento[]
+  empresa                 Empresa                   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  enviadoPor              Usuario                   @relation("AnexoEnviadoPor", fields: [empresaId, enviadoPorId], references: [empresaId, id], onDelete: Restrict)
+  excluidoPor             Usuario?                  @relation("AnexoExcluidoPor", fields: [empresaId, excluidoPorId], references: [empresaId, id], onDelete: Restrict)
+  versoesDocumento        VersaoDocumento[]
+  certificadosTreinamento ParticipacaoTreinamento[]
 
   @@unique([empresaId, id])
   @@index([empresaId, entidadeTipo, entidadeId])
@@ -2279,4 +2293,92 @@ model ResultadoIndicador {
   @@unique([empresaId, id])
   @@index([empresaId, indicadorId, periodo, criadoEm])
   @@map("resultado_indicador")
+}
+
+// ---------------------------------------------------------------- P7 — Treinamentos e competências (ISO 9001 7.2/7.3, ISO 45001 7.2)
+
+enum TipoTreinamento {
+  INTEGRACAO
+  NR
+  RECICLAGEM
+  TECNICO
+  OUTRO
+}
+
+/// Treinamento do catálogo. Obrigatoriedade: `obrigatorioTodos` OU setores listados (Usuario.setorId) — ver docs/06 (P7).
+model Treinamento {
+  id                  String          @id @default(uuid()) @db.Uuid
+  empresaId           String          @map("empresa_id") @db.Uuid
+  nome                String
+  tipo                TipoTreinamento
+  descricao           String?
+  cargaHoraria        Int?            @map("carga_horaria")
+  /// null = não vence.
+  validadeMeses       Int?            @map("validade_meses")
+  obrigatorioTodos    Boolean         @default(false) @map("obrigatorio_todos")
+  obrigatorioSetorIds String[]        @default([]) @map("obrigatorio_setor_ids") @db.Uuid
+  ativo               Boolean         @default(true)
+  versao              Int             @default(0)
+  criadoPorId         String          @map("criado_por_id") @db.Uuid
+  criadoEm            DateTime        @default(now()) @map("criado_em")
+  atualizadoEm        DateTime        @updatedAt @map("atualizado_em")
+
+  empresa   Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  criadoPor Usuario             @relation("TreinamentoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  sessoes   SessaoTreinamento[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@map("treinamento")
+}
+
+/// Turma/sessão realizada de um treinamento.
+model SessaoTreinamento {
+  id             String   @id @default(uuid()) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  treinamentoId  String   @map("treinamento_id") @db.Uuid
+  dataRealizacao DateTime @map("data_realizacao") @db.Date
+  instrutor      String
+  obraId         String?  @map("obra_id") @db.Uuid
+  cargaHoraria   Int?     @map("carga_horaria")
+  observacao     String?
+  criadoPorId    String   @map("criado_por_id") @db.Uuid
+  criadoEm       DateTime @default(now()) @map("criado_em")
+  atualizadoEm   DateTime @updatedAt @map("atualizado_em")
+
+  empresa       Empresa                   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  treinamento   Treinamento               @relation(fields: [empresaId, treinamentoId], references: [empresaId, id], onDelete: Restrict)
+  obra          ObraUnidade?              @relation(fields: [empresaId, obraId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor     Usuario                   @relation("SessaoTreinamentoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  participacoes ParticipacaoTreinamento[]
+
+  @@unique([empresaId, id])
+  @@index([empresaId, treinamentoId, dataRealizacao])
+  @@map("sessao_treinamento")
+}
+
+/// Presença de um usuário numa sessão. `dataValidade` = dataRealizacao + validadeMeses (null = não vence ou ausente).
+model ParticipacaoTreinamento {
+  id                 String    @id @default(uuid()) @db.Uuid
+  empresaId          String    @map("empresa_id") @db.Uuid
+  sessaoId           String    @map("sessao_id") @db.Uuid
+  usuarioId          String    @map("usuario_id") @db.Uuid
+  presente           Boolean   @default(true)
+  aproveitamento     String?
+  certificadoAnexoId String?   @map("certificado_anexo_id") @db.Uuid
+  dataValidade       DateTime? @map("data_validade") @db.Date
+  registradoPorId    String    @map("registrado_por_id") @db.Uuid
+  criadoEm           DateTime  @default(now()) @map("criado_em")
+  atualizadoEm       DateTime  @updatedAt @map("atualizado_em")
+
+  empresa       Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  sessao        SessaoTreinamento @relation(fields: [empresaId, sessaoId], references: [empresaId, id], onDelete: Restrict)
+  usuario       Usuario           @relation("ParticipacaoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+  registradoPor Usuario           @relation("ParticipacaoRegistradoPor", fields: [empresaId, registradoPorId], references: [empresaId, id], onDelete: Restrict)
+  certificado   Anexo?            @relation(fields: [empresaId, certificadoAnexoId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, sessaoId, usuarioId])
+  @@index([empresaId, usuarioId])
+  @@map("participacao_treinamento")
 }

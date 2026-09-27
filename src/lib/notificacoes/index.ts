@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA" | "REQUISITO_LEGAL" | "INCIDENTE" | "INDICADOR";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA" | "REQUISITO_LEGAL" | "INCIDENTE" | "INDICADOR" | "TREINAMENTO";
   entidadeId: string;
 };
 
@@ -62,6 +62,10 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       const i = await db.incidente.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
       onde = i ? `o incidente ${i.codigo}` : "um incidente";
       link = `/incidentes/${evento.entidadeId}`;
+    } else if (evento.entidadeTipo === "TREINAMENTO") {
+      const tr = await db.treinamento.findFirst({ where: { id: evento.entidadeId }, select: { nome: true } });
+      onde = tr ? `o treinamento "${tr.nome}"` : "um treinamento";
+      link = `/treinamentos/${evento.entidadeId}`;
     } else if (evento.entidadeTipo === "INDICADOR") {
       const i = await db.indicador.findFirst({ where: { id: evento.entidadeId }, select: { nome: true } });
       onde = i ? `o indicador "${i.nome}"` : "um indicador";

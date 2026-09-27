@@ -1,0 +1,26 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página e trilha
+   02. Formulário
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA E TRILHA
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-3); max-width: 860px; }
+.trilha { font-size: 13px; }
+.trilha a { color: var(--cor-texto-secundario); text-decoration: none; }
+.titulo { margin: 0; font-size: 22px; }
+
+/* ==========================================================
+   02. FORMULÁRIO
+   ========================================================== */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-4);
+}

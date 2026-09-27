@@ -469,3 +469,66 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 - **Testes**: `tests/indicadores-metas.test.ts` (atingido, períodos, correção, cálculo automático puro) e `npm run test:indicadores`
   (9 casos: gating, permissão/responsável, período inválido/futuro, correção, trigger, automático do plano de ação conferido com os itens
   reais, automático de RNC, alerta idempotente, isolamento, listas e dashboard).
+
+## P7 — Treinamentos e competências entregue (2026-09-26) — P7 completo
+
+- **Schema** (migração `20260927500000_treinamentos`): `Treinamento` (nome único, `TipoTreinamento` INTEGRACAO/NR/RECICLAGEM/TECNICO/OUTRO,
+  descrição, carga horária, `validadeMeses` — null = não vence —, obrigatoriedade, `ativo`, `versao`), `SessaoTreinamento` (data de
+  realização — não futura —, instrutor texto, obra opcional, carga, observação) e `ParticipacaoTreinamento` (única por sessão+usuário;
+  presente, aproveitamento texto, `certificadoAnexoId` → Anexo `CERTIFICADO_TREINAMENTO`, `dataValidade` calculada; CHECK: ausente não tem
+  validade). Permissão `TREINAMENTO_GERENCIAR` (perfis Qualidade e Segurança). Anexo += `CERTIFICADO_TREINAMENTO`; Interação/Notificação +=
+  `TREINAMENTO`; notificação `TREINAMENTO_VENCENDO`.
+- **Decisão — obrigatoriedade**: simples, por **todos os usuários ativos** (`obrigatorioTodos`) **ou por setores** (`obrigatorioSetorIds`,
+  comparado com `Usuario.setorId`). Não há cargo no cadastro de usuário, então não se usa cargo texto; sem marcação = opcional (aparece na
+  matriz só para quem fez).
+- **Regras** (`src/lib/treinamentos/regras.ts`, puro): validade = data da sessão + meses (`calcularProximaReavaliacao`, fim de mês
+  ajustado); status pela **última realização presente** (reciclagem resolve o vencido; ausência não conta): NAO_REALIZADO / EM_DIA (sem
+  validade ou > 30 dias) / A_VENCER (até hoje + 30, vence hoje ainda vale) / VENCIDO. Matriz = usuários × treinamentos; célula vazia =
+  não obrigatório e não realizado. **% em dia** = obrigatórias EM_DIA ou A_VENCER ÷ obrigatórias. A validade fica gravada na participação;
+  mudar `validadeMeses` do treinamento recalcula todas as participações presentes na mesma transação.
+- **Acesso**: catálogo (lista, detalhe, sessões) aberto a quem tem o módulo; cadastrar treinamento/sessão, lançar presença, anexar
+  certificado e ver a matriz/participantes = `TREINAMENTO_GERENCIAR`. Cada pessoa vê a própria situação e os próprios certificados
+  (anexo: participante lê, só o gestor envia/exclui). Filtro de obra da matriz = pessoas com acesso explícito à obra.
+- **Alerta** (`src/lib/treinamentos/reavaliacao.ts`, cron): última realização de cada pessoa/treinamento ativo com validade até hoje + 30
+  dias (ou vencida) → `TREINAMENTO_VENCENDO` ao participante e a quem cadastrou o treinamento (fonte com `diasAntecedencia = 30`, chave
+  idempotente por participação + data).
+- **Telas**: `/treinamentos` (catálogo com validade, obrigatoriedade, nº de sessões e última; sessões recentes), `/treinamentos/novo`,
+  `/treinamentos/[id]` (registrar sessão; por sessão, **presença em lote**: uma linha por usuário ativo com —/Presente/Ausente,
+  aproveitamento e upload do certificado — PDF/imagem validado por magic bytes —; situação da equipe com pendentes; dados/editar;
+  comentários; quem não gerencia vê só a própria participação), `/treinamentos/matriz` (cabeçalho e 1ª coluna fixos, badges
+  `BadgeStatusCompetencia`, filtros obra/pessoa/treinamento, resumo), `/treinamentos/meus` (vencidos e a vencer primeiro, certificado,
+  histórico). Dashboard: painel com % em dia, vencendo em 30 dias e vencidos/não realizados (empresa para quem gerencia; própria situação
+  para os demais). Menu (grupo Gestão): Treinamentos, Matriz de competências (com a permissão), Meus treinamentos.
+- **Seed** (`prisma/seed-treinamentos.ts`, via serviço, datas relativas a hoje): Integração (obrigatória para todos, 12 meses), NR-35
+  (Segurança, 24 meses, com reciclagem que resolve um vencido), NR-18 (Segurança e Meio Ambiente, 12 meses), Brigada de incêndio
+  (opcional) e Gestão de resíduos (Meio Ambiente, não vence) — 11 sessões, participações com vencidos, a vencer, em dia e ausências, e 6
+  certificados PDF.
+- **Testes**: `tests/treinamentos.test.ts` (validade, status, obrigatoriedade, matriz e resumo) e `npm run test:treinamentos` (8 casos:
+  gating, permissão, matriz refletindo presença/validade e reciclagem, alerta idempotente, recálculo da validade, certificado,
+  isolamento, seed/dashboard).
+
+---
+
+## TODOS OS PACOTES P1-P7 ENTREGUES
+
+| Módulo (`Modulo`) | Resumo |
+|---|---|
+| RNC | Não conformidades com análise de causa, plano 5W2H, verificação de eficácia, cancelamento aprovado e restrição LGPD (base). |
+| PLANO_ACAO | Planos 5W2H avulsos ou de qualquer origem (RNC, riscos, HIRA, LAIA, inspeções, requisitos, incidentes), prazos e alertas (base). |
+| MAPA_PROCESSOS | Processos em planilha/mapa de 3 raias com SIPOC, interações, versões publicadas e publicação via aprovação (P1). |
+| RISCOS_OPORTUNIDADES | Matriz P×I com heatmap, tratamento com plano obrigatório para alto/crítico, reavaliação item/geral e aprovação opcional (P2). |
+| SWOT | Ciclos anuais com quadro 2×2, partes interessadas (influência × interesse) e geração de risco/oportunidade (P2). |
+| HIRA | Perigos e riscos por obra com P×S inicial/residual, hierarquia de controle e fluxo de aprovação (motor ou tramitação) (P3). |
+| LAIA | Aspectos e impactos com pontuação por eixos, significância por critérios extras e fluxo de aprovação (P3). |
+| DOCUMENTOS | Tramitação com revisores/aprovadores, revisões imutáveis, publicação com público e ciência, lista mestra e revisão periódica (P4). |
+| INSPECOES | Modelos de checklist, execução em campo com fotos, % de conformidade e RNC/item de ação a partir da resposta NC (P5). |
+| AUDITORIAS | Programa anual, plano de auditoria, constatações NC/OBS/OM/PF com evidências e RNC a partir da NC (P5). |
+| REQUISITOS_LEGAIS | Registro de leis/normas com status de atendimento, verificação periódica, plano obrigatório e revisão geral (P6). |
+| INCIDENTES | Incidentes e acidentes com dados sensíveis protegidos, investigação com causa raiz, plano e taxa de frequência (P6). |
+| INDICADORES | Indicadores com meta e periodicidade, resultados append-only, 2 automáticos (RNC/Plano de Ação), gráfico e alerta sem lançamento (P7). |
+| TREINAMENTOS | Catálogo com validade/obrigatoriedade, sessões, presença em lote com certificado, matriz de competências e alerta de vencimento (P7). |
+
+**Módulos ativos por empresa no seed**:
+- **Monto** (`00000000000100`): todos — RNC, PLANO_ACAO, MAPA_PROCESSOS, RISCOS_OPORTUNIDADES, SWOT, HIRA, LAIA, INSPECOES, AUDITORIAS,
+  DOCUMENTOS, REQUISITOS_LEGAIS, INCIDENTES, INDICADORES, TREINAMENTOS.
+- **Demo** (`00000000000200`): só o padrão do schema — RNC e PLANO_ACAO (usada nos testes de gating e isolamento multi-tenant).

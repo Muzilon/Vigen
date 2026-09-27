@@ -1,0 +1,45 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página e resumo
+   02. Lista de situação
+   03. Histórico
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA E RESUMO
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-4); max-width: 960px; }
+.resumo { display: flex; flex-wrap: wrap; gap: var(--espaco-2) var(--espaco-5); font-size: 13px; color: var(--cor-texto-secundario); }
+.numero { font-family: var(--fonte-mono); font-size: 15px; color: var(--cor-texto); }
+.aviso, .aviso .numero { color: var(--cor-status-plano-execucao-texto); }
+.alerta, .alerta .numero { color: var(--cor-atrasado-texto); }
+
+/* ==========================================================
+   02. LISTA DE SITUAÇÃO
+   ========================================================== */
+.lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--espaco-2); }
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+  min-height: 56px;
+}
+.nome { font-weight: 600; color: var(--cor-texto); text-decoration: none; }
+.sub { display: block; font-size: 12px; color: var(--cor-texto-secundario); margin-top: 2px; }
+.direita { display: flex; align-items: center; gap: var(--espaco-3); flex-shrink: 0; }
+.link { font-size: 13px; color: var(--cor-acento); font-weight: 500; }
+@media (max-width: 640px) {
+  .item { flex-direction: column; align-items: flex-start; }
+}
+
+/* ==========================================================
+   03. HISTÓRICO
+   ========================================================== */
+.historico { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--espaco-2); font-size: 13px; }
+.historico li { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: var(--espaco-3); align-items: baseline; padding-bottom: var(--espaco-2); border-bottom: 1px solid var(--cor-borda-sutil); }
+.mono { font-family: var(--fonte-mono); }

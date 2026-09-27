@@ -14,6 +14,7 @@ import { resumoAuditorias } from "@/lib/auditorias/servico";
 import { resumoRequisitos } from "@/lib/requisitos-legais/servico";
 import { resumoIncidentes } from "@/lib/incidentes/servico";
 import { resumoIndicadores } from "@/lib/indicadores/gestao";
+import { resumoTreinamentos } from "@/lib/treinamentos/servico";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -38,7 +39,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes, metas] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes, metas, treinos] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -57,6 +58,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoRequisitos(a),
     resumoIncidentes(a),
     resumoIndicadores(a),
+    resumoTreinamentos(a),
   ]);
   const k = ind.kpis;
 
@@ -208,6 +210,22 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
               ] as const
             ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
           />
+        </Painel>
+      )}
+
+      {treinos && (
+        <Painel titulo={treinos.escopo === "EMPRESA" ? "Treinamentos — matriz de competências" : "Meus treinamentos"} subtitulo={`${treinos.obrigatorias} treinamento(s) obrigatório(s) ${treinos.escopo === "EMPRESA" ? "na matriz" : "para você"}`}>
+          <div className={styles.gradeKpis}>
+            <Link href={treinos.escopo === "EMPRESA" ? "/treinamentos/matriz" : "/treinamentos/meus"} className={styles.linkKpi}>
+              <Kpi titulo="Em dia" valor={treinos.percentualEmDia === null ? "—" : `${treinos.percentualEmDia}%`} dica={`${treinos.emDia} de ${treinos.obrigatorias} obrigatórios válidos`} />
+            </Link>
+            <Link href={treinos.escopo === "EMPRESA" ? "/treinamentos/matriz" : "/treinamentos/meus"} className={styles.linkKpi}>
+              <Kpi titulo="Vencendo em 30 dias" valor={treinos.aVencer} dica="Programe a reciclagem" alerta={treinos.aVencer > 0} />
+            </Link>
+            <Link href={treinos.escopo === "EMPRESA" ? "/treinamentos/matriz" : "/treinamentos/meus"} className={styles.linkKpi}>
+              <Kpi titulo="Vencidos / não realizados" valor={treinos.vencidos + treinos.naoRealizados} dica={`${treinos.vencidos} vencido(s) · ${treinos.naoRealizados} não realizado(s)`} alerta={treinos.vencidos > 0} />
+            </Link>
+          </div>
         </Painel>
       )}
 

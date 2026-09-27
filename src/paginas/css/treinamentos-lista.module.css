@@ -1,0 +1,63 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página
+   02. Tabela do catálogo
+   03. Sessões recentes
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-4); min-width: 0; }
+.filtro { margin: 0; font-size: 13px; }
+.filtro a { color: var(--cor-texto-secundario); }
+.fraco { color: var(--cor-texto-secundario); font-size: 12.5px; }
+
+/* ==========================================================
+   02. TABELA DO CATÁLOGO
+   ========================================================== */
+.quadro { overflow: auto; background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio-padrao); }
+.tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabela th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 11.5px;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-fundo-sutil);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--cor-borda-forte);
+  white-space: nowrap;
+}
+.tabela td { padding: 8px 10px; border-bottom: 1px solid var(--cor-borda-sutil); vertical-align: top; }
+.tabela tr:hover td { background: var(--cor-fundo-sutil); }
+.nome { min-width: 220px; }
+.link { color: var(--cor-texto); font-weight: 600; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.mono { font-family: var(--fonte-mono); white-space: nowrap; }
+.selo {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: var(--raio-pill);
+  background: var(--cor-status-cancelado-fundo);
+  color: var(--cor-status-cancelado-texto);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* ==========================================================
+   03. SESSÕES RECENTES
+   ========================================================== */
+.sessoes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--espaco-2); }
+.sessao {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+  gap: var(--espaco-3);
+  align-items: baseline;
+  font-size: 13px;
+  padding-bottom: var(--espaco-2);
+  border-bottom: 1px solid var(--cor-borda-sutil);
+}
+@media (max-width: 640px) {
+  .sessao { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}

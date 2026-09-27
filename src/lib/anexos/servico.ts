@@ -13,6 +13,7 @@ import { filtroObraAuditoria, moduloAuditoriasAtivo, podeExecutarAuditoria } fro
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRequisito, moduloRequisitosAtivo, podeGerenciarRequisitos, podeVerificarRequisito } from "@/lib/requisitos-legais/acesso";
 import { filtroAcessoIncidente, moduloIncidentesAtivo, podeTratarIncidente, podeVerRestritosIncidente } from "@/lib/incidentes/acesso";
+import { moduloTreinamentosAtivo, podeGerenciarTreinamentos } from "@/lib/treinamentos/acesso";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, podeTratarRnc, podeVerDadosSensiveis } from "@/lib/rnc/servico";
 import { limiteBytes, MAX_ARQUIVOS_POR_ENVIO, nomeExibicao, validarArquivo } from "./validacao";
@@ -199,6 +200,14 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
       const aberto = i.status !== "CONCLUIDO";
       const podeEnviar = aberto && (trata || (i.registradoPorId === a.usuarioId && i.status === "ABERTO")) && (!sensivel || i.contemDadosPessoais);
       return { podeLer: true, podeEnviar, podeGerir: trata, rncId: null, rncFinal: false, imutavel: aberto ? undefined : "Evidências de incidente concluído não podem ser excluídas." };
+    }
+    case "CERTIFICADO_TREINAMENTO": {
+      // Certificado de participação: quem gerencia treinamentos lê/envia/exclui; o próprio participante só lê.
+      if (!(await moduloTreinamentosAtivo(a))) return NEGADO;
+      const p = await a.db.participacaoTreinamento.findFirst({ where: { id: alvo.entidadeId }, select: { usuarioId: true } });
+      if (!p) return NEGADO;
+      const g = podeGerenciarTreinamentos(a);
+      return { podeLer: g || p.usuarioId === a.usuarioId, podeEnviar: g, podeGerir: g, rncId: null, rncFinal: false };
     }
     case "PLANO_ACAO": {
       const plano = await a.db.planoAcao.findFirst({
