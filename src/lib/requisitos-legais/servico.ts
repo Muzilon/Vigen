@@ -187,7 +187,7 @@ async function dadosRequisito(tx: Tx, a: Ator, d: DadosRequisito) {
   const periodicidadeMeses = d.periodicidadeMeses ?? 12;
   if (!Number.isInteger(periodicidadeMeses) || periodicidadeMeses < 1 || periodicidadeMeses > 60) throw new ErroNegocio("Periodicidade entre 1 e 60 meses.");
   if (d.obraId && (!obraNoEscopo(a, d.obraId) || !(await tx.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true }, select: { id: true } })))) {
-    throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    throw new ErroNegocio("Unidade inválida ou sem acesso.");
   }
   if (d.processoId && !(await tx.processo.findFirst({ where: { id: d.processoId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Processo inválido.");
   if (d.responsavelId && !(await tx.usuario.findFirst({ where: { id: d.responsavelId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Responsável inválido.");

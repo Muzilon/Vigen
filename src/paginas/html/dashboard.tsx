@@ -76,7 +76,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
           <Entrada id="fim" name="fim" type="date" defaultValue={periodo.fim} />
         </div>
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra} className={styles.selecaoFiltro}>
             <option value="">Todas</option>
             {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -126,7 +126,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       <div className={styles.gradeTres}>
         <Painel titulo="Por tipo" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porTipo} /></Painel>
         <Painel titulo="Por gravidade" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porGravidade} paleta="gravidade" /></Painel>
-        <Painel titulo="Por obra" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porObra.slice(0, 10)} /></Painel>
+        <Painel titulo="Por unidade" subtitulo="Registradas no período, qualquer status"><Barras dados={ind.porObra.slice(0, 10)} /></Painel>
       </div>
 
       {docs && (
@@ -150,7 +150,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       )}
 
       {inspecoes && (
-        <Painel titulo="Inspeções / checklists" subtitulo="Últimos 12 meses, obras do seu escopo">
+        <Painel titulo="Inspeções / checklists" subtitulo="Últimos 12 meses, unidades do seu escopo">
           <div className={styles.gradeKpis}>
             <Link href="/inspecoes?status=CONCLUIDA" className={styles.linkKpi}>
               <Kpi titulo="Conformidade média" valor={inspecoes.mediaConformidade === null ? "—" : `${inspecoes.mediaConformidade}%`} dica={`${inspecoes.concluidas} inspeção(ões) concluída(s)`} />
@@ -187,7 +187,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       )}
 
       {incidentes && (
-        <Painel titulo="Incidentes e acidentes" subtitulo={`Últimos 12 meses, obras do seu escopo · ${incidentes.abertos} em aberto · ${incidentes.diasPerdidos} dia(s) perdido(s)`}>
+        <Painel titulo="Incidentes e acidentes" subtitulo={`Últimos 12 meses, unidades do seu escopo · ${incidentes.abertos} em aberto · ${incidentes.diasPerdidos} dia(s) perdido(s)`}>
           <div className={styles.gradeKpis}>
             <Link href="/incidentes" className={styles.linkKpi}>
               <Kpi titulo="Taxa de frequência" valor={incidentes.taxaMensal.toLocaleString("pt-BR")} dica={`incidente(s) por mês · ${incidentes.total} no período`} />
@@ -280,7 +280,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       )}
 
       {hira && (
-        <Painel titulo="HIRA — perigos e riscos de SST vigentes por nível" subtitulo={`Nível inicial das linhas vigentes nas obras do seu escopo${hira.pendentes ? ` · ${hira.pendentes} pendente(s) de aprovação` : ""}`}>
+        <Painel titulo="HIRA — perigos e riscos de SST vigentes por nível" subtitulo={`Nível inicial das linhas vigentes nas unidades do seu escopo${hira.pendentes ? ` · ${hira.pendentes} pendente(s) de aprovação` : ""}`}>
           <Barras
             paleta="gravidade"
             vazio="Nenhuma linha HIRA vigente."

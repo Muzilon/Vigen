@@ -733,7 +733,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
         <aside className={styles.lateral}>
           <Cartao titulo="Detalhes">
             <dl className={styles.listaDetalhes}>
-              <dt>Obra / unidade</dt>
+              <dt>Unidade</dt>
               <dd>{rnc.obra.nome}</dd>
               <dt>Setor</dt>
               <dd>{rnc.setor?.nome ?? "—"}</dd>

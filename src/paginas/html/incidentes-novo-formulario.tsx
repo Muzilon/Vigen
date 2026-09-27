@@ -58,7 +58,7 @@ export function IncidenteNovoFormulario({
           <label className={styles.campo}>Data e hora
             <input type="datetime-local" name="dataHora" required defaultValue={agora} max={agora} className={styles.entrada} />
           </label>
-          <label className={styles.campo}>Obra/unidade
+          <label className={styles.campo}>Unidade
             <select name="obraId" required defaultValue={obras.length === 1 ? obras[0].id : ""} className={styles.entrada}>
               <option value="">Selecione…</option>
               {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

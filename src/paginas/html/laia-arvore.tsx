@@ -25,7 +25,7 @@ export function LaiaArvore({ linhas }: { linhas: LinhaLaiaListada[] }) {
 
   return (
     <div className={styles.envoltorio}>
-      <nav className={styles.arvore} aria-label="Obra, processo e atividade">
+      <nav className={styles.arvore} aria-label="Unidade, processo e atividade">
         {arvore.map((o) => (
           <div key={o.obraId} className={styles.obra}>
             <button
@@ -76,7 +76,7 @@ export function LaiaArvore({ linhas }: { linhas: LinhaLaiaListada[] }) {
 
       <div className={styles.detalhe}>
         {!atividade ? (
-          <p className={styles.vazio}>Escolha uma obra, um processo e uma atividade à esquerda para ver os aspectos mapeados.</p>
+          <p className={styles.vazio}>Escolha uma unidade, um processo e uma atividade à esquerda para ver os aspectos mapeados.</p>
         ) : (
           <>
             <p className={styles.tituloDetalhe}>{atividade.nome}</p>

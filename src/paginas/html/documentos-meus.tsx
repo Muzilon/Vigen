@@ -28,7 +28,7 @@ export default async function DocumentosMeus() {
       <CabecalhoPagina
         titulo="Meus documentos"
         contador={docs.length}
-        subtitulo="Documentos vigentes publicados para você (por setor, obra, perfil ou nominalmente)."
+        subtitulo="Documentos vigentes publicados para você (por setor, unidade, perfil ou nominalmente)."
         acoes={veListaMestra(a) ? <LinkBotao href="/documentos" variante="secundario">Lista mestra</LinkBotao> : undefined}
       />
       {pendentes.length > 0 && (

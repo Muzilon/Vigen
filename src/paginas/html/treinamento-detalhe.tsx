@@ -75,7 +75,7 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                   <label className={styles.campo}>Instrutor
                     <input name="instrutor" required maxLength={200} placeholder="Nome / empresa" className={styles.entrada} />
                   </label>
-                  <label className={styles.campo}>Obra (opcional)
+                  <label className={styles.campo}>Unidade (opcional)
                     <select name="obraId" defaultValue="" className={styles.entrada}>
                       <option value="">— Empresa —</option>
                       {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

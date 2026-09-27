@@ -200,8 +200,8 @@ function ehUnicoViolado(e: unknown) {
 async function validarReferencias(tx: Tx, a: Pick<Ator, "obrasPermitidas">, d: { processoId: string | null; obraId: string | null; responsavelId: string | null }) {
   if (d.processoId && (await tx.processo.count({ where: { id: d.processoId, ativo: true } })) === 0) throw new ErroNegocio("Processo inválido.");
   if (d.obraId) {
-    if (a.obrasPermitidas !== null && !a.obrasPermitidas.includes(d.obraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
-    if ((await tx.obraUnidade.count({ where: { id: d.obraId, ativo: true } })) === 0) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    if (a.obrasPermitidas !== null && !a.obrasPermitidas.includes(d.obraId)) throw new ErroNegocio("Unidade inválida ou sem acesso.");
+    if ((await tx.obraUnidade.count({ where: { id: d.obraId, ativo: true } })) === 0) throw new ErroNegocio("Unidade inválida ou sem acesso.");
   }
   if (d.responsavelId && (await tx.usuario.count({ where: { id: d.responsavelId, ativo: true } })) === 0) throw new ErroNegocio("Responsável inválido.");
 }

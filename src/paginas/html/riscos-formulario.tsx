@@ -108,7 +108,7 @@ export function RiscoFormulario({
         </select>
       </label>
       <label className={styles.campo}>
-        <span className={styles.rotulo}>Obra/unidade (escala por local)</span>
+        <span className={styles.rotulo}>Unidade (escala por local)</span>
         <select name="obraId" value={v.obraId} onChange={(e) => set("obraId", e.target.value)} className={styles.entrada}>
           <option value="">— empresa toda —</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

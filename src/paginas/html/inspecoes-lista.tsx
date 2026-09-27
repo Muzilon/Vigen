@@ -49,7 +49,7 @@ export default async function InspecoesLista({ searchParams }: PageProps<"/inspe
       <CabecalhoPagina
         titulo="Inspeções / checklists"
         contador={lista.length}
-        subtitulo="Inspeções de campo por obra. Uma resposta não conforme vira RNC ou item de ação direto da tela."
+        subtitulo="Inspeções de campo por unidade. Uma resposta não conforme vira RNC ou item de ação direto da tela."
         acoes={
           <>
             {podeGerenciarModelos(a) && <LinkBotao href="/inspecoes/modelos" variante="secundario">Modelos de checklist</LinkBotao>}
@@ -66,7 +66,7 @@ export default async function InspecoesLista({ searchParams }: PageProps<"/inspe
 
       <form className={styles.barraFiltros} method="get">
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra}>
             <option value="">Todas</option>
             {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

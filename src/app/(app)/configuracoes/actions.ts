@@ -133,7 +133,7 @@ export async function salvarObraAcao(_: ResultadoAcao, fd: FormData) {
       endereco: txt(fd, "endereco"),
       ativo: fd.get("ativo") === "on",
     });
-    return id ? "Obra/unidade atualizada." : "Obra/unidade criada.";
+    return id ? "Unidade atualizada." : "Unidade criada.";
   });
 }
 

@@ -19,7 +19,7 @@ export default async function IncidentesNovo() {
       <h1 className={styles.titulo}>Registrar incidente</h1>
       <p className={styles.descricao}>Registre acidentes, quase-acidentes e doenças ocupacionais. Dados pessoais ficam protegidos (LGPD).</p>
       {op.obras.length === 0 ? (
-        <p className={styles.descricao}>Você não tem acesso a nenhuma obra/unidade.</p>
+        <p className={styles.descricao}>Você não tem acesso a nenhuma unidade.</p>
       ) : (
         <IncidenteNovoFormulario obras={op.obras} setores={op.setores} usuarios={op.usuarios} agora={dataHoraLocal(new Date(), fuso)} podeSensiveis={podeVerRestritosIncidente(a)} />
       )}

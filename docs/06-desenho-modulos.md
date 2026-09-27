@@ -311,6 +311,20 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
   com PDFs reais; POL-001 exige ciência com ciências parciais. **Testes**: `tests/documentos.test.ts` e
   `npm run test:documentos` (16 casos).
 
+## Evolução Arquitetural de UX/UI e Integrações (Sessão de Produto)
+
+### 1. Integração Processos ↔ Procedimentos (O "Método")
+- **Banco de Dados (Prisma):** Adição de uma tabela pivô `ProcessoDocumento` para vincular múltiplos documentos (Procedimentos/POPs) a um Processo. Inclui flag `isMetodoPrincipal` (Boolean) para destacar o "Como fazer" (Método do SIPOC). Adição do campo `macroprocesso` para agrupamento lógico.
+- **Interface/UX (React Flow):** O mapa de processos passará a agrupar caixas por `macroprocesso` (ex: "Gestão Contratual") dentro das 3 grandes raias. 
+- **Side-sheet (Visão Dividida):** Clicar em um processo no mapa abre um painel lateral (*split-view*). Os documentos vinculados ganham badges de status vivos (ex: 🔴 Obsoleto) e podem ser lidos inline (PDF) sem sair da tela do mapa.
+
+### 2. RNC e Plano de Ação (Adoção Operacional)
+- **Mobile-First (RNC Quick Report):** Para inspetores em campo via navegador, o foco é um formulário de 10 segundos: Foto (com metadados de GPS/Timestamp) + Áudio/Texto curto + Classificação rápida.
+- **Tratativa Expressa:** Criação da flag `isCorrecaoImediata` (Boolean) na RNC. Permite pular a análise de causa raiz (Ishikawa) para falhas simples que exigem apenas correção pontual.
+- **Estruturação da Causa Raiz:** O diagrama de Ishikawa (6M) passará a ser fortemente tipado no banco (Máquina, Método, Mão de Obra, Materiais, Meio Ambiente, Medição) para extração de métricas de gargalo.
+- **Plano de Ação 5W2H (Kanban):** A tela do Gestor SGI ganha uma visão Kanban drag-and-drop (Pendente, Em Andamento, Concluído), substituindo as atuais tabelas textuais.
+- **Evidência Robusta:** No `ItemAcao`, a conclusão de um item exigirá o vínculo obrigatório com `AnexoId`. Mover um card para "Concluído" dispara o modal para anexar a foto ou comprovante da ação.
+
 ## P5 — Inspeções entregue (2026-09-26)
 
 - **Schema** (migração `20260927100000_inspecoes_auditorias`, compartilhada com Auditorias): `ModeloChecklist` (nome único,

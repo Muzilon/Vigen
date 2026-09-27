@@ -201,7 +201,7 @@ export interface DadosDocumento {
 
 async function validarReferencias(tx: Tx, d: DadosDocumento) {
   if (d.processoId && (await tx.processo.count({ where: { id: d.processoId, ativo: true } })) === 0) throw new ErroNegocio("Processo inválido.");
-  if (d.obraId && (await tx.obraUnidade.count({ where: { id: d.obraId, ativo: true } })) === 0) throw new ErroNegocio("Obra/unidade inválida.");
+  if (d.obraId && (await tx.obraUnidade.count({ where: { id: d.obraId, ativo: true } })) === 0) throw new ErroNegocio("Unidade inválida.");
   if (d.setorId && (await tx.setor.count({ where: { id: d.setorId, ativo: true } })) === 0) throw new ErroNegocio("Setor inválido.");
   if ((await tx.usuario.count({ where: { id: d.responsavelId, ativo: true } })) === 0) throw new ErroNegocio("Responsável inválido.");
 }
@@ -407,7 +407,7 @@ async function validarIdsPublico(tx: Tx, p: PublicoDocumento) {
     if (n !== new Set(ids).size) throw new ErroNegocio(`${rotulo} inválido(s) no público.`);
   };
   await confere(await tx.setor.count({ where: { id: { in: [...p.setorIds] } } }), p.setorIds, "Setor");
-  await confere(await tx.obraUnidade.count({ where: { id: { in: [...p.obraIds] } } }), p.obraIds, "Obra");
+  await confere(await tx.obraUnidade.count({ where: { id: { in: [...p.obraIds] } } }), p.obraIds, "Unidade");
   await confere(await tx.perfil.count({ where: { id: { in: [...p.perfilIds] } } }), p.perfilIds, "Perfil");
   await confere(await tx.usuario.count({ where: { id: { in: [...p.usuarioIds] }, ativo: true } }), p.usuarioIds, "Usuário");
 }

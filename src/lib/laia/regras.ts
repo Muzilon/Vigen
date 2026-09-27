@@ -89,7 +89,7 @@ const obrig = (v: string | null | undefined, campo: string) => {
 };
 
 export function normalizarLaia(d: DadosLaia) {
-  if (!d.obraId) throw new ErroNegocio("Informe a obra (a LAIA é sempre por obra).");
+  if (!d.obraId) throw new ErroNegocio("Informe a unidade (a LAIA é sempre por unidade).");
   if (!CONDICOES.includes(d.situacao)) throw new ErroNegocio("Situação inválida.");
   if (!TEMPORALIDADES.includes(d.temporalidade)) throw new ErroNegocio("Temporalidade inválida.");
   if (!INCIDENCIAS.includes(d.incidencia)) throw new ErroNegocio("Incidência inválida.");

@@ -59,8 +59,8 @@ export const esquemaAcessoUsuario = z.object({
   papel: z.enum(PAPEIS, "Papel inválido."),
   perfilId: uuidOpcional,
   setorId: uuidOpcional,
-  escopoObras: z.enum(["TODAS", "SELECIONADAS"], "Escopo de obras inválido."),
-  obraIds: z.array(z.uuid("Obra inválida.")).default([]),
+  escopoObras: z.enum(["TODAS", "SELECIONADAS"], "Escopo de unidades inválido."),
+  obraIds: z.array(z.uuid("Unidade inválida.")).default([]),
 });
 
 export const esquemaSenha = z.string().min(MIN_SENHA, `A senha deve ter ao menos ${MIN_SENHA} caracteres.`).max(200);
@@ -78,7 +78,7 @@ async function validarReferencias(tx: Tx, d: z.output<typeof esquemaAcessoUsuari
   }
   const obraIds = d.escopoObras === "SELECIONADAS" ? [...new Set(d.obraIds)] : [];
   if (obraIds.length && (await tx.obraUnidade.count({ where: { id: { in: obraIds } } })) !== obraIds.length) {
-    throw new ErroNegocio("Obra/unidade inválida.");
+    throw new ErroNegocio("Unidade inválida.");
   }
   return obraIds;
 }
@@ -266,9 +266,9 @@ export async function salvarObra(a: Ator, id: string | null, dados: unknown) {
   return unico(async () => {
     if (!id) return a.db.obraUnidade.create({ data: { empresaId: a.empresaId, ...d }, select: { id: true } });
     const r = await a.db.obraUnidade.updateMany({ where: { id }, data: d });
-    if (r.count === 0) throw new ErroNegocio("Obra/unidade não encontrada.");
+    if (r.count === 0) throw new ErroNegocio("Unidade não encontrada.");
     return { id };
-  }, "Já existe uma obra/unidade com este nome.");
+  }, "Já existe uma unidade com este nome.");
 }
 
 export async function salvarSetor(a: Ator, id: string | null, dados: unknown) {
@@ -308,7 +308,7 @@ export const esquemaEscala = z.object({
     .string()
     .nullish()
     .transform((s) => s || null)
-    .pipe(z.uuid("Obra inválida.").nullable()),
+    .pipe(z.uuid("Unidade inválida.").nullable()),
   tamanho: z.coerce.number().refine((n) => n === 3 || n === 5, "Tamanho deve ser 3 ou 5."),
   eixos: z.string().transform((s, ctx) => {
     try {
@@ -344,7 +344,7 @@ export async function salvarConfiguracaoEscala(a: Ator, dados: unknown) {
   exigirAdmin(a);
   const d = validar(esquemaEscala, dados);
   if (d.obraId && !(await a.db.obraUnidade.findFirst({ where: { id: d.obraId }, select: { id: true } }))) {
-    throw new ErroNegocio("Obra/unidade inválida.");
+    throw new ErroNegocio("Unidade inválida.");
   }
   // Não usa upsert com a chave composta [empresaId, tipo, obraId]: o Prisma não aceita
   // `null` no tipo do compound-unique input para uma coluna nullable — resolve à mão.
@@ -353,7 +353,7 @@ export async function salvarConfiguracaoEscala(a: Ator, dados: unknown) {
     const dadosSalvos = { tamanho: d.tamanho, eixos: d.eixos, faixas: d.faixas, criteriosExtras: d.criteriosExtras };
     if (existente) return a.db.configuracaoEscala.update({ where: { id: existente.id }, data: dadosSalvos });
     return a.db.configuracaoEscala.create({ data: { empresaId: a.empresaId, tipo: d.tipo, obraId: d.obraId, ...dadosSalvos } });
-  }, "Já existe uma configuração para este tipo/obra.");
+  }, "Já existe uma configuração para este tipo/unidade.");
 }
 
 export async function excluirConfiguracaoEscala(a: Ator, id: string) {

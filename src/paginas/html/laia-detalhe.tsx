@@ -115,7 +115,7 @@ export default async function LaiaDetalhe({ params }: PageProps<"/laia/[id]">) {
         <div className={styles.coluna}>
           <Cartao titulo="Dados">
             <dl className={styles.dados}>
-              <dt>Obra</dt>
+              <dt>Unidade</dt>
               <dd>{l.obra.nome}</dd>
               <dt>Processo</dt>
               <dd>{l.processo ? <Link href={`/processos/${l.processo.id}`}>{l.processo.codigo} — {l.processo.nome}</Link> : "—"}</dd>
@@ -127,7 +127,7 @@ export default async function LaiaDetalhe({ params }: PageProps<"/laia/[id]">) {
               <dd>{l.controles ?? "—"}</dd>
               <dt>Reavaliação</dt>
               <dd>
-                {l.modoReavaliacao === "ITEM" ? "Item a item" : "Na revisão geral da obra"} · a cada {l.periodicidadeMeses} {l.periodicidadeMeses === 1 ? "mês" : "meses"} · próxima em{" "}
+                {l.modoReavaliacao === "ITEM" ? "Item a item" : "Na revisão geral da unidade"} · a cada {l.periodicidadeMeses} {l.periodicidadeMeses === 1 ? "mês" : "meses"} · próxima em{" "}
                 <span className={vencida ? styles.vencida : undefined}>{formatarData(l.proximaReavaliacaoEm)}{vencida ? " (vencida)" : ""}</span>
                 {l.ultimaReavaliacaoEm && <> · última em {formatarDataHora(l.ultimaReavaliacaoEm, fuso)}</>}
               </dd>

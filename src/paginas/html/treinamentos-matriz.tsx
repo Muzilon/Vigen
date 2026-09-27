@@ -48,7 +48,7 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
 
       <form className={styles.barraFiltros} method="get">
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra}>
             <option value="">Empresa toda</option>
             {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -73,7 +73,7 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
           <Link href="/treinamentos/matriz" className={styles.linkLimpar}>Limpar</Link>
         </div>
       </form>
-      {f.obra && <p className={styles.nota}>Com obra selecionada: só pessoas com acesso explícito a ela.</p>}
+      {f.obra && <p className={styles.nota}>Com unidade selecionada: só pessoas com acesso explícito a ela.</p>}
 
       {m.linhas.length === 0 || m.treinamentos.length === 0 ? (
         <EstadoVazio>Nenhuma pessoa ou treinamento com estes filtros.</EstadoVazio>

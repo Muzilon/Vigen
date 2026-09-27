@@ -16,7 +16,7 @@ export function LoginPagina() {
           <h1 className={styles.tituloMarca}>Cada não conformidade tratada até o fim.</h1>
           <p className={styles.descricaoMarca}>
             Do registro em campo à verificação de eficácia: RNC, causa raiz e plano de ação 5W2H no mesmo lugar, com
-            prazos e responsáveis claros para toda a obra.
+            prazos e responsáveis claros para toda a unidade.
           </p>
           <ul className={styles.listaDestaques}>
             <li className={styles.itemDestaque}>

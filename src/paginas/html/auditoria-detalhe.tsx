@@ -160,7 +160,7 @@ export default async function AuditoriaDetalhe({ params }: PageProps<"/auditoria
                                   </select>
                                 </label>
                                 {!au.obraId && (
-                                  <label className={styles.campo}>Obra
+                                  <label className={styles.campo}>Unidade
                                     <select name="obraId" required defaultValue="" className={styles.entrada}>
                                       <option value="">Selecione…</option>
                                       {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

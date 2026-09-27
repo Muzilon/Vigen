@@ -288,7 +288,7 @@ export interface DadosNovaInspecao {
 export async function iniciarInspecao(a: Ator, d: DadosNovaInspecao) {
   await exigirModuloInspecoes(a);
   if (!podeRealizarInspecao(a)) throw new ErroNegocio("Sem permissão para realizar inspeções (INSPECAO_REALIZAR).");
-  if (!obraNoEscopo(a, d.obraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  if (!obraNoEscopo(a, d.obraId)) throw new ErroNegocio("Unidade inválida ou sem acesso.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.dataInspecao)) throw new ErroNegocio("Data da inspeção inválida.");
   const inspetorId = d.inspetorId || a.usuarioId;
   if (inspetorId !== a.usuarioId && !atorTem(a, "INSPECAO_GERENCIAR")) throw new ErroNegocio("Somente quem gerencia inspeções pode designar outro inspetor.");
@@ -301,7 +301,7 @@ export async function iniciarInspecao(a: Ator, d: DadosNovaInspecao) {
     ]);
     if (!modelo) throw new ErroNegocio("Modelo de checklist inválido ou inativo.");
     if (modelo.itens.length === 0) throw new ErroNegocio("O modelo não tem perguntas.");
-    if (!obra) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    if (!obra) throw new ErroNegocio("Unidade inválida ou sem acesso.");
     if (!inspetor) throw new ErroNegocio("Inspetor inválido.");
     if (d.setorId && !(await tx.setor.findFirst({ where: { id: d.setorId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Setor inválido.");
     if (d.processoId && !(await tx.processo.findFirst({ where: { id: d.processoId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Processo inválido.");

@@ -35,7 +35,7 @@ export default async function RncNova() {
       </div>
       {obras.length === 0 ? (
         <div className={styles.semObras}>
-          <Alerta variante="aviso">Você não tem acesso a nenhuma obra/unidade. Solicite ao administrador.</Alerta>
+          <Alerta variante="aviso">Você não tem acesso a nenhuma unidade. Solicite ao administrador.</Alerta>
           <LinkBotao href="/rncs" variante="secundario">Voltar</LinkBotao>
         </div>
       ) : (

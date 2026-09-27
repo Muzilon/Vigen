@@ -29,7 +29,7 @@ export default async function InspecoesNova() {
       <h1 className={styles.titulo}>Nova inspeção</h1>
       {modelos.length === 0 || op.obras.length === 0 ? (
         <EstadoVazio>
-          {modelos.length === 0 ? "Nenhum modelo de checklist ativo com perguntas." : "Você não tem acesso a nenhuma obra."}
+          {modelos.length === 0 ? "Nenhum modelo de checklist ativo com perguntas." : "Você não tem acesso a nenhuma unidade."}
           {podeGerenciarModelos(a) && modelos.length === 0 && <> <Link href="/inspecoes/modelos">Cadastrar modelo</Link></>}
         </EstadoVazio>
       ) : (
@@ -47,7 +47,7 @@ export default async function InspecoesNova() {
             ))}
           </fieldset>
           <label className={styles.campo}>
-            Obra / unidade
+            Unidade
             <select name="obraId" required defaultValue={op.obras.length === 1 ? op.obras[0].id : ""} className={styles.entrada}>
               {op.obras.length > 1 && <option value="">Selecione…</option>}
               {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

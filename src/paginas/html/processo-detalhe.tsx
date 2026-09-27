@@ -272,7 +272,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
               ) : (
                 <table className={styles.tabela}>
                   <thead>
-                    <tr><th>Nº</th><th>Atividade / perigo</th><th>Obra</th><th>Nível</th><th>Status</th></tr>
+                    <tr><th>Nº</th><th>Atividade / perigo</th><th>Unidade</th><th>Nível</th><th>Status</th></tr>
                   </thead>
                   <tbody>
                     {linhasHira.map((l) => (
@@ -301,7 +301,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
               ) : (
                 <table className={styles.tabela}>
                   <thead>
-                    <tr><th>Nº</th><th>Aspecto → impacto</th><th>Obra</th><th>Pontuação</th><th>Significativo</th></tr>
+                    <tr><th>Nº</th><th>Aspecto → impacto</th><th>Unidade</th><th>Pontuação</th><th>Significativo</th></tr>
                   </thead>
                   <tbody>
                     {linhasLaia.map((l) => (

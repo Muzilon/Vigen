@@ -119,7 +119,7 @@ const opc = (v: string | null | undefined, campo: string, max = MAX_TEXTO) => {
 
 /** Valida e normaliza (sem cálculo). Tipos de enum conferidos aqui — o payload de aprovação passa por aqui de novo. */
 export function normalizarHira(d: DadosHira) {
-  if (!d.obraId) throw new ErroNegocio("Informe a obra (o HIRA é sempre por obra).");
+  if (!d.obraId) throw new ErroNegocio("Informe a unidade (o HIRA é sempre por unidade).");
   if (!CONDICOES.includes(d.condicao)) throw new ErroNegocio("Condição inválida.");
   if (d.hierarquiaControle && !HIERARQUIAS.includes(d.hierarquiaControle)) throw new ErroNegocio("Hierarquia de controle inválida.");
   const periodicidadeMeses = d.periodicidadeMeses ?? 12;

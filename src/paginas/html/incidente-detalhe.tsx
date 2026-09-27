@@ -98,7 +98,7 @@ export default async function IncidenteDetalhe({ params }: PageProps<"/incidente
             <dl className={styles.dados}>
               <dt>Data/hora</dt>
               <dd>{formatarDataHora(i.dataHora, fuso)}</dd>
-              <dt>Obra / setor</dt>
+              <dt>Unidade / setor</dt>
               <dd>{i.obra.nome}{i.setor ? ` · ${i.setor.nome}` : ""}</dd>
               <dt>Local</dt>
               <dd>{i.local ?? "—"}</dd>
@@ -130,7 +130,7 @@ export default async function IncidenteDetalhe({ params }: PageProps<"/incidente
                   <label className={styles.campo}>Data e hora
                     <input type="datetime-local" name="dataHora" required defaultValue={dataHoraLocal(i.dataHora, fuso)} className={styles.entrada} />
                   </label>
-                  <label className={styles.campo}>Obra
+                  <label className={styles.campo}>Unidade
                     <select name="obraId" defaultValue={i.obraId} className={styles.entrada}>
                       {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
                     </select>

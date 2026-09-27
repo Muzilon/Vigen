@@ -246,7 +246,7 @@ export async function registrarSessao(a: Ator, treinamentoId: string, d: DadosSe
   const hoje = hojeNoFuso(await fusoDaEmpresa(a));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.dataRealizacao) || Number.isNaN(paraDataDb(d.dataRealizacao).getTime())) throw new ErroNegocio("Data de realização inválida.");
   if (d.dataRealizacao > hoje) throw new ErroNegocio("A data de realização não pode ser futura (registre a sessão depois de realizada).");
-  if (d.obraId && !(await a.db.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Obra/unidade inválida.");
+  if (d.obraId && !(await a.db.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Unidade inválida.");
   const s = await a.db.sessaoTreinamento.create({
     data: {
       empresaId: a.empresaId,

@@ -255,7 +255,7 @@ export async function criarPlanoManual(a: Ator, d: DadosPlanoManual) {
   validarQuantidadeItens(d.itens);
   d.itens.forEach(dadosItem);
   const obraId = d.obraId || null;
-  if (obraId && !obraDoPlanoAcessivel(a, { obraId })) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  if (obraId && !obraDoPlanoAcessivel(a, { obraId })) throw new ErroNegocio("Unidade inválida ou sem acesso.");
   const r = await a.db.$transaction((tx) => criarPlanoNaTransacao(tx, a, { ...d, obraId }, { tipo: "MANUAL", id: null }));
   await notificarItensAtribuidos(a, r.itemIds, "criado");
   return { id: r.id };
@@ -277,7 +277,7 @@ export async function criarPlanoNaTransacao(
   const obraId = d.obraId || null;
   const dados = d.itens.map(dadosItem);
   if (obraId && !(await tx.obraUnidade.findFirst({ where: { id: obraId, ativo: true }, select: { id: true } }))) {
-    throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    throw new ErroNegocio("Unidade inválida ou sem acesso.");
   }
   await validarQuemPlanoManual(tx, dados.map((x) => x.quemId), obraId);
   const plano = await tx.planoAcao.create({

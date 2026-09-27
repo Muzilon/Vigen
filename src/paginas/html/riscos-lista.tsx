@@ -80,7 +80,7 @@ export default async function RiscosLista({ searchParams }: PageProps<"/riscos">
       <CabecalhoPagina
         titulo="Riscos e oportunidades"
         contador={todos.length}
-        subtitulo="Matriz de riscos e oportunidades por processo (ISO 9001 6.1) — nível = probabilidade × impacto pela escala da empresa/obra."
+        subtitulo="Matriz de riscos e oportunidades por processo (ISO 9001 6.1) — nível = probabilidade × impacto pela escala da empresa/unidade."
         acoes={
           <>
             {gerencia && <LinkBotao href="/riscos/revisao-geral" variante="secundario">Revisão geral</LinkBotao>}
@@ -121,7 +121,7 @@ export default async function RiscosLista({ searchParams }: PageProps<"/riscos">
           </Selecao>
         </div>
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra}>
             <option value="">Todas</option>
             {opcoes.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

@@ -121,7 +121,7 @@ export function FormNovaRnc({
         <Secao numero="03" titulo="Onde e quem">
           <div className={styles.gradeDupla}>
             <div className={styles.campo}>
-              <label className={styles.rotulo} htmlFor="obraId">Obra / unidade<Obrigatorio /></label>
+              <label className={styles.rotulo} htmlFor="obraId">Unidade<Obrigatorio /></label>
               <select id="obraId" name="obraId" required className={styles.entrada} defaultValue={v.obraId ?? (obras.length === 1 ? obras[0].id : "")}>
                 <option value="">Selecione...</option>
                 {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

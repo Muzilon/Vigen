@@ -120,7 +120,7 @@ export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">
             <dl className={styles.dados}>
               <dt>Processo</dt>
               <dd>{r.processo ? <Link href={`/processos/${r.processo.id}`}>{r.processo.codigo} — {r.processo.nome}</Link> : "—"}</dd>
-              <dt>Obra/unidade</dt>
+              <dt>Unidade</dt>
               <dd>{r.obra?.nome ?? "Empresa toda"}</dd>
               <dt>Causa</dt>
               <dd>{r.causa ?? "—"}</dd>

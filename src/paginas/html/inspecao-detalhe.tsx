@@ -196,7 +196,7 @@ export default async function InspecaoDetalhe({ params }: PageProps<"/inspecoes/
                               </select>
                             </label>
                           </div>
-                          <p className={styles.ajuda}>Origem: Inspeção · obra {i.obra.nome}{fotosR.length ? ` · ${fotosR.length} foto(s) vão como evidência` : ""}.</p>
+                          <p className={styles.ajuda}>Origem: Inspeção · unidade {i.obra.nome}{fotosR.length ? ` · ${fotosR.length} foto(s) vão como evidência` : ""}.</p>
                         </FormAcao>
                       </details>
                     )

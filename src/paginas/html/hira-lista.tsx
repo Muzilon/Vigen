@@ -81,7 +81,7 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
       <CabecalhoPagina
         titulo="Perigos e riscos (HIRA)"
         contador={todas.length}
-        subtitulo="Identificação de perigos e avaliação de riscos de SST por obra (ISO 45001 6.1.2) — nível = probabilidade × severidade pela escala da obra/empresa."
+        subtitulo="Identificação de perigos e avaliação de riscos de SST por unidade (ISO 45001 6.1.2) — nível = probabilidade × severidade pela escala da unidade/empresa."
         acoes={
           <>
             {nPendentes > 0 && (
@@ -98,7 +98,7 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
 
       <form className={styles.barraFiltros} method="get">
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra}>
             <option value="">Todas</option>
             {opcoes.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -155,7 +155,7 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
         {emArvore ? (
           <Link href={href({ vista: "" })} className={styles.linkLimpar}>Ver planilha</Link>
         ) : (
-          <Link href={href({ vista: "arvore" })} className={styles.linkLimpar}>Ver em árvore (Obra › Processo › Atividade)</Link>
+          <Link href={href({ vista: "arvore" })} className={styles.linkLimpar}>Ver em árvore (Unidade › Processo › Atividade)</Link>
         )}
       </p>
 
@@ -169,7 +169,7 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
             <thead>
               <tr>
                 <th scope="col" className={styles.colCodigo}>Nº</th>
-                <th scope="col">Obra</th>
+                <th scope="col">Unidade</th>
                 <th scope="col">Setor</th>
                 <th scope="col">Processo</th>
                 <th scope="col" className={styles.colTexto}>Atividade</th>

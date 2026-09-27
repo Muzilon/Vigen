@@ -53,7 +53,7 @@ export function FormNovoPlano({ obras, usuarios }: { obras: { id: string; nome: 
           </div>
           <div>
             <Rotulo htmlFor="obraId">
-              Obra / unidade <span className={styles.opcional}>opcional</span>
+              Unidade <span className={styles.opcional}>opcional</span>
             </Rotulo>
             <select id="obraId" name="obraId" value={obraId} onChange={(e) => trocarObra(e.target.value)} className={styles.selecaoObra}>
               <option value="">Nenhuma (toda a empresa)</option>
@@ -61,7 +61,7 @@ export function FormNovoPlano({ obras, usuarios }: { obras: { id: string; nome: 
                 <option key={o.id} value={o.id}>{o.nome}</option>
               ))}
             </select>
-            <p className={styles.ajuda}>Com obra, só usuários com acesso a ela podem ser o &quot;quem&quot; dos itens.</p>
+            <p className={styles.ajuda}>Com unidade, só usuários com acesso a ela podem ser o &quot;quem&quot; dos itens.</p>
           </div>
         </section>
 

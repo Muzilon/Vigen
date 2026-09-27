@@ -73,7 +73,7 @@ export function CamposRequisito({
           {processos.map((p) => <option key={p.id} value={p.id}>{p.codigo} — {p.nome}</option>)}
         </select>
       </label>
-      <label className={styles.campo}>Obra (opcional; vazio = empresa toda)
+      <label className={styles.campo}>Unidade (opcional; vazio = empresa toda)
         <select name="obraId" defaultValue={v.obraId ?? ""} className={styles.entrada}>
           <option value="">— empresa toda —</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

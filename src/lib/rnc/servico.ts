@@ -188,10 +188,10 @@ export async function criarRnc(a: Ator, d: DadosNovaRnc) {
 export async function criarRncNaTransacao(tx: Tx, a: Ator, d: DadosNovaRnc) {
   if (!atorTem(a, "RNC_ABRIR")) throw new ErroNegocio("Sem permissão para abrir RNC.");
   if (a.obrasPermitidas !== null && !a.obrasPermitidas.includes(d.obraId)) {
-    throw new ErroNegocio("Obra/unidade não permitida.");
+    throw new ErroNegocio("Unidade não permitida.");
   }
   const obra = await tx.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true } });
-  if (!obra) throw new ErroNegocio("Obra/unidade inválida.");
+  if (!obra) throw new ErroNegocio("Unidade inválida.");
   const emp = await tx.empresa.findFirst({ where: { id: a.empresaId }, select: { fusoHorario: true } });
   const ano = anoNoFuso(emp?.fusoHorario ?? "America/Sao_Paulo");
   const contemDadosPessoais = !!d.contemDadosPessoais;
@@ -255,7 +255,7 @@ export async function validarNovoResponsavel(
   if (!u) throw new ErroNegocio("Responsável inválido.");
   if (!u.permissoes.includes("RNC_TRATAR")) throw new ErroNegocio("O responsável precisa da permissão de tratar RNCs.");
   if (u.obras !== null && !u.obras.includes(rnc.obraId)) {
-    throw new ErroNegocio("O responsável não tem acesso à obra/unidade desta RNC.");
+    throw new ErroNegocio("O responsável não tem acesso à unidade desta RNC.");
   }
   if (rnc.restrita && !u.permissoes.includes("RNC_VER_RESTRITAS")) {
     throw new ErroNegocio("RNC restrita: o responsável precisa da permissão de ver RNCs restritas.");

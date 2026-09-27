@@ -77,7 +77,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
       <CabecalhoPagina
         titulo="Aspectos e impactos (LAIA)"
         contador={todas.length}
-        subtitulo="Levantamento de aspectos e impactos ambientais por obra (ISO 14001 6.1.2) — pontuação = severidade × frequência × abrangência; requisito legal e partes interessadas elevam a significância."
+        subtitulo="Levantamento de aspectos e impactos ambientais por unidade (ISO 14001 6.1.2) — pontuação = severidade × frequência × abrangência; requisito legal e partes interessadas elevam a significância."
         acoes={
           <>
             {nPendentes > 0 && (
@@ -94,7 +94,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
 
       <form className={styles.barraFiltros} method="get">
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={q.obra}>
             <option value="">Todas</option>
             {opcoes.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -160,7 +160,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
         {emArvore ? (
           <Link href={href({ vista: "" })} className={styles.linkLimpar}>Ver planilha</Link>
         ) : (
-          <Link href={href({ vista: "arvore" })} className={styles.linkLimpar}>Ver em árvore (Obra › Processo › Atividade)</Link>
+          <Link href={href({ vista: "arvore" })} className={styles.linkLimpar}>Ver em árvore (Unidade › Processo › Atividade)</Link>
         )}
       </p>
 
@@ -174,7 +174,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
             <thead>
               <tr>
                 <th scope="col" className={styles.colCodigo}>Nº</th>
-                <th scope="col">Obra</th>
+                <th scope="col">Unidade</th>
                 <th scope="col">Processo</th>
                 <th scope="col" className={styles.colTexto}>Atividade</th>
                 <th scope="col" className={styles.colTexto}>Aspecto</th>

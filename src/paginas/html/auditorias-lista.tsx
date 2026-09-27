@@ -69,7 +69,7 @@ export default async function AuditoriasLista({ searchParams }: PageProps<"/audi
           </Selecao>
         </div>
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra}>
             <option value="">Todas</option>
             {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

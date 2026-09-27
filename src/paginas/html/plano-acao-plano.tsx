@@ -81,7 +81,7 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
             <dd className={styles.textoLivre}>{plano.descricao ?? "—"}</dd>
           </div>
           <div>
-            <dt>Obra / unidade</dt>
+            <dt>Unidade</dt>
             <dd>{plano.obra?.nome ?? "Toda a empresa"}</dd>
           </div>
           <div>

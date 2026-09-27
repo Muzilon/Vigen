@@ -34,7 +34,7 @@ import styles from "@/paginas/css/configuracoes.module.css";
 const ABAS = [
   ["usuarios", "Usuários"],
   ["perfis", "Perfis"],
-  ["obras", "Obras / unidades"],
+  ["obras", "Unidades"],
   ["setores", "Setores"],
   ["modulos", "Módulos"],
   ["escalas", "Escalas"],
@@ -83,7 +83,7 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   INDICADOR_GERENCIAR: "Cadastrar indicadores e lançar resultados de qualquer indicador",
   TREINAMENTO_GERENCIAR: "Cadastrar treinamentos e sessões, lançar presença/certificados e ver a matriz de competências",
   ADMIN_CONFIG: "Administrar configurações",
-  VER_TODAS_OBRAS: "Ver todas as obras",
+  VER_TODAS_OBRAS: "Ver todas as unidades",
 };
 
 type Dados = Awaited<ReturnType<typeof dadosAdministracao>>;
@@ -122,14 +122,14 @@ function CamposUsuario({ u, d }: { u?: Usuario; d: Dados }) {
         </Selecao>
       </div>
       <div>
-        <Rotulo>Escopo de obras *</Rotulo>
+        <Rotulo>Escopo de unidades *</Rotulo>
         <Selecao name="escopoObras" defaultValue={u?.escopoObras ?? "SELECIONADAS"} className={styles.selecaoFormulario}>
-          <option value="TODAS">Todas as obras</option>
+          <option value="TODAS">Todas as unidades</option>
           <option value="SELECIONADAS">Somente as selecionadas</option>
         </Selecao>
       </div>
       <fieldset className={`${styles.grupoOpcoes} ${styles.linhaInteira}`}>
-        <legend className={styles.legenda}>Obras permitidas (quando “Somente as selecionadas”)</legend>
+        <legend className={styles.legenda}>Unidades permitidas (quando “Somente as selecionadas”)</legend>
         <div className={styles.opcoesEmLinha}>
           {d.obras.filter((o) => o.ativo || obrasUsuario.has(o.id)).map((o) => (
             <label key={o.id} className={styles.opcao}>
@@ -196,7 +196,7 @@ function AbaUsuarios({ d, eu }: { d: Dados; eu: string }) {
                   <span className={`${styles.etiqueta} ${styles.etiquetaNeutra}`}>{ROTULO_PAPEL[u.papel]}</span>
                   {u.perfilId && <span className={`${styles.etiqueta} ${styles.etiquetaPerfil}`}>{perfil.get(u.perfilId)}</span>}
                   <span className={styles.obrasUsuario}>
-                    {u.escopoObras === "TODAS" ? "Todas as obras" : u.acessosObra.map((x) => obra.get(x.obraId)).join(", ") || "Nenhuma obra"}
+                    {u.escopoObras === "TODAS" ? "Todas as unidades" : u.acessosObra.map((x) => obra.get(x.obraId)).join(", ") || "Nenhuma unidade"}
                   </span>
                   {!u.ativo && <span className={`${styles.etiqueta} ${styles.etiquetaInativo}`}>Inativo</span>}
                   {u.id === eu && <span className={`${styles.etiqueta} ${styles.etiquetaVoce}`}>Você</span>}
@@ -297,10 +297,10 @@ function AbaObras({ d }: { d: Dados }) {
   );
   return (
     <div className={styles.secoesAba}>
-      <Cartao titulo="Nova obra / unidade">
+      <Cartao titulo="Nova unidade">
         <FormAcao acao={salvarObraAcao} botao="Criar" classeBotao={styles.botaoPrimario} className={styles.formEmLinha}>{campos()}</FormAcao>
       </Cartao>
-      <Cartao titulo={`Obras / unidades (${d.obras.length})`}>
+      <Cartao titulo={`Unidades (${d.obras.length})`}>
         <ul className={styles.listaRegistros}>
           {d.obras.map((o) => (
             <li key={o.id}>
@@ -378,8 +378,8 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
   return (
     <div className={styles.secoesAba}>
       <p className={styles.explicacao}>
-        Escala (P×S) usada para calcular o nível de risco/HIRA/aspecto-impacto. Uma configuração sem obra é o padrão
-        da empresa; escolha uma obra para sobrescrever apenas naquele local. Sem nenhuma configuração cadastrada, o
+        Escala (P×S) usada para calcular o nível de risco/HIRA/aspecto-impacto. Uma configuração sem unidade é o padrão
+        da empresa; escolha uma unidade para sobrescrever apenas naquele local. Sem nenhuma configuração cadastrada, o
         sistema usa um padrão embutido (5x5 para Riscos/HIRA, 3x3 para Aspecto/Impacto).
       </p>
       <Cartao titulo="Nova configuração de escala">
@@ -392,7 +392,7 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
               </Selecao>
             </div>
             <div>
-              <Rotulo>Obra (sobrescrita opcional)</Rotulo>
+              <Rotulo>Unidade (sobrescrita opcional)</Rotulo>
               <Selecao name="obraId" className={styles.selecaoFormulario}>
                 <option value="">— Padrão da empresa —</option>
                 {d.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -428,7 +428,7 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
             {d.configuracoes.map((c) => (
               <li key={c.id}>
                 <span className={styles.tituloPerfil}>
-                  {ROTULO_TIPO_ESCALA[c.tipo]} — {c.obraId ? (obra.get(c.obraId) ?? "obra removida") : "padrão da empresa"} ({c.tamanho}x{c.tamanho})
+                  {ROTULO_TIPO_ESCALA[c.tipo]} — {c.obraId ? (obra.get(c.obraId) ?? "unidade removida") : "padrão da empresa"} ({c.tamanho}x{c.tamanho})
                 </span>
                 <FormAcao
                   acao={excluirConfiguracaoEscalaAcao}
@@ -465,7 +465,7 @@ async function AbaAprovacoes() {
         Quando exigido, toda inclusão, alteração e exclusão de linha da planilha gera uma solicitação de aprovação para os aprovadores
         padrão (o solicitante nunca aprova o próprio pedido). A linha nova fica &quot;pendente de aprovação&quot; até a última assinatura.
         Sem exigência, as mudanças são aplicadas direto, com histórico. Com o módulo Documentos contratado, marque &quot;usar tramitação
-        de documentos&quot; para que cada aprovação registre uma nova revisão da planilha controlada da obra (código e revisão, com
+        de documentos&quot; para que cada aprovação registre uma nova revisão da planilha controlada da unidade (código e revisão, com
         snapshot das linhas vigentes) na lista mestra.
       </p>
       {MODULOS_APROVACAO.map(({ m, modulo, titulo }) => {
@@ -496,7 +496,7 @@ async function AbaAprovacoes() {
                 <span>
                   Usar tramitação de documentos (revisão da planilha controlada)
                   <span className={styles.ajudaOpcao}>
-                    {docs ? "Cada inclusão/alteração/exclusão aprovada gera nova revisão do documento-planilha da obra (tipo PL)." : "Requer o módulo Documentos contratado."}
+                    {docs ? "Cada inclusão/alteração/exclusão aprovada gera nova revisão do documento-planilha da unidade (tipo PL)." : "Requer o módulo Documentos contratado."}
                   </span>
                 </span>
               </label>

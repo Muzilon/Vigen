@@ -189,7 +189,7 @@ function ehUnicoViolado(e: unknown) {
 
 async function validarReferencias(tx: Tx, a: Pick<Ator, "obrasPermitidas">, d: { processoId: string | null; obraId: string; responsavelId: string | null }) {
   if (!obraNoEscopo(a, d.obraId) || (await tx.obraUnidade.count({ where: { id: d.obraId, ativo: true } })) === 0) {
-    throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    throw new ErroNegocio("Unidade inválida ou sem acesso.");
   }
   if (d.processoId && (await tx.processo.count({ where: { id: d.processoId, ativo: true } })) === 0) throw new ErroNegocio("Processo inválido.");
   if (d.responsavelId && (await tx.usuario.count({ where: { id: d.responsavelId, ativo: true } })) === 0) throw new ErroNegocio("Responsável inválido.");
@@ -346,8 +346,8 @@ export interface ResultadoClonagemLaia {
  */
 export async function clonarLaiaParaObra(a: Ator, origemObraId: string, destinoObraId: string): Promise<ResultadoClonagemLaia> {
   await exigirGestao(a);
-  if (origemObraId === destinoObraId) throw new ErroNegocio("Escolha uma obra de destino diferente da origem.");
-  if (!obraNoEscopo(a, origemObraId) || !obraNoEscopo(a, destinoObraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  if (origemObraId === destinoObraId) throw new ErroNegocio("Escolha uma unidade de destino diferente da origem.");
+  if (!obraNoEscopo(a, origemObraId) || !obraNoEscopo(a, destinoObraId)) throw new ErroNegocio("Unidade inválida ou sem acesso.");
   const linhas = await a.db.linhaLaia.findMany({ where: { empresaId: a.empresaId, obraId: origemObraId, status: "VIGENTE" } });
   const erros: ResultadoClonagemLaia["erros"] = [];
   let criadas = 0;
@@ -516,14 +516,14 @@ export async function reavaliarLaia(a: Ator, id: string, d: DadosReavaliacaoLaia
  */
 export async function revisaoGeralLaia(a: Ator, obraId: string, avaliacoes: ({ id: string } & DadosReavaliacaoLaia)[], observacao?: string | null) {
   await exigirGestao(a);
-  if (!obraNoEscopo(a, obraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+  if (!obraNoEscopo(a, obraId)) throw new ErroNegocio("Unidade inválida ou sem acesso.");
   const obs = normalizarObs(observacao) ?? "Revisão geral.";
   const hoje = hojeNoFuso(await fusoDaEmpresa(a));
   const porId = new Map(avaliacoes.map((x) => [x.id, x]));
   return a.db.$transaction(
     async (tx) => {
       const itens = await tx.linhaLaia.findMany({ where: { obraId, status: "VIGENTE" }, orderBy: { numero: "asc" } });
-      if (itens.length === 0) throw new ErroNegocio("Nenhuma linha vigente nesta obra.");
+      if (itens.length === 0) throw new ErroNegocio("Nenhuma linha vigente nesta unidade.");
       for (const id of porId.keys()) if (!itens.some((i) => i.id === id)) throw new ErroNegocio("Avaliação enviada para linha fora do escopo da revisão.");
       for (const l of itens) {
         const d = porId.get(l.id) ?? l;

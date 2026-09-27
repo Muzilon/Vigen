@@ -129,7 +129,7 @@ export interface UsuarioPublico {
 export function validarPublico(p: PublicoDocumento) {
   if (p.publicoTodos) return;
   if (p.setorIds.length + p.obraIds.length + p.perfilIds.length + p.usuarioIds.length === 0) {
-    throw new ErroNegocio("Escolha o público da publicação: todos ou ao menos um setor, obra, perfil ou usuário.");
+    throw new ErroNegocio("Escolha o público da publicação: todos ou ao menos um setor, unidade, perfil ou usuário.");
   }
 }
 

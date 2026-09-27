@@ -35,13 +35,13 @@ export default async function LaiaRevisaoGeral({ searchParams }: PageProps<"/lai
         <Link href="/laia" className={styles.linkVoltar}>← Aspectos e impactos (LAIA)</Link>
       </nav>
       <h1 className={styles.titulo}>Revisão geral da LAIA</h1>
-      <p className={styles.subtitulo}>Confirme ou ajuste a avaliação de cada linha vigente da obra e registre a revisão de uma vez.</p>
+      <p className={styles.subtitulo}>Confirme ou ajuste a avaliação de cada linha vigente da unidade e registre a revisão de uma vez.</p>
 
       <form method="get" className={styles.barraEscopo}>
         <div className={styles.campoEscopo}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={obraId}>
-            <option value="">— escolha a obra —</option>
+            <option value="">— escolha a unidade —</option>
             {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
           </Selecao>
         </div>
@@ -49,9 +49,9 @@ export default async function LaiaRevisaoGeral({ searchParams }: PageProps<"/lai
       </form>
 
       {!obraId ? (
-        <EstadoVazio>Escolha a obra cuja planilha será revisada.</EstadoVazio>
+        <EstadoVazio>Escolha a unidade cuja planilha será revisada.</EstadoVazio>
       ) : itens.length === 0 ? (
-        <EstadoVazio>Nenhuma linha vigente nesta obra.</EstadoVazio>
+        <EstadoVazio>Nenhuma linha vigente nesta unidade.</EstadoVazio>
       ) : (
         <FormAcao
           acao={revisaoGeralLaiaAcao}
@@ -101,7 +101,7 @@ export default async function LaiaRevisaoGeral({ searchParams }: PageProps<"/lai
           </div>
           <label className={styles.observacao}>
             Observação da revisão
-            <input name="observacao" maxLength={1000} placeholder="Ex.: revisão anual da LAIA da obra" className={styles.entrada} />
+            <input name="observacao" maxLength={1000} placeholder="Ex.: revisão anual da LAIA da unidade" className={styles.entrada} />
           </label>
         </FormAcao>
       )}

@@ -86,7 +86,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
       <CabecalhoPagina
         titulo="Não conformidades"
         contador={rncs.length}
-        subtitulo="Relatórios de Não Conformidade de todas as obras"
+        subtitulo="Relatórios de Não Conformidade de todas as unidades"
         acoes={temPermissao(ctx, "RNC_ABRIR") && <LinkBotao href="/rncs/nova">Nova RNC</LinkBotao>}
       />
 
@@ -97,8 +97,8 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
         </div>
         <Rotulo htmlFor="f-status" oculto>Status</Rotulo>
         {sel("f-status", "status", Object.entries(ROTULO_STATUS_RNC), "Status: Todos")}
-        <Rotulo htmlFor="f-obra" oculto>Obra</Rotulo>
-        {sel("f-obra", "obra", obras.map((o) => [o.id, o.nome]), "Obra: Todas")}
+        <Rotulo htmlFor="f-obra" oculto>Unidade</Rotulo>
+        {sel("f-obra", "obra", obras.map((o) => [o.id, o.nome]), "Unidade: Todas")}
         <Rotulo htmlFor="f-tipo" oculto>Tipo</Rotulo>
         {sel("f-tipo", "tipo", Object.entries(ROTULO_TIPO), "Tipo: Todos")}
         <Rotulo htmlFor="f-grav" oculto>Gravidade</Rotulo>
@@ -126,7 +126,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
               <Th scope="col">Código</Th>
               <Th scope="col">Título</Th>
               <Th scope="col">Tipo</Th>
-              <Th scope="col">Obra</Th>
+              <Th scope="col">Unidade</Th>
               <Th scope="col">Gravidade</Th>
               <Th scope="col">Responsável</Th>
               <Th scope="col">Abertura</Th>

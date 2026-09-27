@@ -92,7 +92,7 @@ export async function gerarPlanoLaiaAcao(_: ResultadoAcao, fd: FormData): Promis
 export async function revisaoGeralLaiaAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   const b = obj(fd);
   const escopo = z.object({ obraId: uuid, observacao: opcional }).safeParse(b);
-  if (!escopo.success) return { erro: "Escolha a obra." };
+  if (!escopo.success) return { erro: "Escolha a unidade." };
   const num = (k: string) => {
     const v = String(b[k] ?? "");
     return v === "" ? null : Number(v);
@@ -112,7 +112,7 @@ export async function revisaoGeralLaiaAcao(_: ResultadoAcao, fd: FormData): Prom
 /** "Clone Inteligente": duplica a planilha LAIA vigente de uma obra para outra (docs/ideias-implantadas). */
 export async function clonarLaiaObraAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
   const d = z.object({ origemObraId: uuid, destinoObraId: uuid }).safeParse(obj(fd));
-  if (!d.success) return { erro: "Escolha a obra de origem e a de destino." };
+  if (!d.success) return { erro: "Escolha a unidade de origem e a de destino." };
   return executar(async () => {
     const r = await laia.clonarLaiaParaObra(await getAtor(), d.data.origemObraId, d.data.destinoObraId);
     if (r.erros.length > 0) {

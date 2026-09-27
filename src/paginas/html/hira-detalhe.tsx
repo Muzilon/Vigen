@@ -115,7 +115,7 @@ export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
         <div className={styles.coluna}>
           <Cartao titulo="Dados">
             <dl className={styles.dados}>
-              <dt>Obra / setor</dt>
+              <dt>Unidade / setor</dt>
               <dd>{l.obra.nome} · {l.setor}</dd>
               <dt>Processo</dt>
               <dd>{l.processo ? <Link href={`/processos/${l.processo.id}`}>{l.processo.codigo} — {l.processo.nome}</Link> : "—"}</dd>
@@ -131,7 +131,7 @@ export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
               <dd>{l.requisitoLegal ?? "—"}</dd>
               <dt>Reavaliação</dt>
               <dd>
-                {l.modoReavaliacao === "ITEM" ? "Item a item" : "Na revisão geral da obra"} · a cada {l.periodicidadeMeses} {l.periodicidadeMeses === 1 ? "mês" : "meses"} · próxima em{" "}
+                {l.modoReavaliacao === "ITEM" ? "Item a item" : "Na revisão geral da unidade"} · a cada {l.periodicidadeMeses} {l.periodicidadeMeses === 1 ? "mês" : "meses"} · próxima em{" "}
                 <span className={vencida ? styles.vencida : undefined}>{formatarData(l.proximaReavaliacaoEm)}{vencida ? " (vencida)" : ""}</span>
                 {l.ultimaReavaliacaoEm && <> · última em {formatarDataHora(l.ultimaReavaliacaoEm, fuso)}</>}
               </dd>

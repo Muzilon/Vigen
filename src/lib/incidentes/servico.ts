@@ -218,7 +218,7 @@ async function dadosPrincipais(tx: Tx, a: Ator, d: DadosIncidente, fuso: string)
   if (Number.isNaN(dataHora.getTime())) throw new ErroNegocio("Data/hora inválida.");
   if (dataHora.getTime() > Date.now() + 5 * 60_000) throw new ErroNegocio("A data/hora do incidente não pode ser futura.");
   if (!obraNoEscopo(a, d.obraId) || !(await tx.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true }, select: { id: true } }))) {
-    throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
+    throw new ErroNegocio("Unidade inválida ou sem acesso.");
   }
   if (d.setorId && !(await tx.setor.findFirst({ where: { id: d.setorId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Setor inválido.");
   const diasPerdidos = d.diasPerdidos ?? null;
@@ -275,7 +275,7 @@ async function travar(tx: Tx, i: { id: string; versao: number; status: StatusInc
 async function validarResponsavel(tx: Tx, responsavelId: string, i: { obraId: string; restrita: boolean }) {
   const u = (await usuariosAtivos(tx)).find((x) => x.id === responsavelId);
   if (!u) throw new ErroNegocio("Responsável inválido.");
-  if (u.obras !== null && !u.obras.includes(i.obraId)) throw new ErroNegocio("O responsável não tem acesso à obra/unidade deste incidente.");
+  if (u.obras !== null && !u.obras.includes(i.obraId)) throw new ErroNegocio("O responsável não tem acesso à unidade deste incidente.");
   if (i.restrita && !u.permissoes.includes("INCIDENTE_VER_RESTRITOS")) {
     throw new ErroNegocio("Incidente restrito: o responsável precisa da permissão de ver incidentes restritos.");
   }
@@ -348,7 +348,7 @@ async function notificarRegistro(a: Ator, i: Pick<Registro, "id" | "codigo" | "t
       entidadeTipo: "INCIDENTE",
       entidadeId: i.id,
       titulo: `Incidente ${i.codigo} registrado`,
-      corpo: `${ROTULO_TIPO_INCIDENTE[i.tipo]} (${ROTULO_GRAVIDADE_INCIDENTE[i.gravidade].toLowerCase()}) em ${obra?.nome ?? "obra"}.`,
+      corpo: `${ROTULO_TIPO_INCIDENTE[i.tipo]} (${ROTULO_GRAVIDADE_INCIDENTE[i.gravidade].toLowerCase()}) em ${obra?.nome ?? "unidade"}.`,
       link: linkIncidente(i.id),
       chave: `incidente-registrado:${i.id}:${u.id}`,
     }));

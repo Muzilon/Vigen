@@ -69,7 +69,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
       ? ["Todos os usuários da empresa"]
       : [
           ...p.setorIds.map((x) => `Setor: ${nSetor.get(x) ?? "?"}`),
-          ...p.obraIds.map((x) => `Obra/unidade: ${nObra.get(x) ?? "?"}`),
+          ...p.obraIds.map((x) => `Unidade: ${nObra.get(x) ?? "?"}`),
           ...p.perfilIds.map((x) => `Perfil: ${nPerfil.get(x) ?? "?"}`),
           ...p.usuarioIds.map((x) => nUsuario.get(x) ?? "?"),
         ];
@@ -130,7 +130,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
               )}
               <dt>Processo</dt>
               <dd>{d.processo ? <Link href={`/processos/${d.processo.id}`}>{d.processo.codigo} — {d.processo.nome}</Link> : "—"}</dd>
-              <dt>Obra / setor</dt>
+              <dt>Unidade / setor</dt>
               <dd>{d.obra?.nome ?? "Toda a empresa"}{d.setor ? ` · ${d.setor.nome}` : ""}</dd>
               <dt>Revisão periódica</dt>
               <dd>
@@ -216,7 +216,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
                     </label>
                     <p className={styles.suave}>Ou escolha o público (união dos critérios marcados):</p>
                     <GrupoMarcar titulo="Setores" nome="setorIds" itens={op.setores} />
-                    <GrupoMarcar titulo="Obras / unidades" nome="obraIds" itens={op.obras} />
+                    <GrupoMarcar titulo="Unidades" nome="obraIds" itens={op.obras} />
                     <GrupoMarcar titulo="Perfis" nome="perfilIds" itens={op.perfis} />
                     <GrupoMarcar titulo="Usuários" nome="usuarioIds" itens={op.usuarios} />
                     <label className={styles.opcao}><input type="checkbox" name="notificar" defaultChecked /> Notificar o público (sino e e-mail)</label>

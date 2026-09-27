@@ -160,8 +160,8 @@ async function dadosAuditoria(tx: Tx, a: Ator, d: DadosAuditoria) {
   const equipe = opcional(d.equipe, "Equipe", 1000);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.dataInicio) || !/^\d{4}-\d{2}-\d{2}$/.test(d.dataFim)) throw new ErroNegocio("Datas inválidas.");
   if (d.dataFim < d.dataInicio) throw new ErroNegocio("A data de término não pode ser anterior à de início.");
-  if (d.obraId && !obraNoEscopo(a, d.obraId)) throw new ErroNegocio("Obra/unidade inválida ou sem acesso.");
-  if (d.obraId && !(await tx.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Obra/unidade inválida.");
+  if (d.obraId && !obraNoEscopo(a, d.obraId)) throw new ErroNegocio("Unidade inválida ou sem acesso.");
+  if (d.obraId && !(await tx.obraUnidade.findFirst({ where: { id: d.obraId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Unidade inválida.");
   if (d.processoId && !(await tx.processo.findFirst({ where: { id: d.processoId, ativo: true }, select: { id: true } }))) throw new ErroNegocio("Processo inválido.");
   if (d.programaId && !(await tx.programaAuditoria.findFirst({ where: { id: d.programaId }, select: { id: true } }))) throw new ErroNegocio("Programa inválido.");
   const lider = await tx.usuario.findFirst({ where: { id: d.auditorLiderId, ativo: true }, select: { id: true } });
@@ -422,7 +422,7 @@ export async function abrirRncDaConstatacao(a: Ator, constatacaoId: string, d: D
     if (c.tipo !== "NAO_CONFORMIDADE") throw new ErroNegocio("Somente constatações de não conformidade geram RNC.");
     if (c.geradaRncId) throw new ErroNegocio("Esta constatação já gerou uma RNC.");
     const obraId = au.obraId ?? d.obraId;
-    if (!obraId) throw new ErroNegocio("Escolha a obra/unidade da RNC (a auditoria não tem obra).");
+    if (!obraId) throw new ErroNegocio("Escolha a unidade da RNC (a auditoria não tem unidade).");
     const lider = await tx.usuario.findFirst({ where: { id: au.auditorLiderId }, select: { nome: true } });
     const processo = au.processoId ? await tx.processo.findFirst({ where: { id: au.processoId }, select: { codigo: true, nome: true } }) : null;
     const sug = sugestaoRncConstatacao({ ...au, auditorLider: { nome: lider?.nome ?? "—" } }, c);

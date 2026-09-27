@@ -96,7 +96,7 @@ export function HiraFormulario({
       <fieldset className={styles.bloco}>
         <legend className={styles.rotuloBloco}>Identificação</legend>
         <label className={styles.campo}>
-          <span className={styles.rotulo}>Obra *</span>
+          <span className={styles.rotulo}>Unidade *</span>
           <select name="obraId" required value={v.obraId} onChange={valor("obraId")} className={styles.entrada}>
             <option value="">— escolha —</option>
             {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -240,7 +240,7 @@ export function HiraFormulario({
           <span className={styles.rotulo}>Reavaliação</span>
           <select name="modoReavaliacao" value={v.modoReavaliacao} onChange={valor("modoReavaliacao")} className={styles.entrada}>
             <option value="ITEM">Item a item</option>
-            <option value="GERAL">Na revisão geral da obra</option>
+            <option value="GERAL">Na revisão geral da unidade</option>
           </select>
         </label>
         <label className={styles.campo}>

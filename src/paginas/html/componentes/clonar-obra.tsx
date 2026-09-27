@@ -29,17 +29,17 @@ export function ClonarObraForm({ acao, obras }: { acao: AcaoServidor; obras: { i
       botao="Duplicar matriz"
       variante="secundario"
       className={styles.barraFiltros}
-      confirmar="Clonar todas as linhas vigentes desta obra para a obra destino? Elas nascem para o gestor da unidade destino revisar."
+      confirmar="Clonar todas as linhas vigentes desta unidade para a unidade destino? Elas nascem para o gestor da unidade destino revisar."
     >
       <div className={styles.campoFiltro}>
-        <Rotulo htmlFor={idOrigem}>Obra de origem</Rotulo>
+        <Rotulo htmlFor={idOrigem}>Unidade de origem</Rotulo>
         <Selecao id={idOrigem} name="origemObraId" required defaultValue="">
           <option value="">— escolha —</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
         </Selecao>
       </div>
       <div className={styles.campoFiltro}>
-        <Rotulo htmlFor={idDestino}>Obra de destino</Rotulo>
+        <Rotulo htmlFor={idDestino}>Unidade de destino</Rotulo>
         <Selecao id={idDestino} name="destinoObraId" required defaultValue="">
           <option value="">— escolha —</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}

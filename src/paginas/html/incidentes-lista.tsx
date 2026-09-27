@@ -51,7 +51,7 @@ export default async function IncidentesLista({ searchParams }: PageProps<"/inci
       />
       <form className={styles.barraFiltros} method="get">
         <div className={styles.campoFiltro}>
-          <Rotulo htmlFor="obra">Obra</Rotulo>
+          <Rotulo htmlFor="obra">Unidade</Rotulo>
           <Selecao id="obra" name="obra" defaultValue={f.obra}>
             <option value="">Todas</option>
             {op.obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
@@ -95,7 +95,7 @@ export default async function IncidentesLista({ searchParams }: PageProps<"/inci
                 <th scope="col">Data/hora</th>
                 <th scope="col">Tipo</th>
                 <th scope="col">Gravidade</th>
-                <th scope="col">Obra / local</th>
+                <th scope="col">Unidade / local</th>
                 <th scope="col">Responsável</th>
                 <th scope="col">Status</th>
                 <th scope="col" title="Dias perdidos">Dias</th>

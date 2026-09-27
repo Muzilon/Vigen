@@ -79,7 +79,7 @@ export function DocumentoNovoFormulario({
         />
       </label>
       <label className={styles.campo}>
-        <span className={styles.rotulo}>Obra / unidade</span>
+        <span className={styles.rotulo}>Unidade</span>
         <select name="obraId" defaultValue={v.obraId ?? ""} className={styles.entrada}>
           <option value="">— toda a empresa —</option>
           {obras.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
