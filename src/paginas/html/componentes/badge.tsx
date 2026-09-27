@@ -105,3 +105,11 @@ const COR_STATUS_INCIDENTE: Record<StatusIncidenteBadge, StatusRncBadge> = { ABE
 export function BadgeStatusIncidente({ status, rotulo }: { status: StatusIncidenteBadge; rotulo: string }) {
   return <BadgeStatusRnc status={COR_STATUS_INCIDENTE[status]} rotulo={rotulo} />;
 }
+
+/** Situação do indicador (P7) no último período fechado — atingido verde, não atingido vermelho, sem lançamento cinza. */
+export type SituacaoIndicadorBadge = "ATINGIDO" | "NAO_ATINGIDO" | "SEM_LANCAMENTO";
+const COR_SITUACAO_INDICADOR: Record<SituacaoIndicadorBadge, StatusRncBadge> = { ATINGIDO: "ENCERRADO", NAO_ATINGIDO: "REABERTO", SEM_LANCAMENTO: "CANCELADO" };
+
+export function BadgeSituacaoIndicador({ situacao, rotulo }: { situacao: SituacaoIndicadorBadge; rotulo: string }) {
+  return <BadgeStatusRnc status={COR_SITUACAO_INDICADOR[situacao]} rotulo={rotulo} />;
+}

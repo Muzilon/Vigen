@@ -12,6 +12,7 @@ import { filtroObraAuditoria, moduloAuditoriasAtivo } from "@/lib/auditorias/ace
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
 import { filtroObraRequisito, moduloRequisitosAtivo } from "@/lib/requisitos-legais/acesso";
 import { filtroAcessoIncidente, moduloIncidentesAtivo } from "@/lib/incidentes/acesso";
+import { moduloIndicadoresAtivo } from "@/lib/indicadores/acesso";
 import { filtroObraRisco, moduloRiscosAtivo } from "@/lib/riscos/servico";
 import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
@@ -90,6 +91,14 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     const i = await a.db.incidente.findFirst({ where: { AND: [{ id: t.entidadeId }, filtroAcessoIncidente(a)] }, select: { responsavelId: true, registradoPorId: true } });
     if (!i) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = i.responsavelId && i.responsavelId !== a.usuarioId ? i.responsavelId : i.registradoPorId;
+    return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
+  }
+  if (t.tipo === "INDICADOR") {
+    // Indicadores: todos com o módulo (indicador é da empresa); fala com o responsável (ou quem cadastrou).
+    if (!(await moduloIndicadoresAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const i = await a.db.indicador.findFirst({ where: { id: t.entidadeId }, select: { responsavelId: true, criadoPorId: true } });
+    if (!i) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
+    const padrao = i.responsavelId ?? i.criadoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
   }
   if (t.tipo === "REQUISITO_LEGAL") {
@@ -231,5 +240,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "AUDITORIA") return `/auditorias/${t.entidadeId}`;
   if (t.entidadeTipo === "REQUISITO_LEGAL") return `/requisitos-legais/${t.entidadeId}`;
   if (t.entidadeTipo === "INCIDENTE") return `/incidentes/${t.entidadeId}`;
+  if (t.entidadeTipo === "INDICADOR") return `/indicadores/${t.entidadeId}`;
   return `/plano-acao/${t.entidadeId}`;
 }

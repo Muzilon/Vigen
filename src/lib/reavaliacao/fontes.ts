@@ -32,7 +32,11 @@ export interface ItemReavaliacao {
 export interface FonteReavaliacao {
   modulo: Modulo;
   /** Tipo da notificação (padrão REAVALIACAO_PROXIMA; Documentos usa REVISAO_DOCUMENTO_PROXIMA). */
-  tipoNotificacao?: Extract<TipoNotificacao, "REAVALIACAO_PROXIMA" | "REVISAO_DOCUMENTO_PROXIMA">;
+  tipoNotificacao?: TipoNotificacao;
+  /** Antecedência própria da fonte em dias (padrão: a do cron). Ex.: treinamentos alertam 30 dias antes. */
+  diasAntecedencia?: number;
+  /** Texto próprio do alerta (padrão: "Reavaliação próxima/vencida"). `data` em DD/MM/AAAA. */
+  mensagem?: (item: ItemReavaliacao, vencida: boolean, data: string) => { titulo: string; corpo: string };
   listarVencendo(db: DbTenant, empresa: EmpresaReavaliacao, hoje: string, diasAntecedencia: number): Promise<ItemReavaliacao[]>;
 }
 
@@ -58,7 +62,8 @@ export function montarNotificacoesReavaliacao(
   itens: readonly ItemReavaliacao[],
   hoje: string,
   dias: number,
-  tipo: NonNullable<FonteReavaliacao["tipoNotificacao"]> = "REAVALIACAO_PROXIMA",
+  tipo: TipoNotificacao = "REAVALIACAO_PROXIMA",
+  mensagem?: FonteReavaliacao["mensagem"],
 ): NovaNotificacao[] {
   const doc = tipo === "REVISAO_DOCUMENTO_PROXIMA";
   const out: NovaNotificacao[] = [];
@@ -66,12 +71,15 @@ export function montarNotificacoesReavaliacao(
     if (!deveAlertarReavaliacao(i.dataReavaliacao, hoje, dias)) continue;
     const vencida = i.dataReavaliacao < hoje;
     const data = i.dataReavaliacao.split("-").reverse().join("/");
+    const proprio = mensagem?.(i, vencida, data);
     for (const uid of new Set(i.usuarioIds)) {
       out.push({
         usuarioId: uid,
         tipo,
-        titulo: doc ? `${vencida ? "Revisão de documento vencida" : "Revisão de documento próxima"}: ${i.titulo}` : `${vencida ? "Reavaliação vencida" : "Reavaliação próxima"}: ${i.titulo}`,
-        corpo: doc
+        titulo: proprio ? proprio.titulo : doc ? `${vencida ? "Revisão de documento vencida" : "Revisão de documento próxima"}: ${i.titulo}` : `${vencida ? "Reavaliação vencida" : "Reavaliação próxima"}: ${i.titulo}`,
+        corpo: proprio
+          ? proprio.corpo
+          : doc
           ? `A revisão periódica do documento ${vencida ? "venceu em" : "está prevista para"} ${data}.`
           : `${i.modo === "GERAL" ? "Revisão geral" : "Reavaliação do item"} ${vencida ? "venceu em" : "prevista para"} ${data}.`,
         link: i.link,
@@ -87,8 +95,9 @@ export async function gerarAlertasReavaliacao(db: DbTenant, empresa: EmpresaReav
   let criadas = 0;
   for (const f of fontesReavaliacao(empresa.modulosAtivos)) {
     try {
-      const itens = await f.listarVencendo(db, empresa, hoje, diasAntecedencia);
-      criadas += (await criarNotificacoes(db, empresa.id, montarNotificacoesReavaliacao(f.modulo, itens, hoje, diasAntecedencia, f.tipoNotificacao))).length;
+      const dias = f.diasAntecedencia ?? diasAntecedencia;
+      const itens = await f.listarVencendo(db, empresa, hoje, dias);
+      criadas += (await criarNotificacoes(db, empresa.id, montarNotificacoesReavaliacao(f.modulo, itens, hoje, dias, f.tipoNotificacao, f.mensagem))).length;
     } catch (e) {
       console.error(`[reavaliacao] fonte ${f.modulo} falhou (empresa ${empresa.id})`, e);
     }

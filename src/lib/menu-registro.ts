@@ -37,7 +37,8 @@ export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
   { modulo: "DOCUMENTOS", href: "/documentos/meus", label: "Meus documentos", grupo: GRUPO_MODULO.QUALIDADE, implementado: true },
   { modulo: "REQUISITOS_LEGAIS", href: "/requisitos-legais", label: "Requisitos legais", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "INCIDENTES", href: "/incidentes", label: "Incidentes e acidentes", grupo: GRUPO_MODULO.SEGURANCA, implementado: true },
-  { modulo: "INDICADORES", href: "/indicadores", label: "Indicadores", grupo: GRUPO_MODULO.GESTAO, implementado: false },
+  { modulo: "INDICADORES", href: "/indicadores", label: "Indicadores", grupo: GRUPO_MODULO.GESTAO, implementado: true },
+  { modulo: "INDICADORES", href: "/indicadores/meus", label: "Meus indicadores", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "TREINAMENTOS", href: "/treinamentos", label: "Treinamentos", grupo: GRUPO_MODULO.GESTAO, implementado: false },
 ];
 

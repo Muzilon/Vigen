@@ -13,6 +13,7 @@ import { resumoInspecoes } from "@/lib/inspecoes/servico";
 import { resumoAuditorias } from "@/lib/auditorias/servico";
 import { resumoRequisitos } from "@/lib/requisitos-legais/servico";
 import { resumoIncidentes } from "@/lib/incidentes/servico";
+import { resumoIndicadores } from "@/lib/indicadores/gestao";
 import { contarPorFaixa } from "@/lib/riscos/servico";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
@@ -37,7 +38,7 @@ const esquema = z.object({
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const f = esquema.parse(await searchParams);
   const a = await getAtor();
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes, metas] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -55,6 +56,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoAuditorias(a),
     resumoRequisitos(a),
     resumoIncidentes(a),
+    resumoIndicadores(a),
   ]);
   const k = ind.kpis;
 
@@ -206,6 +208,22 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
               ] as const
             ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
           />
+        </Painel>
+      )}
+
+      {metas && (
+        <Painel titulo="Indicadores — metas" subtitulo={`${metas.total} indicador(es) ativo(s) · situação no último período fechado`}>
+          <div className={styles.gradeKpis}>
+            <Link href="/indicadores" className={styles.linkKpi}>
+              <Kpi titulo="Metas atingidas" valor={metas.percentualAtingidos === null ? "—" : `${metas.percentualAtingidos}%`} dica={`${metas.atingidos} atingida(s) de ${metas.atingidos + metas.naoAtingidos} com lançamento`} />
+            </Link>
+            <Link href="/indicadores?situacao=NAO_ATINGIDO" className={styles.linkKpi}>
+              <Kpi titulo="Não atingidas" valor={metas.naoAtingidos} dica="Resultado fora da meta" alerta={metas.naoAtingidos > 0} />
+            </Link>
+            <Link href="/indicadores?situacao=SEM_LANCAMENTO" className={styles.linkKpi}>
+              <Kpi titulo="Sem lançamento" valor={metas.semLancamento} dica={`${metas.meus} sob sua responsabilidade`} alerta={metas.semLancamento > 0} />
+            </Link>
+          </div>
         </Painel>
       )}
 

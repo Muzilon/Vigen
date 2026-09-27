@@ -429,3 +429,43 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
   fatalidade); INC-003 restrito com dados sensíveis reais; INC-004 com plano de ação de investigação; 2 concluídos com causa raiz.
 - **Testes**: `tests/incidentes.test.ts` e `npm run test:incidentes` (9 casos: gating, escopo, permissão, LGPD — inclusive
   anexos, comentários, notificações e responsável —, ciclo com plano, trigger, isolamento, sequência em paralelo, dashboard).
+
+## P7 — Indicadores entregue (2026-09-26)
+
+- **Schema** (migração `20260927400000_indicadores`): `Indicador` (nome único por empresa, descrição, processo opcional, unidade texto,
+  `DirecaoIndicador` MAIOR_MELHOR/MENOR_MELHOR, meta `Decimal(14,4)`, `PeriodicidadeIndicador` MENSAL/TRIMESTRAL/SEMESTRAL/ANUAL,
+  `FonteIndicador` MANUAL/RNC_EFICACIA_PRIMEIRA_VERIFICACAO/PLANO_ITENS_ATRASADOS, fórmula/fonte texto, responsável, `ativo` = exclusão
+  lógica, `versao` = trava otimista) e `ResultadoIndicador` (período texto `2026-01`/`2026-T1`/`2026-S1`/`2026` — CHECK de formato —, valor,
+  **cópia da meta e da direção no lançamento**, `automatico`, observação, registrado por, criado em). Permissão `INDICADOR_GERENCIAR`
+  (perfil Qualidade do seed). Interação/Notificação += `INDICADOR`; notificação `INDICADOR_SEM_LANCAMENTO`. Não é o `IndicadorProcesso`
+  do P1 (texto livre no SIPOC), que continua no detalhe do processo.
+- **Decisão — trilha**: `ResultadoIndicador` é **append-only** (trigger bloqueia UPDATE/DELETE) e serve de histórico; não há
+  `HistoricoIndicador`. Correção = novo lançamento do mesmo período com observação obrigatória; o mais recente vale (`vigentesPorPeriodo`)
+  e o anterior aparece como "substituído por correção". Como cada resultado guarda a meta vigente, mudar a meta não reescreve o passado.
+- **Regras** (`src/lib/indicadores/periodos.ts`, puro): período por data/periodicidade, aritmética de períodos, limites (dia inicial/final),
+  último período fechado, rótulos (`mar/26`, `1º tri/26`), **atingido** = valor ≥ meta (maior melhor) ou ≤ meta (menor melhor),
+  situação no período de referência (último fechado): ATINGIDO / NAO_ATINGIDO / SEM_LANCAMENTO. Lançamento de período futuro é negado.
+- **Automáticos** (`src/lib/indicadores/automaticos.ts`, estende o dashboard reaproveitando `diaNoFuso` de `calculos.ts`): "% de RNCs eficazes
+  na 1ª verificação" (mesma definição do KPI do dashboard, recortada pelo período) e "% de itens de ação atrasados" (itens com prazo no
+  período, sem cancelados: concluído depois do prazo ou aberto com prazo vencido). O detalhe mostra o valor calculado do último período
+  fechado e do corrente (parcial); "Registrar valor calculado" grava o resultado (`automatico = true`); lançamento manual é negado.
+  **Decisão**: o valor é agregado da empresa inteira (independe do escopo de quem consulta), para todos verem o mesmo número; só a
+  porcentagem sai, sem dados de RNC restrita. Unidade dos automáticos é sempre `%`.
+- **Acesso** (`acesso.ts` / `gestao.ts`): leitura = módulo (indicador é corporativo, sem obra). Cadastrar/editar/inativar =
+  `INDICADOR_GERENCIAR`; lançar = `INDICADOR_GERENCIAR` **ou o responsável**.
+- **Alerta** (`src/lib/indicadores/reavaliacao.ts`, importado pelo cron): indicador ativo sem resultado no último período fechado →
+  `INDICADOR_SEM_LANCAMENTO` ao responsável (ou quem cadastrou), um por período (chave idempotente com o prazo = fim do período + 15 dias).
+  Para isso `FonteReavaliacao` ganhou `tipoNotificacao` livre, `diasAntecedencia` e `mensagem` próprios (padrões mantidos para as fontes antigas).
+- **Telas**: `/indicadores` (filtro processo/situação/inativos, resumo atingidos/não atingidos/sem lançamento, badge `BadgeSituacaoIndicador`,
+  últimos 4 resultados em chips verde/vermelho, "Lançar" nas pendentes), `/indicadores/meus` (mesma tela, só os do responsável — menu
+  "Meus indicadores"), `/indicadores/novo` (`?processo=`), `/indicadores/[id]` (gráfico de linha SVG resultado × meta tracejada com pontos
+  verde/vermelho e períodos sem lançamento vazios — `componentes/grafico-indicador.tsx` —, lançar/registrar calculado, dados/editar,
+  inativar, lançamentos com correções, comentários). Processo: cartão "Indicadores com meta e resultados" (+ Novo). Dashboard: painel
+  "Indicadores — metas" (% atingidas, não atingidas, sem lançamento). Menu: grupo Gestão.
+- **Seed** (`prisma/seed-indicadores.ts`, via serviço, períodos relativos a hoje): 6 manuais (satisfação do cliente trimestral, prazo de
+  entrega de materiais, perda de concreto com uma correção, taxa de frequência de acidentes **sem lançamento no último mês**, horas de
+  treinamento, resíduos semestral) com 3–4 períodos e 2 automáticos registrados a partir dos dados reais (períodos sem dados ficam sem
+  lançamento).
+- **Testes**: `tests/indicadores-metas.test.ts` (atingido, períodos, correção, cálculo automático puro) e `npm run test:indicadores`
+  (9 casos: gating, permissão/responsável, período inválido/futuro, correção, trigger, automático do plano de ação conferido com os itens
+  reais, automático de RNC, alerta idempotente, isolamento, listas e dashboard).

@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA" | "REQUISITO_LEGAL" | "INCIDENTE";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA" | "REQUISITO_LEGAL" | "INCIDENTE" | "INDICADOR";
   entidadeId: string;
 };
 
@@ -62,6 +62,10 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       const i = await db.incidente.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
       onde = i ? `o incidente ${i.codigo}` : "um incidente";
       link = `/incidentes/${evento.entidadeId}`;
+    } else if (evento.entidadeTipo === "INDICADOR") {
+      const i = await db.indicador.findFirst({ where: { id: evento.entidadeId }, select: { nome: true } });
+      onde = i ? `o indicador "${i.nome}"` : "um indicador";
+      link = `/indicadores/${evento.entidadeId}`;
     } else if (evento.entidadeTipo === "REQUISITO_LEGAL") {
       const r = await db.requisitoLegal.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
       onde = r ? `o requisito legal ${r.codigo}` : "um requisito legal";

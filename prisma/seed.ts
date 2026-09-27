@@ -10,6 +10,7 @@ import { semearInspecoes } from "./seed-inspecoes";
 import { semearAuditorias } from "./seed-auditorias";
 import { semearRequisitosLegais } from "./seed-requisitos-legais";
 import { semearIncidentes } from "./seed-incidentes";
+import { semearIndicadores } from "./seed-indicadores";
 
 const prisma = new PrismaClient();
 
@@ -73,7 +74,7 @@ async function main() {
     {
       nome: "Qualidade",
       descricao: "Equipe de Qualidade",
-      permissoes: ["RNC_VERIFICAR_EFICACIA", "RNC_APROVAR_CANCELAMENTO", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "PROCESSO_GERENCIAR", "RISCO_GERENCIAR", "RISCO_TRATAR", "SWOT_GERENCIAR", "DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR", "INSPECAO_GERENCIAR", "INSPECAO_REALIZAR", "AUDITORIA_GERENCIAR", "AUDITORIA_REALIZAR", "REQUISITO_LEGAL_GERENCIAR", "INCIDENTE_GERENCIAR"],
+      permissoes: ["RNC_VERIFICAR_EFICACIA", "RNC_APROVAR_CANCELAMENTO", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "PROCESSO_GERENCIAR", "RISCO_GERENCIAR", "RISCO_TRATAR", "SWOT_GERENCIAR", "DOCUMENTO_ELABORAR", "DOCUMENTO_GERENCIAR", "INSPECAO_GERENCIAR", "INSPECAO_REALIZAR", "AUDITORIA_GERENCIAR", "AUDITORIA_REALIZAR", "REQUISITO_LEGAL_GERENCIAR", "INCIDENTE_GERENCIAR", "INDICADOR_GERENCIAR"],
     },
     { nome: "Segurança", descricao: "Equipe de SSO", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "RNC_VER_RESTRITAS", "RISCO_TRATAR", "HIRA_GERENCIAR", "DOCUMENTO_ELABORAR", "INSPECAO_GERENCIAR", "INSPECAO_REALIZAR", "REQUISITO_LEGAL_GERENCIAR", "INCIDENTE_GERENCIAR", "INCIDENTE_VER_RESTRITOS"] },
     { nome: "Meio Ambiente", descricao: "Equipe de Meio Ambiente", permissoes: ["RNC_TRATAR", "PLANO_GERENCIAR", "LAIA_GERENCIAR", "INSPECAO_REALIZAR", "REQUISITO_LEGAL_GERENCIAR"] },
@@ -148,6 +149,7 @@ async function main() {
   await semearAuditorias(prisma, e);
   await semearRequisitosLegais(prisma, e);
   await semearIncidentes(prisma, e);
+  await semearIndicadores(prisma, e);
 
   // ---- Demo (para testar isolamento) ----
   // Sem override: fica só com o default do schema (RNC + PLANO_ACAO) — testa o gating

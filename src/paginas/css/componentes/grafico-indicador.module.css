@@ -1,0 +1,40 @@
+/* ==========================================================
+   ÍNDICE
+   01. Figura e legenda
+   02. SVG — grade, linhas e pontos
+   ========================================================== */
+
+/* ==========================================================
+   01. FIGURA E LEGENDA
+   ========================================================== */
+.figura { margin: 0; display: flex; flex-direction: column; gap: var(--espaco-2); min-width: 0; }
+.legenda { display: flex; flex-wrap: wrap; gap: var(--espaco-3); font-size: 12px; color: var(--cor-texto-secundario); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.marca { display: inline-block; width: 18px; height: 0; border-top: 2px solid; }
+.marcaValor { border-color: var(--cor-acento); }
+.marcaMeta { border-top-style: dashed; border-color: var(--cor-texto-fraco); }
+.ponto { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.pontoOk { background: var(--cor-status-encerrado-texto); }
+.pontoRuim { background: var(--cor-status-reaberto-texto); }
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-secundario); }
+/* Descrição textual para leitor de tela (o SVG tem só aria-label). */
+.legendaAcessivel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================
+   02. SVG
+   ========================================================== */
+.svg { width: 100%; height: auto; display: block; }
+.grade { stroke: var(--cor-borda-sutil); stroke-width: 1; }
+.texto { font-family: var(--fonte-mono); font-size: 11px; fill: var(--cor-texto-secundario); }
+.linhaMeta { fill: none; stroke: var(--cor-texto-fraco); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.linhaValor { fill: none; stroke: var(--cor-acento); stroke-width: 2.5; stroke-linejoin: round; }
+.circuloOk { fill: var(--cor-status-encerrado-texto); stroke: var(--cor-superficie); stroke-width: 2; }
+.circuloRuim { fill: var(--cor-status-reaberto-texto); stroke: var(--cor-superficie); stroke-width: 2; }
+.pontoVazio { fill: var(--cor-superficie); stroke: var(--cor-texto-fraco); stroke-width: 1.5; stroke-dasharray: 2 2; }

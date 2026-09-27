@@ -28,6 +28,7 @@ const ROTULO: Record<TipoNotificacao, string> = {
   AUDITORIA_ATRIBUIDA: "Auditoria atribuída",
   INCIDENTE_REGISTRADO: "Incidente registrado",
   INCIDENTE_ATRIBUIDO: "Investigação de incidente",
+  INDICADOR_SEM_LANCAMENTO: "Indicador sem lançamento",
 };
 
 export default async function Notificacoes({ searchParams }: PageProps<"/notificacoes">) {

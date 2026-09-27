@@ -75,6 +75,7 @@ enum Permissao {
   REQUISITO_LEGAL_GERENCIAR
   INCIDENTE_GERENCIAR
   INCIDENTE_VER_RESTRITOS
+  INDICADOR_GERENCIAR
 }
 
 enum EscopoObras {
@@ -179,6 +180,7 @@ enum TipoEntidadeInteracao {
   AUDITORIA
   REQUISITO_LEGAL
   INCIDENTE
+  INDICADOR
 }
 
 enum TipoNotificacao {
@@ -200,6 +202,7 @@ enum TipoNotificacao {
   AUDITORIA_ATRIBUIDA
   INCIDENTE_REGISTRADO
   INCIDENTE_ATRIBUIDO
+  INDICADOR_SEM_LANCAMENTO
 }
 
 enum TipoEntidadeNotificacao {
@@ -215,6 +218,7 @@ enum TipoEntidadeNotificacao {
   AUDITORIA
   REQUISITO_LEGAL
   INCIDENTE
+  INDICADOR
 }
 
 enum StatusEmailNotificacao {
@@ -453,6 +457,8 @@ model Empresa {
   incidentes               Incidente[]
   incidentesDadosSensiveis IncidenteDadosSensiveis[]
   historicosIncidente      HistoricoIncidente[]
+  indicadores              Indicador[]
+  resultadosIndicador      ResultadoIndicador[]
 
   @@map("empresa")
 }
@@ -595,6 +601,9 @@ model Usuario {
   incidentesResponsavel     Incidente[]                  @relation("IncidenteResponsavel")
   incidentesRegistrados     Incidente[]                  @relation("IncidenteRegistradoPor")
   historicosIncidente       HistoricoIncidente[]         @relation("HistoricoIncidenteUsuario")
+  indicadoresResponsavel    Indicador[]                  @relation("IndicadorResponsavel")
+  indicadoresCriados        Indicador[]                  @relation("IndicadorCriadoPor")
+  resultadosIndicador       ResultadoIndicador[]         @relation("ResultadoIndicadorRegistradoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -1084,6 +1093,7 @@ model Processo {
   inspecoes         Inspecao[]
   auditorias        Auditoria[]
   requisitosLegais  RequisitoLegal[]
+  indicadoresModulo Indicador[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -2191,4 +2201,82 @@ model HistoricoIncidente {
   @@unique([empresaId, id])
   @@index([empresaId, incidenteId, criadoEm])
   @@map("historico_incidente")
+}
+
+// ---------------------------------------------------------------- P7 — Indicadores (ISO 9001 9.1)
+
+enum DirecaoIndicador {
+  MAIOR_MELHOR
+  MENOR_MELHOR
+}
+
+enum PeriodicidadeIndicador {
+  MENSAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
+/// MANUAL: o responsável lança o valor. Demais: calculado dos dados reais do sistema (src/lib/indicadores/automaticos.ts).
+enum FonteIndicador {
+  MANUAL
+  RNC_EFICACIA_PRIMEIRA_VERIFICACAO
+  PLANO_ITENS_ATRASADOS
+}
+
+/// Indicador formal com meta e periodicidade (difere de IndicadorProcesso, que é só texto no SIPOC).
+model Indicador {
+  id            String                 @id @default(uuid()) @db.Uuid
+  empresaId     String                 @map("empresa_id") @db.Uuid
+  nome          String
+  descricao     String?
+  processoId    String?                @map("processo_id") @db.Uuid
+  unidade       String
+  direcao       DirecaoIndicador
+  meta          Decimal                @db.Decimal(14, 4)
+  periodicidade PeriodicidadeIndicador
+  fonte         FonteIndicador         @default(MANUAL)
+  formula       String?
+  responsavelId String?                @map("responsavel_id") @db.Uuid
+  ativo         Boolean                @default(true)
+  versao        Int                    @default(0)
+  criadoPorId   String                 @map("criado_por_id") @db.Uuid
+  criadoEm      DateTime               @default(now()) @map("criado_em")
+  atualizadoEm  DateTime               @updatedAt @map("atualizado_em")
+
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  processo    Processo?            @relation(fields: [empresaId, processoId], references: [empresaId, id], onDelete: Restrict)
+  responsavel Usuario?             @relation("IndicadorResponsavel", fields: [empresaId, responsavelId], references: [empresaId, id], onDelete: Restrict)
+  criadoPor   Usuario              @relation("IndicadorCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  resultados  ResultadoIndicador[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@index([empresaId, processoId])
+  @@index([empresaId, responsavelId])
+  @@map("indicador")
+}
+
+/// Resultado de um período. Append-only (trigger): correção = novo lançamento do mesmo período (o mais recente vale).
+/// `meta`/`direcao` são cópia do indicador no momento do lançamento (a meta pode mudar depois).
+model ResultadoIndicador {
+  id              String           @id @default(uuid()) @db.Uuid
+  empresaId       String           @map("empresa_id") @db.Uuid
+  indicadorId     String           @map("indicador_id") @db.Uuid
+  periodo         String
+  valor           Decimal          @db.Decimal(14, 4)
+  meta            Decimal          @db.Decimal(14, 4)
+  direcao         DirecaoIndicador
+  automatico      Boolean          @default(false)
+  observacao      String?
+  registradoPorId String           @map("registrado_por_id") @db.Uuid
+  criadoEm        DateTime         @default(now()) @map("criado_em")
+
+  empresa       Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  indicador     Indicador @relation(fields: [empresaId, indicadorId], references: [empresaId, id], onDelete: Restrict)
+  registradoPor Usuario   @relation("ResultadoIndicadorRegistradoPor", fields: [empresaId, registradoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, indicadorId, periodo, criadoEm])
+  @@map("resultado_indicador")
 }

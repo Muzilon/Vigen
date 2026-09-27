@@ -28,7 +28,9 @@ import { listarLaiaDoProcesso, podeGerenciarLaia } from "@/lib/laia/servico";
 import { podeElaborarDocumentos } from "@/lib/documentos/acesso";
 import { formatarRevisao, ROTULO_STATUS_DOCUMENTO } from "@/lib/documentos/regras";
 import { listarDocumentosDoProcesso } from "@/lib/documentos/servico";
-import { BadgeStatusDocumento, BadgeStatusRequisito } from "@/paginas/html/componentes/badge";
+import { BadgeSituacaoIndicador, BadgeStatusDocumento, BadgeStatusRequisito } from "@/paginas/html/componentes/badge";
+import { listarIndicadoresDoProcesso, podeGerenciarIndicadores } from "@/lib/indicadores/gestao";
+import { formatarValor, ROTULO_SITUACAO, rotuloPeriodo } from "@/lib/indicadores/periodos";
 import { ROTULO_STATUS_REQUISITO } from "@/lib/requisitos-legais/regras";
 import { listarRequisitosDoProcesso, podeGerenciarRequisitos } from "@/lib/requisitos-legais/servico";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
@@ -55,7 +57,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   const p = await obterProcesso(a, id);
   if (!p) notFound();
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos, requisitos] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos, requisitos, indicadores] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -67,6 +69,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     listarLaiaDoProcesso(a, id),
     listarDocumentosDoProcesso(a, id),
     listarRequisitosDoProcesso(a, id),
+    listarIndicadoresDoProcesso(a, id),
   ]);
   const g = podeGerenciarProcessos(a) && p.ativo;
   const candidatos = outros.filter((o) => o.id !== p.id);
@@ -374,7 +377,35 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
-          {(!riscos || !linhasHira || !linhasLaia || !documentos || !requisitos) && (
+          {indicadores && (
+            <Cartao
+              titulo={`Indicadores com meta e resultados · ${indicadores.length}`}
+              acoes={podeGerenciarIndicadores(a) ? <Link href={`/indicadores/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Novo</Link> : undefined}
+            >
+              {indicadores.length === 0 ? (
+                <p className={styles.vazio}>Nenhum indicador com meta vinculado a este processo.</p>
+              ) : (
+                <table className={styles.tabela}>
+                  <thead>
+                    <tr><th>Indicador</th><th>Meta</th><th>Resultado</th><th>Situação</th></tr>
+                  </thead>
+                  <tbody>
+                    {indicadores.map((i) => (
+                      <tr key={i.id}>
+                        <td><Link href={`/indicadores/${i.id}`} className={styles.linkProcesso}>{i.nome}</Link></td>
+                        <td>{i.direcao === "MAIOR_MELHOR" ? "≥ " : "≤ "}{formatarValor(i.meta, i.unidade)}</td>
+                        <td>{i.resultadoReferencia ? formatarValor(i.resultadoReferencia.valor, i.unidade) : "—"} <span className={styles.vazio}>({rotuloPeriodo(i.periodoReferencia)})</span></td>
+                        <td><BadgeSituacaoIndicador situacao={i.situacao} rotulo={ROTULO_SITUACAO[i.situacao]} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className={styles.rodapeCartao}><Link href={`/indicadores?processo=${p.id}`} className={styles.linkProcesso}>Ver todos os indicadores do processo →</Link></p>
+            </Cartao>
+          )}
+
+          {(!riscos || !linhasHira || !linhasLaia || !documentos || !requisitos || !indicadores) && (
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
               {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
@@ -382,6 +413,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
               {!linhasLaia && <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!documentos && <li>Documentos vinculados <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!requisitos && <li>Requisitos legais <span className={styles.emBreve}>módulo não contratado</span></li>}
+              {!indicadores && <li>Indicadores com meta <span className={styles.emBreve}>módulo não contratado</span></li>}
             </ul>
           </Cartao>
           )}

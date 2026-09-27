@@ -80,6 +80,7 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   REQUISITO_LEGAL_GERENCIAR: "Gerenciar requisitos legais (cadastro, verificação, revisão geral)",
   INCIDENTE_GERENCIAR: "Gerenciar incidentes (investigação, responsável, plano, conclusão)",
   INCIDENTE_VER_RESTRITOS: "Ver incidentes restritos e dados pessoais de envolvidos (LGPD)",
+  INDICADOR_GERENCIAR: "Cadastrar indicadores e lançar resultados de qualquer indicador",
   ADMIN_CONFIG: "Administrar configurações",
   VER_TODAS_OBRAS: "Ver todas as obras",
 };
