@@ -41,7 +41,7 @@ const esquema = z.object({
   res: enumUrl(["1"]),
 });
 
-/** Matriz de riscos e oportunidades (ISO 9001 6.1): filtros, heatmaps P×I (inicial e residual) e lista. */
+/** Matriz de riscos e oportunidades (ISO 9001 6.1): filtros, heatmap P×I com toggle inicial/residual e lista. */
 export default async function RiscosLista({ searchParams }: PageProps<"/riscos">) {
   const ctx = await getContexto();
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
@@ -137,8 +137,20 @@ export default async function RiscosLista({ searchParams }: PageProps<"/riscos">
       </form>
 
       <div className={styles.heatmaps}>
-        <Heatmap titulo="Nível inicial (P × I)" eixoColuna={eixoColuna} eixoLinha={eixoLinha} celulas={celulas(false)} />
-        <Heatmap titulo="Nível residual (após tratamento)" eixoColuna={eixoColuna} eixoLinha={eixoLinha} celulas={celulas(true)} />
+        <div className={styles.toggleHeatmap} role="group" aria-label="Ver nível inicial ou residual">
+          <Link href={href({})} aria-current={!residual ? "true" : undefined} className={!residual ? styles.toggleAtivo : styles.toggleInativo}>
+            Risco inicial
+          </Link>
+          <Link href={href({ res: "1" })} aria-current={residual ? "true" : undefined} className={residual ? styles.toggleAtivo : styles.toggleInativo}>
+            Risco residual
+          </Link>
+        </div>
+        <Heatmap
+          titulo={residual ? "Nível residual (após tratamento)" : "Nível inicial (P × I)"}
+          eixoColuna={eixoColuna}
+          eixoLinha={eixoLinha}
+          celulas={celulas(residual)}
+        />
       </div>
 
       {celula && (

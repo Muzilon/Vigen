@@ -2,7 +2,7 @@
    ÍNDICE
    01. Página
    02. Filtros
-   03. Heatmaps (inicial e residual lado a lado)
+   03. Heatmap (toggle inicial/residual)
    04. Tabela
    ========================================================== */
 
@@ -56,20 +56,41 @@
 .linkLimpar:hover { color: var(--cor-texto); }
 
 /* ==========================================================
-   03. HEATMAPS
+   03. HEATMAP (com toggle inicial/residual)
    ========================================================== */
 .heatmaps {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--espaco-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-3);
   padding: var(--espaco-4);
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-padrao);
 }
-@media (max-width: 1000px) {
-  .heatmaps { grid-template-columns: minmax(0, 1fr); }
+.toggleHeatmap {
+  display: inline-flex;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pill);
+  overflow: hidden;
 }
+.toggleAtivo,
+.toggleInativo {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.toggleAtivo {
+  background: var(--cor-acento);
+  color: var(--cor-acento-texto);
+}
+.toggleInativo {
+  background: transparent;
+  color: var(--cor-texto-secundario);
+}
+.toggleInativo:hover { background: var(--cor-fundo-sutil); }
 .filtroCelula {
   margin: 0;
   font-size: 13px;

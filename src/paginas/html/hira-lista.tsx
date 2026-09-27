@@ -45,7 +45,7 @@ const esquema = z.object({
   vista: enumUrl(["arvore"]),
 });
 
-/** Planilha HIRA (ISO 45001): filtros, heatmaps P×S inicial e residual e a planilha densa por obra. */
+/** Planilha HIRA (ISO 45001): filtros, heatmap P×S com toggle inicial/residual e a planilha densa por obra. */
 export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
   const ctx = await getContexto();
   exigirModulo(ctx, "HIRA");
@@ -140,8 +140,20 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
       </form>
 
       <div className={styles.heatmaps}>
-        <Heatmap titulo="Risco inicial (P × S)" eixoColuna={eixoColuna} eixoLinha={eixoLinha} celulas={celulas(false)} />
-        <Heatmap titulo="Risco residual (após controles)" eixoColuna={eixoColuna} eixoLinha={eixoLinha} celulas={celulas(true)} />
+        <div className={styles.toggleHeatmap} role="group" aria-label="Ver risco inicial ou residual">
+          <Link href={href({})} aria-current={!residual ? "true" : undefined} className={!residual ? styles.toggleAtivo : styles.toggleInativo}>
+            Risco inicial
+          </Link>
+          <Link href={href({ res: "1" })} aria-current={residual ? "true" : undefined} className={residual ? styles.toggleAtivo : styles.toggleInativo}>
+            Risco residual
+          </Link>
+        </div>
+        <Heatmap
+          titulo={residual ? "Risco residual (após controles)" : "Risco inicial (P × S)"}
+          eixoColuna={eixoColuna}
+          eixoLinha={eixoLinha}
+          celulas={celulas(residual)}
+        />
       </div>
 
       {celula && (
