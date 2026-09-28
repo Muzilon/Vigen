@@ -1,14 +1,34 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { definirAtivoTreinamentoAcao, editarTreinamentoAcao, lancarPresencasAcao, registrarSessaoAcao } from "@/app/(app)/treinamentos/actions";
+import {
+  avaliarEficaciaAcao,
+  definirAtivoTreinamentoAcao,
+  editarTreinamentoAcao,
+  excluirGatilhoAcao,
+  lancarPresencasAcao,
+  registrarGatilhoAcao,
+  registrarSessaoAcao,
+} from "@/app/(app)/treinamentos/actions";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { dataIso, formatarData, formatarDataHora, hojeNoFuso } from "@/lib/datas";
 import { exigirModulo } from "@/lib/modulos";
 import { getContexto } from "@/lib/tenant";
-import { ROTULO_STATUS_COMPETENCIA, ROTULO_TIPO_TREINAMENTO, statusCompetencia } from "@/lib/treinamentos/regras";
+import {
+  MODALIDADES,
+  MOTIVOS_GATILHO,
+  pendenciasNr1,
+  ROTULO_MODALIDADE,
+  ROTULO_MOTIVO_GATILHO,
+  ROTULO_SITUACAO_EFICACIA,
+  ROTULO_STATUS_COMPETENCIA,
+  ROTULO_TIPO_TREINAMENTO,
+  situacaoEficacia,
+  statusCompetencia,
+  STATUS_PENDENTES,
+} from "@/lib/treinamentos/regras";
 import { matrizCompetencias, obterTreinamento, opcoesTreinamentos, podeGerenciarTreinamentos } from "@/lib/treinamentos/servico";
-import { BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
+import { BadgeEficacia, BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
@@ -31,9 +51,12 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
   const [op, fuso, matriz] = await Promise.all([opcoesTreinamentos(a), fusoDaEmpresa(a), g ? matrizCompetencias(a, { treinamentoId: id }) : null]);
   const hoje = hojeNoFuso(fuso);
   const nomeSetor = new Map(op.setores.map((s) => [s.id, s.nome]));
+  const nomeFuncao = new Map(op.funcoes.map((f) => [f.id, f.nome]));
+  const publicoObrigatorio = [...t.obrigatorioSetorIds.map((s) => `setor ${nomeSetor.get(s) ?? "?"}`), ...t.obrigatorioFuncaoIds.map((f) => `função ${nomeFuncao.get(f) ?? "?"}`)];
   const pendentes = matriz
-    ? matriz.linhas.map((l) => ({ usuario: l.usuario, celula: l.celulas[0] })).filter((x) => x.celula && (x.celula.status === "VENCIDO" || x.celula.status === "A_VENCER" || x.celula.status === "NAO_REALIZADO"))
+    ? matriz.linhas.map((l) => ({ usuario: l.usuario, celula: l.celulas[0] })).filter((x) => x.celula?.status && (x.celula.status === "A_VENCER" || STATUS_PENDENTES.includes(x.celula.status)))
     : [];
+  const nr1 = t.tipo === "NR" || t.tipo === "RECICLAGEM";
 
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>
@@ -48,9 +71,12 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
           <p className={styles.meta}>
             <span>
               Obrigatório para:{" "}
-              {t.obrigatorioTodos ? "todos" : t.obrigatorioSetorIds.length ? t.obrigatorioSetorIds.map((s) => nomeSetor.get(s) ?? "?").join(", ") : "ninguém (opcional)"}
+              {t.obrigatorioTodos ? "todos" : publicoObrigatorio.length ? publicoObrigatorio.join(", ") : "ninguém (opcional)"}
             </span>
             <span>{t.sessoes.length} sessão(ões)</span>
+            {t.critico && <span className={styles.critico}>Crítico para aptidão</span>}
+            {t.documento && <span>Conscientização: ciência de <Link href={`/documentos/${t.documento.id}`} className={styles.link}>{t.documento.codigo}</Link></span>}
+            {t.diasAvaliacaoEficacia && <span>Eficácia avaliada {t.diasAvaliacaoEficacia} dias após a sessão</span>}
             {!t.ativo && <span className={styles.inativo}>Inativo</span>}
           </p>
         </div>
@@ -85,6 +111,19 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                     <input type="number" name="cargaHoraria" min={1} max={1000} defaultValue={t.cargaHoraria ?? ""} className={styles.entrada} />
                   </label>
                 </div>
+                <div className={styles.linhaCampos}>
+                  <label className={styles.campo}>Modalidade
+                    <select name="modalidade" defaultValue="PRESENCIAL" className={styles.entrada}>
+                      {MODALIDADES.map((m) => <option key={m} value={m}>{ROTULO_MODALIDADE[m]}</option>)}
+                    </select>
+                  </label>
+                  <label className={`${styles.campo} ${styles.campoTriplo}`}>Qualificação do instrutor{nr1 ? " (NR-1)" : ""}
+                    <input name="qualificacaoInstrutor" maxLength={500} placeholder="Ex.: Téc. Segurança do Trabalho, registro MTE 12345" className={styles.entrada} />
+                  </label>
+                </div>
+                <label className={styles.campo}>Conteúdo programático{nr1 ? " (NR-1)" : ""}
+                  <textarea name="conteudoProgramatico" rows={2} maxLength={4000} defaultValue={t.descricao ?? ""} className={styles.entrada} />
+                </label>
                 <label className={styles.campo}>Observação
                   <input name="observacao" maxLength={2000} className={styles.entrada} />
                 </label>
@@ -97,6 +136,12 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
           {t.sessoes.map((s) => {
             const porUsuario = new Map(s.participacoes.map((p) => [p.usuarioId, p]));
             const presentes = s.participacoes.filter((p) => p.presente).length;
+            const pend = pendenciasNr1(t, s);
+            const dataSessao = dataIso(s.dataRealizacao);
+            const avaliaveis = s.participacoes
+              .filter((p) => p.presente)
+              .map((p) => ({ p, situacao: situacaoEficacia(p, dataSessao, t.diasAvaliacaoEficacia, hoje) }))
+              .filter((x) => x.situacao);
             return (
               <section key={s.id} id={`sessao-${s.id}`}>
                 <Cartao titulo={`Sessão de ${formatarData(s.dataRealizacao)} · ${s.instrutor}`}>
@@ -104,6 +149,18 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                     {s.obra ? `${s.obra.nome} · ` : ""}{s.cargaHoraria ? `${s.cargaHoraria} h · ` : ""}{g ? `${presentes} presente(s), ${s.participacoes.length - presentes} ausente(s)` : ""}
                     {s.observacao ? ` · ${s.observacao}` : ""}
                   </p>
+                  <p className={styles.infoSessao}>
+                    {ROTULO_MODALIDADE[s.modalidade]}{s.qualificacaoInstrutor ? ` · ${s.qualificacaoInstrutor}` : ""}
+                  </p>
+                  {pend && (
+                    pend.length === 0 ? (
+                      <p className={styles.nr1Ok}>Conforme NR-1 (conteúdo, instrutor qualificado e carga horária)</p>
+                    ) : (
+                      <ul className={styles.nr1Pendente} aria-label="Pendências NR-1">
+                        {pend.map((x) => <li key={x}>{x}</li>)}
+                      </ul>
+                    )
+                  )}
                   {g ? (
                     <FormAcao acao={lancarPresencasAcao} botao="Salvar presença e certificados" tamanho="pequeno" className={styles.formulario}>
                       <input type="hidden" name="sessaoId" value={s.id} />
@@ -155,6 +212,39 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                   ) : (
                     <p className={styles.vazio}>Você não participou desta sessão.</p>
                   )}
+                  {g && avaliaveis.length > 0 && (
+                    <details className={styles.eficacia} open={avaliaveis.some((x) => x.situacao === "PENDENTE")}>
+                      <summary>
+                        Avaliação de eficácia · {avaliaveis.filter((x) => x.situacao === "PENDENTE").length} pendente(s)
+                      </summary>
+                      <ul className={styles.listaEficacia}>
+                        {avaliaveis.map(({ p, situacao }) => (
+                          <li key={p.id}>
+                            <div className={styles.cabecalhoEficacia}>
+                              <strong>{p.usuario.nome}</strong>
+                              <BadgeEficacia situacao={situacao!} rotulo={ROTULO_SITUACAO_EFICACIA[situacao!]} />
+                            </div>
+                            {p.eficaciaResultado && (
+                              <p className={styles.dica}>
+                                {p.avaliadorEficacia?.nome} · {p.eficaciaAvaliadaEm ? formatarDataHora(p.eficaciaAvaliadaEm, fuso) : ""}
+                                {p.eficaciaObservacao ? ` · ${p.eficaciaObservacao}` : ""}
+                              </p>
+                            )}
+                            <FormAcao acao={avaliarEficaciaAcao} botao={p.eficaciaResultado ? "Corrigir" : "Avaliar"} tamanho="pequeno" variante="secundario" className={styles.formEficacia}>
+                              <input type="hidden" name="participacaoId" value={p.id} />
+                              <input type="hidden" name="treinamentoId" value={t.id} />
+                              <select name="resultado" required defaultValue={p.eficaciaResultado ?? ""} aria-label={`Resultado de ${p.usuario.nome}`} className={styles.entradaPequena}>
+                                <option value="" disabled>Resultado…</option>
+                                <option value="EFICAZ">Eficaz</option>
+                                <option value="NAO_EFICAZ">Não eficaz</option>
+                              </select>
+                              <input name="observacao" maxLength={2000} defaultValue={p.eficaciaObservacao ?? ""} placeholder="Evidência / ação (obrigatória se não eficaz)" aria-label={`Observação de ${p.usuario.nome}`} className={styles.entradaPequena} />
+                            </FormAcao>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
                 </Cartao>
               </section>
             );
@@ -185,12 +275,60 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
             </Cartao>
           )}
 
+          {g && (
+            <Cartao titulo={`Gatilhos de reciclagem · ${t.gatilhos.length}`}>
+              {t.ativo && (
+                <FormAcao acao={registrarGatilhoAcao} botao="Registrar gatilho" tamanho="pequeno" className={styles.formulario}>
+                  <input type="hidden" name="treinamentoId" value={t.id} />
+                  <label className={styles.campo}>Pessoa
+                    <select name="usuarioId" required defaultValue="" className={styles.entrada}>
+                      <option value="" disabled>Selecione…</option>
+                      {op.usuarios.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                    </select>
+                  </label>
+                  <div className={styles.linhaCampos2}>
+                    <label className={styles.campo}>Motivo
+                      <select name="motivo" required defaultValue="RETORNO_AFASTAMENTO" className={styles.entrada}>
+                        {MOTIVOS_GATILHO.map((m) => <option key={m} value={m}>{ROTULO_MOTIVO_GATILHO[m]}</option>)}
+                      </select>
+                    </label>
+                    <label className={styles.campo}>Data do evento
+                      <input type="date" name="dataEvento" required max={hoje} defaultValue={hoje} className={styles.entrada} />
+                    </label>
+                  </div>
+                  <label className={styles.campo}>Descrição (opcional)
+                    <input name="descricao" maxLength={2000} placeholder="Ex.: afastamento de 120 dias" className={styles.entrada} />
+                  </label>
+                </FormAcao>
+              )}
+              <p className={styles.dica}>A pessoa fica com &quot;Reciclagem pendente&quot; até ser marcada presente numa sessão a partir da data do evento.</p>
+              {t.gatilhos.length > 0 && (
+                <ul className={styles.pendentes}>
+                  {t.gatilhos.map((x) => (
+                    <li key={x.id}>
+                      <span>
+                        {x.usuario.nome}
+                        <span className={styles.subLinha}>{ROTULO_MOTIVO_GATILHO[x.motivo]}{x.descricao ? ` · ${x.descricao}` : ""}</span>
+                      </span>
+                      <span className={styles.vazio}>{formatarData(x.dataEvento)}</span>
+                      <FormAcao acao={excluirGatilhoAcao} botao="Excluir" tamanho="pequeno" variante="secundario" confirmar="Excluir este gatilho (lançado por engano)?">
+                        <input type="hidden" name="id" value={x.id} />
+                        <input type="hidden" name="treinamentoId" value={t.id} />
+                      </FormAcao>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Cartao>
+          )}
+
           {!g && (
             <Cartao titulo="Sua situação">
               {(() => {
                 const minhas = t.sessoes.flatMap((s) => s.participacoes.filter((p) => p.presente).map((p) => ({ data: dataIso(s.dataRealizacao), validade: p.dataValidade ? dataIso(p.dataValidade) : null })));
                 const ultima = minhas.sort((x, y) => y.data.localeCompare(x.data))[0] ?? null;
-                const st = statusCompetencia(ultima ? { dataValidade: ultima.validade } : null, hoje);
+                const gatilho = t.gatilhos.map((x) => dataIso(x.dataEvento)).sort().at(-1) ?? null;
+                const st = statusCompetencia(ultima ? { dataValidade: ultima.validade, dataRealizacao: ultima.data } : null, hoje, undefined, gatilho);
                 return <p className={styles.resumo}><BadgeStatusCompetencia status={st} rotulo={ROTULO_STATUS_COMPETENCIA[st]} /> {ultima ? `realizado em ${formatarData(ultima.data)}${ultima.validade ? `, válido até ${formatarData(ultima.validade)}` : ""}` : ""}</p>;
               })()}
             </Cartao>
@@ -218,8 +356,14 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                       validadeMeses: t.validadeMeses ? String(t.validadeMeses) : "",
                       obrigatorioTodos: t.obrigatorioTodos,
                       obrigatorioSetorIds: t.obrigatorioSetorIds,
+                      obrigatorioFuncaoIds: t.obrigatorioFuncaoIds,
+                      documentoId: t.documentoId ?? "",
+                      critico: t.critico,
+                      diasAvaliacaoEficacia: t.diasAvaliacaoEficacia ? String(t.diasAvaliacaoEficacia) : "",
                     }}
                     setores={op.setores}
+                    funcoes={op.funcoes}
+                    documentos={op.documentos}
                   />
                 </FormAcao>
                 <p className={styles.dica}>Mudar a validade recalcula a validade de todas as participações já lançadas.</p>

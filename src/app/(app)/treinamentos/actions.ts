@@ -8,7 +8,7 @@ import { getAtor } from "@/lib/ator-servidor";
 import * as tr from "@/lib/treinamentos/servico";
 import { executar, obj, opcional, uuid, uuidOpcional, valoresDoForm, versao } from "../acoes-comuns";
 
-const caminhos = (id?: string | null) => ["/treinamentos", "/treinamentos/matriz", "/treinamentos/meus", "/dashboard", ...(id ? [`/treinamentos/${id}`] : [])];
+const caminhos = (id?: string | null) => ["/treinamentos", "/treinamentos/matriz", "/treinamentos/meus", "/treinamentos/auditoria", "/dashboard", ...(id ? [`/treinamentos/${id}`] : [])];
 const erros = (e: z.ZodError) => e.issues.map((i) => i.message).join(" ");
 const inteiroOpcional = (msg: string) =>
   z
@@ -20,11 +20,14 @@ const inteiroOpcional = (msg: string) =>
 
 const esquemaDados = z.object({
   nome: z.string(),
-  tipo: z.enum(["INTEGRACAO", "NR", "RECICLAGEM", "TECNICO", "OUTRO"], "Tipo inválido."),
+  tipo: z.enum(["INTEGRACAO", "NR", "RECICLAGEM", "TECNICO", "CONSCIENTIZACAO", "OUTRO"], "Tipo inválido."),
+  documentoId: uuidOpcional,
   descricao: opcional,
   cargaHoraria: inteiroOpcional("Carga horária inválida."),
   validadeMeses: inteiroOpcional("Validade inválida."),
   obrigatorioTodos: z.literal("1").optional(),
+  critico: z.literal("1").optional(),
+  diasAvaliacaoEficacia: inteiroOpcional("Prazo da avaliação de eficácia inválido."),
 });
 const dadosDoForm = (fd: FormData) => {
   const d = esquemaDados.safeParse(obj(fd));
@@ -32,7 +35,9 @@ const dadosDoForm = (fd: FormData) => {
   const setores = fd.getAll("obrigatorioSetorIds").map(String).filter(Boolean);
   const s = z.array(z.uuid("Setor inválido.")).safeParse(setores);
   if (!s.success) return { erro: erros(s.error) } as const;
-  return { dados: { ...d.data, obrigatorioTodos: d.data.obrigatorioTodos === "1", obrigatorioSetorIds: s.data } } as const;
+  const f = z.array(z.uuid("Função inválida.")).safeParse(fd.getAll("obrigatorioFuncaoIds").map(String).filter(Boolean));
+  if (!f.success) return { erro: erros(f.error) } as const;
+  return { dados: { ...d.data, obrigatorioTodos: d.data.obrigatorioTodos === "1", critico: d.data.critico === "1", obrigatorioSetorIds: s.data, obrigatorioFuncaoIds: f.data } } as const;
 };
 
 export async function criarTreinamentoAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
@@ -75,6 +80,9 @@ export async function registrarSessaoAcao(_: ResultadoAcao, fd: FormData): Promi
       obraId: uuidOpcional,
       cargaHoraria: inteiroOpcional("Carga horária inválida."),
       observacao: opcional,
+      modalidade: z.enum(["PRESENCIAL", "EAD", "SEMIPRESENCIAL"], "Modalidade inválida."),
+      conteudoProgramatico: opcional,
+      qualificacaoInstrutor: opcional,
     })
     .safeParse(obj(fd));
   if (!d.success) return { erro: erros(d.error) };
@@ -113,4 +121,42 @@ export async function lancarPresencasAcao(_: ResultadoAcao, fd: FormData): Promi
     const pres = linhas.filter((l) => l.presente).length;
     return { ok: `Presença registrada: ${pres} presente(s), ${linhas.length - pres} ausente(s)${certificados.length ? `, ${certificados.length} certificado(s)` : ""}.` };
   }, caminhos(x.data.treinamentoId));
+}
+
+export async function registrarGatilhoAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const d = z
+    .object({
+      treinamentoId: uuid,
+      usuarioId: uuid,
+      motivo: z.enum(["MUDANCA_FUNCAO", "RETORNO_AFASTAMENTO", "ACIDENTE_INCIDENTE", "MUDANCA_PROCEDIMENTO", "OUTRO"], "Motivo inválido."),
+      dataEvento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data do evento."),
+      descricao: opcional,
+    })
+    .safeParse(obj(fd));
+  if (!d.success) return { erro: erros(d.error) };
+  const { treinamentoId, ...dados } = d.data;
+  return executar(async () => {
+    await tr.registrarGatilho(await getAtor(), { ...dados, treinamentoIds: [treinamentoId] });
+    return { ok: "Gatilho registrado: reciclagem pendente até a próxima sessão." };
+  }, caminhos(treinamentoId));
+}
+
+export async function excluirGatilhoAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const d = z.object({ id: uuid, treinamentoId: uuid }).safeParse(obj(fd));
+  if (!d.success) return { erro: "Dados inválidos." };
+  return executar(async () => {
+    await tr.excluirGatilho(await getAtor(), d.data.id);
+    return { ok: "Gatilho excluído." };
+  }, caminhos(d.data.treinamentoId));
+}
+
+export async function avaliarEficaciaAcao(_: ResultadoAcao, fd: FormData): Promise<ResultadoAcao> {
+  const d = z
+    .object({ participacaoId: uuid, treinamentoId: uuid, resultado: z.enum(["EFICAZ", "NAO_EFICAZ"], "Escolha o resultado."), observacao: opcional })
+    .safeParse(obj(fd));
+  if (!d.success) return { erro: erros(d.error) };
+  return executar(async () => {
+    await tr.avaliarEficacia(await getAtor(), d.data.participacaoId, d.data.resultado, d.data.observacao);
+    return { ok: "Avaliação de eficácia registrada." };
+  }, caminhos(d.data.treinamentoId));
 }

@@ -14,6 +14,7 @@ import {
   salvarPerfilAcao,
   salvarPreferenciasAcao,
   salvarSetorAcao,
+  salvarFuncaoAcao,
 } from "@/app/(app)/configuracoes/actions";
 import { salvarTipoDocumentoAcao } from "@/app/(app)/documentos/actions";
 import { listarTipos } from "@/lib/documentos/servico";
@@ -36,6 +37,7 @@ const ABAS = [
   ["perfis", "Perfis"],
   ["obras", "Unidades"],
   ["setores", "Setores"],
+  ["funcoes", "Funções"],
   ["modulos", "Módulos"],
   ["escalas", "Escalas"],
   ["aprovacoes", "Aprovações"],
@@ -119,6 +121,13 @@ function CamposUsuario({ u, d }: { u?: Usuario; d: Dados }) {
         <Selecao name="setorId" defaultValue={u?.setorId ?? ""} className={styles.selecaoFormulario}>
           <option value="">—</option>
           {d.setores.filter((s) => s.ativo || s.id === u?.setorId).map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
+        </Selecao>
+      </div>
+      <div>
+        <Rotulo>Função</Rotulo>
+        <Selecao name="funcaoId" defaultValue={u?.funcaoId ?? ""} className={styles.selecaoFormulario}>
+          <option value="">—</option>
+          {d.funcoes.filter((f) => f.ativo || f.id === u?.funcaoId).map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
         </Selecao>
       </div>
       <div>
@@ -333,6 +342,35 @@ function AbaSetores({ d }: { d: Dados }) {
           {d.setores.map((s) => (
             <li key={s.id}>
               <FormAcao acao={salvarSetorAcao} botao="Salvar" classeBotao={styles.botaoSecundario} className={styles.formEmLinha}>{campos(s)}</FormAcao>
+            </li>
+          ))}
+        </ul>
+      </Cartao>
+    </div>
+  );
+}
+
+function AbaFuncoes({ d }: { d: Dados }) {
+  const campos = (f?: Dados["funcoes"][number]) => (
+    <>
+      {f && <input type="hidden" name="id" value={f.id} />}
+      <Entrada name="nome" required defaultValue={f?.nome} placeholder="Nome *" aria-label="Nome" className={styles.entradaNomeSetor} />
+      <label className={styles.opcaoEmLinha}>
+        <input type="checkbox" name="ativo" defaultChecked={f ? f.ativo : true} /> Ativa
+      </label>
+    </>
+  );
+  return (
+    <div className={styles.secoesAba}>
+      <Cartao titulo="Nova função">
+        <FormAcao acao={salvarFuncaoAcao} botao="Criar" classeBotao={styles.botaoPrimario} className={styles.formEmLinha}>{campos()}</FormAcao>
+        <p className={styles.ajuda}>Funções/cargos (ex.: Eletricista, Montador de andaime) definem treinamentos obrigatórios por função.</p>
+      </Cartao>
+      <Cartao titulo={`Funções (${d.funcoes.length})`}>
+        <ul className={styles.listaRegistros}>
+          {d.funcoes.map((f) => (
+            <li key={f.id}>
+              <FormAcao acao={salvarFuncaoAcao} botao="Salvar" classeBotao={styles.botaoSecundario} className={styles.formEmLinha}>{campos(f)}</FormAcao>
             </li>
           ))}
         </ul>
@@ -603,7 +641,7 @@ async function AbaPreferencias({ empresaId }: { empresaId: string }) {
   );
 }
 
-/** Administração (usuários, perfis, obras, setores e preferências de notificação). Exige ADMIN_CONFIG. */
+/** Administração (usuários, perfis, obras, setores, funções e preferências de notificação). Exige ADMIN_CONFIG. */
 export default async function Configuracoes({ searchParams }: PageProps<"/configuracoes">) {
   const ctx = await getContexto();
   if (!temPermissao(ctx, "ADMIN_CONFIG")) notFound();
@@ -631,6 +669,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
       {aba === "perfis" && d && <AbaPerfis d={d} />}
       {aba === "obras" && d && <AbaObras d={d} />}
       {aba === "setores" && d && <AbaSetores d={d} />}
+      {aba === "funcoes" && d && <AbaFuncoes d={d} />}
       {aba === "modulos" && <AbaModulos empresaId={ctx.empresaId} />}
       {aba === "escalas" && escalas && <AbaEscalas d={escalas} />}
       {aba === "aprovacoes" && <AbaAprovacoes />}

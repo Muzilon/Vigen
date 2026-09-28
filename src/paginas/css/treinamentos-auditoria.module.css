@@ -1,0 +1,67 @@
+/* ==========================================================
+   ÍNDICE
+   01. Página, ações e indicadores
+   02. Treinamentos e sessões
+   03. Impressão
+   ========================================================== */
+
+/* ==========================================================
+   01. PÁGINA, AÇÕES E INDICADORES
+   ========================================================== */
+.pagina { display: flex; flex-direction: column; gap: var(--espaco-4); max-width: 1100px; }
+.acoes { display: flex; align-items: center; gap: var(--espaco-4); }
+.link { color: var(--cor-acento); font-weight: 500; font-size: 13px; }
+.indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--espaco-3); }
+.indicadores div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--espaco-3);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+}
+.indicadores strong { font-family: var(--fonte-mono); font-size: 20px; }
+.indicadores span { font-size: 12px; color: var(--cor-texto-secundario); }
+
+/* ==========================================================
+   02. TREINAMENTOS E SESSÕES
+   ========================================================== */
+.treinamento {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3) var(--espaco-4);
+  break-inside: avoid;
+  overflow-x: auto;
+}
+.cabecalhoTreinamento h2 { margin: 0; font-size: 16px; }
+.cabecalhoTreinamento h2 a { color: inherit; text-decoration: none; }
+.cabecalhoTreinamento p { margin: 2px 0 var(--espaco-3); font-size: 12.5px; color: var(--cor-texto-secundario); }
+.tabela { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tabela th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--cor-texto-secundario);
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--cor-borda-forte);
+  white-space: nowrap;
+}
+.tabela td { padding: 5px 8px; border-bottom: 1px solid var(--cor-borda-sutil); vertical-align: top; }
+.mono { font-family: var(--fonte-mono); white-space: nowrap; }
+.sub { display: block; font-size: 11px; color: var(--cor-texto-secundario); }
+.vazio { margin: 0; font-size: 13px; color: var(--cor-texto-fraco); }
+.ok { color: var(--cor-status-encerrado-texto); font-weight: 500; }
+.atencao, .atencao.sub { color: var(--cor-status-plano-execucao-texto); font-weight: 500; }
+
+/* ==========================================================
+   03. IMPRESSÃO — só o relatório, sem menu e cabeçalho do app
+   ========================================================== */
+@media print {
+  :global(body *) { visibility: hidden; }
+  .pagina, .pagina * { visibility: visible; }
+  .pagina { position: absolute; inset: 0 auto auto 0; width: 100%; max-width: none; }
+  .acoes { display: none; }
+  .treinamento { border-color: #999; }
+}

@@ -10,10 +10,26 @@ export interface ValoresTreinamento {
   validadeMeses: string;
   obrigatorioTodos: boolean;
   obrigatorioSetorIds: string[];
+  obrigatorioFuncaoIds: string[];
+  documentoId: string;
+  critico: boolean;
+  diasAvaliacaoEficacia: string;
 }
 
 /** Campos cadastrais do treinamento (novo e edição), usados dentro de um FormAcao. */
-export function CamposTreinamento({ v, setores }: { v: Partial<ValoresTreinamento>; setores: { id: string; nome: string }[] }) {
+type Opcao = { id: string; nome: string };
+
+export function CamposTreinamento({
+  v,
+  setores,
+  funcoes,
+  documentos,
+}: {
+  v: Partial<ValoresTreinamento>;
+  setores: Opcao[];
+  funcoes: Opcao[];
+  documentos: { id: string; codigo: string; titulo: string }[];
+}) {
   return (
     <div className={styles.grade}>
       <label className={styles.campoLargo}>Nome do treinamento
@@ -42,8 +58,35 @@ export function CamposTreinamento({ v, setores }: { v: Partial<ValoresTreinament
             </label>
           ))}
         </div>
-        <span className={styles.dica}>Sem nenhuma marcação o treinamento é opcional (aparece na matriz só para quem o fez).</span>
+        {funcoes.length > 0 && (
+          <div className={styles.setores}>
+            {funcoes.map((f) => (
+              <label key={f.id} className={styles.opcao}>
+                <input type="checkbox" name="obrigatorioFuncaoIds" value={f.id} defaultChecked={v.obrigatorioFuncaoIds?.includes(f.id)} /> Função {f.nome}
+              </label>
+            ))}
+          </div>
+        )}
+        <span className={styles.dica}>Setores e funções somam (basta um). Sem nenhuma marcação o treinamento é opcional (aparece na matriz só para quem o fez).</span>
       </fieldset>
+      {documentos.length > 0 && (
+        <label className={styles.campoLargo}>Documento para conscientização (ISO 9001 7.3)
+          <select name="documentoId" defaultValue={v.documentoId ?? ""} className={styles.entrada}>
+            <option value="">— Nenhum —</option>
+            {documentos.map((d) => <option key={d.id} value={d.id}>{d.codigo} — {d.titulo}</option>)}
+          </select>
+          <span className={styles.dica}>A ciência da revisão vigente conta como realização; nova revisão publicada gera &quot;Reciclagem pendente&quot;.</span>
+        </label>
+      )}
+      <label className={styles.campoLargo}>
+        <span className={styles.opcao}>
+          <input type="checkbox" name="critico" value="1" defaultChecked={v.critico} /> Crítico para aptidão
+        </span>
+        <span className={styles.dica}>Pendência (vencido, não realizado ou reciclagem pendente) deixa a pessoa obrigada como &quot;Inapta&quot;.</span>
+      </label>
+      <label className={styles.campo}>Avaliar eficácia após (dias)
+        <input name="diasAvaliacaoEficacia" type="number" min={1} max={365} defaultValue={v.diasAvaliacaoEficacia} placeholder="Em branco = não exige" className={styles.entrada} />
+      </label>
       <label className={styles.campoLargo}>Descrição / conteúdo programático
         <textarea name="descricao" rows={3} maxLength={4000} defaultValue={v.descricao} className={styles.entrada} />
       </label>

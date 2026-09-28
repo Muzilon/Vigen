@@ -8,7 +8,7 @@ import { exigirModulo } from "@/lib/modulos";
 import { getContexto } from "@/lib/tenant";
 import { ROTULO_STATUS_COMPETENCIA } from "@/lib/treinamentos/regras";
 import { listarTreinamentos, matrizCompetencias, opcoesTreinamentos, podeGerenciarTreinamentos } from "@/lib/treinamentos/servico";
-import { BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
+import { BadgeAptidao, BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
 import { Botao } from "@/paginas/html/componentes/botao";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
@@ -30,6 +30,7 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
     listarTreinamentos(a),
   ]);
   const r = m.resumo;
+  const nomeTreinamento = new Map(m.treinamentos.map((t) => [t.id, t.nome]));
 
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>
@@ -44,6 +45,8 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
         <span className={r.aVencer ? styles.aviso : undefined}><strong className={styles.numero}>{r.aVencer}</strong> vencendo em 30 dias</span>
         <span className={r.vencidos ? styles.alerta : undefined}><strong className={styles.numero}>{r.vencidos}</strong> vencido(s)</span>
         <span><strong className={styles.numero}>{r.naoRealizados}</strong> obrigatório(s) não realizado(s)</span>
+        <span className={r.reciclagemPendente ? styles.alerta : undefined}><strong className={styles.numero}>{r.reciclagemPendente}</strong> reciclagem(ns) pendente(s)</span>
+        <span className={r.inaptos ? styles.alerta : undefined}><strong className={styles.numero}>{r.inaptos}</strong> pessoa(s) inapta(s)</span>
       </div>
 
       <form className={styles.barraFiltros} method="get">
@@ -83,8 +86,9 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
             <thead>
               <tr>
                 <th scope="col" className={styles.colPessoa}>Pessoa</th>
+                <th scope="col" title="Inapto: pendência em treinamento crítico obrigatório">Aptidão</th>
                 {m.treinamentos.map((t) => (
-                  <th key={t.id} scope="col"><Link href={`/treinamentos/${t.id}`}>{t.nome}</Link></th>
+                  <th key={t.id} scope="col"><Link href={`/treinamentos/${t.id}`}>{t.nome}</Link>{t.critico && <span className={styles.sub}>crítico</span>}</th>
                 ))}
               </tr>
             </thead>
@@ -93,8 +97,14 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
                 <tr key={l.usuario.id}>
                   <th scope="row" className={styles.colPessoa}>
                     {l.usuario.nome}
-                    <span className={styles.sub}>{l.usuario.setor?.nome ?? "sem setor"}</span>
+                    <span className={styles.sub}>{l.usuario.setor?.nome ?? "sem setor"}{l.usuario.funcao ? ` · ${l.usuario.funcao.nome}` : ""}</span>
                   </th>
+                  <td>
+                    <BadgeAptidao
+                      apto={l.aptidao.apto}
+                      titulo={l.aptidao.pendencias.map((p) => `${nomeTreinamento.get(p.treinamentoId)}: ${ROTULO_STATUS_COMPETENCIA[p.status]}`).join("\n") || undefined}
+                    />
+                  </td>
                   {l.celulas.map((c) => (
                     <td key={c.treinamentoId} className={c.obrigatorio ? undefined : styles.opcional}>
                       {c.status ? (

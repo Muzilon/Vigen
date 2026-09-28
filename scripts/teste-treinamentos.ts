@@ -13,9 +13,13 @@ import { fontesReavaliacao, gerarAlertasReavaliacao } from "../src/lib/reavaliac
 import "../src/lib/treinamentos/reavaliacao";
 import {
   anexarCertificado,
+  avaliarEficacia,
   criarTreinamento,
   definirAtivoTreinamento,
   editarTreinamento,
+  excluirGatilho,
+  registrarGatilho,
+  relatorioAuditoria,
   lancarPresencas,
   listarTreinamentos,
   matrizCompetencias,
@@ -101,19 +105,79 @@ async function main() {
     assert.equal(meus.itens.find((i) => i.treinamento.id === tId)!.status, "EM_DIA");
   });
 
-  await caso("alerta de vencimento (TREINAMENTO_VENCENDO, 30 dias): só a última realização, idempotente", async () => {
-    const fonte = fontesReavaliacao(["TREINAMENTOS"])[0];
-    assert.ok(fonte && fonte.tipoNotificacao === "TREINAMENTO_VENCENDO" && fonte.diasAntecedencia === 30);
+  await caso("alertas escalados: 60 dias colaborador, 30 dias gestores, vencido a ambos — idempotentes", async () => {
+    const fontes = fontesReavaliacao(["TREINAMENTOS"]);
+    const por = (d: number) => fontes.find((f) => f.diasAntecedencia === d)!;
+    assert.equal(fontes.length, 3);
+    assert.ok(fontes.every((f) => f.tipoNotificacao === "TREINAMENTO_VENCENDO"));
     const empresa = { id: e, fusoHorario: FUSO, modulosAtivos: ["TREINAMENTOS" as const] };
-    const itens = await fonte.listarVencendo(q.db, empresa, hoje, 30);
-    const doTreino = itens.filter((i) => i.link === `/treinamentos/${tId}`);
-    assert.equal(doTreino.length, 1); // só o técnico de segurança (a vencer); o inspetor reciclou
-    assert.ok(doTreino[0].usuarioIds.includes(seg.usuarioId) && doTreino[0].usuarioIds.includes(q.usuarioId));
-    const conta = () => admin.notificacao.count({ where: { empresaId: e, usuarioId: seg.usuarioId, tipo: "TREINAMENTO_VENCENDO", link: `/treinamentos/${tId}` } });
+    const doTreino = <T extends { link: string }>(xs: T[], id = tId) => xs.filter((x) => x.link === `/treinamentos/${id}`);
+    // Técnico de segurança a vencer (≤ 30 dias): colaborador só ele; gestão = quem cadastrou + TREINAMENTO_GERENCIAR.
+    const colabItens = doTreino(await por(60).listarVencendo(q.db, empresa, hoje, 60));
+    assert.equal(colabItens.length, 1); // o inspetor reciclou
+    assert.deepEqual(colabItens[0].usuarioIds, [seg.usuarioId]);
+    const gestao = doTreino(await por(30).listarVencendo(q.db, empresa, hoje, 30));
+    assert.equal(gestao.length, 1);
+    assert.ok(gestao[0].usuarioIds.includes(q.usuarioId) && !gestao[0].usuarioIds.includes(inspetor.usuarioId));
+    assert.equal(doTreino(await por(0).listarVencendo(q.db, empresa, hoje, 0)).length, 0);
+    // Vencido (crítico): colaborador + gestores, mensagem de inaptidão.
+    const t2 = (await criarTreinamento(q, { ...base, nome: `${base.nome} vencido`, critico: true })).id;
+    const s2 = await registrarSessao(q, t2, { dataRealizacao: somarDias(hoje, -400), instrutor: "Instrutor V" });
+    await lancarPresencas(q, s2.id, [{ usuarioId: colab.usuarioId, presente: true }]);
+    const venc = doTreino(await por(0).listarVencendo(q.db, empresa, hoje, 0), t2);
+    assert.equal(venc.length, 1);
+    assert.ok(venc[0].usuarioIds.includes(colab.usuarioId) && venc[0].usuarioIds.includes(q.usuarioId) && venc[0].entidadeId.endsWith(":vencido:critico"));
+    assert.equal(doTreino(await por(60).listarVencendo(q.db, empresa, hoje, 60), t2).length, 0); // vencido sai do aviso prévio
+    const conta = (u: string, id: string) => admin.notificacao.count({ where: { empresaId: e, usuarioId: u, tipo: "TREINAMENTO_VENCENDO", link: `/treinamentos/${id}` } });
     await gerarAlertasReavaliacao(q.db, empresa, hoje);
-    assert.equal(await conta(), 1);
+    const [segN, colabN, qN] = [await conta(seg.usuarioId, tId), await conta(colab.usuarioId, t2), await conta(q.usuarioId, t2)];
+    assert.ok(segN >= 1 && colabN === 1 && qN === 1);
+    const n = await admin.notificacao.findFirstOrThrow({ where: { usuarioId: colab.usuarioId, link: `/treinamentos/${t2}` } });
+    assert.match(n.corpo ?? "", /INAPTA/);
     await gerarAlertasReavaliacao(q.db, empresa, hoje);
-    assert.equal(await conta(), 1);
+    assert.deepEqual([await conta(seg.usuarioId, tId), await conta(colab.usuarioId, t2), await conta(q.usuarioId, t2)], [segN, 1, 1]);
+    await definirAtivoTreinamento(q, t2, false);
+  });
+
+  await caso("obrigatoriedade por função: soma com setor; função inválida é recusada", async () => {
+    const f = await admin.funcao.upsert({ where: { empresaId_nome: { empresaId: e, nome: "Função teste" } }, create: { empresaId: e, nome: "Função teste" }, update: {} });
+    const antes = (await admin.usuario.findUniqueOrThrow({ where: { id: colab.usuarioId } })).funcaoId;
+    await admin.usuario.update({ where: { id: colab.usuarioId }, data: { funcaoId: f.id } });
+    try {
+      assert.equal((await celula(colab.usuarioId))!.obrigatorio, false);
+      await editarTreinamento(q, tId, { ...base, obrigatorioFuncaoIds: [f.id] });
+      const c = (await celula(colab.usuarioId))!;
+      assert.deepEqual([c.obrigatorio, c.status], [true, "NAO_REALIZADO"]);
+      assert.equal((await celula(seg.usuarioId))!.obrigatorio, true); // setor continua valendo
+      await assert.rejects(editarTreinamento(q, tId, { ...base, obrigatorioFuncaoIds: ["00000000-0000-0000-0000-000000000000"] }), erro(/Função inválida/));
+      await editarTreinamento(q, tId, { ...base, obrigatorioTodos: true, obrigatorioFuncaoIds: [f.id] });
+      assert.deepEqual((await admin.treinamento.findUniqueOrThrow({ where: { id: tId } })).obrigatorioFuncaoIds, []);
+    } finally {
+      await admin.usuario.update({ where: { id: colab.usuarioId }, data: { funcaoId: antes } });
+      await editarTreinamento(q, tId, base);
+    }
+  });
+
+  await caso("conscientização (ISO 7.3): ciência da revisão vigente conta; ciência anterior à publicação = reciclagem pendente", async () => {
+    const doc = await admin.documento.findUniqueOrThrow({ where: { empresaId_codigo: { empresaId: e, codigo: "PR-001" } }, select: { id: true, versaoVigenteId: true, versaoVigente: { select: { publicacao: { select: { publicadoEm: true } } } } } });
+    const pub = doc.versaoVigente!.publicacao!.publicadoEm;
+    const ciencia = async (usuarioId: string, dias: number) => {
+      const c = await admin.cienciaDocumento.findFirst({ where: { versaoId: doc.versaoVigenteId!, usuarioId } });
+      return c ?? admin.cienciaDocumento.create({ data: { empresaId: e, versaoId: doc.versaoVigenteId!, usuarioId, confirmadoEm: new Date(pub.getTime() + dias * 86_400_000) } });
+    };
+    const antiga = await ciencia(inspetor.usuarioId, -3); // simula ciência de revisão anterior
+    const atual = await ciencia(seg.usuarioId, 2);
+    const tc = (await criarTreinamento(q, { nome: `Política SGI ${sufixo}`, tipo: "CONSCIENTIZACAO", validadeMeses: null, obrigatorioTodos: true, critico: true, documentoId: doc.id })).id;
+    await assert.rejects(criarTreinamento(q, { nome: `x ${sufixo}`, tipo: "CONSCIENTIZACAO", documentoId: "00000000-0000-0000-0000-000000000000" }), erro(/Documento inválido/));
+    const m = await matrizCompetencias(q, { treinamentoId: tc });
+    const st = (u: string) => m.linhas.find((l) => l.usuario.id === u)!.celulas[0].status;
+    assert.equal(st(seg.usuarioId), atual.confirmadoEm > pub ? "EM_DIA" : "RECICLAGEM_PENDENTE");
+    assert.equal(st(inspetor.usuarioId), antiga.confirmadoEm < pub ? "RECICLAGEM_PENDENTE" : "EM_DIA");
+    assert.equal(st(colab.usuarioId), "NAO_REALIZADO");
+    assert.equal(m.linhas.find((l) => l.usuario.id === colab.usuarioId)!.aptidao.apto, false);
+    assert.equal(await statusDoUsuario(seg, seg.usuarioId, tc), st(seg.usuarioId));
+    assert.equal((await meusTreinamentos(colab)).itens.find((i) => i.treinamento.id === tc)!.status, "NAO_REALIZADO");
+    await definirAtivoTreinamento(q, tc, false);
   });
 
   await caso("mudar a validade recalcula as participações (sem validade → em dia)", async () => {
@@ -137,7 +201,69 @@ async function main() {
     assert.equal((await celula(inspetor.usuarioId))!.status, "EM_DIA"); // nova sessão renova a validade
   });
 
+  await caso("gatilho de reciclagem: pendência calculada, torna inapto se crítico, resolvida por nova sessão", async () => {
+    await editarTreinamento(q, tId, { ...base, critico: true });
+    const antes = await matrizCompetencias(q, { treinamentoId: tId, usuarioId: seg.usuarioId });
+    assert.equal(antes.linhas[0].aptidao.apto, true);
+    await assert.rejects(registrarGatilho(inspetor, { usuarioId: seg.usuarioId, treinamentoIds: [tId], motivo: "RETORNO_AFASTAMENTO", dataEvento: hoje }), erro(/TREINAMENTO_GERENCIAR/));
+    await assert.rejects(registrarGatilho(q, { usuarioId: seg.usuarioId, treinamentoIds: [tId], motivo: "RETORNO_AFASTAMENTO", dataEvento: somarDias(hoje, 1) }), erro(/futura/));
+    await registrarGatilho(q, { usuarioId: seg.usuarioId, treinamentoIds: [tId], motivo: "RETORNO_AFASTAMENTO", dataEvento: somarDias(hoje, -2), descricao: "Afastamento 120 dias" });
+    assert.equal((await celula(seg.usuarioId))!.status, "RECICLAGEM_PENDENTE");
+    assert.equal(await statusDoUsuario(seg, seg.usuarioId, tId), "RECICLAGEM_PENDENTE");
+    const m = await matrizCompetencias(q, { treinamentoId: tId, usuarioId: seg.usuarioId });
+    assert.deepEqual(m.linhas[0].aptidao, { apto: false, pendencias: [{ treinamentoId: tId, status: "RECICLAGEM_PENDENTE" }] });
+    assert.ok((await meusTreinamentos(seg)).aptidao.pendencias.some((x) => x.treinamentoId === tId));
+    const s = await registrarSessao(q, tId, { dataRealizacao: somarDias(hoje, -1), instrutor: "Instrutor E" });
+    await lancarPresencas(q, s.id, [{ usuarioId: seg.usuarioId, presente: true }]);
+    assert.equal((await celula(seg.usuarioId))!.status, "EM_DIA");
+    assert.ok(!(await meusTreinamentos(seg)).aptidao.pendencias.some((x) => x.treinamentoId === tId));
+    // Excluir gatilho lançado por engano.
+    await registrarGatilho(q, { usuarioId: inspetor.usuarioId, treinamentoIds: [tId], motivo: "OUTRO", dataEvento: hoje });
+    assert.equal((await celula(inspetor.usuarioId))!.status, "RECICLAGEM_PENDENTE");
+    const g = await admin.gatilhoReciclagem.findFirstOrThrow({ where: { usuarioId: inspetor.usuarioId, treinamentoId: tId } });
+    await assert.rejects(excluirGatilho(demo, g.id), erro(/não contratado/));
+    await excluirGatilho(q, g.id);
+    assert.equal((await celula(inspetor.usuarioId))!.status, "EM_DIA");
+    await editarTreinamento(q, tId, { ...base, critico: false });
+  });
+
+  await caso("eficácia e NR-1: avaliação só de presente, não eficaz exige ação; sessão conforme/pendente; auditoria", async () => {
+    await editarTreinamento(q, tId, { ...base, diasAvaliacaoEficacia: 30 });
+    const s = await registrarSessao(q, tId, {
+      dataRealizacao: somarDias(hoje, -40),
+      instrutor: "Instrutor F",
+      cargaHoraria: 8,
+      modalidade: "PRESENCIAL",
+      conteudoProgramatico: "Riscos, medidas de controle, EPI",
+      qualificacaoInstrutor: "Téc. Segurança do Trabalho",
+    });
+    const pendente = await registrarSessao(q, tId, { dataRealizacao: somarDias(hoje, -40), instrutor: "Instrutor G", cargaHoraria: 4 });
+    await assert.rejects(registrarSessao(q, tId, { dataRealizacao: hoje, instrutor: "x", modalidade: "X" as never }), erro(/Modalidade/));
+    const ps = await lancarPresencas(q, s.id, [{ usuarioId: inspetor.usuarioId, presente: true }, { usuarioId: seg.usuarioId, presente: false }]);
+    await assert.rejects(avaliarEficacia(q, ps.get(seg.usuarioId)!, "EFICAZ"), erro(/presente/));
+    await assert.rejects(avaliarEficacia(q, ps.get(inspetor.usuarioId)!, "NAO_EFICAZ"), erro(/ação/));
+    await assert.rejects(avaliarEficacia(inspetor, ps.get(inspetor.usuarioId)!, "EFICAZ"), erro(/TREINAMENTO_GERENCIAR/));
+    const aud0 = (await relatorioAuditoria(q)).itens.find((t) => t.id === tId)!;
+    assert.equal(aud0.sessoes.find((x) => x.id === s.id)!.eficaciaPendente, 1);
+    await avaliarEficacia(q, ps.get(inspetor.usuarioId)!, "EFICAZ", "Observado em campo");
+    const p = await admin.participacaoTreinamento.findUniqueOrThrow({ where: { id: ps.get(inspetor.usuarioId)! } });
+    assert.equal(p.eficaciaResultado, "EFICAZ");
+    assert.equal(p.eficaciaAvaliadorId, q.usuarioId);
+    // Virar ausente limpa a avaliação (CHECK do banco).
+    await lancarPresencas(q, s.id, [{ usuarioId: inspetor.usuarioId, presente: false }]);
+    assert.equal((await admin.participacaoTreinamento.findUniqueOrThrow({ where: { id: p.id } })).eficaciaResultado, null);
+    await lancarPresencas(q, s.id, [{ usuarioId: inspetor.usuarioId, presente: true }]);
+    await avaliarEficacia(q, p.id, "NAO_EFICAZ", "Refazer prática de resgate");
+    const aud = (await relatorioAuditoria(q)).itens.find((t) => t.id === tId)!;
+    const sa = aud.sessoes.find((x) => x.id === s.id)!;
+    assert.deepEqual([sa.pendenciasNr1, sa.naoEficazes, sa.eficaciaPendente], [[], 1, 0]);
+    assert.equal(aud.sessoes.find((x) => x.id === pendente.id)!.pendenciasNr1!.length, 3);
+    await assert.rejects(relatorioAuditoria(colab), erro(/TREINAMENTO_GERENCIAR/));
+    await editarTreinamento(q, tId, base);
+  });
+
   await caso("isolamento: Demo não vê treinamento, sessões nem participações da Monto", async () => {
+    assert.equal(await demo.db.gatilhoReciclagem.count({ where: { treinamentoId: tId } }), 0);
     assert.equal(await demo.db.treinamento.findFirst({ where: { id: tId } }), null);
     assert.equal(await demo.db.sessaoTreinamento.count({ where: { treinamentoId: tId } }), 0);
     assert.equal(await demo.db.participacaoTreinamento.count({ where: { usuarioId: seg.usuarioId } }), 0);

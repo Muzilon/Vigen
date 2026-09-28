@@ -68,6 +68,7 @@ function dadosUsuario(fd: FormData) {
     papel: txt(fd, "papel"),
     perfilId: txt(fd, "perfilId"),
     setorId: txt(fd, "setorId"),
+    funcaoId: txt(fd, "funcaoId"),
     escopoObras: txt(fd, "escopoObras"),
     obraIds: fd.getAll("obraIds").map(String),
   };
@@ -142,6 +143,14 @@ export async function salvarSetorAcao(_: ResultadoAcao, fd: FormData) {
     const id = fd.get("id") ? idDe(fd) : null;
     await adm.salvarSetor(a, id, { nome: txt(fd, "nome"), ativo: fd.get("ativo") === "on" });
     return id ? "Setor atualizado." : "Setor criado.";
+  });
+}
+
+export async function salvarFuncaoAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    const id = fd.get("id") ? idDe(fd) : null;
+    await adm.salvarFuncao(a, id, { nome: txt(fd, "nome"), ativo: fd.get("ativo") === "on" });
+    return id ? "Função atualizada." : "Função criada.";
   });
 }
 

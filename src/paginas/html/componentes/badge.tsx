@@ -115,9 +115,30 @@ export function BadgeSituacaoIndicador({ situacao, rotulo }: { situacao: Situaca
 }
 
 /** Status de competência (P7 — treinamentos): em dia verde, a vencer âmbar, vencido vermelho, não realizado cinza. */
-export type StatusCompetenciaBadge = "EM_DIA" | "A_VENCER" | "VENCIDO" | "NAO_REALIZADO";
-const COR_STATUS_COMPETENCIA: Record<StatusCompetenciaBadge, StatusRncBadge> = { EM_DIA: "ENCERRADO", A_VENCER: "PLANO_EM_EXECUCAO", VENCIDO: "REABERTO", NAO_REALIZADO: "CANCELADO" };
+export type StatusCompetenciaBadge = "EM_DIA" | "A_VENCER" | "VENCIDO" | "NAO_REALIZADO" | "RECICLAGEM_PENDENTE";
+const COR_STATUS_COMPETENCIA: Record<StatusCompetenciaBadge, StatusRncBadge> = {
+  EM_DIA: "ENCERRADO",
+  A_VENCER: "PLANO_EM_EXECUCAO",
+  VENCIDO: "REABERTO",
+  NAO_REALIZADO: "CANCELADO",
+  RECICLAGEM_PENDENTE: "ABERTO",
+};
 
 export function BadgeStatusCompetencia({ status, rotulo }: { status: StatusCompetenciaBadge; rotulo: string }) {
   return <BadgeStatusRnc status={COR_STATUS_COMPETENCIA[status]} rotulo={rotulo} />;
+}
+
+export function BadgeAptidao({ apto, titulo }: { apto: boolean; titulo?: string }) {
+  return (
+    <span title={titulo}>
+      <BadgeStatusRnc status={apto ? "ENCERRADO" : "REABERTO"} rotulo={apto ? "Apto" : "Inapto"} />
+    </span>
+  );
+}
+
+export type SituacaoEficaciaBadge = "EFICAZ" | "NAO_EFICAZ" | "AGUARDANDO" | "PENDENTE";
+const COR_EFICACIA: Record<SituacaoEficaciaBadge, StatusRncBadge> = { EFICAZ: "ENCERRADO", NAO_EFICAZ: "REABERTO", AGUARDANDO: "CANCELADO", PENDENTE: "PLANO_EM_EXECUCAO" };
+
+export function BadgeEficacia({ situacao, rotulo }: { situacao: SituacaoEficaciaBadge; rotulo: string }) {
+  return <BadgeStatusRnc status={COR_EFICACIA[situacao]} rotulo={rotulo} />;
 }

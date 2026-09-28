@@ -465,6 +465,8 @@ model Empresa {
   indicadores              Indicador[]
   resultadosIndicador      ResultadoIndicador[]
   treinamentos             Treinamento[]
+  gatilhosReciclagem       GatilhoReciclagem[]
+  funcoes                  Funcao[]
   sessoesTreinamento       SessaoTreinamento[]
   participacoesTreinamento ParticipacaoTreinamento[]
 
@@ -522,6 +524,23 @@ model Setor {
   @@map("setor")
 }
 
+/// Função/cargo do usuário (ex.: Eletricista, Montador de andaime). Base da obrigatoriedade de treinamentos por função.
+model Funcao {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuarios Usuario[]
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, nome])
+  @@map("funcao")
+}
+
 model Perfil {
   id           String      @id @default(uuid()) @db.Uuid
   empresaId    String      @map("empresa_id") @db.Uuid
@@ -549,6 +568,7 @@ model Usuario {
   papel        PapelUsuario @default(COLABORADOR)
   perfilId     String?      @map("perfil_id") @db.Uuid
   setorId      String?      @map("setor_id") @db.Uuid
+  funcaoId     String?      @map("funcao_id") @db.Uuid
   escopoObras  EscopoObras  @default(SELECIONADAS) @map("escopo_obras")
   tokenVersao  Int          @default(0) @map("token_versao")
   ativo        Boolean      @default(true)
@@ -559,6 +579,7 @@ model Usuario {
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   perfil  Perfil? @relation(fields: [empresaId, perfilId], references: [empresaId, id], onDelete: Restrict)
   setor   Setor?  @relation(fields: [empresaId, setorId], references: [empresaId, id], onDelete: Restrict)
+  funcao  Funcao? @relation(fields: [empresaId, funcaoId], references: [empresaId, id], onDelete: Restrict)
 
   acessosObra               UsuarioAcessoObra[]
   rncsAbertas               Rnc[]                        @relation("RncAbertoPor")
@@ -617,6 +638,9 @@ model Usuario {
   sessoesTreinamentoCriadas SessaoTreinamento[]          @relation("SessaoTreinamentoCriadoPor")
   participacoesTreinamento  ParticipacaoTreinamento[]    @relation("ParticipacaoUsuario")
   participacoesRegistradas  ParticipacaoTreinamento[]    @relation("ParticipacaoRegistradoPor")
+  eficaciasAvaliadas        ParticipacaoTreinamento[]    @relation("ParticipacaoAvaliadorEficacia")
+  gatilhosReciclagem        GatilhoReciclagem[]          @relation("GatilhoUsuario")
+  gatilhosRegistrados       GatilhoReciclagem[]          @relation("GatilhoRegistradoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -1577,6 +1601,7 @@ model Documento {
   versoes       VersaoDocumento[]     @relation("DocumentoVersoes")
   publicacoes   PublicacaoDocumento[]
   historico     HistoricoDocumento[]
+  treinamentos  Treinamento[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, codigo])
@@ -1628,21 +1653,21 @@ model VersaoDocumento {
 /// Publicação de uma revisão: público (todos ou listas de setores/obras/perfis/usuários — união),
 /// se notifica e se exige ciência ("li e estou ciente"). Append-only (trigger).
 model PublicacaoDocumento {
-  id             String   @id @default(uuid()) @db.Uuid
-  empresaId      String   @map("empresa_id") @db.Uuid
-  documentoId    String   @map("documento_id") @db.Uuid
-  versaoId       String   @map("versao_id") @db.Uuid
-  publicoTodos   Boolean  @default(false) @map("publico_todos")
-  setorIds       String[] @map("setor_ids") @db.Uuid
-  obraIds        String[] @map("obra_ids") @db.Uuid
-  perfilIds      String[] @map("perfil_ids") @db.Uuid
-  usuarioIds     String[] @map("usuario_ids") @db.Uuid
-  notificar      Boolean  @default(true)
-  exigirCiencia  Boolean  @default(false) @map("exigir_ciencia")
+  id               String   @id @default(uuid()) @db.Uuid
+  empresaId        String   @map("empresa_id") @db.Uuid
+  documentoId      String   @map("documento_id") @db.Uuid
+  versaoId         String   @map("versao_id") @db.Uuid
+  publicoTodos     Boolean  @default(false) @map("publico_todos")
+  setorIds         String[] @map("setor_ids") @db.Uuid
+  obraIds          String[] @map("obra_ids") @db.Uuid
+  perfilIds        String[] @map("perfil_ids") @db.Uuid
+  usuarioIds       String[] @map("usuario_ids") @db.Uuid
+  notificar        Boolean  @default(true)
+  exigirCiencia    Boolean  @default(false) @map("exigir_ciencia")
   /// Micro-quiz de ciência de leitura (opcional, até 3 perguntas): Array<{ pergunta, opcoes: string[], correta: number }>.
-  perguntasCiencia Json?  @map("perguntas_ciencia")
-  publicadoPorId String   @map("publicado_por_id") @db.Uuid
-  publicadoEm    DateTime @default(now()) @map("publicado_em")
+  perguntasCiencia Json?    @map("perguntas_ciencia")
+  publicadoPorId   String   @map("publicado_por_id") @db.Uuid
+  publicadoEm      DateTime @default(now()) @map("publicado_em")
 
   empresa      Empresa         @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   documento    Documento       @relation(fields: [empresaId, documentoId], references: [empresaId, id], onDelete: Restrict)
@@ -2304,30 +2329,59 @@ enum TipoTreinamento {
   NR
   RECICLAGEM
   TECNICO
+  CONSCIENTIZACAO
+  OUTRO
+}
+
+enum ModalidadeTreinamento {
+  PRESENCIAL
+  EAD
+  SEMIPRESENCIAL
+}
+
+enum ResultadoEficacia {
+  EFICAZ
+  NAO_EFICAZ
+}
+
+enum MotivoGatilhoReciclagem {
+  MUDANCA_FUNCAO
+  RETORNO_AFASTAMENTO
+  ACIDENTE_INCIDENTE
+  MUDANCA_PROCEDIMENTO
   OUTRO
 }
 
 /// Treinamento do catálogo. Obrigatoriedade: `obrigatorioTodos` OU setores listados (Usuario.setorId) — ver docs/06 (P7).
 model Treinamento {
-  id                  String          @id @default(uuid()) @db.Uuid
-  empresaId           String          @map("empresa_id") @db.Uuid
-  nome                String
-  tipo                TipoTreinamento
-  descricao           String?
-  cargaHoraria        Int?            @map("carga_horaria")
+  id                    String          @id @default(uuid()) @db.Uuid
+  empresaId             String          @map("empresa_id") @db.Uuid
+  nome                  String
+  tipo                  TipoTreinamento
+  descricao             String?
+  cargaHoraria          Int?            @map("carga_horaria")
   /// null = não vence.
-  validadeMeses       Int?            @map("validade_meses")
-  obrigatorioTodos    Boolean         @default(false) @map("obrigatorio_todos")
-  obrigatorioSetorIds String[]        @default([]) @map("obrigatorio_setor_ids") @db.Uuid
-  ativo               Boolean         @default(true)
-  versao              Int             @default(0)
-  criadoPorId         String          @map("criado_por_id") @db.Uuid
-  criadoEm            DateTime        @default(now()) @map("criado_em")
-  atualizadoEm        DateTime        @updatedAt @map("atualizado_em")
+  validadeMeses         Int?            @map("validade_meses")
+  obrigatorioTodos      Boolean         @default(false) @map("obrigatorio_todos")
+  obrigatorioSetorIds   String[]        @default([]) @map("obrigatorio_setor_ids") @db.Uuid
+  obrigatorioFuncaoIds  String[]        @default([]) @map("obrigatorio_funcao_ids") @db.Uuid
+  /// Conscientização (ISO 9001 7.3): ciência da revisão vigente deste documento conta como realização.
+  documentoId           String?         @map("documento_id") @db.Uuid
+  /// Crítico: pendência (vencido/não realizado/reciclagem pendente) em obrigatório torna a pessoa inapta.
+  critico               Boolean         @default(false)
+  /// Dias após a sessão para avaliar a eficácia (null = não exige avaliação).
+  diasAvaliacaoEficacia Int?            @map("dias_avaliacao_eficacia")
+  ativo                 Boolean         @default(true)
+  versao                Int             @default(0)
+  criadoPorId           String          @map("criado_por_id") @db.Uuid
+  criadoEm              DateTime        @default(now()) @map("criado_em")
+  atualizadoEm          DateTime        @updatedAt @map("atualizado_em")
 
   empresa   Empresa             @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   criadoPor Usuario             @relation("TreinamentoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+  documento Documento?          @relation(fields: [empresaId, documentoId], references: [empresaId, id], onDelete: Restrict)
   sessoes   SessaoTreinamento[]
+  gatilhos  GatilhoReciclagem[]
 
   @@unique([empresaId, id])
   @@unique([empresaId, nome])
@@ -2336,17 +2390,20 @@ model Treinamento {
 
 /// Turma/sessão realizada de um treinamento.
 model SessaoTreinamento {
-  id             String   @id @default(uuid()) @db.Uuid
-  empresaId      String   @map("empresa_id") @db.Uuid
-  treinamentoId  String   @map("treinamento_id") @db.Uuid
-  dataRealizacao DateTime @map("data_realizacao") @db.Date
-  instrutor      String
-  obraId         String?  @map("obra_id") @db.Uuid
-  cargaHoraria   Int?     @map("carga_horaria")
-  observacao     String?
-  criadoPorId    String   @map("criado_por_id") @db.Uuid
-  criadoEm       DateTime @default(now()) @map("criado_em")
-  atualizadoEm   DateTime @updatedAt @map("atualizado_em")
+  id                    String                @id @default(uuid()) @db.Uuid
+  empresaId             String                @map("empresa_id") @db.Uuid
+  treinamentoId         String                @map("treinamento_id") @db.Uuid
+  dataRealizacao        DateTime              @map("data_realizacao") @db.Date
+  instrutor             String
+  obraId                String?               @map("obra_id") @db.Uuid
+  cargaHoraria          Int?                  @map("carga_horaria")
+  observacao            String?
+  modalidade            ModalidadeTreinamento @default(PRESENCIAL)
+  conteudoProgramatico  String?               @map("conteudo_programatico")
+  qualificacaoInstrutor String?               @map("qualificacao_instrutor")
+  criadoPorId           String                @map("criado_por_id") @db.Uuid
+  criadoEm              DateTime              @default(now()) @map("criado_em")
+  atualizadoEm          DateTime              @updatedAt @map("atualizado_em")
 
   empresa       Empresa                   @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   treinamento   Treinamento               @relation(fields: [empresaId, treinamentoId], references: [empresaId, id], onDelete: Restrict)
@@ -2361,26 +2418,54 @@ model SessaoTreinamento {
 
 /// Presença de um usuário numa sessão. `dataValidade` = dataRealizacao + validadeMeses (null = não vence ou ausente).
 model ParticipacaoTreinamento {
-  id                 String    @id @default(uuid()) @db.Uuid
-  empresaId          String    @map("empresa_id") @db.Uuid
-  sessaoId           String    @map("sessao_id") @db.Uuid
-  usuarioId          String    @map("usuario_id") @db.Uuid
-  presente           Boolean   @default(true)
-  aproveitamento     String?
-  certificadoAnexoId String?   @map("certificado_anexo_id") @db.Uuid
-  dataValidade       DateTime? @map("data_validade") @db.Date
-  registradoPorId    String    @map("registrado_por_id") @db.Uuid
-  criadoEm           DateTime  @default(now()) @map("criado_em")
-  atualizadoEm       DateTime  @updatedAt @map("atualizado_em")
+  id                  String             @id @default(uuid()) @db.Uuid
+  empresaId           String             @map("empresa_id") @db.Uuid
+  sessaoId            String             @map("sessao_id") @db.Uuid
+  usuarioId           String             @map("usuario_id") @db.Uuid
+  presente            Boolean            @default(true)
+  aproveitamento      String?
+  certificadoAnexoId  String?            @map("certificado_anexo_id") @db.Uuid
+  dataValidade        DateTime?          @map("data_validade") @db.Date
+  registradoPorId     String             @map("registrado_por_id") @db.Uuid
+  eficaciaResultado   ResultadoEficacia? @map("eficacia_resultado")
+  eficaciaObservacao  String?            @map("eficacia_observacao")
+  eficaciaAvaliadaEm  DateTime?          @map("eficacia_avaliada_em")
+  eficaciaAvaliadorId String?            @map("eficacia_avaliador_id") @db.Uuid
+  criadoEm            DateTime           @default(now()) @map("criado_em")
+  atualizadoEm        DateTime           @updatedAt @map("atualizado_em")
 
-  empresa       Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
-  sessao        SessaoTreinamento @relation(fields: [empresaId, sessaoId], references: [empresaId, id], onDelete: Restrict)
-  usuario       Usuario           @relation("ParticipacaoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
-  registradoPor Usuario           @relation("ParticipacaoRegistradoPor", fields: [empresaId, registradoPorId], references: [empresaId, id], onDelete: Restrict)
-  certificado   Anexo?            @relation(fields: [empresaId, certificadoAnexoId], references: [empresaId, id], onDelete: Restrict)
+  empresa           Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  avaliadorEficacia Usuario?          @relation("ParticipacaoAvaliadorEficacia", fields: [empresaId, eficaciaAvaliadorId], references: [empresaId, id], onDelete: Restrict)
+  sessao            SessaoTreinamento @relation(fields: [empresaId, sessaoId], references: [empresaId, id], onDelete: Restrict)
+  usuario           Usuario           @relation("ParticipacaoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+  registradoPor     Usuario           @relation("ParticipacaoRegistradoPor", fields: [empresaId, registradoPorId], references: [empresaId, id], onDelete: Restrict)
+  certificado       Anexo?            @relation(fields: [empresaId, certificadoAnexoId], references: [empresaId, id], onDelete: Restrict)
 
   @@unique([empresaId, id])
   @@unique([empresaId, sessaoId, usuarioId])
   @@index([empresaId, usuarioId])
   @@map("participacao_treinamento")
+}
+
+/// Evento que exige reciclagem (afastamento, mudança de função etc.). Pendente enquanto não houver realização presente
+/// do treinamento com data posterior ao evento — status calculado, sem flag "resolvido".
+model GatilhoReciclagem {
+  id              String                  @id @default(uuid()) @db.Uuid
+  empresaId       String                  @map("empresa_id") @db.Uuid
+  usuarioId       String                  @map("usuario_id") @db.Uuid
+  treinamentoId   String                  @map("treinamento_id") @db.Uuid
+  motivo          MotivoGatilhoReciclagem
+  dataEvento      DateTime                @map("data_evento") @db.Date
+  descricao       String?
+  registradoPorId String                  @map("registrado_por_id") @db.Uuid
+  criadoEm        DateTime                @default(now()) @map("criado_em")
+
+  empresa       Empresa     @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  usuario       Usuario     @relation("GatilhoUsuario", fields: [empresaId, usuarioId], references: [empresaId, id], onDelete: Restrict)
+  treinamento   Treinamento @relation(fields: [empresaId, treinamentoId], references: [empresaId, id], onDelete: Restrict)
+  registradoPor Usuario     @relation("GatilhoRegistradoPor", fields: [empresaId, registradoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@index([empresaId, usuarioId, treinamentoId])
+  @@map("gatilho_reciclagem")
 }

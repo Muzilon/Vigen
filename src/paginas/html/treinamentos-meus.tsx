@@ -5,28 +5,38 @@ import { exigirModulo } from "@/lib/modulos";
 import { getContexto } from "@/lib/tenant";
 import { ROTULO_STATUS_COMPETENCIA, ROTULO_TIPO_TREINAMENTO } from "@/lib/treinamentos/regras";
 import { meusTreinamentos } from "@/lib/treinamentos/servico";
-import { BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
+import { BadgeAptidao, BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/treinamentos-meus.module.css";
 
-const ORDEM = { VENCIDO: 0, A_VENCER: 1, NAO_REALIZADO: 2, EM_DIA: 3 } as const;
+const ORDEM = { VENCIDO: 0, RECICLAGEM_PENDENTE: 1, A_VENCER: 2, NAO_REALIZADO: 3, EM_DIA: 4 } as const;
 
 /** "Meus treinamentos": situação própria (o que está vencendo primeiro), certificados e histórico de sessões. */
 export default async function TreinamentosMeus() {
   const ctx = await getContexto();
   exigirModulo(ctx, "TREINAMENTOS");
   const a = await getAtor();
-  const { itens, historico, resumo } = await meusTreinamentos(a);
+  const { itens, historico, resumo, aptidao } = await meusTreinamentos(a);
+  const nomeTreinamento = new Map(itens.map((c) => [c.treinamento.id, c.treinamento.nome]));
   const ordenados = [...itens].sort((x, y) => ORDEM[x.status!] - ORDEM[y.status!] || x.treinamento.nome.localeCompare(y.treinamento.nome));
   const certificadoDa = new Map(historico.filter((p) => p.presente && p.certificado).map((p) => [`${p.sessao.treinamentoId}:${dataIso(p.sessao.dataRealizacao)}`, p.certificado!]));
 
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>
       <CabecalhoPagina titulo="Meus treinamentos" subtitulo="Sua situação nos treinamentos obrigatórios e nos que você já fez, com validade e certificados." />
+      <div className={styles.aptidao}>
+        <BadgeAptidao apto={aptidao.apto} />
+        <span>
+          {aptidao.apto
+            ? "Nenhuma pendência em treinamentos críticos."
+            : `Pendências em treinamentos críticos: ${aptidao.pendencias.map((p) => `${nomeTreinamento.get(p.treinamentoId)} (${ROTULO_STATUS_COMPETENCIA[p.status].toLowerCase()})`).join(", ")}.`}
+        </span>
+      </div>
       <div className={styles.resumo}>
         <span><strong className={styles.numero}>{resumo.percentualEmDia === null ? "—" : `${resumo.percentualEmDia}%`}</strong> dos obrigatórios em dia</span>
+        {resumo.reciclagemPendente > 0 && <span className={styles.alerta}><strong className={styles.numero}>{resumo.reciclagemPendente}</strong> reciclagem(ns) pendente(s)</span>}
         <span className={resumo.aVencer ? styles.aviso : undefined}><strong className={styles.numero}>{resumo.aVencer}</strong> vencendo em 30 dias</span>
         <span className={resumo.vencidos ? styles.alerta : undefined}><strong className={styles.numero}>{resumo.vencidos}</strong> vencido(s)</span>
         <span><strong className={styles.numero}>{resumo.naoRealizados}</strong> obrigatório(s) pendente(s)</span>

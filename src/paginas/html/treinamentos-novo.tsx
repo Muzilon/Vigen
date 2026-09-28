@@ -21,7 +21,7 @@ export default async function TreinamentosNovo() {
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/treinamentos">← Treinamentos</Link></nav>
       <h1 className={styles.titulo}>Novo treinamento</h1>
       <FormAcao acao={criarTreinamentoAcao} botao="Cadastrar treinamento" className={styles.formulario}>
-        <CamposTreinamento v={{}} setores={op.setores} />
+        <CamposTreinamento v={{}} setores={op.setores} funcoes={op.funcoes} documentos={op.documentos} />
       </FormAcao>
     </div>
   );

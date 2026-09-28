@@ -13,6 +13,16 @@
 .numero { font-family: var(--fonte-mono); font-size: 15px; color: var(--cor-texto); }
 .aviso, .aviso .numero { color: var(--cor-status-plano-execucao-texto); }
 .alerta, .alerta .numero { color: var(--cor-atrasado-texto); }
+.aptidao {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  font-size: 13px;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: var(--espaco-3);
+}
 
 /* ==========================================================
    02. LISTA DE SITUAÇÃO

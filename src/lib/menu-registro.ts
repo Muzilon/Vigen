@@ -42,6 +42,7 @@ export const REGISTRO_ITENS_MENU: ItemMenuRegistro[] = [
   { modulo: "TREINAMENTOS", href: "/treinamentos", label: "Treinamentos", grupo: GRUPO_MODULO.GESTAO, implementado: true },
   { modulo: "TREINAMENTOS", href: "/treinamentos/matriz", label: "Matriz de competências", grupo: GRUPO_MODULO.GESTAO, implementado: true, permissao: "TREINAMENTO_GERENCIAR" },
   { modulo: "TREINAMENTOS", href: "/treinamentos/meus", label: "Meus treinamentos", grupo: GRUPO_MODULO.GESTAO, implementado: true },
+  { modulo: "TREINAMENTOS", href: "/treinamentos/auditoria", label: "Evidências p/ auditoria", grupo: GRUPO_MODULO.GESTAO, implementado: true, permissao: "TREINAMENTO_GERENCIAR" },
 ];
 
 /** Itens do registro visíveis para o contexto atual (módulo ativo, implementado e permitido). */

@@ -521,6 +521,40 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
   gating, permissão, matriz refletindo presença/validade e reciclagem, alerta idempotente, recálculo da validade, certificado,
   isolamento, seed/dashboard).
 
+## P7+ — Treinamentos: MVP do dossiê docs/ideias/06 entregue (2026-09-27)
+
+- **Schema** (migração `20260927700000_treinamentos_mvp`): `Treinamento` += `critico` e `diasAvaliacaoEficacia` (CHECK 1–365);
+  `SessaoTreinamento` += `ModalidadeTreinamento` (PRESENCIAL/EAD/SEMIPRESENCIAL), `conteudoProgramatico`, `qualificacaoInstrutor`;
+  `ParticipacaoTreinamento` += eficácia (`ResultadoEficacia` EFICAZ/NAO_EFICAZ, observação, avaliador, data — CHECK: só presente e campos
+  juntos); nova `GatilhoReciclagem` (pessoa, treinamento, `MotivoGatilhoReciclagem`, data do evento, descrição).
+- **Decisão — gatilho sem "resolvido"**: a pendência é calculada. Evento com data **posterior** à última realização presente →
+  `RECICLAGEM_PENDENTE` (vencido prevalece); sessão no próprio dia do evento resolve. Gatilho lançado por engano é excluído.
+- **Aptidão calculada** (`calcularAptidao`): inapto se algum treinamento **crítico e obrigatório** estiver vencido, não realizado ou com
+  reciclagem pendente. Coluna "Aptidão" na matriz (motivos no tooltip), cartão em "Meus treinamentos", `resumo.inaptos`.
+- **Eficácia** (`situacaoEficacia`): AGUARDANDO até data da sessão + dias; depois PENDENTE; "Não eficaz" exige a ação. Marcar ausente
+  limpa a avaliação. Formulário por participante no detalhe da sessão.
+- **NR-1** (`pendenciasNr1`, tipos NR/RECICLAGEM): conteúdo programático, qualificação do instrutor e carga horária ≥ a do catálogo.
+  **Decisão**: é aviso/evidência, não invalida a validade (evita derrubar a matriz por dado histórico incompleto).
+- **Modo auditoria** (`/treinamentos/auditoria`, menu "Evidências p/ auditoria", TREINAMENTO_GERENCIAR): indicadores e, por
+  treinamento, sessões com presença, certificados/presentes, eficácia e NR-1; impressão/PDF só do relatório.
+- **Fora deste pacote**: ASO/LGPD, alertas escalados (60/30/0), crachá digital, itens v2/v3+ do dossiê.
+- **Testes**: `tests/treinamentos.test.ts` (+ gatilho, aptidão, eficácia, NR-1) e `npm run test:treinamentos` (+2 casos).
+
+## P7+ — Treinamentos: função, alertas escalados e conscientização (2026-09-27)
+
+- **Schema** (migração `20260927800000_treinamentos_funcao_conscientizacao`): nova `Funcao` (nome único por empresa, ativo) e
+  `Usuario.funcaoId`; `Treinamento` += `obrigatorioFuncaoIds` e `documentoId` (→ Documento); `TipoTreinamento` += `CONSCIENTIZACAO`.
+- **Obrigatoriedade** = todos OU setor OU função (união). Administração ganhou a aba "Funções" e o campo Função no usuário;
+  a matriz mostra setor · função.
+- **Alertas escalados** (três fontes de reavaliação, chaves idempotentes distintas por sufixo no entidadeId): 60 dias → colaborador;
+  30 dias → quem cadastrou + todos com TREINAMENTO_GERENCIAR; vencido → colaborador + gestores ("INAPTA" se crítico).
+- **Conscientização (ISO 7.3)** — **decisão**: reaproveita a ciência de documentos em vez de registro novo. Treinamento vinculado a
+  documento: cada ciência vira realização (data da confirmação no fuso) e a publicação da revisão vigente vira gatilho — quem só deu
+  ciência de revisão anterior fica em "Reciclagem pendente". Sessões presenciais também contam.
+- **Seed**: funções Encarregado de obra / Montador de andaime / Eletricista; NR-35 obrigatória também para Montador; treinamento
+  "Política do SGI — conscientização" ligado ao POL-001.
+- **Testes**: `npm run test:treinamentos` (12 casos: + alertas escalados, função, conscientização).
+
 ---
 
 ## TODOS OS PACOTES P1-P7 ENTREGUES

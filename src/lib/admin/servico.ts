@@ -1,5 +1,5 @@
 /**
- * Administração da empresa (ADMIN_CONFIG): usuários, perfis, obras/unidades e setores.
+ * Administração da empresa (ADMIN_CONFIG): usuários, perfis, obras/unidades, setores e funções.
  * Tudo via DbTenant (empresaId injetado). Toda mudança de acesso de um usuário (papel, perfil,
  * escopo de obras, obras, ativo, senha) incrementa tokenVersao — as sessões dele caem.
  */
@@ -59,6 +59,7 @@ export const esquemaAcessoUsuario = z.object({
   papel: z.enum(PAPEIS, "Papel inválido."),
   perfilId: uuidOpcional,
   setorId: uuidOpcional,
+  funcaoId: uuidOpcional,
   escopoObras: z.enum(["TODAS", "SELECIONADAS"], "Escopo de unidades inválido."),
   obraIds: z.array(z.uuid("Unidade inválida.")).default([]),
 });
@@ -75,6 +76,9 @@ async function validarReferencias(tx: Tx, d: z.output<typeof esquemaAcessoUsuari
   }
   if (d.setorId && !(await tx.setor.findFirst({ where: { id: d.setorId }, select: { id: true } }))) {
     throw new ErroNegocio("Setor inválido.");
+  }
+  if (d.funcaoId && !(await tx.funcao.findFirst({ where: { id: d.funcaoId }, select: { id: true } }))) {
+    throw new ErroNegocio("Função inválida.");
   }
   const obraIds = d.escopoObras === "SELECIONADAS" ? [...new Set(d.obraIds)] : [];
   if (obraIds.length && (await tx.obraUnidade.count({ where: { id: { in: obraIds } } })) !== obraIds.length) {
@@ -105,6 +109,7 @@ export async function criarUsuario(a: Ator, dados: unknown) {
             papel: d.papel,
             perfilId: d.perfilId,
             setorId: d.setorId,
+            funcaoId: d.funcaoId,
             escopoObras: d.escopoObras,
           },
           select: { id: true },
@@ -157,6 +162,7 @@ export async function atualizarUsuario(a: Ator, id: string, dados: unknown) {
             papel: d.papel,
             perfilId: d.perfilId,
             setorId: d.setorId,
+            funcaoId: d.funcaoId,
             escopoObras: d.escopoObras,
             ...(mudouAcesso ? { tokenVersao: { increment: 1 } } : {}),
           },
@@ -271,6 +277,19 @@ export async function salvarObra(a: Ator, id: string | null, dados: unknown) {
   }, "Já existe uma unidade com este nome.");
 }
 
+export const esquemaFuncao = esquemaSetor;
+
+export async function salvarFuncao(a: Ator, id: string | null, dados: unknown) {
+  exigirAdmin(a);
+  const d = validar(esquemaFuncao, dados);
+  return unico(async () => {
+    if (!id) return a.db.funcao.create({ data: { empresaId: a.empresaId, ...d }, select: { id: true } });
+    const r = await a.db.funcao.updateMany({ where: { id }, data: d });
+    if (r.count === 0) throw new ErroNegocio("Função não encontrada.");
+    return { id };
+  }, "Já existe uma função com este nome.");
+}
+
 export async function salvarSetor(a: Ator, id: string | null, dados: unknown) {
   exigirAdmin(a);
   const d = validar(esquemaSetor, dados);
@@ -374,17 +393,18 @@ export async function dadosEscalas(a: Ator) {
 
 export async function dadosAdministracao(a: Ator) {
   exigirAdmin(a);
-  const [usuarios, perfis, obras, setores] = await Promise.all([
+  const [usuarios, perfis, obras, setores, funcoes] = await Promise.all([
     a.db.usuario.findMany({
       orderBy: { nome: "asc" },
       select: {
-        id: true, nome: true, email: true, papel: true, perfilId: true, setorId: true, escopoObras: true, ativo: true, ultimoLogin: true,
+        id: true, nome: true, email: true, papel: true, perfilId: true, setorId: true, funcaoId: true, escopoObras: true, ativo: true, ultimoLogin: true,
         acessosObra: { select: { obraId: true } },
       },
     }),
     a.db.perfil.findMany({ orderBy: { nome: "asc" }, include: { _count: { select: { usuarios: true } } } }),
     a.db.obraUnidade.findMany({ orderBy: { nome: "asc" } }),
     a.db.setor.findMany({ orderBy: { nome: "asc" } }),
+    a.db.funcao.findMany({ orderBy: { nome: "asc" } }),
   ]);
-  return { usuarios, perfis, obras, setores };
+  return { usuarios, perfis, obras, setores, funcoes };
 }
