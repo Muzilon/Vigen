@@ -35,7 +35,7 @@ export default async function DocumentosMeus() {
   const ordenados = [...pendentes, ...docs.filter((d) => !(d.exigirCiencia && !d.cienciaEm))];
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Meus documentos"
         contador={docs.length}

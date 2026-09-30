@@ -32,7 +32,7 @@ export default async function LaiaNovo({ searchParams }: PageProps<"/laia/novo">
   // Aceita o processo da URL só se ele existir na lista.
   const processoId = typeof sp.processo === "string" && op.processos.some((p) => p.id === sp.processo) ? sp.processo : "";
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/laia" className={styles.linkVoltar}>← Aspectos e impactos (LAIA)</Link>
       </nav>

@@ -29,7 +29,7 @@ export default async function PlanoAcaoNovo() {
     .map((u) => ({ id: u.id, nome: u.nome, obras: u.obras }));
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <div>
         <nav aria-label="Trilha da página" className={styles.trilha}>
           <Link href="/plano-acao" className={styles.linkTrilha}>Plano de Ação</Link>
@@ -37,7 +37,7 @@ export default async function PlanoAcaoNovo() {
           <span className={styles.trilhaAtual}>Novo plano avulso</span>
         </nav>
         <h1 className={styles.titulo}>Novo plano de ação</h1>
-        <p className={styles.subtitulo}>Plano avulso, sem RNC de origem (ex.: melhoria, reunião, requisito legal).</p>
+        <p className={styles.subtitulo}>Plano avulso, sem RNC de origem (ex.: melhoria, reunião).</p>
       </div>
       <FormNovoPlano obras={obras} usuarios={usuarios} />
     </div>

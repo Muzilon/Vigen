@@ -10,7 +10,8 @@
 .cartao {
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-padrao);
+  border-radius: var(--raio-cartao);
+  box-shadow: var(--sombra-cartao);
 }
 
 .corpo {

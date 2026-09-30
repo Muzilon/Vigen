@@ -43,3 +43,6 @@ next-env.d.ts
 
 # anexos (driver local)
 /storage/
+
+# Exportação do Figma (55 MB de SVG, só referência local para quem for codificar o design; não versionar)
+docs/ideias/ideias_design/Vigen — Sistema (SGI)/

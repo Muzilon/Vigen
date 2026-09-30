@@ -31,7 +31,7 @@ export default async function AuditoriasNova() {
   // Ano atual, usado para escolher automaticamente o programa de auditorias do ano.
   const ano = Number(hoje.slice(0, 4));
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/auditorias">← Auditorias</Link></nav>
       <h1 className={styles.titulo}>Nova auditoria</h1>
       <FormAcao acao={criarAuditoriaAcao} botao="Planejar auditoria" className={styles.formulario}>

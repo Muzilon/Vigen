@@ -83,7 +83,7 @@ export default async function SwotCiclo({ params, searchParams }: PageProps<"/sw
     : [null, []];
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/swot" className={styles.linkVoltar}>← SWOT</Link>
       </nav>

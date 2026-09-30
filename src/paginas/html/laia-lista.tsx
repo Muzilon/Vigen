@@ -95,7 +95,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
   const emArvore = q.vista === "arvore";
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Aspectos e impactos (LAIA)"
         contador={todas.length}

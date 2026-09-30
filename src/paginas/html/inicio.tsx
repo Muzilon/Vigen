@@ -49,7 +49,7 @@ export default async function Inicio() {
   ];
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo={`Olá, ${ctx.usuario.nome}`} subtitulo={ctx.usuario.empresaNome} />
 
       <div className={styles.gradeIndicadores}>

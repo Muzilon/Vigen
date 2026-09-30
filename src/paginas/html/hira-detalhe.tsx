@@ -45,22 +45,22 @@ type Snapshot = {
 };
 
 /**
- * Página de detalhe de uma linha HIRA: dados do perigo, avaliação inicial e residual, reavaliação, plano de ação,
+ * Página de detalhe de uma linha de Perigos e Riscos: dados do perigo, avaliação inicial e residual, reavaliação, plano de ação,
  * histórico, aprovações, anexos e comentários. Se houver pedido de aprovação em andamento, a linha fica bloqueada para alteração.
  */
-/** Detalhe da linha HIRA: dados, avaliação, reavaliação, plano, histórico, aprovações, anexos e comentários. */
+/** Detalhe da linha de Perigos e Riscos: dados, avaliação, reavaliação, plano, histórico, aprovações, anexos e comentários. */
 export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de HIRA, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Perigos e Riscos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "HIRA");
-  // `id`: o identificador da linha HIRA, tirado do endereço.
+  // `id`: o identificador da linha de Perigos e Riscos, tirado do endereço.
   const { id } = await params;
   // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
-  // Busca a linha HIRA (perigo, risco, controles, avaliações, plano...).
+  // Busca a linha de Perigos e Riscos (perigo, risco, controles, avaliações, plano...).
   const l = await obterHira(a, id);
   // Linha inexistente ou sem acesso → 404.
   if (!l) notFound();
@@ -94,9 +94,9 @@ export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
   const vencida = vigente && l.proximaReavaliacaoEm && l.proximaReavaliacaoEm.toISOString().slice(0, 10) < hoje;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
-        <Link href={`/hira?obra=${l.obraId}`} className={styles.linkVoltar}>← Perigos e riscos (HIRA)</Link>
+        <Link href={`/hira?obra=${l.obraId}`} className={styles.linkVoltar}>← Perigos e Riscos</Link>
       </nav>
 
       <header className={styles.cabecalho}>

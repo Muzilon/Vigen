@@ -53,7 +53,7 @@ export default async function IndicadoresLista({ searchParams, meus = false }: {
   const filtroSituacao = (s: string) => `${base}?${new URLSearchParams({ ...(f.processo ? { processo: f.processo } : {}), situacao: s })}`;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo={meus ? "Meus indicadores" : "Indicadores"}
         contador={lista.length}

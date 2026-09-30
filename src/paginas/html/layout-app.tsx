@@ -1,10 +1,13 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
+import type { MenuMontado } from "@/lib/menu-registro";
 import styles from "@/paginas/css/layout-app.module.css";
+import { Icone } from "@/paginas/html/componentes/icone";
 import { PainelNotificacoes } from "@/paginas/html/componentes/painel-notificacoes";
-import { NavLateral, type ItemMenuLateral } from "@/paginas/html/componentes/nav-lateral";
+import { NavLateral } from "@/paginas/html/componentes/nav-lateral";
 import { Trilha } from "@/paginas/html/componentes/trilha";
 
-// Nome amigável de cada papel de usuário, mostrado no rodapé do menu lateral.
+// Nome amigável de cada papel de usuário (aparece como dica ao passar o mouse no cartão do usuário).
 const ROTULO_PAPEL_CURTO: Record<string, string> = {
   ADMIN: "Administrador",
   GESTOR_SGI: "Gestor SGI",
@@ -19,12 +22,12 @@ function iniciais(nome: string) {
 }
 
 /**
- * Casca da área logada (Direção A "Campo"): sidebar escura fixa + cabeçalho
- * sticky. Ver docs/05-guia-paginas-css.md para a escala de z-index e as
- * regras de "cabeçalho sempre no topo".
+ * Casca da área logada (Design System Vigen): sidebar teal fixa (logo, menu por seções e cartão do usuário)
+ * + cabeçalho sticky com a trilha e o sino de notificações. `menu` vem pronto do servidor (quem vê o quê).
+ * Ver docs/05-guia-paginas-css.md para a escala de z-index e as regras de "cabeçalho sempre no topo".
  */
 export function LayoutApp({
-  itensMenu,
+  menu,
   empresaNome,
   usuarioNome,
   usuarioPapel,
@@ -32,7 +35,7 @@ export function LayoutApp({
   aoSair,
   children,
 }: {
-  itensMenu: ItemMenuLateral[];
+  menu: MenuMontado;
   empresaNome: string;
   usuarioNome: string;
   usuarioPapel: string;
@@ -41,33 +44,22 @@ export function LayoutApp({
   children: ReactNode;
 }) {
   return (
-    <div className={`${styles.casca} fonteIbmPlex`}>
+    <div className={`${styles.casca} fonteBase`}>
       <aside className={styles.sidebar}>
-        <div className={styles.logo}>
-          <IconeLogo />
-          <span className={styles.logoTexto}>Vigen</span>
-        </div>
+        <LogoSidebar />
 
-        <button type="button" className={styles.seletorEmpresa}>
-          <span className={styles.iniciaisEmpresa}>{iniciais(empresaNome)}</span>
-          <span className={styles.textoEmpresa}>
-            <span className={styles.nomeEmpresa}>{empresaNome}</span>
-          </span>
-        </button>
+        <NavLateral topo={menu.topo} secoes={menu.secoes} rodape={menu.rodape} />
 
-        <NavLateral itens={itensMenu} />
-
-        <div className={styles.espacador} />
-
-        <div className={styles.rodapeUsuario}>
+        {/* Cartão do usuário (rodapé): avatar com as iniciais, nome, empresa e o botão Sair. */}
+        <div className={styles.rodapeUsuario} title={ROTULO_PAPEL_CURTO[usuarioPapel] ?? usuarioPapel}>
           <span className={styles.avatarUsuario}>{iniciais(usuarioNome)}</span>
           <span className={styles.textoUsuario}>
             <span className={styles.nomeUsuario}>{usuarioNome}</span>
-            <span className={styles.cargoUsuario}>{ROTULO_PAPEL_CURTO[usuarioPapel] ?? usuarioPapel}</span>
+            <span className={styles.cargoUsuario}>{empresaNome}</span>
           </span>
           <form action={aoSair}>
             <button type="submit" aria-label="Sair" className={styles.botaoSair}>
-              <IconeSair />
+              <Icone nome="sair" />
             </button>
           </form>
         </div>
@@ -75,7 +67,7 @@ export function LayoutApp({
 
       <div className={styles.colunaPrincipal}>
         <header className={styles.cabecalho}>
-          <Trilha empresaNome={empresaNome} itens={itensMenu} />
+          <Trilha empresaNome={empresaNome} itens={menu.rotulos} />
           <PainelNotificacoes naoLidas={naoLidas} />
         </header>
 
@@ -85,23 +77,15 @@ export function LayoutApp({
   );
 }
 
-/** Desenho (SVG) do logotipo no menu lateral. */
-function IconeLogo() {
+/**
+ * Logo da sidebar: a versão horizontal clara no desktop e só o ícone "V" claro no celular
+ * (a troca é feita pelo CSS, até 900px).
+ */
+function LogoSidebar() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z" />
-      <path d="m8.5 9 3.5 6.5L15.5 9" />
-    </svg>
-  );
-}
-
-/** Ícone de porta com seta, do botão Sair. */
-function IconeSair() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="m16 17 5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
+    <div className={styles.logo}>
+      <Image src="/marca/vigen-logo-claro.svg" alt="Vigen" width={372} height={103} priority className={styles.logoCompleta} />
+      <Image src="/marca/vigen-icone-claro.svg" alt="Vigen" width={276} height={278} priority className={styles.logoIcone} />
+    </div>
   );
 }

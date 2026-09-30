@@ -75,7 +75,7 @@ export default async function InspecaoDetalhe({ params }: PageProps<"/inspecoes/
   const gerados = i.respostas.filter((r) => r.geradaRnc || r.geradoItemAcao);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/inspecoes">← Inspeções</Link>
       </nav>

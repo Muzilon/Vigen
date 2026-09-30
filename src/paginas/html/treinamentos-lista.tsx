@@ -39,7 +39,7 @@ export default async function TreinamentosLista({ searchParams }: PageProps<"/tr
     .slice(0, 10);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Treinamentos"
         contador={lista.length}

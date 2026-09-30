@@ -33,7 +33,7 @@
 | Norma | Tema | Exemplos no Vigen |
 |---|---|---|
 | **ISO 9001** | Qualidade | RNC, mapa de processos, riscos e oportunidades, documentos, auditorias, indicadores, treinamentos |
-| **ISO 14001** | Meio ambiente | LAIA (aspectos e impactos), requisitos legais ambientais |
+| **ISO 14001** | Meio ambiente | LAIA (aspectos e impactos) |
 | **ISO 45001** | Saúde e segurança do trabalho (SSO) | HIRA (perigos e riscos), incidentes/acidentes, inspeções de segurança, NRs |
 
 **Clientes-alvo:** construtoras, indústrias e mineradoras no Brasil. Isso define o produto:
@@ -193,7 +193,7 @@ page.tsx (casca) → paginas/html/<pagina>.tsx → lib/<modulo>/servico.ts → l
 - **Perfil** (configurável pelo admin): soma permissões extras. **Efetivas = padrão do papel ∪ perfil** (`permissoesEfetivas`).
 - Permissões existentes: `RNC_*`, `PLANO_GERENCIAR`, `PROCESSO_GERENCIAR`, `RISCO_GERENCIAR`/`RISCO_TRATAR`, `SWOT_GERENCIAR`,
   `HIRA_GERENCIAR`, `LAIA_GERENCIAR`, `DOCUMENTO_ELABORAR`/`GERENCIAR`, `INSPECAO_GERENCIAR`/`REALIZAR`,
-  `AUDITORIA_GERENCIAR`/`REALIZAR`, `REQUISITO_LEGAL_GERENCIAR`, `INCIDENTE_GERENCIAR`/`VER_RESTRITOS`, `INDICADOR_GERENCIAR`,
+  `AUDITORIA_GERENCIAR`/`REALIZAR`, `INCIDENTE_GERENCIAR`/`VER_RESTRITOS`, `INDICADOR_GERENCIAR`,
   `TREINAMENTO_GERENCIAR`, `ADMIN_CONFIG`, `VER_TODAS_OBRAS`.
 - **Permissão nova** = valor no enum `Permissao` (migração `ALTER TYPE ... ADD VALUE`) + entrada em `TODAS_PERMISSOES`, + (se fizer
   sentido) no perfil do seed.
@@ -202,7 +202,7 @@ page.tsx (casca) → paginas/html/<pagina>.tsx → lib/<modulo>/servico.ts → l
 ### 5.4 Escopo por obra/unidade
 - `Usuario.escopoObras` = `TODAS` ou `SELECIONADAS` (+ `UsuarioAcessoObra`). `VER_TODAS_OBRAS` equivale a TODAS.
 - `filtroObras(obrasPermitidas)` (`src/lib/escopo-obras.ts`) monta o `where`. Registro **sem obra** = da empresa toda, visível a todos.
-- Módulos com obra **obrigatória**: HIRA, LAIA, Inspeções, Incidentes. Com obra **opcional**: RNC, Riscos, Requisitos Legais,
+- Módulos com obra **obrigatória**: HIRA, LAIA, Inspeções, Incidentes. Com obra **opcional**: RNC, Riscos,
   Auditorias. Sem obra (corporativos): Documentos, Indicadores, Processos, SWOT.
 
 ### 5.5 Módulos contratados (gating)
@@ -225,7 +225,7 @@ page.tsx (casca) → paginas/html/<pagina>.tsx → lib/<modulo>/servico.ts → l
 
 ### 5.7 Numeração e códigos
 `ContadorSequencial` com upsert atômico: `proximaSequencia(tx, tipo, ano, subtipo?)`. Formatos: `RNC-001-26`, `INSP-NNN-AA`,
-`AUD-NNN-AA`, `LEG-NNN-AA`, `INC-NNN-AA`, `R-001`/`O-001`, `H-001`, `A-001`, documentos `SIGLA-NNN` (por tipo). Novo tipo ⇒ valor
+`AUD-NNN-AA`, `INC-NNN-AA`, `R-001`/`O-001`, `H-001`, `A-001`, documentos `SIGLA-NNN` (por tipo). Novo tipo ⇒ valor
 em `TipoSequencia`.
 
 ### 5.8 Datas e fuso
@@ -254,12 +254,12 @@ Antes de criar algo novo, **reaproveite** estes motores.
 
 ### 6.1 Plano de Ação 5W2H (`src/lib/plano-acao/`)
 - `PlanoAcao` (origem polimórfica: `OrigemPlanoAcao` = RNC, INSPECAO, AUDITORIA, MANUAL, RISCO_OPORTUNIDADE, HIRA, LAIA,
-  REQUISITO_LEGAL, INCIDENTE + `origemId`) → `ItemAcao` (o quê, por quê, onde, **quem** (usuário interno), **quando**, como, quanto;
+  INCIDENTE + `origemId`) → `ItemAcao` (o quê, por quê, onde, **quem** (usuário interno), **quando**, como, quanto;
   status PENDENTE/EM_ANDAMENTO/CONCLUIDO/CANCELADO).
 - "Atrasado" e o status geral do plano são **calculados**.
 - Dentro de outras transações use `criarPlanoNaTransacao` e `adicionarItemNaTransacao`.
 - Padrão de negócio repetido: **situação ruim exige plano**. Ao cadastrar sem plano, informa-se a "primeira ação" e o plano nasce
-  na mesma transação. Vale para risco MITIGAR/EVITAR Alto/Crítico e requisito legal NÃO ATENDE/PARCIAL.
+  na mesma transação. Vale para risco MITIGAR/EVITAR Alto/Crítico.
 - Telas: `/plano-acao` (visão unificada; "Minhas ações"), `/plano-acao/[id]` (item), `/plano-acao/planos/[id]`, `/plano-acao/novo`
   (plano MANUAL).
 
@@ -301,7 +301,7 @@ Antes de criar algo novo, **reaproveite** estes motores.
   `entidadeId`, data, título, link e destinatários.
 - A chave de idempotência é `reavaliacao:<modulo>:<entidadeId>:<data>:<usuario>`. Para vários degraus do mesmo módulo (ex.: alertas
   de 60/30/0 dias), registre várias fontes com `chave` diferente e **sufixo no `entidadeId`** (ver `treinamentos/reavaliacao.ts`).
-- Fontes atuais: Riscos, HIRA, LAIA, Documentos (revisão), Requisitos Legais, Indicadores (sem lançamento), Treinamentos
+- Fontes atuais: Riscos, HIRA, LAIA, Documentos (revisão), Indicadores (sem lançamento), Treinamentos
   (escalado).
 - O cron diário também manda alertas de prazo/atraso de itens de ação. O semanal envia o resumo por e-mail.
 
@@ -315,15 +315,14 @@ Antes de criar algo novo, **reaproveite** estes motores.
 
 ### 6.8 Dashboard (`/dashboard`)
 Painéis por módulo, exibidos só quando o módulo está ativo e respeitando o que o usuário pode ver: RNCs (abertas, eficácia na 1ª
-verificação, por obra/tipo/gravidade), plano (atrasos), riscos/HIRA/LAIA por nível, documentos, inspeções, auditorias, requisitos (%
-atendimento), incidentes (taxa de frequência simples), indicadores (% atingidas) e treinamentos (% em dia). Para agregar, reaproveite
+verificação, por obra/tipo/gravidade), plano (atrasos), riscos/HIRA/LAIA por nível, documentos, inspeções, auditorias, incidentes (taxa de frequência simples), indicadores (% atingidas) e treinamentos (% em dia). Para agregar, reaproveite
 os `resumo*()` dos serviços.
 
 ---
 
 ## 7. Receita: como construir uma funcionalidade
 
-Siga nesta ordem. Os módulos de Treinamentos, Requisitos Legais e Indicadores são bons exemplos recentes para copiar.
+Siga nesta ordem. Os módulos de Treinamentos e Indicadores são bons exemplos recentes para copiar.
 
 1. **Schema** (`prisma/schema.prisma`): `empresaId`, `@@unique([empresaId, id])`, FKs compostas, `@@map("snake_case")`,
    `@map` nas colunas. Acrescente as relações inversas em `Empresa`/`Usuario`. Enums novos ou valores novos em
@@ -406,7 +405,7 @@ Ver §6.1. **Preenchimento:** cada linha 5W2H exige **o quê**, **quem** e **qua
 - **Preenchimento:** aba **Planilha** (`/processos`): editar linha a linha, "+ Adicionar linha", ↑↓ para ordenar, mudar o tipo move
   de raia. Aba **Mapa**: SVG gerado automaticamente em 3 raias, com caixas clicáveis. No detalhe: SIPOC, indicadores, interações.
 - **Publicação:** congela um snapshot (`VersaoProcesso`), seja direto ou via motor de aprovação.
-- **Integrações:** o detalhe do processo é um **hub**, com cartões de riscos, HIRA, LAIA, documentos, requisitos legais e
+- **Integrações:** o detalhe do processo é um **hub**, com cartões de riscos, HIRA, LAIA, documentos e
   indicadores vinculados a ele.
 - **Quem:** leitura com o módulo; escrita com `PROCESSO_GERENCIAR`.
 
@@ -474,13 +473,13 @@ interessadas) **elevam** a faixa. **Significativo = ALTO/CRÍTICO** (filtro "som
   forte) com evidência → para cada NC, **abrir RNC** (origem AUDITORIA_*; o tipo é sugerido pela norma) → concluir.
 - **Quem:** `AUDITORIA_GERENCIAR` planeja; o auditor líder (`AUDITORIA_REALIZAR`) executa.
 
-### 8.12 Requisitos Legais · `REQUISITOS_LEGAIS`
-- **Cadastro:** `LEG-NNN-AA`: tipo (lei, norma, portaria, resolução), número, título, esfera, tema (Qualidade/SSO/MA), órgão, resumo,
-  aplicabilidade, processo/obra, responsável e periodicidade de verificação.
-- **Preenchimento:** o status (ATENDE / PARCIAL / NÃO ATENDE / NÃO APLICÁVEL / EM ANÁLISE) **só muda por verificação registrada**
-  (data + observação + evidência anexada), para que tudo fique no histórico. **NÃO ATENDE ou PARCIAL exigem plano.** A revisão geral
-  marca um lote como revisado.
-- **Indicador:** % de atendimento = atende ÷ (atende + parcial + não atende).
+### 8.12 Requisitos Legais · **DESCONTINUADO** (2026-09-30)
+O módulo foi **retirado do produto** por decisão do Eric (complexidade): telas, serviço, seed, testes e as ligações com Processos,
+Dashboard, Plano de Ação, Anexos, Interações, Notificações e cron foram removidos. A migração `20260930100000_remove_requisitos_legais`
+apaga as tabelas e os tipos próprios. Os valores `REQUISITOS_LEGAIS` / `REQUISITO_LEGAL*` **continuam nos enums compartilhados do
+banco** (não dá para apagar valor de enum com dados antigos) e são tratados como "sem acesso" no código. **Não reimplementar sem ordem.**
+Os campos de texto "requisito legal" do HIRA e do LAIA (e o critério que eleva a faixa da LAIA) **continuam**: são dados da própria
+linha, não o módulo.
 
 ### 8.13 Incidentes e Acidentes (ISO 45001 10.2) · `INCIDENTES`
 - **Cadastro:** `INC-NNN-AA`: tipo (típico, trajeto, quase-acidente, doença ocupacional), gravidade (sem afastamento / com
@@ -534,13 +533,12 @@ derruba as sessões abertas. O admin não pode remover o próprio acesso.
 
 ```
               ┌────────────── Mapa de Processos (hub) ──────────────┐
-              │ riscos · HIRA · LAIA · documentos · requisitos · KPIs│
+              │ riscos · HIRA · LAIA · documentos · indicadores · KPIs│
               └──────────────────────────────────────────────────────┘
  SWOT ──gera──▶ Riscos/Oportunidades ─┐
  Inspeção (NC) ──abre──▶ RNC ─────────┤
  Auditoria (constatação NC) ─▶ RNC ───┤
  HIRA / LAIA ─────────────────────────┼──▶ PLANO DE AÇÃO 5W2H ──▶ itens com evidência ──▶ (RNC) verificação de eficácia
- Requisito legal (não atende) ────────┤
  Incidente (investigação) ────────────┘
  HIRA/LAIA ──alteração──▶ Motor de Aprovação ──(opcional)──▶ Documento-planilha versionado
  Documento publicado ──ciência──▶ Treinamento de conscientização (ISO 7.3)
@@ -555,17 +553,18 @@ reavaliação periódica, painel no dashboard e cartão no detalhe do processo.
 
 ## 10. UI, design e CSS
 
-- **Hoje no código:** a **Direção A "Campo"** (`docs/04-propostas-design.md`): sidebar escura, acento âmbar (`--cor-acento: #b45309`),
-  fundo neutro quente, **IBM Plex Sans + Mono**, raio 6px, tabelas densas. Os tokens ficam em `src/paginas/css/base.css`.
+- **Hoje no código:** o **Design System Vigen** (Figma "Vigen — Sistema (SGI)", implantação em fases: `docs/07-plano-implantacao-design.md`):
+  paleta **teal** (`--cor-primaria-*`, sidebar #0F2B34, acento #4B798F), neutros frios, fonte **Inter**, botões/campos com raio 10px,
+  cartões com raio 16px e sombra suave. Os tokens ficam em `src/paginas/css/base.css`. (A antiga Direção A "Campo", âmbar + IBM Plex,
+  está em `docs/04-propostas-design.md` só como histórico.)
 - **Regras de CSS** (detalhes em `docs/05-guia-paginas-css.md`): um `.module.css` por página, seções numeradas com índice, **só
   tokens** (cores, espaços, raios, fontes, z-index) e nada de Tailwind novo. Reaproveite os componentes de
   `paginas/html/componentes/` antes de criar novos.
 - **Badges de status:** `componentes/badge.tsx` mapeia cada status do domínio para as cores semânticas (`BadgeStatusRnc`,
   `BadgeFaixa`, `BadgeStatusCompetencia`, `BadgeAptidao`, `BadgeEficacia`...). Status novo ⇒ novo mapeamento ali.
 - **Campo/celular:** alvos de toque ≥ 44px, formulários curtos (Inspeções e Incidentes são a referência).
-- **Em estudo (não aplicar sem ordem):** `docs/ideias/ideias_design/01-design-system-paleta.md` propõe migrar para uma paleta
-  **teal** (#0F2B34...), fonte Inter, Bento UI e raio de 12–16px. É uma **decisão de design pendente**, do lado do Claude/Eric. Quando
-  aprovada, a migração deve ser feita **trocando os tokens do `base.css`**, não página por página.
+- **Migração em andamento:** a paleta teal/Inter foi **aprovada** (2026-09-30). Fase 1 (tokens, fonte, logos) feita; casca, componentes
+  e módulos seguem o plano do doc 07. A migração é feita **trocando os tokens do `base.css`**, não página por página.
 
 ---
 
@@ -579,7 +578,7 @@ isolamento).
 | admin@monto.com.br | ADMIN | tudo, aprovações, configurações |
 | qualidade@monto.com.br | GESTOR_SGI + perfil Qualidade | processos, riscos, documentos, indicadores, treinamentos |
 | seguranca@monto.com.br | perfil Segurança | HIRA, incidentes (restritos), treinamentos |
-| meioambiente@monto.com.br | perfil Meio Ambiente | LAIA, requisitos |
+| meioambiente@monto.com.br | perfil Meio Ambiente | LAIA |
 | inspetor@monto.com.br | INSPETOR | inspeções em campo, RNC |
 | colaborador@monto.com.br | COLABORADOR | abrir RNC, "minhas ações", ciência, meus treinamentos |
 | admin@demo.com.br | ADMIN da Demo | isolamento/gating |
@@ -591,7 +590,7 @@ npm run lint                   # eslint
 npm test                       # vitest (regras puras)
 npm run test:<modulo>          # integração: rnc→test:fluxo-rnc, anexos, notificacoes, admin, isolamento,
                                # processos, riscos, swot, hira, laia, documentos, inspecoes, auditorias,
-                               # requisitos-legais, incidentes, indicadores, treinamentos, aprovacao, plano-manual
+                               # incidentes, indicadores, treinamentos, aprovacao, plano-manual
 ```
 - Os testes de integração **gravam no banco local** e os registros append-only não podem ser apagados. Escreva testes que
   **aguentam rodar de novo**: nomes com sufixo aleatório, "cria se não existir", asserções que não dependam de o banco estar limpo.
@@ -642,6 +641,7 @@ npm run test:<modulo>          # integração: rnc→test:fluxo-rnc, anexos, not
 | `docs/04-propostas-design.md` | Direções de design A/B (A adotada) |
 | `docs/05-guia-paginas-css.md` | **Obrigatório para UI:** estrutura de páginas, tokens, componentes, checklist |
 | `docs/06-desenho-modulos.md` | **Registro oficial** de cada pacote entregue (schema, decisões, regras, telas, testes) |
+| `docs/07-plano-implantacao-design.md` | **Plano do novo design** (sidebar, logos, fases por módulo, regras de execução) |
 | `docs/tarefas/` | Tarefas técnicas aprovadas |
 | `docs/ideias/` | Rascunhos — **não implementar sem ordem** |
 | `docs/ideias/ideias_design/` | Design system proposto (teal) e prompts de mockup |

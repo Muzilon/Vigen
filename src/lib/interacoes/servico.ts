@@ -10,7 +10,6 @@ import { acessoDocumento } from "@/lib/documentos/acesso";
 import { moduloInspecoesAtivo } from "@/lib/inspecoes/acesso";
 import { filtroObraAuditoria, moduloAuditoriasAtivo } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
-import { filtroObraRequisito, moduloRequisitosAtivo } from "@/lib/requisitos-legais/acesso";
 import { filtroAcessoIncidente, moduloIncidentesAtivo } from "@/lib/incidentes/acesso";
 import { moduloIndicadoresAtivo } from "@/lib/indicadores/acesso";
 import { moduloTreinamentosAtivo } from "@/lib/treinamentos/acesso";
@@ -19,8 +18,9 @@ import { filtroAcessoItem, filtroAcessoRnc } from "@/lib/rnc/servico";
 
 export const MAX_MENSAGEM = 4000;
 
+// `REQUISITO_LEGAL` fica de fora: o módulo foi descontinuado (o valor só permanece no enum do banco).
 export interface Thread {
-  tipo: TipoEntidadeInteracao;
+  tipo: Exclude<TipoEntidadeInteracao, "REQUISITO_LEGAL">;
   entidadeId: string;
 }
 
@@ -107,14 +107,6 @@ async function acessarEntidade(a: Ator, t: Thread): Promise<{ destinatarioPadrao
     const i = await a.db.indicador.findFirst({ where: { id: t.entidadeId }, select: { responsavelId: true, criadoPorId: true } });
     if (!i) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
     const padrao = i.responsavelId ?? i.criadoPorId;
-    return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
-  }
-  if (t.tipo === "REQUISITO_LEGAL") {
-    // Requisitos legais: usuários com o módulo e escopo (sem obra = todos); fala com o responsável.
-    if (!(await moduloRequisitosAtivo(a))) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
-    const r = await a.db.requisitoLegal.findFirst({ where: { AND: [{ id: t.entidadeId, ativo: true }, filtroObraRequisito(a)] }, select: { responsavelId: true, criadoPorId: true } });
-    if (!r) throw new ErroNegocio("Registro não encontrado ou sem acesso.");
-    const padrao = r.responsavelId ?? r.criadoPorId;
     return { destinatarioPadrao: padrao !== a.usuarioId ? padrao : null };
   }
   if (t.tipo === "DOCUMENTO") {
@@ -246,7 +238,6 @@ export function linkThread(t: { entidadeTipo: TipoEntidadeInteracao; entidadeId:
   if (t.entidadeTipo === "DOCUMENTO") return `/documentos/${t.entidadeId}`;
   if (t.entidadeTipo === "INSPECAO") return `/inspecoes/${t.entidadeId}`;
   if (t.entidadeTipo === "AUDITORIA") return `/auditorias/${t.entidadeId}`;
-  if (t.entidadeTipo === "REQUISITO_LEGAL") return `/requisitos-legais/${t.entidadeId}`;
   if (t.entidadeTipo === "INCIDENTE") return `/incidentes/${t.entidadeId}`;
   if (t.entidadeTipo === "INDICADOR") return `/indicadores/${t.entidadeId}`;
   if (t.entidadeTipo === "TREINAMENTO") return `/treinamentos/${t.entidadeId}`;

@@ -3,6 +3,12 @@ import { notFound } from "next/navigation";
 import type { Contexto } from "@/lib/tenant";
 
 /**
+ * Módulos que o produto oferece hoje. O módulo Requisitos Legais foi descontinuado: o valor `REQUISITOS_LEGAIS`
+ * continua no enum do banco (não dá para apagar um valor de enum com dados antigos), mas não tem mais tela nem rótulo.
+ */
+export type ModuloEmUso = Exclude<Modulo, "REQUISITOS_LEGAIS">;
+
+/**
  * Gating por módulo contratado (Empresa.modulosAtivos). Um módulo desligado (ou nunca
  * ligado) para a empresa não deve aparecer no menu nem ser acessível por URL direta.
  */
@@ -17,19 +23,18 @@ export function exigirModulo(ctx: Pick<Contexto, "modulosAtivos">, modulo: Modul
 }
 
 /** Rótulos em português para exibição (ex.: aba "Módulos" em Configurações). */
-export const ROTULO_MODULO: Record<Modulo, string> = {
+export const ROTULO_MODULO: Record<ModuloEmUso, string> = {
   RNC: "Não conformidades (RNC)",
   PLANO_ACAO: "Plano de ação",
   MAPA_PROCESSOS: "Mapa de processos",
-  RISCOS_OPORTUNIDADES: "Riscos e oportunidades",
+  RISCOS_OPORTUNIDADES: "Ameaças e Oportunidades",
   SWOT: "SWOT",
-  HIRA: "HIRA (perigos e riscos ocupacionais)",
-  LAIA: "LAIA (aspectos e impactos ambientais)",
+  HIRA: "Perigos e Riscos",
+  LAIA: "Aspectos e Impactos (LAIA)",
   INSPECOES: "Inspeções / checklists",
-  AUDITORIAS: "Auditorias internas",
+  AUDITORIAS: "Auditoria (auditorias internas)",
   DOCUMENTOS: "Documentos (tramitação e aprovação)",
-  REQUISITOS_LEGAIS: "Requisitos legais",
-  INCIDENTES: "Incidentes e acidentes",
+  INCIDENTES: "Acidentes e Incidentes",
   INDICADORES: "Indicadores",
   TREINAMENTOS: "Treinamentos e competências",
 };
@@ -37,13 +42,13 @@ export const ROTULO_MODULO: Record<Modulo, string> = {
 /** Agrupamento por área, para exibição na aba "Módulos" e no menu lateral. */
 export const GRUPO_MODULO = {
   QUALIDADE: "Qualidade",
-  SEGURANCA: "Segurança",
+  SEGURANCA: "Segurança do Trabalho",
   MEIO_AMBIENTE: "Meio Ambiente",
   GESTAO: "Gestão",
 } as const;
 export type GrupoModulo = (typeof GRUPO_MODULO)[keyof typeof GRUPO_MODULO];
 
-export const GRUPO_POR_MODULO: Record<Modulo, GrupoModulo> = {
+export const GRUPO_POR_MODULO: Record<ModuloEmUso, GrupoModulo> = {
   RNC: GRUPO_MODULO.QUALIDADE,
   PLANO_ACAO: GRUPO_MODULO.GESTAO,
   MAPA_PROCESSOS: GRUPO_MODULO.QUALIDADE,
@@ -53,12 +58,11 @@ export const GRUPO_POR_MODULO: Record<Modulo, GrupoModulo> = {
   LAIA: GRUPO_MODULO.MEIO_AMBIENTE,
   INSPECOES: GRUPO_MODULO.QUALIDADE,
   AUDITORIAS: GRUPO_MODULO.QUALIDADE,
-  DOCUMENTOS: GRUPO_MODULO.QUALIDADE,
-  REQUISITOS_LEGAIS: GRUPO_MODULO.GESTAO,
+  DOCUMENTOS: GRUPO_MODULO.GESTAO,
   INCIDENTES: GRUPO_MODULO.SEGURANCA,
   INDICADORES: GRUPO_MODULO.GESTAO,
   TREINAMENTOS: GRUPO_MODULO.GESTAO,
 };
 
 /** Todos os módulos, na ordem em que devem aparecer na aba "Módulos". */
-export const TODOS_MODULOS = Object.keys(ROTULO_MODULO) as Modulo[];
+export const TODOS_MODULOS = Object.keys(ROTULO_MODULO) as ModuloEmUso[];

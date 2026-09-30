@@ -32,7 +32,7 @@ export default async function InspecoesNova() {
   const modelos = op.modelos.filter((m) => m.totalItens > 0);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/inspecoes">← Inspeções</Link>
       </nav>

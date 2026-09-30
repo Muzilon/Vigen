@@ -25,7 +25,7 @@ export default async function TreinamentosNovo() {
   // Opções dos campos: setores, funções e documentos publicados.
   const op = await opcoesTreinamentos(a);
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/treinamentos">← Treinamentos</Link></nav>
       <h1 className={styles.titulo}>Novo treinamento</h1>
       <FormAcao acao={criarTreinamentoAcao} botao="Cadastrar treinamento" className={styles.formulario}>

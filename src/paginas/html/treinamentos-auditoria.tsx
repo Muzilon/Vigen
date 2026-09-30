@@ -36,7 +36,7 @@ export default async function TreinamentosAuditoria() {
   const eficaciaPendente = sessoes.reduce((n, s) => n + s.eficaciaPendente, 0);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Evidências de competência"
         subtitulo={`${ctx.usuario.empresaNome} · ISO 9001:2015 7.2 · posição em ${formatarData(hoje)}`}

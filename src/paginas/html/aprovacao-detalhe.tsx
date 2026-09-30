@@ -38,7 +38,7 @@ export default async function AprovacaoDetalhe({ params }: PageProps<"/aprovacoe
   const assinadas = f.etapas.filter((e) => e.status === "APROVADA").length;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <Link href="/aprovacoes" className={styles.voltar}>
         ← Aprovações
       </Link>

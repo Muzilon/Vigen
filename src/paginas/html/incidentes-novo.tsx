@@ -22,7 +22,7 @@ export default async function IncidentesNovo() {
   // Busca em paralelo as opções dos campos (unidades, setores, pessoas) e o fuso horário da empresa.
   const [op, fuso] = await Promise.all([opcoesIncidentes(a), fusoDaEmpresa(a)]);
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/incidentes">← Incidentes e acidentes</Link></nav>
       <h1 className={styles.titulo}>Registrar incidente</h1>
       <p className={styles.descricao}>Registre acidentes, quase-acidentes e doenças ocupacionais. Dados pessoais ficam protegidos (LGPD).</p>

@@ -24,7 +24,6 @@
     "test:documentos": "tsx scripts/teste-documentos.ts",
     "test:inspecoes": "tsx scripts/teste-inspecoes.ts",
     "test:auditorias": "tsx scripts/teste-auditorias.ts",
-    "test:requisitos-legais": "tsx scripts/teste-requisitos-legais.ts",
     "test:incidentes": "tsx scripts/teste-incidentes.ts",
     "test:indicadores": "tsx scripts/teste-indicadores.ts",
     "test:treinamentos": "tsx scripts/teste-treinamentos.ts"

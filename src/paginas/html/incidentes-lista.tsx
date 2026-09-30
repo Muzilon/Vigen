@@ -52,7 +52,7 @@ export default async function IncidentesLista({ searchParams }: PageProps<"/inci
   ]);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Incidentes e acidentes"
         contador={lista.length}

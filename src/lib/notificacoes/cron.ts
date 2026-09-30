@@ -13,7 +13,6 @@ import "@/lib/riscos/reavaliacao";
 import "@/lib/hira/reavaliacao";
 import "@/lib/laia/reavaliacao";
 import "@/lib/documentos/reavaliacao";
-import "@/lib/requisitos-legais/reavaliacao";
 import "@/lib/indicadores/reavaliacao";
 import "@/lib/treinamentos/reavaliacao";
 import { atorDoUsuario, usuariosAtivos } from "./destinatarios";

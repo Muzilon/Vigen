@@ -44,7 +44,7 @@ export default async function AuditoriasLista({ searchParams }: PageProps<"/audi
   const anos = [...new Set([...op.programas.map((p) => p.ano), new Date().getFullYear()])].sort((x, y) => y - x);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Auditorias"
         contador={lista.length}

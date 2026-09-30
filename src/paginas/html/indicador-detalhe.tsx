@@ -80,7 +80,7 @@ export default async function IndicadorDetalhe({ params }: PageProps<"/indicador
     : [null, null];
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/indicadores" className={styles.linkVoltar}>← Indicadores</Link>
       </nav>

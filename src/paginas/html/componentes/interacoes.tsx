@@ -31,7 +31,7 @@ export async function Interacoes({
   fuso,
 }: {
   a: Ator;
-  tipo: TipoEntidadeInteracao;
+  tipo: Exclude<TipoEntidadeInteracao, "REQUISITO_LEGAL">;
   entidadeId: string;
   usuarios: { id: string; nome: string }[];
   fuso: string;

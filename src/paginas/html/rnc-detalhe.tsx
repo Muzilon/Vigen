@@ -211,7 +211,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
   const podeVerificar = rnc.status === "EM_VERIFICACAO" && atorTem(a, "RNC_VERIFICAR_EFICACIA");
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       {sp.aviso === "anexos" && (
         <Alerta variante="aviso" role="status">
           A RNC foi registrada, mas os anexos não puderam ser armazenados. Não abra a RNC novamente: anexe os arquivos pela seção de anexos no resumo.

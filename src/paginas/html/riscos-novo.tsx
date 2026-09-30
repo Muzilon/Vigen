@@ -30,7 +30,7 @@ export default async function RiscosNovo({ searchParams }: PageProps<"/riscos/no
   // Aceita o processo da URL só se ele existir na lista.
   const processoId = typeof sp.processo === "string" && op.processos.some((p) => p.id === sp.processo) ? sp.processo : "";
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/riscos" className={styles.linkVoltar}>← Riscos e oportunidades</Link>
       </nav>

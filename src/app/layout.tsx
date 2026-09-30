@@ -1,30 +1,23 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "@/paginas/css/base.css";
 
-// Fontes da Direção A "Campo" (ver docs/05-guia-paginas-css.md): IBM Plex Sans
-// para UI, IBM Plex Mono para códigos de RNC, datas e números de tabela.
-// Expostas como variáveis CSS consumidas por src/paginas/css/base.css.
-const ibmPlexSans = IBM_Plex_Sans({
-  variable: "--font-ibm-plex-sans",
+// Fonte do Design System Vigen (ver docs/05-guia-paginas-css.md): Inter em toda a interface.
+// Exposta como variável CSS consumida por src/paginas/css/base.css (token --fonte-ui).
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "Vigen",
-  description: "Plataforma QHSE",
+  description: "Vigen — Sistema de Gestão Integrado (ISO 9001, 14001 e 45001)",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}>
+    <html lang="pt-BR" className={inter.variable}>
       <body>{children}</body>
     </html>
   );

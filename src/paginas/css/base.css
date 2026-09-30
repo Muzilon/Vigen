@@ -1,65 +1,104 @@
 /* ==========================================================
    ÍNDICE
-   01. Fontes (variáveis geradas pelo next/font, ver layout raiz)
-   02. Tokens de cor — Direção A "Campo"
+   01. Fontes (variável gerada pelo next/font, ver layout raiz)
+   02. Tokens de cor — paleta teal (Design System · Vigen)
    03. Tokens de status de RNC (cor de fundo + texto)
-   04. Tokens de gravidade e atraso
+   04. Tokens de gravidade, atraso, aviso e badges genéricos
    05. Tokens de tipografia
-   06. Tokens de espaço e raio
+   06. Tokens de espaço, raio e sombra
    07. Escala de z-index
    08. Reset básico
    09. Tipografia base (body, headings, links)
+
+   Fonte da verdade do design: Figma "Vigen — Sistema (SGI)" (quadro "Design System · Vigen").
+   Regra: as páginas usam SOMENTE estes tokens (nunca cor, raio ou sombra soltos).
+   Os nomes `--cor-*` antigos foram mantidos (só os valores mudaram), para o sistema
+   inteiro adotar a nova identidade sem mexer em cada página.
    ========================================================== */
 
 /* ==========================================================
-   02. TOKENS DE COR — superfícies, bordas, texto, acento
-   Direção A "Campo": fundo neutro quente + acento âmbar de segurança.
-   Contraste texto/fundo verificado ≥ 4.5:1 (WCAG AA).
+   02. TOKENS DE COR
+   2a. Primitivos: as escalas do Design System (primária teal, neutros frios e semânticas).
+   2b. Semânticos: o papel de cada cor na interface (sidebar, acento, fundos, bordas, texto).
+   Contraste texto/fundo verificado ≥ 4.5:1 (WCAG AA) nos pares usados.
    ========================================================== */
 :root {
-  /* Sidebar (sempre escura, independente de tema) */
-  --cor-sidebar-fundo: #1e2528;
-  --cor-sidebar-fundo-alt: #252e31;
-  --cor-sidebar-item-ativo-fundo: #2c3639;
-  --cor-sidebar-borda: #334044;
-  --cor-sidebar-texto: #e7e5e0;
-  --cor-sidebar-texto-secundario: #a8a49c;
-  --cor-sidebar-texto-ativo: #ffffff;
-  --cor-sidebar-texto-item: #d3d0c9;       /* itens de menu não ativos */
-  --cor-sidebar-texto-descricao: #c9c6bf;  /* parágrafo sobre fundo escuro (login) */
-  --cor-sidebar-elevado: #3a4549;          /* iniciais da empresa, contador do menu */
+  /* 2a. Primitivos — Primária (teal / azul-petróleo) */
+  --cor-primaria-50: #f0f4f6;
+  --cor-primaria-100: #d9e3e8;
+  --cor-primaria-200: #b8cbd4;
+  --cor-primaria-300: #90afbd;
+  --cor-primaria-400: #6e94a9;
+  --cor-primaria-500: #4b798f;
+  --cor-primaria-600: #396276;
+  --cor-primaria-700: #254a59;
+  --cor-primaria-800: #193942;
+  --cor-primaria-900: #0f2b34;
 
-  /* Acento âmbar de segurança */
-  --cor-acento: #b45309;
-  --cor-acento-hover: #92400e;
-  --cor-acento-claro: #f59e0b;
-  --cor-acento-texto: #ffffff;
+  /* 2a. Primitivos — Neutros (cinza-azulado frio) */
+  --cor-neutro-0: #ffffff;
+  --cor-neutro-50: #f8fafc;
+  --cor-neutro-100: #f1f5f9;
+  --cor-neutro-200: #e2e8f0;
+  --cor-neutro-300: #cbd5e1;
+  --cor-neutro-400: #94a3b8;
+  --cor-neutro-500: #64748b;
+  --cor-neutro-600: #475569;
+  --cor-neutro-700: #334155;
+  --cor-neutro-800: #1e293b;
+  --cor-neutro-900: #0f172a;
+
+  /* 2a. Primitivos — Semânticas */
+  --cor-verde-500: #10b981;
+  --cor-ambar-500: #f59e0b;
+  --cor-laranja-500: #f97316;
+  --cor-vermelho-500: #ef4444;
+  --cor-azul-500: #3b82f6;
+
+  /* 2b. Sidebar (sempre escura, independente de tema) */
+  --cor-sidebar-fundo: var(--cor-primaria-900);
+  --cor-sidebar-fundo-alt: var(--cor-primaria-800);
+  --cor-sidebar-item-ativo-fundo: var(--cor-primaria-800);
+  --cor-sidebar-borda: var(--cor-primaria-700);
+  --cor-sidebar-texto: var(--cor-primaria-100);
+  --cor-sidebar-texto-secundario: var(--cor-primaria-300);
+  --cor-sidebar-texto-ativo: var(--cor-neutro-0);
+  --cor-sidebar-texto-item: var(--cor-primaria-100);       /* itens de menu não ativos */
+  --cor-sidebar-texto-rotulo: var(--cor-primaria-400);     /* títulos das seções (QUALIDADE, GESTÃO...) */
+  --cor-sidebar-texto-descricao: var(--cor-primaria-100);  /* parágrafo sobre fundo escuro (login) */
+  --cor-sidebar-elevado: var(--cor-primaria-700);          /* iniciais da empresa, contador do menu */
+
+  /* Acento (botão primário, links, foco) */
+  --cor-acento: var(--cor-primaria-500);
+  --cor-acento-hover: var(--cor-primaria-600);
+  --cor-acento-claro: var(--cor-primaria-300);
+  --cor-acento-texto: var(--cor-neutro-0);
 
   /* Superfícies e fundo de conteúdo */
-  --cor-fundo: #f5f3ee;
-  --cor-fundo-sutil: #faf8f4;
-  --cor-superficie: #ffffff;
-  --cor-contador-fundo: #e9e5dc;
+  --cor-fundo: var(--cor-neutro-50);
+  --cor-fundo-sutil: var(--cor-neutro-100);
+  --cor-superficie: var(--cor-neutro-0);
+  --cor-contador-fundo: var(--cor-neutro-200);
 
   /* Bordas */
-  --cor-borda: #e2ded5;
-  --cor-borda-forte: #d6d1c6;
-  --cor-borda-sutil: #eeebe4;
-  --cor-borda-tracejada: #c9c2b4;
+  --cor-borda: var(--cor-neutro-200);
+  --cor-borda-forte: var(--cor-neutro-300);
+  --cor-borda-sutil: var(--cor-neutro-100);
+  --cor-borda-tracejada: var(--cor-neutro-300);
 
   /* Texto sobre superfícies claras */
-  --cor-texto: #1c1b19;
-  --cor-texto-secundario: #5c5850;
-  --cor-texto-fraco: #a8a49c;
+  --cor-texto: var(--cor-neutro-900);
+  --cor-texto-secundario: var(--cor-neutro-600);
+  --cor-texto-fraco: var(--cor-neutro-400);
 
   /* Destaque escuro no conteúdo (etapa concluída do stepper, selo "Ciclo N",
      opção marcada de controles segmentados) — mesmo tom da sidebar */
-  --cor-destaque-escuro: #1e2528;
-  --cor-destaque-escuro-texto: #ffffff;
+  --cor-destaque-escuro: var(--cor-primaria-900);
+  --cor-destaque-escuro-texto: var(--cor-neutro-0);
 
   /* Perigo / atraso */
-  --cor-perigo-texto: #9f1239;
-  --cor-perigo-fundo: #ffe4e6;
+  --cor-perigo-texto: #b91c1c;
+  --cor-perigo-fundo: #fee2e2;
 }
 
 /* ==========================================================
@@ -80,14 +119,14 @@
   --cor-status-em-verificacao-fundo: #cffafe;
   --cor-status-em-verificacao-texto: #0e7490;
 
-  --cor-status-encerrado-fundo: #dcfce7;
-  --cor-status-encerrado-texto: #15803d;
+  --cor-status-encerrado-fundo: #d1fae5;
+  --cor-status-encerrado-texto: #047857;
 
-  --cor-status-reaberto-fundo: #ffe4e6;
-  --cor-status-reaberto-texto: #be123c;
+  --cor-status-reaberto-fundo: #fee2e2;
+  --cor-status-reaberto-texto: #b91c1c;
 
-  --cor-status-cancelado-fundo: #e7e5e4;
-  --cor-status-cancelado-texto: #57534e;
+  --cor-status-cancelado-fundo: var(--cor-neutro-200);
+  --cor-status-cancelado-texto: var(--cor-neutro-600);
 
   /* Quadrantes da SWOT (reaproveitam as cores de status) */
   --cor-swot-forca: var(--cor-status-encerrado-texto);
@@ -101,12 +140,14 @@
 }
 
 /* ==========================================================
-   04. TOKENS DE GRAVIDADE E ATRASO
+   04. TOKENS DE GRAVIDADE, ATRASO, AVISO E BADGES GENÉRICOS
    Crítica é a única com fundo sólido (maior alarme visual).
+   Os badges genéricos (sucesso, alerta, perigo, info, neutro, primário)
+   seguem o componente "Badge" do Design System e servem aos módulos novos.
    ========================================================== */
 :root {
-  --cor-gravidade-baixa-fundo: #e7e5e4;
-  --cor-gravidade-baixa-texto: #57534e;
+  --cor-gravidade-baixa-fundo: var(--cor-neutro-200);
+  --cor-gravidade-baixa-texto: var(--cor-neutro-600);
 
   --cor-gravidade-media-fundo: #dbeafe;
   --cor-gravidade-media-texto: #1d4ed8;
@@ -114,29 +155,53 @@
   --cor-gravidade-alta-fundo: #ffedd5;
   --cor-gravidade-alta-texto: #c2410c;
 
-  --cor-gravidade-critica-fundo: #9f1239;
+  --cor-gravidade-critica-fundo: #b91c1c;
   --cor-gravidade-critica-texto: #ffffff;
 
-  --cor-atrasado-texto: #9f1239;
-  --cor-atrasado-fundo: #ffe4e6;
+  --cor-atrasado-texto: #b91c1c;
+  --cor-atrasado-fundo: #fee2e2;
 
   /* Alerta de aviso (ex.: tentativas restantes antes do bloqueio de login) */
-  --cor-aviso-fundo: #fbf6ea;
-  --cor-aviso-borda: #e8d9b8;
+  --cor-aviso-fundo: #fffbeb;
+  --cor-aviso-borda: #fde68a;
+
+  /* Badges genéricos (fundo suave + texto escuro + bolinha na cor semântica) */
+  --cor-badge-sucesso-fundo: #ecfdf5;
+  --cor-badge-sucesso-texto: #047857;
+  --cor-badge-alerta-fundo: #fffbeb;
+  --cor-badge-alerta-texto: #b45309;
+  --cor-badge-perigo-fundo: #fef2f2;
+  --cor-badge-perigo-texto: #b91c1c;
+  --cor-badge-info-fundo: #eff6ff;
+  --cor-badge-info-texto: #1d4ed8;
+  --cor-badge-neutro-fundo: var(--cor-neutro-100);
+  --cor-badge-neutro-texto: var(--cor-neutro-600);
+  --cor-badge-primario-fundo: var(--cor-primaria-50);
+  --cor-badge-primario-texto: var(--cor-primaria-600);
 }
 
 /* ==========================================================
    05. TOKENS DE TIPOGRAFIA
-   As variáveis --font-ibm-plex-* são geradas por next/font/google
-   no layout raiz (src/app/layout.tsx) e ficam disponíveis aqui.
+   A variável --font-inter é gerada por next/font/google no layout raiz
+   (src/app/layout.tsx) e fica disponível aqui.
+   Os tamanhos abaixo foram estimados a partir do quadro "Design System" exportado;
+   conferir com os estilos de texto do Figma na hora de aplicar cada tela.
    ========================================================== */
 :root {
-  --fonte-ui: var(--font-ibm-plex-sans), "IBM Plex Sans", system-ui, sans-serif;
-  --fonte-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --fonte-ui: var(--font-inter), "Inter", system-ui, sans-serif;
+  /* O design usa Inter em tudo; códigos e números ganham algarismos tabulares (.mono, seção 09). */
+  --fonte-mono: var(--fonte-ui);
+
+  --texto-display: 36px;         /* Display/Número (ex.: "142 dias") */
+  --texto-titulo-pagina: 28px;   /* Título/Página */
+  --texto-titulo-secao: 20px;    /* Título/Seção */
+  --texto-titulo-card: 16px;     /* Título/Card */
+  --texto-corpo: 14px;           /* Corpo/Padrão e Corpo/Destaque */
+  --texto-pequeno: 12px;         /* Corpo/Pequeno e Rótulo/Caps */
 }
 
 /* ==========================================================
-   06. TOKENS DE ESPAÇO E RAIO
+   06. TOKENS DE ESPAÇO, RAIO E SOMBRA
    ========================================================== */
 :root {
   --espaco-1: 4px;
@@ -146,9 +211,17 @@
   --espaco-5: 20px;
   --espaco-6: 24px;
   --espaco-8: 32px;
+  --espaco-10: 40px;
+  --espaco-12: 48px;
 
-  --raio-padrao: 6px;
-  --raio-pill: 999px;
+  --raio-pequeno: 6px;    /* etiquetas, itens de lista */
+  --raio-padrao: 10px;    /* botões e campos */
+  --raio-cartao: 16px;    /* cartões e painéis ("Cards brancos com raio 16") */
+  --raio-pill: 999px;     /* badges */
+
+  /* "Sombra/Card" do Design System (valores estimados; ajustar ao estilo de efeito do Figma) */
+  --sombra-cartao: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.08);
+  --sombra-flutuante: 0 10px 30px rgb(15 23 42 / 0.18);
 }
 
 /* ==========================================================
@@ -340,9 +413,9 @@
 
 /* ==========================================================
    09. TIPOGRAFIA BASE
-   Fonte IBM Plex em todo o app (body). A classe .fonteIbmPlex, aplicada
-   no elemento raiz de cada página, reforça a fonte também em controles
-   de formulário e expõe .mono para trechos monoespaçados.
+   Fonte Inter em todo o app (body). A classe .fonteBase, aplicada no elemento
+   raiz de cada página, reforça a fonte também em controles de formulário e
+   expõe .mono para códigos, datas e números (algarismos tabulares: alinham em colunas).
    ========================================================== */
 body {
   font-family: var(--fonte-ui);
@@ -350,15 +423,16 @@ body {
   background: var(--cor-fundo);
 }
 
-.fonteIbmPlex,
-.fonteIbmPlex input,
-.fonteIbmPlex select,
-.fonteIbmPlex textarea,
-.fonteIbmPlex button {
+.fonteBase,
+.fonteBase input,
+.fonteBase select,
+.fonteBase textarea,
+.fonteBase button {
   font-family: var(--fonte-ui);
 }
 
-.fonteIbmPlex code,
-.fonteIbmPlex .mono {
+.fonteBase code,
+.fonteBase .mono {
   font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
 }

@@ -61,7 +61,7 @@ export default async function AuditoriaDetalhe({ params }: PageProps<"/auditoria
   const hid = (n: string, v: string | number) => <input type="hidden" name={n} value={v} />;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/auditorias">← Auditorias</Link></nav>
       <header className={styles.cabecalho}>
         <div>

@@ -42,7 +42,7 @@ export default async function RiscosRevisaoGeral({ searchParams }: PageProps<"/r
     processo === "sem" ? "registros sem processo" : processo ? `processo ${op.processos.find((p) => p.id === processo)?.codigo}` : "toda a empresa";
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/riscos" className={styles.linkVoltar}>← Riscos e oportunidades</Link>
       </nav>

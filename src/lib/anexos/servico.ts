@@ -11,7 +11,6 @@ import { filtroObras } from "@/lib/escopo-obras";
 import { moduloInspecoesAtivo, podeExecutarInspecao } from "@/lib/inspecoes/acesso";
 import { filtroObraAuditoria, moduloAuditoriasAtivo, podeExecutarAuditoria } from "@/lib/auditorias/acesso";
 import { moduloProcessosAtivo } from "@/lib/processos/servico";
-import { filtroObraRequisito, moduloRequisitosAtivo, podeGerenciarRequisitos, podeVerificarRequisito } from "@/lib/requisitos-legais/acesso";
 import { filtroAcessoIncidente, moduloIncidentesAtivo, podeTratarIncidente, podeVerRestritosIncidente } from "@/lib/incidentes/acesso";
 import { moduloTreinamentosAtivo, podeGerenciarTreinamentos } from "@/lib/treinamentos/acesso";
 import { filtroObraRisco, moduloRiscosAtivo, podeTratarRisco } from "@/lib/riscos/servico";
@@ -177,13 +176,9 @@ async function acessoEntidade(a: Ator, alvo: Alvo): Promise<AcessoEntidade> {
         imutavel: aberta ? undefined : "Evidências de auditoria concluída ou cancelada não podem ser excluídas.",
       };
     }
-    case "REQUISITO_LEGAL": {
-      // Evidência de atendimento: leitura com o módulo e escopo; envio por quem gerencia ou pelo responsável.
-      if (!(await moduloRequisitosAtivo(a))) return NEGADO;
-      const r = await a.db.requisitoLegal.findFirst({ where: { AND: [{ id: alvo.entidadeId, ativo: true }, filtroObraRequisito(a)] }, select: { responsavelId: true } });
-      if (!r) return NEGADO;
-      return { podeLer: true, podeEnviar: podeVerificarRequisito(a, r), podeGerir: podeGerenciarRequisitos(a), rncId: null, rncFinal: false };
-    }
+    // Módulo Requisitos Legais descontinuado: o valor continua no enum do banco, mas ninguém tem acesso.
+    case "REQUISITO_LEGAL":
+      return NEGADO;
     case "INCIDENTE":
     case "INCIDENTE_DADOS_SENSIVEIS": {
       // Incidente: leitura = incidente visível (escopo + restrição LGPD). Fotos/evidências: quem registrou enquanto

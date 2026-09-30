@@ -95,7 +95,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
   );
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Não conformidades"
         contador={rncs.length}

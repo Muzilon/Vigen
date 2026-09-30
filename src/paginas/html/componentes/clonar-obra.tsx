@@ -7,7 +7,7 @@ import styles from "@/paginas/css/componentes/clonar-obra.module.css";
 
 /**
  * "Clone Inteligente" (docs/ideias-implantadas/01-riscos-hira-laia.md, item 4): duplica a
- * planilha (HIRA ou LAIA) vigente de uma obra para outra. As linhas nascem sujeitas à mesma
+ * planilha (Perigos e Riscos ou LAIA) vigente de uma obra para outra. As linhas nascem sujeitas à mesma
  * política de aprovação do módulo — o gestor da obra destino só precisa ler e confirmar.
  *
  * - `acao`: a função de servidor que faz a cópia de fato (vem da página que usa este componente).

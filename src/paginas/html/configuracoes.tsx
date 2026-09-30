@@ -84,7 +84,6 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   INSPECAO_REALIZAR: "Realizar inspeções de campo",
   AUDITORIA_GERENCIAR: "Planejar auditorias (programa, auditorias, cancelar)",
   AUDITORIA_REALIZAR: "Executar auditorias como auditor líder",
-  REQUISITO_LEGAL_GERENCIAR: "Gerenciar requisitos legais (cadastro, verificação, revisão geral)",
   INCIDENTE_GERENCIAR: "Gerenciar incidentes (investigação, responsável, plano, conclusão)",
   INCIDENTE_VER_RESTRITOS: "Ver incidentes restritos e dados pessoais de envolvidos (LGPD)",
   INDICADOR_GERENCIAR: "Cadastrar indicadores e lançar resultados de qualquer indicador",
@@ -444,9 +443,9 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
   return (
     <div className={styles.secoesAba}>
       <p className={styles.explicacao}>
-        Escala (P×S) usada para calcular o nível de risco/HIRA/aspecto-impacto. Uma configuração sem unidade é o padrão
+        Escala (P×S) usada para calcular o nível de risco/perigos e riscos/aspecto-impacto. Uma configuração sem unidade é o padrão
         da empresa; escolha uma unidade para sobrescrever apenas naquele local. Sem nenhuma configuração cadastrada, o
-        sistema usa um padrão embutido (5x5 para Riscos/HIRA, 3x3 para Aspecto/Impacto).
+        sistema usa um padrão embutido (5x5 para Riscos/Perigos e Riscos, 3x3 para Aspecto/Impacto).
       </p>
       <Cartao titulo="Nova configuração de escala">
         <FormAcao acao={salvarConfiguracaoEscalaAcao} botao="Salvar" classeBotao={styles.botaoPrimario} className={styles.pilha}>
@@ -513,13 +512,13 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
   );
 }
 
-// Módulos cujas linhas podem exigir aprovação (HIRA e LAIA): chave interna, código do módulo e título exibido.
+// Módulos cujas linhas podem exigir aprovação (Perigos e Riscos e LAIA): chave interna, código do módulo e título exibido.
 const MODULOS_APROVACAO: { m: ModuloAprovavel; modulo: "HIRA" | "LAIA"; titulo: string }[] = [
-  { m: "hira", modulo: "HIRA", titulo: "HIRA — perigos e riscos de SST" },
+  { m: "hira", modulo: "HIRA", titulo: "Perigos e Riscos — SST" },
   { m: "laia", modulo: "LAIA", titulo: "LAIA — aspectos e impactos ambientais" },
 ];
 
-/** Fluxo de aprovação de inclusão/alteração/exclusão de linhas HIRA/LAIA (decisão 5). */
+/** Fluxo de aprovação de inclusão/alteração/exclusão de linhas de Perigos e Riscos/LAIA (decisão 5). */
 async function AbaAprovacoes() {
   const a = await getAtor();
   // Busca em paralelo a configuração e os módulos ativos da empresa, e os usuários ativos (candidatos a aprovador).
@@ -541,7 +540,7 @@ async function AbaAprovacoes() {
         const c = lerConfigAprovacao(empresa?.config, m);
         // A empresa contratou o módulo Documentos? (necessário para usar a tramitação de documentos)
         const docs = !!empresa?.modulosAtivos.includes("DOCUMENTOS");
-        // O módulo (HIRA ou LAIA) está contratado?
+        // O módulo (Perigos e Riscos ou LAIA) está contratado?
         const ativo = empresa?.modulosAtivos.includes(modulo);
         return (
           <Cartao key={m} titulo={titulo}>
@@ -698,7 +697,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
   const escalas = aba === "escalas" ? await dadosEscalas(await getAtor()) : null;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo="Administração" subtitulo={ctx.usuario.empresaNome} />
       <nav className={styles.abas} aria-label="Seções da administração">
         {ABAS.map(([k, rotulo]) => (

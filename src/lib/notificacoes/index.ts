@@ -9,7 +9,7 @@ export type EventoNotificacao = {
   interacaoId: string;
   destinatarioId: string | null;
   autorId: string;
-  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA" | "REQUISITO_LEGAL" | "INCIDENTE" | "INDICADOR" | "TREINAMENTO";
+  entidadeTipo: "RNC" | "ITEM_ACAO" | "PROCESSO" | "RISCO_OPORTUNIDADE" | "HIRA" | "LAIA" | "DOCUMENTO" | "INSPECAO" | "AUDITORIA" | "INCIDENTE" | "INDICADOR" | "TREINAMENTO";
   entidadeId: string;
 };
 
@@ -43,7 +43,7 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       link = `/riscos/${evento.entidadeId}`;
     } else if (evento.entidadeTipo === "HIRA") {
       const l = await db.linhaHira.findFirst({ where: { id: evento.entidadeId }, select: { numero: true } });
-      onde = l ? `a linha HIRA H-${String(l.numero).padStart(3, "0")}` : "uma linha HIRA";
+      onde = l ? `a linha de Perigos e Riscos H-${String(l.numero).padStart(3, "0")}` : "uma linha de Perigos e Riscos";
       link = `/hira/${evento.entidadeId}`;
     } else if (evento.entidadeTipo === "LAIA") {
       const l = await db.linhaLaia.findFirst({ where: { id: evento.entidadeId }, select: { numero: true } });
@@ -70,10 +70,6 @@ export async function notificar(evento: EventoNotificacao): Promise<void> {
       const i = await db.indicador.findFirst({ where: { id: evento.entidadeId }, select: { nome: true } });
       onde = i ? `o indicador "${i.nome}"` : "um indicador";
       link = `/indicadores/${evento.entidadeId}`;
-    } else if (evento.entidadeTipo === "REQUISITO_LEGAL") {
-      const r = await db.requisitoLegal.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
-      onde = r ? `o requisito legal ${r.codigo}` : "um requisito legal";
-      link = `/requisitos-legais/${evento.entidadeId}`;
     } else if (evento.entidadeTipo === "DOCUMENTO") {
       const d = await db.documento.findFirst({ where: { id: evento.entidadeId }, select: { codigo: true } });
       onde = d ? `o documento ${d.codigo}` : "um documento";

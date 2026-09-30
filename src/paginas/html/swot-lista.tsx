@@ -33,7 +33,7 @@ export default async function SwotLista() {
   const g = podeGerenciarSwot(a);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="SWOT e partes interessadas"
         contador={ciclos.length}

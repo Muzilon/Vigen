@@ -28,11 +28,9 @@ import { listarLaiaDoProcesso, podeGerenciarLaia } from "@/lib/laia/servico";
 import { podeElaborarDocumentos } from "@/lib/documentos/acesso";
 import { formatarRevisao, ROTULO_STATUS_DOCUMENTO } from "@/lib/documentos/regras";
 import { listarDocumentosDoProcesso } from "@/lib/documentos/servico";
-import { BadgeSituacaoIndicador, BadgeStatusDocumento, BadgeStatusRequisito } from "@/paginas/html/componentes/badge";
+import { BadgeSituacaoIndicador, BadgeStatusDocumento } from "@/paginas/html/componentes/badge";
 import { listarIndicadoresDoProcesso, podeGerenciarIndicadores } from "@/lib/indicadores/gestao";
 import { formatarValor, ROTULO_SITUACAO, rotuloPeriodo } from "@/lib/indicadores/periodos";
-import { ROTULO_STATUS_REQUISITO } from "@/lib/requisitos-legais/regras";
-import { listarRequisitosDoProcesso, podeGerenciarRequisitos } from "@/lib/requisitos-legais/servico";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -50,7 +48,7 @@ const CAMPOS_SIPOC = [
 
 /**
  * Página de detalhe de um processo: dados e SIPOC (editáveis), indicadores simples, interações com outros
- * processos, vínculos com os outros módulos (riscos, HIRA, LAIA, documentos, requisitos, indicadores com meta),
+ * processos, vínculos com os outros módulos (riscos, Perigos e Riscos, LAIA, documentos, indicadores com meta),
  * versões publicadas (com opção de publicar direto ou por aprovação), anexos e comentários.
  * Os vínculos de módulos não contratados aparecem como "módulo não contratado".
  */
@@ -73,7 +71,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   // Alvo dos anexos (este processo).
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
   // Busca em paralelo: versões publicadas, outros processos, usuários ativos, fuso horário, anexos e os vínculos de cada módulo (vazio/nulo quando o módulo não está contratado).
-  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos, requisitos, indicadores] = await Promise.all([
+  const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos, indicadores] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -84,7 +82,6 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     listarHiraDoProcesso(a, id),
     listarLaiaDoProcesso(a, id),
     listarDocumentosDoProcesso(a, id),
-    listarRequisitosDoProcesso(a, id),
     listarIndicadoresDoProcesso(a, id),
   ]);
   // `g`: pode editar este processo (tem permissão e o processo está ativo).
@@ -283,11 +280,11 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
 
           {linhasHira && (
             <Cartao
-              titulo={`Perigos e riscos (HIRA) · ${linhasHira.length}`}
+              titulo={`Perigos e Riscos · ${linhasHira.length}`}
               acoes={podeGerenciarHira(a) ? <Link href={`/hira/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Nova linha</Link> : undefined}
             >
               {linhasHira.length === 0 ? (
-                <p className={styles.vazio}>Nenhuma linha HIRA vinculada a este processo.</p>
+                <p className={styles.vazio}>Nenhuma linha de Perigos e Riscos vinculada a este processo.</p>
               ) : (
                 <table className={styles.tabela}>
                   <thead>
@@ -306,7 +303,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
                   </tbody>
                 </table>
               )}
-              <p className={styles.rodapeCartao}><Link href={`/hira?processo=${p.id}`} className={styles.linkProcesso}>Ver na planilha HIRA →</Link></p>
+              <p className={styles.rodapeCartao}><Link href={`/hira?processo=${p.id}`} className={styles.linkProcesso}>Ver na planilha de Perigos e Riscos →</Link></p>
             </Cartao>
           )}
 
@@ -368,34 +365,6 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
-          {requisitos && (
-            <Cartao
-              titulo={`Requisitos legais · ${requisitos.length}`}
-              acoes={podeGerenciarRequisitos(a) ? <Link href={`/requisitos-legais/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Novo</Link> : undefined}
-            >
-              {requisitos.length === 0 ? (
-                <p className={styles.vazio}>Nenhum requisito legal vinculado a este processo.</p>
-              ) : (
-                <table className={styles.tabela}>
-                  <thead>
-                    <tr><th>Código</th><th>Requisito</th><th>Status</th><th>Próx. verificação</th></tr>
-                  </thead>
-                  <tbody>
-                    {requisitos.map((r) => (
-                      <tr key={r.id}>
-                        <td><Link href={`/requisitos-legais/${r.id}`} className={styles.linkProcesso}>{r.codigo}</Link></td>
-                        <td>{r.numero} — {r.titulo}</td>
-                        <td><BadgeStatusRequisito status={r.status} rotulo={ROTULO_STATUS_REQUISITO[r.status]} /></td>
-                        <td>{r.status === "NAO_APLICAVEL" ? "—" : formatarData(r.proximaVerificacaoEm)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              <p className={styles.rodapeCartao}><Link href={`/requisitos-legais?processo=${p.id}`} className={styles.linkProcesso}>Ver no registro de requisitos →</Link></p>
-            </Cartao>
-          )}
-
           {indicadores && (
             <Cartao
               titulo={`Indicadores com meta e resultados · ${indicadores.length}`}
@@ -424,14 +393,13 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             </Cartao>
           )}
 
-          {(!riscos || !linhasHira || !linhasLaia || !documentos || !requisitos || !indicadores) && (
+          {(!riscos || !linhasHira || !linhasLaia || !documentos || !indicadores) && (
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
               {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
-              {!linhasHira && <li>Perigos e riscos (HIRA) <span className={styles.emBreve}>módulo não contratado</span></li>}
+              {!linhasHira && <li>Perigos e Riscos <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasLaia && <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!documentos && <li>Documentos vinculados <span className={styles.emBreve}>módulo não contratado</span></li>}
-              {!requisitos && <li>Requisitos legais <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!indicadores && <li>Indicadores com meta <span className={styles.emBreve}>módulo não contratado</span></li>}
             </ul>
           </Cartao>

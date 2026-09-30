@@ -94,7 +94,7 @@ export default async function LaiaDetalhe({ params }: PageProps<"/laia/[id]">) {
   const rotuloEixo = (k: (typeof EIXOS_LAIA)[number]) => eixoLaia(config, k)?.rotulo ?? k;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href={`/laia?obra=${l.obraId}`} className={styles.linkVoltar}>← Aspectos e impactos (LAIA)</Link>
       </nav>

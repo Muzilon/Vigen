@@ -20,7 +20,7 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/plano-acao-lista.module.css";
 
 /** Rótulo curto da origem de planos sem RNC (lista de itens). */
-const ROTULO_ORIGEM_PLANO: Partial<Record<string, string>> = { MANUAL: "Manual", RISCO_OPORTUNIDADE: "Risco", HIRA: "HIRA", LAIA: "LAIA", INSPECAO: "Inspeção", AUDITORIA: "Auditoria", REQUISITO_LEGAL: "Requisito legal", INCIDENTE: "Incidente" };
+const ROTULO_ORIGEM_PLANO: Partial<Record<string, string>> = { MANUAL: "Manual", RISCO_OPORTUNIDADE: "Risco", HIRA: "Perigos e Riscos", LAIA: "LAIA", INSPECAO: "Inspeção", AUDITORIA: "Auditoria", INCIDENTE: "Incidente" };
 
 // Regra de validação dos filtros da URL (escopo, status, responsável e prazo); valores inválidos viram "sem filtro".
 const esquemaFiltros = z.object({
@@ -145,7 +145,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
   ];
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Plano de Ação"
         contador={itens.length}

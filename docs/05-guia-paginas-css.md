@@ -117,7 +117,7 @@ truncado).
 | Grupo | Exemplos | Uso |
 |---|---|---|
 | Sidebar | `--cor-sidebar-fundo`, `--cor-sidebar-texto`, `--cor-sidebar-item-ativo-fundo` | só dentro de `layout-app.module.css` |
-| Acento | `--cor-acento` (#B45309), `--cor-acento-hover`, `--cor-acento-claro` | botões primários, item ativo, ícones de destaque |
+| Acento | `--cor-acento` (#4B798F, primária 500), `--cor-acento-hover`, `--cor-acento-claro` | botões primários, item ativo, ícones de destaque |
 | Destaque escuro | `--cor-destaque-escuro`, `--cor-destaque-escuro-texto` | etapa concluída do stepper, selo "Ciclo N", opção marcada de segmentados (fora da sidebar) |
 | Superfície | `--cor-fundo`, `--cor-fundo-sutil`, `--cor-superficie` | fundo de página / cabeçalho de tabela / cartões |
 | Borda | `--cor-borda`, `--cor-borda-forte`, `--cor-borda-sutil` | cartões, inputs, linhas de tabela |
@@ -125,17 +125,19 @@ truncado).
 | Status de RNC | `--cor-status-<status>-fundo` / `-texto` (aberto, em-analise, plano-execucao, em-verificacao, encerrado, reaberto, cancelado) | `BadgeStatusRnc` |
 | Gravidade | `--cor-gravidade-<nivel>-fundo` / `-texto` (baixa, media, alta, critica) | `BadgeGravidade` |
 | Atraso | `--cor-atrasado-texto`, `--cor-atrasado-fundo` | `BadgeAtrasado` |
-| Tipografia | `--fonte-ui` (IBM Plex Sans), `--fonte-mono` (IBM Plex Mono) | aplicar via classe utilitária `.fonteIbmPlex` (definida em `base.css`) no elemento raiz da página migrada |
-| Espaço/raio | `--espaco-1`…`--espaco-8`, `--raio-padrao` (6px), `--raio-pill` | espaçamento e cantos |
+| Tipografia | `--fonte-ui` (Inter), `--fonte-mono` (Inter, com algarismos tabulares), `--texto-*` (tamanhos) | aplicar via classe utilitária `.fonteBase` (definida em `base.css`) no elemento raiz da página migrada |
+| Espaço/raio/sombra | `--espaco-1`…`--espaco-12`, `--raio-pequeno` (6px), `--raio-padrao` (10px, botões/campos), `--raio-cartao` (16px), `--raio-pill`, `--sombra-cartao`, `--sombra-flutuante` | espaçamento, cantos e elevação |
+| Primitivos | `--cor-primaria-50…900` (teal), `--cor-neutro-0…900`, `--cor-verde/ambar/laranja/vermelho/azul-500` | só para compor tokens semânticos; nas páginas prefira os tokens semânticos |
+| Badges genéricos | `--cor-badge-<sucesso/alerta/perigo/info/neutro/primario>-fundo` / `-texto` | componente `Badge` do Design System |
 
 **Nunca usar hex solto fora de `base.css`.** Se precisar de uma cor nova,
 adicione o token em `base.css` (seção correta) e use `var(--...)` no CSS do
 componente/página.
 
-As fontes IBM Plex Sans/Mono são carregadas via `next/font/google` em
-`src/app/layout.tsx` (variáveis `--font-ibm-plex-sans` / `--font-ibm-plex-mono`),
-e `base.css` as expõe como `--fonte-ui` / `--fonte-mono`. Uma página migrada
-aplica a classe `fonteIbmPlex` no seu elemento raiz (reforça a fonte em
+A fonte Inter é carregada via `next/font/google` em
+`src/app/layout.tsx` (variável `--font-inter`),
+e `base.css` a expõe como `--fonte-ui` / `--fonte-mono`. Uma página migrada
+aplica a classe `fonteBase` no seu elemento raiz (reforça a fonte em
 controles de formulário); o `body` também já usa `--fonte-ui`.
 
 O Tailwind foi **removido** do projeto (sem `globals.css`, sem
@@ -315,7 +317,7 @@ mensagens de erro/aviso/sucesso.
 - Novo plano avulso — `plano-acao/novo/page.tsx` → `paginas/html/plano-acao-novo.tsx` (+ `plano-acao-novo-formulario.tsx`)
 - Detalhe do plano avulso — `plano-acao/planos/[id]/page.tsx` → `paginas/html/plano-acao-plano.tsx` (+ `plano-acao-plano-editar.tsx`)
 - Badges de status de item/plano — `paginas/html/componentes/badge-status-item.tsx` (`BadgeStatusItem`, `BadgeStatusPlano`, `BadgeOrigem`)
-- `base.css` com tokens + fontes IBM Plex Sans/Mono (`src/app/layout.tsx`)
+- `base.css` com tokens + fonte Inter (`src/app/layout.tsx`)
 - Início — `src/app/(app)/page.tsx` → `paginas/html/inicio.tsx`
 - Dashboard — `src/app/(app)/dashboard/page.tsx` → `paginas/html/dashboard.tsx`;
   `dashboard/graficos.tsx` → `paginas/html/dashboard-graficos.tsx` (cores via

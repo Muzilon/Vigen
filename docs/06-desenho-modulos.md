@@ -375,7 +375,11 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
   externa planejada.
 - **Testes**: `tests/auditorias.test.ts` e `npm run test:auditorias` (7 casos).
 
-## P6 — Requisitos Legais entregue (2026-09-26)
+## P6 — Requisitos Legais entregue (2026-09-26) — ⚠ DESCONTINUADO em 2026-09-30
+
+> **Módulo removido do produto** por decisão do Eric (complexidade). Esta seção fica só como histórico. Código, telas, seed, testes e
+> integrações foram apagados; a migração `20260930100000_remove_requisitos_legais` apaga as tabelas. Os valores de enum `REQUISITOS_LEGAIS` /
+> `REQUISITO_LEGAL*` permanecem no banco (legado). Não reimplementar sem ordem.
 
 - **Schema** (migração `20260927200000_requisitos_legais`): `RequisitoLegal` (código `LEG-NNN-AA` via `proximaSequencia` com novo
   `TipoSequencia.REQUISITO_LEGAL`; `TipoRequisitoLegal` LEI/NORMA/PORTARIA/RESOLUCAO/OUTRO, número, título, `EsferaRequisito`,
@@ -571,12 +575,11 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 | DOCUMENTOS | Tramitação com revisores/aprovadores, revisões imutáveis, publicação com público e ciência, lista mestra e revisão periódica (P4). |
 | INSPECOES | Modelos de checklist, execução em campo com fotos, % de conformidade e RNC/item de ação a partir da resposta NC (P5). |
 | AUDITORIAS | Programa anual, plano de auditoria, constatações NC/OBS/OM/PF com evidências e RNC a partir da NC (P5). |
-| REQUISITOS_LEGAIS | Registro de leis/normas com status de atendimento, verificação periódica, plano obrigatório e revisão geral (P6). |
 | INCIDENTES | Incidentes e acidentes com dados sensíveis protegidos, investigação com causa raiz, plano e taxa de frequência (P6). |
 | INDICADORES | Indicadores com meta e periodicidade, resultados append-only, 2 automáticos (RNC/Plano de Ação), gráfico e alerta sem lançamento (P7). |
 | TREINAMENTOS | Catálogo com validade/obrigatoriedade, sessões, presença em lote com certificado, matriz de competências e alerta de vencimento (P7). |
 
 **Módulos ativos por empresa no seed**:
 - **Monto** (`00000000000100`): todos — RNC, PLANO_ACAO, MAPA_PROCESSOS, RISCOS_OPORTUNIDADES, SWOT, HIRA, LAIA, INSPECOES, AUDITORIAS,
-  DOCUMENTOS, REQUISITOS_LEGAIS, INCIDENTES, INDICADORES, TREINAMENTOS.
+  DOCUMENTOS, INCIDENTES, INDICADORES, TREINAMENTOS.
 - **Demo** (`00000000000200`): só o padrão do schema — RNC e PLANO_ACAO (usada nos testes de gating e isolamento multi-tenant).

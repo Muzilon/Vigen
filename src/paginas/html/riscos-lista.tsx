@@ -95,7 +95,7 @@ export default async function RiscosLista({ searchParams }: PageProps<"/riscos">
   const gerencia = podeGerenciarRiscos(a);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Riscos e oportunidades"
         contador={todos.length}

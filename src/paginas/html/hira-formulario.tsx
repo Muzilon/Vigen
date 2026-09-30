@@ -8,7 +8,7 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/hira-formulario.module.css";
 
-/** Todos os valores de uma linha HIRA que o formulário controla (com `id` e `versao` só na edição). */
+/** Todos os valores de uma linha de Perigos e Riscos que o formulário controla (com `id` e `versao` só na edição). */
 export interface ValoresHira {
   id?: string;
   versao?: number;
@@ -46,7 +46,7 @@ function tentar(config: ConfigEscala, p: number, s: number): AvaliacaoPS | null 
 }
 
 /**
- * Formulário da linha HIRA com cálculo ao vivo do nível inicial e residual (escala resolvida pela
+ * Formulário da linha de Perigos e Riscos com cálculo ao vivo do nível inicial e residual (escala resolvida pela
  * obra escolhida: `escalas[obraId]` ou `escalas[""]`). `aprovacao` avisa que a gravação vira uma
  * solicitação de aprovação (config da empresa); em "alterar", pede o motivo.
  */

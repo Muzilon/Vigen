@@ -47,7 +47,7 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
   const nomeTreinamento = new Map(m.treinamentos.map((t) => [t.id, t.nome]));
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Matriz de competências"
         contador={m.linhas.length}

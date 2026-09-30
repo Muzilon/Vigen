@@ -114,7 +114,7 @@ export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">
   const aprovadores = op.usuarios.filter((u) => u.id !== a.usuarioId);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/riscos" className={styles.linkVoltar}>← Riscos e oportunidades</Link>
       </nav>

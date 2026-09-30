@@ -66,7 +66,7 @@ export default async function DocumentosLista({ searchParams }: PageProps<"/docu
   const emTramitacao = docs.filter((d) => d.status === "EM_REVISAO" || d.status === "EM_APROVACAO" || d.status === "APROVADO").length;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Lista mestra de documentos"
         contador={docs.length}

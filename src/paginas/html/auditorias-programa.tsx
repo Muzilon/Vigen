@@ -33,7 +33,7 @@ export default async function AuditoriasPrograma() {
   const anoAtual = new Date().getFullYear();
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/auditorias">← Auditorias</Link></nav>
       <CabecalhoPagina titulo="Programa anual de auditorias" contador={programas.length} subtitulo="Objetivo do ano e cronograma das auditorias planejadas." />
       {programas.length === 0 && <EstadoVazio>Nenhum programa cadastrado.</EstadoVazio>}

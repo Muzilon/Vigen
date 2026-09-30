@@ -11,7 +11,6 @@ import { resumoLaia } from "@/lib/laia/servico";
 import { resumoDocumentos } from "@/lib/documentos/servico";
 import { resumoInspecoes } from "@/lib/inspecoes/servico";
 import { resumoAuditorias } from "@/lib/auditorias/servico";
-import { resumoRequisitos } from "@/lib/requisitos-legais/servico";
 import { resumoIncidentes } from "@/lib/incidentes/servico";
 import { resumoIndicadores } from "@/lib/indicadores/gestao";
 import { resumoTreinamentos } from "@/lib/treinamentos/servico";
@@ -40,7 +39,7 @@ const esquema = z.object({
 /**
  * Página "Dashboard": painel geral com os indicadores de RNC (filtráveis por período, unidade, tipo e setor)
  * e um resumo de cada módulo contratado (documentos, inspeções, auditorias, incidentes, treinamentos, metas,
- * requisitos legais, riscos, HIRA e LAIA). Cada bloco só aparece se o usuário tem acesso ao módulo.
+ * riscos, Perigos e Riscos e LAIA). Cada bloco só aparece se o usuário tem acesso ao módulo.
  */
 /** Dashboard de indicadores (ver A-Dashboard.dc.html, Direção A "Campo"). */
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
@@ -49,7 +48,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
   // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
   // Busca tudo em paralelo (mais rápido): indicadores de RNC, unidades e setores para os filtros, e o resumo de cada módulo (vem vazio se o módulo não está disponível).
-  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes, metas, treinos] = await Promise.all([
+  const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, incidentes, metas, treinos] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
     }),
@@ -65,7 +64,6 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoDocumentos(a),
     resumoInspecoes(a),
     resumoAuditorias(a),
-    resumoRequisitos(a),
     resumoIncidentes(a),
     resumoIndicadores(a),
     resumoTreinamentos(a),
@@ -74,7 +72,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
   const k = ind.kpis;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo="Dashboard" subtitulo={`Indicadores de ${formatarData(periodo.inicio)} a ${formatarData(periodo.fim)}`} />
 
       <form className={styles.barraFiltros} method="get">
@@ -256,22 +254,6 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
         </Painel>
       )}
 
-      {requisitos && (
-        <Painel titulo="Requisitos legais — atendimento" subtitulo={`${requisitos.total} requisito(s) no seu escopo · ${requisitos.porStatus.NAO_APLICAVEL} não aplicável(is)`}>
-          <div className={styles.gradeKpis}>
-            <Link href="/requisitos-legais" className={styles.linkKpi}>
-              <Kpi titulo="Atendimento" valor={requisitos.percentual === null ? "—" : `${requisitos.percentual}%`} dica="Atende ÷ (atende + parcial + não atende)" />
-            </Link>
-            <Link href="/requisitos-legais?status=NAO_ATENDE" className={styles.linkKpi}>
-              <Kpi titulo="Não atende / parcial" valor={requisitos.porStatus.NAO_ATENDE + requisitos.porStatus.ATENDE_PARCIAL} dica={`${requisitos.porStatus.NAO_ATENDE} não atende · ${requisitos.porStatus.ATENDE_PARCIAL} parcial`} alerta={requisitos.porStatus.NAO_ATENDE > 0} />
-            </Link>
-            <Link href="/requisitos-legais?vencidos=1" className={styles.linkKpi}>
-              <Kpi titulo="Verificação vencida" valor={requisitos.vencidos} dica={`${requisitos.porStatus.EM_ANALISE} em análise`} alerta={requisitos.vencidos > 0} />
-            </Link>
-          </div>
-        </Painel>
-      )}
-
       {riscosPorFaixa && (
         <Painel titulo="Riscos e oportunidades abertos por nível" subtitulo="Situação atual (nível inicial), sem os encerrados">
           <Barras
@@ -291,10 +273,10 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       )}
 
       {hira && (
-        <Painel titulo="HIRA — perigos e riscos de SST vigentes por nível" subtitulo={`Nível inicial das linhas vigentes nas unidades do seu escopo${hira.pendentes ? ` · ${hira.pendentes} pendente(s) de aprovação` : ""}`}>
+        <Painel titulo="Perigos e Riscos (SST) — linhas vigentes por nível" subtitulo={`Nível inicial das linhas vigentes nas unidades do seu escopo${hira.pendentes ? ` · ${hira.pendentes} pendente(s) de aprovação` : ""}`}>
           <Barras
             paleta="gravidade"
-            vazio="Nenhuma linha HIRA vigente."
+            vazio="Nenhuma linha de Perigos e Riscos vigente."
             dados={(
               [
                 ["CRITICA", "Crítico", hira.porFaixa.CRITICO],
@@ -304,7 +286,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
               ] as const
             ).map(([chave, rotulo, valor]) => ({ chave, rotulo, valor }))}
           />
-          <Link href="/hira" className={styles.linkLimpar}>Abrir a planilha HIRA →</Link>
+          <Link href="/hira" className={styles.linkLimpar}>Abrir a planilha de Perigos e Riscos →</Link>
         </Painel>
       )}
 

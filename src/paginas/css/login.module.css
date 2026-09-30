@@ -1,8 +1,8 @@
 /* ==========================================================
    ÍNDICE
    01. Página — divide em painel de marca + painel de formulário
-   02. Painel de marca — fundo escuro, mensagem institucional
-   03. Lista de destaques do painel de marca
+   02. Painel de marca — fundo escuro, logo principal e mensagem institucional
+   03. Etiquetas das normas (ISO 9001, 14001, 45001)
    04. Painel de formulário — cartão de entrada centralizado
    05. Campo de senha com botão de mostrar/ocultar
    ========================================================== */
@@ -21,7 +21,7 @@
    02. PAINEL DE MARCA
    ========================================================== */
 .painelMarca {
-  width: 46%;
+  width: 44%;
   max-width: 640px;
   flex: none;
   background: var(--cor-sidebar-fundo);
@@ -30,8 +30,7 @@
   padding: var(--espaco-8) 56px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  justify-content: center;
 }
 @media (max-width: 900px) {
   .painelMarca {
@@ -39,91 +38,75 @@
   }
 }
 
-.logoMarca {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-  color: var(--cor-acento-claro); /* traço do ícone (currentColor) */
-}
-.logoTextoMarca {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--cor-sidebar-texto-ativo);
+.conteudoMarca {
+  max-width: 470px;
 }
 
-.conteudoMarca {
-  position: relative;
-  max-width: 470px;
-  margin: auto 0;
+.logoMarca {
+  width: 280px;
+  height: auto;
+  margin-bottom: var(--espaco-10);
 }
-.selo {
-  margin: 0 0 14px 0;
-  font-family: var(--fonte-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  color: var(--cor-acento-claro);
-}
+
 .tituloMarca {
   margin: 0;
-  font-size: 34px;
-  line-height: 1.18;
+  font-size: 32px;
+  line-height: 1.2;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--cor-sidebar-texto-ativo);
 }
 .descricaoMarca {
-  margin: 18px 0 0 0;
-  font-size: 15px;
-  line-height: 1.55;
+  margin: var(--espaco-4) 0 0 0;
+  font-size: var(--texto-corpo);
+  line-height: 1.6;
   color: var(--cor-sidebar-texto-descricao);
 }
 
-.rodapeMarca {
-  font-size: 12px;
-  color: var(--cor-sidebar-texto-secundario);
-}
-
 /* ==========================================================
-   03. LISTA DE DESTAQUES
+   03. ETIQUETAS DAS NORMAS
    ========================================================== */
-.listaDestaques {
+.listaNormas {
   list-style: none;
-  margin: 28px 0 0 0;
+  margin: var(--espaco-6) 0 0 0;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  font-size: 14px;
-  color: var(--cor-sidebar-texto);
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
 }
-.itemDestaque {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.iconeDestaque {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--raio-padrao);
+.etiquetaNorma {
+  padding: var(--espaco-1) var(--espaco-3);
+  border-radius: var(--raio-pill);
   background: var(--cor-sidebar-fundo-alt);
-  color: var(--cor-acento-claro);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
+  color: var(--cor-sidebar-texto);
+  font-size: var(--texto-pequeno);
+  font-weight: 600;
 }
 
 /* ==========================================================
    04. PAINEL DE FORMULÁRIO
+   O formulário vira um cartão branco (raio 16 + sombra), como no Figma.
    ========================================================== */
 .painelFormulario {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: var(--espaco-8) var(--espaco-6);
+}
+
+/* Logo escura mostrada só quando o painel de marca está escondido (até 900px) */
+.logoMobile {
+  display: none;
+  width: 220px;
+  height: auto;
+  margin-bottom: var(--espaco-6);
+}
+@media (max-width: 900px) {
+  .logoMobile {
+    display: block;
+  }
 }
 
 .cartaoFormulario {
@@ -131,25 +114,38 @@
   max-width: 400px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  padding: var(--espaco-8);
+  background: var(--cor-superficie);
+  border-radius: var(--raio-cartao);
+  box-shadow: var(--sombra-cartao);
 }
 
 .tituloFormulario {
   margin: 0;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 .subtituloFormulario {
-  margin: 6px 0 28px 0;
-  font-size: 14px;
+  margin: var(--espaco-2) 0 var(--espaco-6) 0;
+  font-size: var(--texto-corpo);
   color: var(--cor-texto-secundario);
 }
 
 .grupoCampo {
-  margin-top: 18px;
+  margin-top: var(--espaco-4);
 }
 .grupoCampo:first-of-type {
   margin-top: 0;
+}
+
+/* Aviso fixo sob o botão: política de bloqueio por tentativas erradas */
+.notaBloqueio {
+  margin: var(--espaco-4) 0 0 0;
+  font-size: var(--texto-pequeno);
+  line-height: 1.5;
+  color: var(--cor-texto-secundario);
 }
 
 /* ==========================================================
@@ -178,7 +174,7 @@
 }
 
 .botaoEntrar {
-  margin-top: 22px;
+  margin-top: var(--espaco-6);
   width: 100%;
   height: 44px;
   font-size: 15px;

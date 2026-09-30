@@ -36,7 +36,7 @@ export default async function TreinamentosMeus() {
   const certificadoDa = new Map(historico.filter((p) => p.presente && p.certificado).map((p) => [`${p.sessao.treinamentoId}:${dataIso(p.sessao.dataRealizacao)}`, p.certificado!]));
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo="Meus treinamentos" subtitulo="Sua situação nos treinamentos obrigatórios e nos que você já fez, com validade e certificados." />
       <div className={styles.aptidao}>
         <BadgeAptidao apto={aptidao.apto} />

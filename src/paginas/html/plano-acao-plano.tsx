@@ -19,8 +19,7 @@ import { EditarPlanoForm } from "@/paginas/html/plano-acao-plano-editar";
 import styles from "@/paginas/css/plano-acao-plano.module.css";
 
 /**
- * Página de detalhe de um plano de ação que não é de RNC (avulso ou vindo de risco, HIRA, LAIA, inspeção, incidente
- * ou requisito legal): dados, itens 5W2H com ações, formulário para adicionar itens e anexos.
+ * Página de detalhe de um plano de ação que não é de RNC (avulso ou vindo de risco, Perigos e Riscos, LAIA, inspeção, incidente): dados, itens 5W2H com ações, formulário para adicionar itens e anexos.
  * Quem não tem visão completa vê só os próprios itens.
  */
 /** Detalhe de um plano de ação avulso (sem RNC de origem). */
@@ -53,7 +52,7 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
   const concluidos = ativosNoPlano.filter((i) => i.status === "CONCLUIDO").length;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       {/* 1. Trilha + título + selos */}
       <div>
         <nav aria-label="Trilha da página" className={styles.trilha}>
@@ -66,13 +65,11 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
           {plano.origemTipo === "RISCO_OPORTUNIDADE" && plano.origemId ? (
             <Link href={`/riscos/${plano.origemId}`}><BadgeOrigem>Risco/oportunidade</BadgeOrigem></Link>
           ) : plano.origemTipo === "HIRA" && plano.origemId ? (
-            <Link href={`/hira/${plano.origemId}`}><BadgeOrigem>HIRA (SST)</BadgeOrigem></Link>
+            <Link href={`/hira/${plano.origemId}`}><BadgeOrigem>Perigos e Riscos (SST)</BadgeOrigem></Link>
           ) : plano.origemTipo === "INSPECAO" && plano.origemId ? (
             <Link href={`/inspecoes/${plano.origemId}`}><BadgeOrigem>Inspeção</BadgeOrigem></Link>
           ) : plano.origemTipo === "INCIDENTE" && plano.origemId ? (
             <Link href={`/incidentes/${plano.origemId}`}><BadgeOrigem>Incidente</BadgeOrigem></Link>
-          ) : plano.origemTipo === "REQUISITO_LEGAL" && plano.origemId ? (
-            <Link href={`/requisitos-legais/${plano.origemId}`}><BadgeOrigem>Requisito legal</BadgeOrigem></Link>
           ) : plano.origemTipo === "LAIA" && plano.origemId ? (
             <Link href={`/laia/${plano.origemId}`}><BadgeOrigem>LAIA (meio ambiente)</BadgeOrigem></Link>
           ) : (

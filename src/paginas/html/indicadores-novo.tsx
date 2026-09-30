@@ -29,7 +29,7 @@ export default async function IndicadoresNovo({ searchParams }: PageProps<"/indi
   // Só aceita o processo da URL se ele realmente existir na lista (evita valor inventado).
   const processo = typeof sp.processo === "string" && op.processos.some((p) => p.id === sp.processo) ? sp.processo : "";
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}><Link href="/indicadores">← Indicadores</Link></nav>
       <h1 className={styles.titulo}>Novo indicador</h1>
       <p className={styles.texto}>

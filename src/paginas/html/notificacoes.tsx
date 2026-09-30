@@ -52,7 +52,7 @@ export default async function Notificacoes({ searchParams }: PageProps<"/notific
   const aba = (ativo: boolean) => `${styles.aba} ${ativo ? styles.abaAtiva : ""}`;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Notificações"
         subtitulo={somenteNaoLidas ? `${lista.length} não lida(s)` : "Últimas 100 notificações"}

@@ -15,13 +15,13 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/hira-revisao-geral.module.css";
 
 /**
- * Revisão geral do HIRA por obra (decisão 4): reavalia de uma vez todas as linhas vigentes da
+ * Revisão geral de Perigos e Riscos por obra (decisão 4): reavalia de uma vez todas as linhas vigentes da
  * planilha da obra; cada uma ganha histórico REVISAO_GERAL e nova data de reavaliação.
  */
 export default async function HiraRevisaoGeral({ searchParams }: PageProps<"/hira/revisao-geral">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de HIRA, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Perigos e Riscos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "HIRA");
   // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
@@ -41,11 +41,11 @@ export default async function HiraRevisaoGeral({ searchParams }: PageProps<"/hir
   const { eixoP, eixoS } = eixosPS(op.escalas[obraId] ?? op.escalas[""]);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
-        <Link href="/hira" className={styles.linkVoltar}>← Perigos e riscos (HIRA)</Link>
+        <Link href="/hira" className={styles.linkVoltar}>← Perigos e Riscos</Link>
       </nav>
-      <h1 className={styles.titulo}>Revisão geral do HIRA</h1>
+      <h1 className={styles.titulo}>Revisão geral de Perigos e Riscos</h1>
       <p className={styles.subtitulo}>Confirme ou ajuste a avaliação de cada linha vigente da planilha da unidade e registre a revisão de uma vez.</p>
 
       <form method="get" className={styles.barraEscopo}>
@@ -68,7 +68,7 @@ export default async function HiraRevisaoGeral({ searchParams }: PageProps<"/hir
           acao={revisaoGeralHiraAcao}
           botao={`Registrar revisão geral (${itens.length})`}
           className={styles.formulario}
-          confirmar={`Registrar a revisão geral de ${itens.length} linha(s) do HIRA da ${obraNome}?`}
+          confirmar={`Registrar a revisão geral de ${itens.length} linha(s) de Perigos e Riscos da ${obraNome}?`}
         >
           <input type="hidden" name="obraId" value={obraId} />
           <div className={styles.rolagem}>
@@ -114,7 +114,7 @@ export default async function HiraRevisaoGeral({ searchParams }: PageProps<"/hir
           </div>
           <label className={styles.observacao}>
             Observação da revisão
-            <input name="observacao" maxLength={1000} placeholder="Ex.: revisão anual do HIRA da unidade" className={styles.entrada} />
+            <input name="observacao" maxLength={1000} placeholder="Ex.: revisão anual de Perigos e Riscos da unidade" className={styles.entrada} />
           </label>
         </FormAcao>
       )}

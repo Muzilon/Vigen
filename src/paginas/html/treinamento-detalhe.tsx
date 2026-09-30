@@ -74,7 +74,7 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
   const nr1 = t.tipo === "NR" || t.tipo === "RECICLAGEM";
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/treinamentos" className={styles.linkVoltar}>← Treinamentos</Link>
       </nav>

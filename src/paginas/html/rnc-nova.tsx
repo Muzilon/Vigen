@@ -31,7 +31,7 @@ export default async function RncNova() {
     .map((u) => ({ id: u.id, nome: u.nome }));
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <div className={styles.cabecalho}>
         <h1 className={styles.titulo}>Nova RNC</h1>
         <span className={styles.espacador} />

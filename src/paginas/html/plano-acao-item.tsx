@@ -94,7 +94,7 @@ export default async function PlanoAcaoItem({ params }: PageProps<"/plano-acao/[
   const diasParaPrazo = Math.round((item.quando.getTime() - paraDataDb(hoje).getTime()) / DIA_MS);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/plano-acao" className={styles.linkVoltar}>
           <IconeVoltar />

@@ -58,7 +58,7 @@ export default async function InspecoesLista({ searchParams }: PageProps<"/inspe
   const rncs = lista.reduce((s, i) => s + i.rncsGeradas, 0);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
         titulo="Inspeções / checklists"
         contador={lista.length}

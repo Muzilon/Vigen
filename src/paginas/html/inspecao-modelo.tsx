@@ -60,7 +60,7 @@ export default async function InspecaoModelo({ params }: PageProps<"/inspecoes/m
   if (!m) notFound();
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/inspecoes/modelos">← Modelos de checklist</Link>
       </nav>

@@ -36,7 +36,7 @@ export default async function AprovacoesLista({ searchParams }: PageProps<"/apro
   const aba = (ativo: boolean) => `${styles.aba} ${ativo ? styles.abaAtiva : ""}`;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo="Aprovações" subtitulo="Pedidos de alteração que exigem assinatura de aprovadores." />
 
       <nav className={styles.abas} aria-label="Visão das aprovações">

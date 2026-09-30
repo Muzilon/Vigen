@@ -49,14 +49,14 @@ const esquema = z.object({
 });
 
 /**
- * Página "Perigos e riscos (HIRA)": filtros, mapa de calor (probabilidade × severidade) com alternância entre risco
+ * Página "Perigos e Riscos": filtros, mapa de calor (probabilidade × severidade) com alternância entre risco
  * inicial e residual, e a planilha densa das linhas (ou a visão em árvore). Mostra também quantas linhas aguardam aprovação.
  */
-/** Planilha HIRA (ISO 45001): filtros, heatmap P×S com toggle inicial/residual e a planilha densa por obra. */
+/** Planilha de Perigos e Riscos (ISO 45001): filtros, heatmap P×S com toggle inicial/residual e a planilha densa por obra. */
 export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de HIRA, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Perigos e Riscos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "HIRA");
   // Lê e valida os filtros da URL (valores inválidos viram "sem filtro").
   const f = esquema.parse(await searchParams);
@@ -100,9 +100,9 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
   const gerencia = podeGerenciarHira(a);
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
-        titulo="Perigos e riscos (HIRA)"
+        titulo="Perigos e Riscos"
         contador={todas.length}
         subtitulo="Identificação de perigos e avaliação de riscos de SST por unidade (ISO 45001 6.1.2) — nível = probabilidade × severidade pela escala da unidade/empresa."
         acoes={
@@ -195,11 +195,11 @@ export default async function HiraLista({ searchParams }: PageProps<"/hira">) {
       </p>
 
       {linhas.length === 0 ? (
-        <EstadoVazio>Nenhuma linha HIRA com estes filtros.</EstadoVazio>
+        <EstadoVazio>Nenhuma linha de Perigos e Riscos com estes filtros.</EstadoVazio>
       ) : emArvore ? (
         <HiraArvore linhas={linhas} />
       ) : (
-        <div className={styles.quadroPlanilha} role="region" aria-label="Planilha HIRA" tabIndex={0}>
+        <div className={styles.quadroPlanilha} role="region" aria-label="Planilha de Perigos e Riscos" tabIndex={0}>
           <table className={styles.planilha}>
             <thead>
               <tr>

@@ -30,7 +30,7 @@ export default async function InspecoesModelos() {
   const modelos = await listarModelos(a, { todos: true });
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href="/inspecoes">← Inspeções</Link>
       </nav>

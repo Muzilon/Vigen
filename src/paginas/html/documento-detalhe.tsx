@@ -104,7 +104,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
   const podeCiencia = !!meu && meu.exigirCiencia && !meu.cienciaEm;
 
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
         <Link href={d.acessoCompleto && elabora ? "/documentos" : "/documentos/meus"} className={styles.linkVoltar}>
           ← {d.acessoCompleto && elabora ? "Lista mestra de documentos" : "Meus documentos"}

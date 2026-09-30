@@ -25,7 +25,7 @@ export default async function Mensagens() {
   // Busca até 100 mensagens não lidas endereçadas ao usuário.
   const msgs = await listarNaoLidas(a, 100);
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo="Mensagens" subtitulo={`${msgs.length} não lida(s)`} />
       <section className={styles.painel}>
         {msgs.length === 0 ? (
@@ -40,7 +40,7 @@ export default async function Mensagens() {
                     <span className={styles.linhaAutor}>
                       <span className={styles.autor}>{m.autor.nome}</span>
                       <span className={styles.meta}>
-                        {m.entidadeTipo === "RNC" ? "RNC" : m.entidadeTipo === "PROCESSO" ? "Processo" : m.entidadeTipo === "RISCO_OPORTUNIDADE" ? "Risco/oportunidade" : m.entidadeTipo === "HIRA" ? "HIRA" : m.entidadeTipo === "LAIA" ? "LAIA" : m.entidadeTipo === "DOCUMENTO" ? "Documento" : m.entidadeTipo === "REQUISITO_LEGAL" ? "Requisito legal" : m.entidadeTipo === "INCIDENTE" ? "Incidente" : m.entidadeTipo === "INSPECAO" ? "Inspeção" : m.entidadeTipo === "AUDITORIA" ? "Auditoria" : "Item de ação"} · <span className={styles.data}>{formatarDataHora(m.criadoEm, fuso)}</span>
+                        {m.entidadeTipo === "RNC" ? "RNC" : m.entidadeTipo === "PROCESSO" ? "Processo" : m.entidadeTipo === "RISCO_OPORTUNIDADE" ? "Risco/oportunidade" : m.entidadeTipo === "HIRA" ? "Perigos e Riscos" : m.entidadeTipo === "LAIA" ? "LAIA" : m.entidadeTipo === "DOCUMENTO" ? "Documento" : m.entidadeTipo === "INCIDENTE" ? "Incidente" : m.entidadeTipo === "INSPECAO" ? "Inspeção" : m.entidadeTipo === "AUDITORIA" ? "Auditoria" : "Item de ação"} · <span className={styles.data}>{formatarDataHora(m.criadoEm, fuso)}</span>
                       </span>
                     </span>
                     <span className={styles.texto}>{m.mensagem}</span>

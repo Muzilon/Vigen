@@ -22,7 +22,7 @@ export function LoginFormulario() {
   return (
     <form key={estado?.email ?? ""} action={acao} className={styles.cartaoFormulario}>
       <h2 className={styles.tituloFormulario}>Entrar</h2>
-      <p className={styles.subtituloFormulario}>Use o e-mail corporativo cadastrado pela sua empresa.</p>
+      <p className={styles.subtituloFormulario}>Use o e-mail cadastrado pela sua empresa.</p>
 
       <div className={styles.grupoCampo}>
         <Rotulo htmlFor="email">E-mail</Rotulo>
@@ -63,6 +63,9 @@ export function LoginFormulario() {
       <Botao type="submit" disabled={pendente} className={styles.botaoEntrar}>
         {pendente ? "Entrando..." : "Entrar"}
       </Botao>
+
+      {/* Aviso da regra de bloqueio (5 falhas por e-mail → 15 min): valores de LIMITE_LOGIN em src/lib/auth/limite-login.ts. */}
+      <p className={styles.notaBloqueio}>Após 5 tentativas erradas o acesso é bloqueado por 15 minutos.</p>
     </form>
   );
 }

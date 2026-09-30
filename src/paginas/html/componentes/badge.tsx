@@ -90,22 +90,6 @@ export function BadgeStatusDocumento({ status, rotulo }: { status: StatusDocumen
   return <BadgeStatusRnc status={COR_STATUS_DOCUMENTO[status]} rotulo={rotulo} />;
 }
 
-/** Status de atendimento de requisito legal (P6) — reaproveita as cores de status da RNC. */
-export type StatusRequisitoBadge = "ATENDE" | "ATENDE_PARCIAL" | "NAO_ATENDE" | "NAO_APLICAVEL" | "EM_ANALISE";
-// Cor de cada situação de requisito legal (atende = verde, não atende = vermelho...).
-const COR_STATUS_REQUISITO: Record<StatusRequisitoBadge, StatusRncBadge> = {
-  ATENDE: "ENCERRADO",
-  ATENDE_PARCIAL: "PLANO_EM_EXECUCAO",
-  NAO_ATENDE: "REABERTO",
-  NAO_APLICAVEL: "CANCELADO",
-  EM_ANALISE: "EM_ANALISE",
-};
-
-/** Etiqueta da situação de atendimento de um requisito legal. */
-export function BadgeStatusRequisito({ status, rotulo }: { status: StatusRequisitoBadge; rotulo: string }) {
-  return <BadgeStatusRnc status={COR_STATUS_REQUISITO[status]} rotulo={rotulo} />;
-}
-
 /** Gravidade de incidente (P6) — sem afastamento / com afastamento / fatalidade nas cores de gravidade. */
 export type GravidadeIncidenteBadge = "SEM_AFASTAMENTO" | "COM_AFASTAMENTO" | "FATALIDADE";
 // Cor de cada gravidade de incidente (sem afastamento = média, com afastamento = alta, fatalidade = crítica).

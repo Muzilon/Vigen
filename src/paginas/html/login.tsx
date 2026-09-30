@@ -1,90 +1,51 @@
+import Image from "next/image";
 import { LoginFormulario } from "@/paginas/html/login-formulario";
 import styles from "@/paginas/css/login.module.css";
 
 /**
- * Página de entrada (login): à esquerda o painel da marca (texto de apresentação e destaques),
- * à direita o formulário de e-mail e senha (login-formulario.tsx).
+ * Página de entrada (login): à esquerda o painel da marca (logo principal "Vigen — Sistema de Gestão Integrado",
+ * mensagem de apresentação e as normas atendidas), à direita o cartão com o formulário de e-mail e senha
+ * (login-formulario.tsx). No celular só o formulário aparece, com a logo principal escura acima dele.
  */
-/** Página de entrada — Direção A "Campo" (ver Login.dc.html). */
 export function LoginPagina() {
   return (
-    <div className={`${styles.pagina} fonteIbmPlex`}>
+    <div className={`${styles.pagina} fonteBase`}>
       <section className={styles.painelMarca}>
-        <div className={styles.logoMarca}>
-          <IconeLogo />
-          <span className={styles.logoTextoMarca}>Vigen</span>
-        </div>
-
         <div className={styles.conteudoMarca}>
-          <p className={styles.selo}>QUALIDADE · MEIO AMBIENTE · SSO</p>
-          <h1 className={styles.tituloMarca}>Cada não conformidade tratada até o fim.</h1>
+          {/* Logo principal (versão clara, para fundo escuro) — inclui a frase "Sistema de Gestão Integrado". */}
+          <Image
+            src="/marca/vigen-logo-principal-claro.svg"
+            alt="Vigen — Sistema de Gestão Integrado"
+            width={377}
+            height={137}
+            priority
+            className={styles.logoMarca}
+          />
+          <h1 className={styles.tituloMarca}>Qualidade, meio ambiente e segurança num só lugar.</h1>
           <p className={styles.descricaoMarca}>
-            Do registro em campo à verificação de eficácia: RNC, causa raiz e plano de ação 5W2H no mesmo lugar, com
-            prazos e responsáveis claros para toda a unidade.
+            RNCs, planos de ação, riscos, documentos, inspeções, auditorias e treinamentos — com evidência pronta para o
+            auditor.
           </p>
-          <ul className={styles.listaDestaques}>
-            <li className={styles.itemDestaque}>
-              <span className={styles.iconeDestaque} aria-hidden="true"><IconeRelogio /></span>
-              Registro em campo em poucos minutos
-            </li>
-            <li className={styles.itemDestaque}>
-              <span className={styles.iconeDestaque} aria-hidden="true"><IconeLista /></span>
-              Planos 5W2H com ciclos e verificação de eficácia
-            </li>
-            <li className={styles.itemDestaque}>
-              <span className={styles.iconeDestaque} aria-hidden="true"><IconeCadeado /></span>
-              Dados pessoais de envolvidos protegidos (LGPD)
-            </li>
+          <ul className={styles.listaNormas} aria-label="Normas atendidas">
+            <li className={styles.etiquetaNorma}>ISO 9001</li>
+            <li className={styles.etiquetaNorma}>ISO 14001</li>
+            <li className={styles.etiquetaNorma}>ISO 45001</li>
           </ul>
         </div>
-
-        <p className={styles.rodapeMarca}>© 2026 Vigen · Gestão de não conformidades para operações de campo</p>
       </section>
 
       <section className={styles.painelFormulario}>
+        {/* No celular o painel da marca some; a logo principal (versão escura) aparece aqui, acima do formulário. */}
+        <Image
+          src="/marca/vigen-logo-principal.svg"
+          alt="Vigen — Sistema de Gestão Integrado"
+          width={377}
+          height={137}
+          priority
+          className={styles.logoMobile}
+        />
         <LoginFormulario />
       </section>
     </div>
-  );
-}
-
-/** Desenho (SVG) do logotipo da marca. */
-function IconeLogo() {
-  return (
-    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z" />
-      <path d="m8.5 9 3.5 6.5L15.5 9" />
-    </svg>
-  );
-}
-/** Ícone de relógio, usado no destaque "registro em campo em poucos minutos". */
-function IconeRelogio() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-/** Ícone de lista com marcas de verificação, usado no destaque dos planos 5W2H. */
-function IconeLista() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M10 6h10" />
-      <path d="M10 12h10" />
-      <path d="M10 18h10" />
-      <path d="m3.5 6 1.5 1.5L7.5 5" />
-      <path d="m3.5 12 1.5 1.5 2.5-2.5" />
-      <path d="m3.5 18 1.5 1.5 2.5-2.5" />
-    </svg>
-  );
-}
-/** Ícone de cadeado, usado no destaque de proteção de dados pessoais (LGPD). */
-function IconeCadeado() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="5" y="11" width="14" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
   );
 }
