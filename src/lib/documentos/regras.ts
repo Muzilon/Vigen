@@ -223,6 +223,7 @@ export const ROTULO_STATUS_VERSAO: Record<StatusVersaoDocumento, string> = {
 export const ROTULO_ACAO_DOCUMENTO: Record<AcaoHistoricoDocumento, string> = {
   CRIACAO: "Criação",
   ALTERACAO_DADOS: "Dados alterados",
+  EDICAO: "Documento editado",
   NOVA_REVISAO: "Nova revisão",
   ARQUIVO_SUBSTITUIDO: "Arquivo substituído",
   ENVIO_APROVACAO: "Enviado para revisão/aprovação",

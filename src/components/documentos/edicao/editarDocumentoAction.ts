@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
+import { prismaAdmin as prisma } from '@/lib/prisma';
 import { AcaoHistoricoDocumento } from '@prisma/client';
 
 export type EditarDocumentoInput = {
@@ -70,8 +70,8 @@ export async function editarDocumentoAction(input: EditarDocumentoInput) {
           documentoId: input.id,
           usuarioId: input.usuarioId,
           acao: AcaoHistoricoDocumento.EDICAO,
-          versao: documentoAtualizado.versao,
           dados: {
+            versao: documentoAtualizado.versao,
             antes: dadosAntigos,
             depois: dadosNovos,
           },

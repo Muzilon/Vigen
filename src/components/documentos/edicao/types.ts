@@ -27,6 +27,19 @@ export interface AtualizarDocumentoInput {
   status: StatusDocumento;
 }
 
+export interface EventoAuditoriaEdicao {
+  tipo: 'EDICAO';
+  documentoId: string;
+  antes: DocumentoEdicao;
+  depois: DocumentoEdicao;
+  data: string;
+}
+
+declare global {
+  // Log em memória usado apenas pela simulação do server-action e pelos testes.
+  var mockEventLog: EventoAuditoriaEdicao[];
+}
+
 export type AtualizarDocumentoResult =
   | {
       success: true;
