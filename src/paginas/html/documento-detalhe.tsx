@@ -206,6 +206,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
 
               {trabalho.status === "RASCUNHO" && elabora && (
                 <>
+                  {/* Upload antigo (salvava no disco local) desativado em favor do novo componente Drag & Drop UploadAnexo:
                   <details className={styles.editar}>
                     <summary>Trocar o arquivo da revisão</summary>
                     <FormAcao acao={substituirArquivoAcao} botao="Substituir arquivo" tamanho="pequeno" className={styles.formulario}>
@@ -218,6 +219,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
                       </label>
                     </FormAcao>
                   </details>
+                  */}
                   <div className={styles.bloco}>
                     <p className={styles.subtitulo}>Enviar para revisão e aprovação</p>
                     <DocumentoEnvio

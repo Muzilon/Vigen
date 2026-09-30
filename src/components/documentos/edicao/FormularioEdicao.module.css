@@ -1,0 +1,517 @@
+/**
+ * Vigen Design System - Estilos do Formulário de Edição de Documento (F6)
+ * Identidade Visual: Azul-Petróleo (Deep Teal)
+ * Arquitetura: CSS Modules sem dependência de Tailwind
+ */
+
+/* ==========================================================================
+   Contêiner Principal
+   ========================================================================== */
+.card {
+  max-width: 820px;
+  margin: 0 auto;
+  background-color: var(--vigen-color-surface, #FFFFFF);
+  border: 1px solid var(--vigen-color-border, #D1D9E0);
+  border-radius: var(--vigen-radius-lg, 12px);
+  box-shadow: var(--vigen-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+  font-family: var(--vigen-font-family, system-ui, sans-serif);
+  color: var(--vigen-color-text-primary, #111B21);
+  transition: box-shadow var(--vigen-transition-normal, 250ms ease);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--vigen-space-6, 1.5rem) var(--vigen-space-8, 2rem);
+  background: linear-gradient(135deg, var(--vigen-color-primary-surface, #F2F8F9) 0%, #FFFFFF 100%);
+  border-bottom: 1px solid var(--vigen-color-border-subtle, #E6EBEE);
+  gap: var(--vigen-space-4, 1rem);
+}
+
+.headerText {
+  flex: 1;
+}
+
+.title {
+  font-size: var(--vigen-font-size-xl, 1.5rem);
+  font-weight: var(--vigen-font-weight-bold, 700);
+  color: var(--vigen-color-primary, #0A5C66);
+  margin: 0 0 var(--vigen-space-1, 0.25rem) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--vigen-space-3, 0.75rem);
+}
+
+.subtitle {
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  color: var(--vigen-color-text-secondary, #475467);
+  margin: 0;
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: var(--vigen-space-2, 0.5rem);
+  flex-wrap: wrap;
+}
+
+.versionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  background-color: var(--vigen-color-primary-100, #D0ECF0);
+  color: var(--vigen-color-primary-dark, #042E34);
+  font-size: var(--vigen-font-size-xs, 0.75rem);
+  font-weight: var(--vigen-font-weight-semibold, 600);
+  border-radius: var(--vigen-radius-full, 9999px);
+  border: 1px solid var(--vigen-color-primary-300, #71BFCC);
+}
+
+/* ==========================================================================
+   Banners de Estado (Offline, Conflito de Versão, Erro, Sucesso)
+   ========================================================================== */
+.bannerOffline {
+  display: flex;
+  align-items: center;
+  gap: var(--vigen-space-3, 0.75rem);
+  padding: var(--vigen-space-3, 0.75rem) var(--vigen-space-6, 1.5rem);
+  background-color: var(--vigen-color-offline-bg, #EDF2F7);
+  border-bottom: 1px solid var(--vigen-color-offline-border, #CBD5E0);
+  color: var(--vigen-color-offline, #4A5568);
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  font-weight: var(--vigen-font-weight-medium, 500);
+}
+
+.bannerConflict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vigen-space-3, 0.75rem);
+  padding: var(--vigen-space-4, 1rem) var(--vigen-space-6, 1.5rem);
+  background-color: var(--vigen-color-warning-bg, #FFF9ED);
+  border-left: 5px solid var(--vigen-color-warning, #995B00);
+  border-bottom: 1px solid var(--vigen-color-warning-border, #F5CE8A);
+  color: var(--vigen-color-warning-text, #613800);
+}
+
+.bannerConflictHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--vigen-space-3, 0.75rem);
+}
+
+.bannerConflictTitle {
+  font-size: var(--vigen-font-size-base, 1rem);
+  font-weight: var(--vigen-font-weight-bold, 700);
+  margin: 0;
+  color: var(--vigen-color-warning-text, #613800);
+}
+
+.bannerConflictBody {
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  line-height: var(--vigen-line-height-normal, 1.5);
+  margin: 0;
+}
+
+.bannerConflictActions {
+  display: flex;
+  gap: var(--vigen-space-3, 0.75rem);
+  margin-top: var(--vigen-space-2, 0.5rem);
+}
+
+.bannerError {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--vigen-space-3, 0.75rem);
+  padding: var(--vigen-space-4, 1rem) var(--vigen-space-6, 1.5rem);
+  background-color: var(--vigen-color-danger-bg, #FDF2F2);
+  border-left: 5px solid var(--vigen-color-danger, #B3261E);
+  border-bottom: 1px solid var(--vigen-color-danger-border, #F5B8B5);
+  color: var(--vigen-color-danger, #B3261E);
+}
+
+.bannerSuccess {
+  display: flex;
+  align-items: center;
+  gap: var(--vigen-space-3, 0.75rem);
+  padding: var(--vigen-space-4, 1rem) var(--vigen-space-6, 1.5rem);
+  background-color: var(--vigen-color-success-bg, #EDF7F1);
+  border-left: 5px solid var(--vigen-color-success, #1B6E44);
+  border-bottom: 1px solid var(--vigen-color-success-border, #A3D9BC);
+  color: var(--vigen-color-success, #1B6E44);
+  font-weight: var(--vigen-font-weight-medium, 500);
+}
+
+/* ==========================================================================
+   Formulário e Grupos de Campos
+   ========================================================================== */
+.form {
+  padding: var(--vigen-space-8, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--vigen-space-6, 1.5rem);
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--vigen-space-6, 1.5rem);
+}
+
+@media (max-width: 640px) {
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vigen-space-2, 0.5rem);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  font-weight: var(--vigen-font-weight-semibold, 600);
+  color: var(--vigen-color-text-primary, #111B21);
+}
+
+.requiredMark {
+  color: var(--vigen-color-danger, #B3261E);
+  margin-left: var(--vigen-space-1, 0.25rem);
+  font-weight: bold;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.625rem 0.875rem;
+  font-family: inherit;
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  color: var(--vigen-color-text-primary, #111B21);
+  background-color: var(--vigen-color-surface, #FFFFFF);
+  border: 1px solid var(--vigen-color-border, #D1D9E0);
+  border-radius: var(--vigen-radius-md, 8px);
+  outline: none;
+  transition: border-color var(--vigen-transition-fast, 150ms ease),
+              box-shadow var(--vigen-transition-fast, 150ms ease);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--vigen-color-primary, #0A5C66);
+  box-shadow: var(--vigen-shadow-focus, 0 0 0 3px rgba(10, 92, 102, 0.35));
+}
+
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  background-color: var(--vigen-color-surface-muted, #F1F4F6);
+  color: var(--vigen-color-text-muted, #667085);
+  cursor: not-allowed;
+  border-color: var(--vigen-color-border-subtle, #E6EBEE);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: var(--vigen-line-height-normal, 1.5);
+}
+
+.inputError {
+  border-color: var(--vigen-color-danger, #B3261E) !important;
+}
+
+.inputError:focus {
+  box-shadow: var(--vigen-shadow-danger-focus, 0 0 0 3px rgba(179, 38, 30, 0.25)) !important;
+}
+
+.helperText {
+  font-size: var(--vigen-font-size-xs, 0.75rem);
+  color: var(--vigen-color-text-secondary, #475467);
+  margin: 0;
+}
+
+.errorText {
+  display: flex;
+  align-items: center;
+  gap: var(--vigen-space-1, 0.25rem);
+  font-size: var(--vigen-font-size-xs, 0.75rem);
+  font-weight: var(--vigen-font-weight-medium, 500);
+  color: var(--vigen-color-danger, #B3261E);
+  margin: 0;
+}
+
+/* ==========================================================================
+   Componente de Tags
+   ========================================================================== */
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vigen-space-2, 0.5rem);
+  margin-top: var(--vigen-space-1, 0.25rem);
+}
+
+.tagItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vigen-space-1, 0.25rem);
+  background-color: var(--vigen-color-primary-surface, #F2F8F9);
+  color: var(--vigen-color-primary, #0A5C66);
+  border: 1px solid var(--vigen-color-primary-200, #A3D8E0);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--vigen-radius-sm, 4px);
+  font-size: var(--vigen-font-size-xs, 0.75rem);
+  font-weight: var(--vigen-font-weight-medium, 500);
+}
+
+.tagRemoveBtn {
+  background: none;
+  border: none;
+  color: var(--vigen-color-primary-hover, #0E7482);
+  cursor: pointer;
+  padding: 0 0.125rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+
+.tagRemoveBtn:hover,
+.tagRemoveBtn:focus-visible {
+  color: var(--vigen-color-danger, #B3261E);
+  outline: none;
+}
+
+/* ==========================================================================
+   Metadados (Versão, Autor, Data)
+   ========================================================================== */
+.metadataPanel {
+  display: flex;
+  gap: var(--vigen-space-6, 1.5rem);
+  padding: var(--vigen-space-3, 0.75rem) var(--vigen-space-4, 1rem);
+  background-color: var(--vigen-color-bg-app, #F5F8FA);
+  border-radius: var(--vigen-radius-md, 8px);
+  font-size: var(--vigen-font-size-xs, 0.75rem);
+  color: var(--vigen-color-text-secondary, #475467);
+  flex-wrap: wrap;
+}
+
+.metadataItem {
+  display: flex;
+  gap: var(--vigen-space-1, 0.25rem);
+}
+
+.metadataKey {
+  font-weight: var(--vigen-font-weight-semibold, 600);
+}
+
+/* ==========================================================================
+   Barra de Ações e Botões
+   ========================================================================== */
+.actionsBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--vigen-space-3, 0.75rem);
+  padding-top: var(--vigen-space-4, 1rem);
+  border-top: 1px solid var(--vigen-color-border-subtle, #E6EBEE);
+}
+
+.btnPrimary,
+.btnSecondary,
+.btnConflictReload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vigen-space-2, 0.5rem);
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--vigen-radius-md, 8px);
+  font-family: inherit;
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  font-weight: var(--vigen-font-weight-semibold, 600);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--vigen-transition-fast, 150ms ease);
+}
+
+.btnPrimary {
+  background-color: var(--vigen-color-primary, #0A5C66);
+  color: var(--vigen-color-text-inverse, #FFFFFF);
+  border: 1px solid var(--vigen-color-primary, #0A5C66);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background-color: var(--vigen-color-primary-hover, #0E7482);
+  border-color: var(--vigen-color-primary-hover, #0E7482);
+}
+
+.btnPrimary:active:not(:disabled) {
+  background-color: var(--vigen-color-primary-active, #06434B);
+}
+
+.btnPrimary:focus-visible {
+  outline: none;
+  box-shadow: var(--vigen-shadow-focus, 0 0 0 3px rgba(10, 92, 102, 0.35));
+}
+
+.btnPrimary:disabled {
+  background-color: var(--vigen-color-border, #D1D9E0);
+  border-color: var(--vigen-color-border, #D1D9E0);
+  color: var(--vigen-color-text-muted, #667085);
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background-color: transparent;
+  color: var(--vigen-color-text-primary, #111B21);
+  border: 1px solid var(--vigen-color-border, #D1D9E0);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background-color: var(--vigen-color-surface-hover, #F8FAFB);
+  border-color: var(--vigen-color-border-strong, #8F9CA8);
+}
+
+.btnSecondary:focus-visible {
+  outline: none;
+  box-shadow: var(--vigen-shadow-focus, 0 0 0 3px rgba(10, 92, 102, 0.35));
+}
+
+.btnSecondary:disabled {
+  color: var(--vigen-color-text-muted, #667085);
+  cursor: not-allowed;
+}
+
+.btnConflictReload {
+  background-color: var(--vigen-color-warning, #995B00);
+  color: #FFFFFF;
+  border: 1px solid var(--vigen-color-warning, #995B00);
+  padding: 0.5rem 1rem;
+}
+
+.btnConflictReload:hover {
+  background-color: #804C00;
+  border-color: #804C00;
+}
+
+.btnConflictReload:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(153, 91, 0, 0.35);
+}
+
+/* ==========================================================================
+   Spinner e Animações
+   ========================================================================== */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinnerTeal {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--vigen-color-primary-100, #D0ECF0);
+  border-top-color: var(--vigen-color-primary, #0A5C66);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Estado Carregando (Skeleton / Loading State)
+   ========================================================================== */
+.loadingContainer {
+  padding: var(--vigen-space-8, 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+  gap: var(--vigen-space-4, 1rem);
+}
+
+.loadingSkeleton {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--vigen-space-4, 1rem);
+}
+
+.skeletonBar {
+  height: 18px;
+  background: linear-gradient(90deg, #E6EBEE 25%, #F5F8FA 50%, #E6EBEE 75%);
+  background-size: 200% 100%;
+  border-radius: var(--vigen-radius-sm, 4px);
+  animation: shimmer 1.5s infinite;
+}
+
+.skeletonBox {
+  height: 100px;
+  background: linear-gradient(90deg, #E6EBEE 25%, #F5F8FA 50%, #E6EBEE 75%);
+  background-size: 200% 100%;
+  border-radius: var(--vigen-radius-md, 8px);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==========================================================================
+   Estado Vazio (Empty State)
+   ========================================================================== */
+.emptyState {
+  padding: var(--vigen-space-12, 3rem) var(--vigen-space-6, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--vigen-space-3, 0.75rem);
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  color: var(--vigen-color-primary, #0A5C66);
+  opacity: 0.6;
+}
+
+.emptyTitle {
+  font-size: var(--vigen-font-size-lg, 1.25rem);
+  font-weight: var(--vigen-font-weight-bold, 700);
+  color: var(--vigen-color-text-primary, #111B21);
+  margin: 0;
+}
+
+.emptyDescription {
+  font-size: var(--vigen-font-size-sm, 0.875rem);
+  color: var(--vigen-color-text-secondary, #475467);
+  max-width: 420px;
+  margin: 0 0 var(--vigen-space-4, 1rem) 0;
+}
