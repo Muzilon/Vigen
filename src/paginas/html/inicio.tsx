@@ -8,20 +8,31 @@ import { getContexto } from "@/lib/tenant";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import styles from "@/paginas/css/inicio.module.css";
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
+/**
+ * Página inicial ("Olá, fulano"): resumo rápido do usuário logado — quantas RNCs estão abertas, quantos itens de ação
+ * estão atrasados, quantos itens pendentes são dele — e as últimas mensagens não lidas.
+ */
 /** Início — resumo do usuário logado (ver Inicio.dc.html, Direção A "Campo"). */
 export default async function Inicio() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Fuso horário da empresa e a data de hoje nesse fuso (para saber o que está atrasado).
   const fuso = await fusoDaEmpresa(a);
   const hoje = paraDataDb(hojeNoFuso(fuso));
+  // `gestor`: usuário com permissão de gerenciar planos de ação (vê os itens de todos, não só os seus).
   const gestor = atorTem(a, "PLANO_GERENCIAR");
+  // Filtro reutilizado: itens de ação ainda não concluídos (pendentes ou em andamento).
   const abertos = { status: { in: ["PENDENTE" as const, "EM_ANDAMENTO" as const] } };
 
+  // Faz as 4 consultas ao mesmo tempo (mais rápido): RNCs abertas, itens atrasados, meus itens e mensagens.
   const [rncsAbertas, atrasados, meus, mensagens] = await Promise.all([
     // B7: mesma regra de acesso do detalhe e da lista.
     a.db.rnc.count({ where: { AND: [filtroAcessoRnc(a), { status: { notIn: ["ENCERRADO", "CANCELADO"] } }] } }),
@@ -30,6 +41,7 @@ export default async function Inicio() {
     listarNaoLidas(a, 5),
   ]);
 
+  // Os três "cartões" de número do topo: rótulo, valor, para onde o clique leva e a cor de destaque.
   const cards = [
     { rotulo: "RNCs abertas", valor: rncsAbertas, href: "/rncs", destaque: styles.valorInformativo },
     { rotulo: "Itens atrasados", valor: atrasados, href: `/plano-acao?escopo=${gestor ? "todos" : "meus"}&status=ATRASADO`, destaque: styles.valorAlerta },

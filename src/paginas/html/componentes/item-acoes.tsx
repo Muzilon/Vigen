@@ -5,6 +5,7 @@ import { dataIso } from "@/lib/datas";
 import botoes from "@/paginas/css/componentes/botao.module.css";
 import styles from "@/paginas/css/componentes/item-acoes.module.css";
 
+/** Os dados de um item do plano 5W2H que este componente precisa (o quê, por quê, onde, quem, quando, como, quanto). */
 interface ItemParaAcoes {
   id: string;
   status: string;
@@ -22,7 +23,12 @@ export function itemTemAcoes(status: string, podeExecutar: boolean, podeGerencia
   return (status === "PENDENTE" || status === "EM_ANDAMENTO") && (podeExecutar || podeGerenciar);
 }
 
-/** Ações por item: execução (quem) e gestão (responsável da RNC / PLANO_GERENCIAR). */
+/**
+ * Botões de ação de um item do plano 5W2H:
+ * - quem executa: "Iniciar" e "Concluir" (este pede data, evidência e arquivos);
+ * - quem gerencia (responsável da RNC ou permissão PLANO_GERENCIAR): "Editar" e "Cancelar".
+ * `podeExecutar`/`podeGerenciar` dizem o que o usuário atual pode fazer; `hoje` é a data padrão da conclusão.
+ */
 export function ItemAcoes({
   item,
   rncId,
@@ -38,19 +44,23 @@ export function ItemAcoes({
   usuarios: { id: string; nome: string }[];
   hoje: string;
 }) {
+  // Sem nenhuma ação possível (item já concluído/cancelado ou usuário sem permissão): mostra só "—".
   if (!itemTemAcoes(item.status, podeExecutar, podeGerenciar)) return <span className={styles.semAcao}>—</span>;
+  // Campos escondidos que todos os formulários abaixo enviam: qual item (e qual RNC) é o alvo da ação.
   const ocultos = (
     <>
       <input type="hidden" name="itemId" value={item.id} />
       {rncId && <input type="hidden" name="rncId" value={rncId} />}
     </>
   );
+  // Monta um campo de formulário: um rótulo (<label>) ligado ao controle (input/select/textarea) pelo `id`.
   const campo = (id: string, rotulo: string, controle: React.ReactNode) => (
     <div className={styles.campo}>
       <label htmlFor={id} className={styles.rotulo}>{rotulo}</label>
       {controle}
     </div>
   );
+  // Prefixo para gerar ids únicos por item (vários itens na mesma página não podem repetir id).
   const pfx = `it-${item.id}`;
   return (
     <div className={styles.acoes}>

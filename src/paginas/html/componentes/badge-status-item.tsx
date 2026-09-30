@@ -15,6 +15,10 @@ const CLASSE_STATUS: Record<StatusEfetivoItem | StatusGeralPlano, string> = {
   ATRASADO: styles.atrasado,
 };
 
+/**
+ * Peça interna usada pelos dois badges abaixo: desenha a etiqueta colorida com o texto.
+ * Se o status for ATRASADO, acrescenta um ícone de relógio antes do texto.
+ */
 function Conteudo({ status, rotulo }: { status: StatusEfetivoItem | StatusGeralPlano; rotulo: string }) {
   return (
     <span className={`${styles.badge} ${CLASSE_STATUS[status]}`}>
@@ -24,10 +28,12 @@ function Conteudo({ status, rotulo }: { status: StatusEfetivoItem | StatusGeralP
   );
 }
 
+/** Etiqueta com o status de UM item do plano 5W2H (Pendente, Em andamento, Concluído, Atrasado...). */
 export function BadgeStatusItem({ status }: { status: StatusEfetivoItem }) {
   return <Conteudo status={status} rotulo={ROTULO_STATUS_ITEM[status]} />;
 }
 
+/** Etiqueta com o status geral do plano de ação inteiro (calculado a partir dos itens dele). */
 export function BadgeStatusPlano({ status }: { status: StatusGeralPlano }) {
   return <Conteudo status={status} rotulo={ROTULO_STATUS_PLANO[status]} />;
 }
@@ -37,6 +43,7 @@ export function BadgeOrigem({ children }: { children: React.ReactNode }) {
   return <span className={`${styles.badge} ${styles.origem}`}>{children}</span>;
 }
 
+/** Desenho (SVG) de um relógio, mostrado nos itens atrasados. */
 function IconeRelogio() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

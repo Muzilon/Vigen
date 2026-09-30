@@ -1,8 +1,10 @@
 import type { TipoAuditoria } from "@prisma/client";
 import styles from "@/paginas/css/auditoria-formulario.module.css";
 
+// Uma opção de lista suspensa: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
+/** Os valores de uma auditoria que o formulário mostra (todos opcionais: vazios na criação, preenchidos na edição). */
 export interface ValoresAuditoria {
   programaId: string;
   tipo: TipoAuditoria;
@@ -16,6 +18,11 @@ export interface ValoresAuditoria {
   dataFim: string;
 }
 
+/**
+ * Os campos do formulário de auditoria (tipo, norma, escopo, datas, auditor líder, equipe, programa, processo, unidade).
+ * É reaproveitado na criação e na edição: a página que o usa coloca dentro de um <FormAcao>.
+ * - `v`: valores iniciais. As demais propriedades são as listas para as caixas de seleção.
+ */
 /** Campos da auditoria (nova e edição), usados dentro de um FormAcao. */
 export function CamposAuditoria({
   v,

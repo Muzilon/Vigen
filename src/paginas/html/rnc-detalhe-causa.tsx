@@ -7,7 +7,9 @@ import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-
 import { Botao } from "@/paginas/html/componentes/botao";
 import styles from "@/paginas/css/rnc-detalhe-causa.module.css";
 
+// Os métodos de análise possíveis (5 Porquês, Ishikawa ou texto livre); as chaves vêm de ROTULO_METODO.
 type Metodo = keyof typeof ROTULO_METODO;
+// Formato guardado da análise: lista de porquês, mapa do Ishikawa (categoria → texto) ou um texto livre.
 type Analise = { porques?: string[]; ishikawa?: Record<string, string>; texto?: string };
 
 /**
@@ -22,12 +24,18 @@ export function CausaForm(props: {
   analise: Analise | null;
   causaRaiz: string | null;
 }) {
+  // Liga o formulário à server action (a padrão é salvar causa da RNC; outro módulo pode passar a sua): `res` é a resposta, `pendente` indica que está salvando.
   const [res, acao, pendente] = useActionState(props.acao ?? salvarCausaAcao, null);
+  // Método escolhido no momento (começa com o que já estava salvo ou "5 Porquês").
   const [metodo, setMetodo] = useState<Metodo>(props.metodo ?? "CINCO_PORQUES");
+  // Os 5 campos do método "5 Porquês" (começam vazios ou com o que já foi salvo).
   const [porques, setPorques] = useState<string[]>(props.analise?.porques ?? ["", "", "", "", ""]);
+  // Os campos do Ishikawa: um texto para cada um dos 6M (máquina, método, mão de obra, materiais, meio ambiente, medição).
   const [ishikawa, setIshikawa] = useState<Record<string, string>>(props.analise?.ishikawa ?? {});
+  // O texto do método livre ("Outro").
   const [texto, setTexto] = useState(props.analise?.texto ?? "");
 
+  // Só o conteúdo do método escolhido vai no envio (em formato JSON, dentro de um campo escondido).
   const analise =
     metodo === "CINCO_PORQUES" ? { porques } : metodo === "ISHIKAWA" ? { ishikawa } : { texto };
 

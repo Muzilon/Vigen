@@ -40,22 +40,37 @@ import styles from "@/paginas/css/treinamento-detalhe.module.css";
  * certificado por pessoa (quem gerencia). Os demais veem o catálogo e a própria participação/certificado.
  */
 export default async function TreinamentoDetalhe({ params }: PageProps<"/treinamentos/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Treinamentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "TREINAMENTOS");
+  // `id`: o identificador do treinamento, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o treinamento com sessões, participações, gatilhos e documento de conscientização.
   const t = await obterTreinamento(a, id);
+  // Treinamento inexistente ou sem acesso → 404.
   if (!t) notFound();
+  // `g`: pode gerenciar treinamentos (registrar sessões, lançar presença, avaliar eficácia). Os demais só veem a própria participação.
   const g = podeGerenciarTreinamentos(a);
+  // Busca em paralelo as opções, o fuso horário e (só para quem gerencia) a situação da equipe neste treinamento.
   const [op, fuso, matriz] = await Promise.all([opcoesTreinamentos(a), fusoDaEmpresa(a), g ? matrizCompetencias(a, { treinamentoId: id }) : null]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // Dicionário id do setor → nome.
   const nomeSetor = new Map(op.setores.map((s) => [s.id, s.nome]));
+  // Dicionário id da função → nome.
   const nomeFuncao = new Map(op.funcoes.map((f) => [f.id, f.nome]));
+  // Texto do público obrigatório ("setor X", "função Y") para o cabeçalho.
   const publicoObrigatorio = [...t.obrigatorioSetorIds.map((s) => `setor ${nomeSetor.get(s) ?? "?"}`), ...t.obrigatorioFuncaoIds.map((f) => `função ${nomeFuncao.get(f) ?? "?"}`)];
+  // Pessoas com este treinamento a vencer, vencido ou não realizado (só para quem gerencia).
   const pendentes = matriz
     ? matriz.linhas.map((l) => ({ usuario: l.usuario, celula: l.celulas[0] })).filter((x) => x.celula?.status && (x.celula.status === "A_VENCER" || STATUS_PENDENTES.includes(x.celula.status)))
     : [];
+  // O treinamento é do tipo NR ou reciclagem? Então os campos da NR-1 (qualificação, conteúdo) ficam destacados.
   const nr1 = t.tipo === "NR" || t.tipo === "RECICLAGEM";
 
   return (
@@ -134,10 +149,15 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
           {t.sessoes.length === 0 && <Cartao titulo="Sessões"><p className={styles.vazio}>Nenhuma sessão registrada.</p></Cartao>}
 
           {t.sessoes.map((s) => {
+            // Dicionário usuário → participação nesta sessão.
             const porUsuario = new Map(s.participacoes.map((p) => [p.usuarioId, p]));
+            // Quantas pessoas estiveram presentes na sessão.
             const presentes = s.participacoes.filter((p) => p.presente).length;
+            // Pendências da sessão frente à NR-1 (lista vazia = conforme; vazio/nulo = não se aplica).
             const pend = pendenciasNr1(t, s);
+            // Data da sessão em texto AAAA-MM-DD.
             const dataSessao = dataIso(s.dataRealizacao);
+            // Participantes presentes cuja eficácia já pode (ou poderia) ser avaliada, com a situação de cada um.
             const avaliaveis = s.participacoes
               .filter((p) => p.presente)
               .map((p) => ({ p, situacao: situacaoEficacia(p, dataSessao, t.diasAvaliacaoEficacia, hoje) }))

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import styles from "@/paginas/css/layout-app.module.css";
 
+/** Um item do menu lateral: endereço (`href`), texto, ícone e, opcionalmente, um contador (ex.: aprovações pendentes). */
 export type ItemMenuLateral = { href: string; label: string; icone: ReactNode; contador?: number };
 
 /** Item ativo = pathname exato, ou prefixo para rotas com sub-páginas (ex.: /rncs/123). */
@@ -19,9 +20,12 @@ function ehAtivo(pathname: string, href: string) {
  * barra superior — fecha ao navegar, com Esc ou ao clicar fora.
  */
 export function NavLateral({ itens }: { itens: ItemMenuLateral[] }) {
+  // `pathname`: o endereço atual (ex.: "/rncs/123"), usado para destacar o item ativo.
   const pathname = usePathname();
   const idPainel = useId();
+  // `aberto`: no celular, se o menu está aberto ou recolhido.
   const [aberto, setAberto] = useState(false);
+  // Guarda o endereço da renderização anterior, para detectar quando o usuário navegou.
   const [pathnameAnterior, setPathnameAnterior] = useState(pathname);
 
   // Fecha ao trocar de rota (ajuste de estado durante o render, sem efeito)
@@ -30,6 +34,8 @@ export function NavLateral({ itens }: { itens: ItemMenuLateral[] }) {
     setAberto(false);
   }
 
+  // Enquanto o menu está aberto, escuta o teclado (Esc) e os cliques fora dele para fechá-lo.
+  // O `return` no final desliga as escutas quando o menu fecha (limpeza).
   useEffect(() => {
     if (!aberto) return;
     const aoTeclar = (e: KeyboardEvent) => {
@@ -46,6 +52,7 @@ export function NavLateral({ itens }: { itens: ItemMenuLateral[] }) {
     };
   }, [aberto]);
 
+  // Item do menu que corresponde à página atual (o texto dele aparece ao lado do botão "Menu").
   const ativoAtual = itens.find((i) => ehAtivo(pathname, i.href));
 
   return (
@@ -89,6 +96,7 @@ export function NavLateral({ itens }: { itens: ItemMenuLateral[] }) {
   );
 }
 
+/** Ícone do botão de menu: três tracinhos (hambúrguer) quando fechado, um "X" quando aberto. */
 function IconeMenu({ aberto }: { aberto: boolean }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true">

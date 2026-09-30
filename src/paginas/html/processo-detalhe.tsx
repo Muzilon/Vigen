@@ -39,6 +39,7 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
 import styles from "@/paginas/css/processo-detalhe.module.css";
 
+// Campos do SIPOC (Fornecedores, Entradas, Saídas, Clientes, Recursos): o nome no banco e o rótulo mostrado na tela.
 const CAMPOS_SIPOC = [
   ["fornecedores", "Fornecedores"],
   ["entradas", "Entradas"],
@@ -47,16 +48,31 @@ const CAMPOS_SIPOC = [
   ["recursos", "Recursos"],
 ] as const;
 
+/**
+ * Página de detalhe de um processo: dados e SIPOC (editáveis), indicadores simples, interações com outros
+ * processos, vínculos com os outros módulos (riscos, HIRA, LAIA, documentos, requisitos, indicadores com meta),
+ * versões publicadas (com opção de publicar direto ou por aprovação), anexos e comentários.
+ * Os vínculos de módulos não contratados aparecem como "módulo não contratado".
+ */
 /** Detalhe do processo: dados/SIPOC, indicadores, interações, versões publicadas, anexos e comentários. */
 export default async function ProcessoDetalhe({ params }: PageProps<"/processos/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Mapa de Processos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "MAPA_PROCESSOS");
+  // `id`: o identificador do processo, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o processo com dono, indicadores e interações.
   const p = await obterProcesso(a, id);
+  // Processo inexistente ou sem acesso → 404.
   if (!p) notFound();
+  // Alvo dos anexos (este processo).
   const alvoAnexo = { tipo: "PROCESSO" as const, entidadeId: p.id };
+  // Busca em paralelo: versões publicadas, outros processos, usuários ativos, fuso horário, anexos e os vínculos de cada módulo (vazio/nulo quando o módulo não está contratado).
   const [versoes, outros, usuarios, fuso, anexos, podeAnexar, riscos, linhasHira, linhasLaia, documentos, requisitos, indicadores] = await Promise.all([
     listarVersoes(a, p.id),
     listarProcessos(a),
@@ -71,8 +87,11 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
     listarRequisitosDoProcesso(a, id),
     listarIndicadoresDoProcesso(a, id),
   ]);
+  // `g`: pode editar este processo (tem permissão e o processo está ativo).
   const g = podeGerenciarProcessos(a) && p.ativo;
+  // Processos com os quais é possível criar uma interação (todos, menos este).
   const candidatos = outros.filter((o) => o.id !== p.id);
+  // Quem pode aprovar a publicação: todos os usuários, menos quem está pedindo.
   const aprovadores = usuarios.filter((u) => u.id !== a.usuarioId);
 
   return (
@@ -460,6 +479,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
             ) : (
               <ol className={styles.versoes}>
                 {versoes.map((v) => {
+                  // O "retrato" congelado do processo no momento da publicação dessa versão.
                   const s = v.snapshot as unknown as SnapshotProcesso;
                   return (
                     <li key={v.id} className={styles.versao}>
@@ -500,6 +520,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
   );
 }
 
+/** Uma linha de dado (rótulo + valor) da lista de dados do processo; valor vazio vira "—". */
 function LinhaDado({ rotulo, valor }: { rotulo: string; valor: string | null }) {
   return (
     <>
@@ -509,6 +530,10 @@ function LinhaDado({ rotulo, valor }: { rotulo: string; valor: string | null }) 
   );
 }
 
+/**
+ * Lista de interações com outros processos (entregas ou recebimentos), cada uma com link para o processo
+ * relacionado, o que flui entre eles e, se `podeRemover`, o botão de remover.
+ */
 function ListaInteracoes({
   itens,
   processoId,

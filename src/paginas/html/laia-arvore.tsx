@@ -6,6 +6,7 @@ import type { LinhaLaiaListada } from "@/lib/laia/servico";
 import { BadgeFaixa } from "@/paginas/html/componentes/badge";
 import styles from "@/paginas/css/hira-arvore.module.css";
 
+// Texto mostrado na árvore para registros que não têm processo vinculado.
 const SEM_PROCESSO = "— sem processo —";
 
 /**
@@ -14,11 +15,16 @@ const SEM_PROCESSO = "— sem processo —";
  * aspectos/impactos (LAIA) dela aparecem em cards à direita.
  */
 export function LaiaArvore({ linhas }: { linhas: LinhaLaiaListada[] }) {
+  // Monta a árvore (Unidade > Processo > Atividade) a partir da lista plana de linhas; `useMemo` só refaz a conta se as linhas mudarem.
   const arvore = useMemo(() => construirArvore(linhas), [linhas]);
+  // Qual unidade está expandida na árvore (começa na primeira).
   const [obraAberta, setObraAberta] = useState<string | null>(arvore[0]?.obraId ?? null);
+  // Qual processo está expandido dentro da unidade.
   const [processoAberto, setProcessoAberto] = useState<string | null>(null);
+  // Qual atividade foi clicada (é a que tem seus cartões mostrados à direita).
   const [atividadeSelecionada, setAtividadeSelecionada] = useState<string | null>(null);
 
+  // Do estado (ids escolhidos) chegamos aos objetos: unidade aberta, processo aberto e atividade selecionada.
   const obra = arvore.find((o) => o.obraId === obraAberta) ?? null;
   const processo = obra?.processos.find((p) => p.chave === processoAberto) ?? null;
   const atividade = processo?.atividades.find((a) => a.chave === atividadeSelecionada) ?? null;
@@ -99,6 +105,8 @@ export function LaiaArvore({ linhas }: { linhas: LinhaLaiaListada[] }) {
   );
 }
 
+// Os três níveis da árvore: atividade (com suas linhas), processo (com suas atividades) e unidade (com seus processos).
+// `total` é a contagem de registros abaixo de cada nó, mostrada ao lado do nome.
 interface NoAtividade {
   chave: string;
   nome: string;
@@ -117,7 +125,12 @@ interface NoObra {
   processos: NoProcesso[];
 }
 
+/**
+ * Transforma a lista plana de linhas em árvore: agrupa por unidade, depois por processo, depois por atividade,
+ * contando o total em cada nível. As unidades saem em ordem alfabética.
+ */
 function construirArvore(linhas: LinhaLaiaListada[]): NoObra[] {
+  // Dicionário id da unidade → nó da unidade (evita criar a mesma unidade duas vezes).
   const obras = new Map<string, NoObra>();
   for (const l of linhas) {
     let obra = obras.get(l.obraId);
@@ -126,6 +139,7 @@ function construirArvore(linhas: LinhaLaiaListada[]): NoObra[] {
       obras.set(l.obraId, obra);
     }
     obra.total++;
+    // Identificador do processo (ou "sem-processo") e, abaixo, da atividade dentro dele.
     const chaveProcesso = l.processo?.id ?? "sem-processo";
     let processo = obra.processos.find((p) => p.chave === chaveProcesso);
     if (!processo) {

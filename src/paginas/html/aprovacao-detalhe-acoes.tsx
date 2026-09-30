@@ -24,9 +24,12 @@ export function AprovacaoDetalheAcoes({
   decidir: AcaoServidor;
   cancelar: AcaoServidor;
 }) {
+  // Dois formulários independentes (decidir e cancelar), cada um ligado à sua server action com resposta e estado "enviando".
   const [resDecisao, executarDecisao, pendenteDecisao] = useActionState(decidir, null);
   const [resCancelar, executarCancelar, pendenteCancelar] = useActionState(cancelar, null);
+  // Aviso local mostrado quando se tenta rejeitar sem escrever o motivo.
   const [avisoRejeicao, setAvisoRejeicao] = useState("");
+  // Id único para ligar os rótulos aos campos (acessibilidade).
   const id = useId();
 
   return (
@@ -36,8 +39,10 @@ export function AprovacaoDetalheAcoes({
           action={executarDecisao}
           className={styles.formDecisao}
           onSubmit={(e) => {
+            // Descobre qual botão foi clicado (Aprovar ou Rejeitar) e lê o comentário digitado.
             const botao = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
             const comentario = new FormData(e.currentTarget).get("comentario");
+            // Rejeitar exige comentário: se estiver vazio, cancela o envio e mostra o aviso.
             if (botao?.value === "REJEITAR" && !String(comentario ?? "").trim()) {
               e.preventDefault();
               setAvisoRejeicao("Informe o motivo da rejeição no comentário.");

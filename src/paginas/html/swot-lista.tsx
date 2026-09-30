@@ -12,14 +12,24 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/swot-lista.module.css";
 
+/**
+ * Página "SWOT e partes interessadas": lista os ciclos anuais de análise de contexto (ISO 9001 4.1/4.2)
+ * e, para quem pode gerenciar, o formulário de criar um novo ciclo (podendo copiar os itens do anterior).
+ */
 /** Ciclos anuais de análise de contexto (SWOT + partes interessadas, ISO 9001 4.1/4.2). */
 export default async function SwotLista() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de SWOT, a página responde "404 - não encontrada".
   exigirModulo(ctx, "SWOT");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca em paralelo os ciclos já criados e o fuso horário da empresa.
   const [ciclos, fuso] = await Promise.all([listarCiclos(a), fusoDaEmpresa(a)]);
+  // Ano atual e sugestão do ano do próximo ciclo (se o do ano atual já existe, sugere o seguinte).
   const anoAtual = anoNoFuso(fuso);
   const proximoAno = ciclos.some((c) => c.ano === anoAtual) ? Math.max(anoAtual, ...ciclos.map((c) => c.ano)) + 1 : anoAtual;
+  // `g`: verdadeiro se o usuário pode criar/editar ciclos (senão vê só a lista).
   const g = podeGerenciarSwot(a);
 
   return (

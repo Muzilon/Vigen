@@ -7,9 +7,16 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { Entrada, Rotulo } from "@/paginas/html/componentes/campo-formulario";
 import styles from "@/paginas/css/plano-acao-plano-editar.module.css";
 
-/** Edição do cabeçalho do plano avulso; campos controlados (não se perdem em erro). */
+/**
+ * Formulário para editar o título e o objetivo de um plano avulso.
+ * É "use client": os campos são controlados pelo React (guardam o que foi digitado, inclusive se der erro).
+ * - `planoId`/`versao`: qual plano é e em que versão foi lido (evita sobrescrever edição de outra pessoa).
+ * - `titulo`/`descricao`: valores atuais, usados como ponto de partida.
+ */
 export function EditarPlanoForm({ planoId, versao, titulo: t0, descricao: d0 }: { planoId: string; versao: number; titulo: string; descricao: string }) {
+  // Liga o formulário à server action: `res` é a resposta, `pendente` indica que está salvando.
   const [res, acao, pendente] = useActionState(editarPlanoManualAcao, null);
+  // Texto atual do título e da descrição (começam com os valores salvos).
   const [titulo, setTitulo] = useState(t0);
   const [descricao, setDescricao] = useState(d0);
   return (

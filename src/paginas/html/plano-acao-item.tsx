@@ -15,6 +15,7 @@ import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/
 import { BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
 import styles from "@/paginas/css/plano-acao-item.module.css";
 
+// Quantos milissegundos tem um dia (usado para contar dias até o prazo).
 const DIA_MS = 86_400_000;
 // Colunas @db.Date chegam como meia-noite UTC: o dia da semana é lido em UTC para não deslocar.
 const fmtDiaSemana = new Intl.DateTimeFormat("pt-BR", { weekday: "long", timeZone: "UTC" });
@@ -32,9 +33,13 @@ function textoPrazo(dias: number) {
  * sem descrição, causa raiz, outros itens ou dados sensíveis da RNC.
  */
 export default async function PlanoAcaoItem({ params }: PageProps<"/plano-acao/[id]">) {
+  // `id`: o identificador do item de ação, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o item (com quem é o responsável e o plano/RNC de origem) — só se o usuário tem acesso a ele.
   const item = await a.db.itemAcao.findFirst({
     where: { AND: [{ id }, filtroAcessoItem(a)] },
     include: {
@@ -49,30 +54,43 @@ export default async function PlanoAcaoItem({ params }: PageProps<"/plano-acao/[
       },
     },
   });
+  // Item inexistente ou sem acesso → 404.
   if (!item) notFound();
+  // A RNC de origem, se o plano nasceu de uma (planos avulsos não têm).
   const rnc = item.planoAcao.rnc;
+  // O usuário pode ver essa RNC? (se não, o item aparece sem link e sem detalhes dela)
   const rncVisivel = !rnc || (await a.db.rnc.count({ where: { AND: [{ id: rnc.id }, filtroAcessoRnc(a)] } })) > 0;
+  // Fuso horário da empresa e data de hoje nele.
   const fuso = await fusoDaEmpresa(a);
   const hoje = hojeNoFuso(fuso);
+  // Status real do item (calculado: um item pendente com prazo vencido vira "atrasado").
   const st = statusEfetivoItem(item, hoje);
+  // O item é do ciclo atual do plano? (itens de ciclos antigos, de uma RNC reaberta, ficam só para consulta)
   const atual = !rnc || item.ciclo === cicloAtual(rnc.verificacoes);
+  // Usuários ativos em ordem alfabética (alimentam as listas de quem pode receber mensagem ou ser o responsável).
   const ativos = (await usuariosAtivos(a.db)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
   const usuarios = ativos.map((u) => ({ id: u.id, nome: u.nome }));
   // "Quem": só usuários ativos com acesso à obra da RNC / do plano avulso (mantém o atual na lista).
+  // Unidade usada para filtrar quem pode ser o "quem": só quem tem acesso a ela (mantendo o responsável atual).
   const obraQuem = rnc ? rnc.obraId : item.planoAcao.obraId;
   const usuariosQuem = ativos
     .filter((u) => !obraQuem || u.obras === null || u.obras.includes(obraQuem) || u.id === item.quemId)
     .map((u) => ({ id: u.id, nome: u.nome }));
+  // Pode editar/cancelar o item? Depende de ser do ciclo atual, da permissão e do status da RNC (ou do plano avulso).
   const podeGerenciar =
     atual &&
     (rnc
       ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
       : podeGerenciarPlanoManual(a, item.planoAcao));
+  // Pode iniciar/concluir? Só o responsável do item (e, numa RNC, só com o plano em execução).
   const podeExecutar = atual && item.quemId === a.usuarioId && (!rnc || rnc.status === "PLANO_EM_EXECUCAO");
+  // Alvo dos anexos (este item) e se o usuário pode enviar novos.
   const alvoAnexo = { tipo: "ITEM_ACAO" as const, entidadeId: item.id };
   const [anexos, podeAnexar] = await Promise.all([listarAnexos(a, alvoAnexo), podeEnviarAnexo(a, alvoAnexo)]);
 
+  // O item ainda está em aberto (pendente ou em andamento)?
   const aberto = item.status === "PENDENTE" || item.status === "EM_ANDAMENTO";
+  // Dias que faltam para o prazo (negativo = atrasado).
   const diasParaPrazo = Math.round((item.quando.getTime() - paraDataDb(hoje).getTime()) / DIA_MS);
 
   return (
@@ -168,6 +186,7 @@ export default async function PlanoAcaoItem({ params }: PageProps<"/plano-acao/[
   );
 }
 
+/** Seta para a esquerda do link "Plano de Ação". */
 function IconeVoltar() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -176,6 +195,7 @@ function IconeVoltar() {
   );
 }
 
+/** Relógio do chip de prazo. */
 function IconeRelogio() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

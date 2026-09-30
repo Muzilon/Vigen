@@ -22,7 +22,10 @@ export async function AprovacoesDaEntidade({
   entidadeId: string;
   titulo?: string;
 }) {
+  // `a` = "ator": quem está logado (usuário, empresa e permissões). Toda consulta ao banco passa por ele,
+  // o que garante que cada empresa só enxergue os próprios dados.
   const a = await getAtor();
+  // Busca em paralelo o fuso horário da empresa e os fluxos de aprovação deste registro.
   const [fuso, fluxos] = await Promise.all([fusoDaEmpresa(a), listarFluxosDaEntidade(a, entidadeTipo, entidadeId)]);
   return (
     <section className={styles.painel} aria-label={titulo}>
@@ -32,6 +35,7 @@ export async function AprovacoesDaEntidade({
       ) : (
         <ul className={styles.lista}>
           {fluxos.map((f) => {
+            // Quantas assinaturas já foram dadas (para mostrar "1/3" ao lado do status).
             const assinadas = f.etapas.filter((e) => e.status === "APROVADA").length;
             return (
               <li key={f.id} className={styles.item}>

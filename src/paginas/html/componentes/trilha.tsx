@@ -9,7 +9,12 @@ const ROTULOS_EXTRAS: { href: string; label: string }[] = [
   { href: "/configuracoes", label: "Configurações" },
 ];
 
-/** Trilha (breadcrumb) do cabeçalho: "Empresa / Rótulo da rota atual". */
+/**
+ * Trilha de navegação do cabeçalho, no formato "Empresa / Nome da página atual".
+ * Descobre em que página o usuário está comparando o endereço atual (`usePathname`)
+ * com a lista de itens do menu; se não achar nenhum, mostra "Painel".
+ * Precisa ser "use client" porque lê o endereço do navegador.
+ */
 export function Trilha({ empresaNome, itens }: { empresaNome: string; itens: { href: string; label: string }[] }) {
   const pathname = usePathname();
   const atual = [...ROTULOS_EXTRAS, ...itens].reverse().find((i) => (i.href === "/" ? pathname === "/" : pathname.startsWith(i.href)));

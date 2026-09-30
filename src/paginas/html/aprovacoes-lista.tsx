@@ -11,18 +11,28 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { EnvoltorioTabela, LinhaCabecalhoTabela, LinhaTabela, Tabela, Td, Th } from "@/paginas/html/componentes/tabela";
 import styles from "@/paginas/css/aprovacoes-lista.module.css";
 
+/**
+ * Página "Aprovações": duas abas — "Aguardando mim" (o que espera a sua assinatura) e "Solicitadas por mim"
+ * (com filtro por status). Mostra uma tabela com resumo, entidade, tipo de alteração, solicitante, modo, progresso e data.
+ */
 export default async function AprovacoesLista({ searchParams }: PageProps<"/aprovacoes">) {
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Verdadeiro se a aba "Solicitadas por mim" está aberta (`?aba=solicitadas`).
   const abaSolicitadas = sp.aba === "solicitadas";
+  // Filtro de status vindo da URL, aceito só se for um status conhecido (senão vira "sem filtro").
   const statusParam = typeof sp.status === "string" ? sp.status : "";
   const status = (STATUS_FLUXO as string[]).includes(statusParam) ? (statusParam as StatusFluxoAprovacao) : null;
 
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca em paralelo: fuso horário, quantas aprovações aguardam o usuário e a lista da aba atual.
   const [fuso, pendentes, lista] = await Promise.all([
     fusoDaEmpresa(a),
     contarAguardandoMim(a),
     abaSolicitadas ? listarSolicitadasPorMim(a, status ? { status: [status] } : {}) : listarAguardandoMim(a),
   ]);
+  // Monta as classes de CSS de uma aba, destacando a que está ativa.
   const aba = (ativo: boolean) => `${styles.aba} ${ativo ? styles.abaAtiva : ""}`;
 
   return (
@@ -100,7 +110,9 @@ export default async function AprovacoesLista({ searchParams }: PageProps<"/apro
   );
 }
 
+/** Uma linha da tabela: resumo (link para o detalhe) com o status, entidade, alteração, solicitante, modo, progresso e data. */
 function Linha({ f, fuso }: { f: FluxoResumo; fuso: string }) {
+  // Quantas assinaturas já foram aprovadas, para mostrar "1 de 3".
   const assinadas = f.etapas.filter((e) => e.status === "APROVADA").length;
   return (
     <LinhaTabela>

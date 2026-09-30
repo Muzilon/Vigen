@@ -7,9 +7,16 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { Alerta } from "@/paginas/html/componentes/alerta";
 import styles from "@/paginas/css/login.module.css";
 
+/**
+ * Formulário de login (e-mail e senha), com botão de mostrar/ocultar a senha.
+ * É "use client" porque reage a cliques (mostrar senha) e mostra o estado "Entrando...".
+ */
 export function LoginFormulario() {
+  // Liga o formulário à server action `entrar`: `estado` traz o erro (e o e-mail digitado), `pendente` indica que está enviando.
   const [estado, acao, pendente] = useActionState(entrar, null);
+  // Se a senha está sendo exibida em texto (true) ou escondida com pontinhos (false).
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+  // Mensagem de erro de login, se houver (ex.: senha incorreta).
   const erro = estado?.erro;
 
   return (
@@ -60,6 +67,7 @@ export function LoginFormulario() {
   );
 }
 
+/** Ícone de olho: aberto quando a senha está escondida (clique para mostrar), riscado quando está visível. */
 function IconeOlho({ aberto }: { aberto: boolean }) {
   if (!aberto) {
     return (
@@ -79,6 +87,7 @@ function IconeOlho({ aberto }: { aberto: boolean }) {
   );
 }
 
+/** Ícone exibido ao lado da mensagem de erro do login. */
 function IconeAlerta() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

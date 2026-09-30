@@ -10,6 +10,7 @@ import styles from "@/paginas/css/componentes/heatmap.module.css";
  * até aqui.
  */
 
+/** Uma célula do mapa de calor: posição (linha × coluna), quantos registros caem ali, a cor e um link opcional. */
 export interface CelulaHeatmap {
   /** Valor do eixo da linha (ex.: severidade = 3). */
   linha: number;
@@ -21,6 +22,7 @@ export interface CelulaHeatmap {
   href?: string;
 }
 
+/** Tudo o que o mapa de calor recebe: título, os dois eixos (linhas e colunas), as células e a legenda de cores. */
 export interface HeatmapProps {
   titulo: string;
   /** Rótulo e valores do eixo mostrado nas colunas (ex.: Probabilidade: 1..5). */
@@ -31,6 +33,7 @@ export interface HeatmapProps {
   legenda?: { cor: CorFaixa; rotulo: string }[];
 }
 
+// Liga cada faixa de risco (baixa/média/alta/crítica) à classe de cor correspondente no CSS.
 const CLASSE_COR: Record<CorFaixa, string> = {
   baixa: styles.corBaixa,
   media: styles.corMedia,
@@ -38,6 +41,7 @@ const CLASSE_COR: Record<CorFaixa, string> = {
   critica: styles.corCritica,
 };
 
+// Legenda usada quando quem chama não informa uma própria.
 const LEGENDA_PADRAO: { cor: CorFaixa; rotulo: string }[] = [
   { cor: "baixa", rotulo: "Baixo" },
   { cor: "media", rotulo: "Médio" },
@@ -45,8 +49,15 @@ const LEGENDA_PADRAO: { cor: CorFaixa; rotulo: string }[] = [
   { cor: "critica", rotulo: "Crítico" },
 ];
 
+/**
+ * Desenha a matriz de calor: uma tabela em que cada célula é colorida pela faixa de risco e
+ * mostra quantos registros estão naquela combinação (ex.: probabilidade 4 × impacto 3).
+ * Se a célula tiver `href` e contagem maior que zero, vira um link que filtra a lista.
+ */
 export function Heatmap({ titulo, eixoColuna, eixoLinha, celulas, legenda = LEGENDA_PADRAO }: HeatmapProps) {
+  // Índice para achar uma célula rapidamente pela chave "linha-coluna".
   const porPosicao = new Map(celulas.map((c) => [`${c.linha}-${c.coluna}`, c]));
+  // Linhas do maior valor para o menor, para o nível mais alto ficar no topo da matriz.
   const linhasOrdenadas = [...eixoLinha.valores].sort((a, b) => b.valor - a.valor);
 
   return (

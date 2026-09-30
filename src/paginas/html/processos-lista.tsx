@@ -13,20 +13,30 @@ import styles from "@/paginas/css/processos-lista.module.css";
  * editável (aba "Planilha") + diagrama em 3 raias gerado da ordem (aba "Mapa").
  */
 export default async function ProcessosLista({ searchParams }: PageProps<"/processos">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Mapa de Processos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "MAPA_PROCESSOS");
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Qual aba está aberta: "mapa" (diagrama) ou, por padrão, "planilha".
   const aba = sp.aba === "mapa" ? "mapa" : "planilha";
+  // Se o usuário pediu para mostrar também os processos inativos (?inativos=1).
   const inativos = sp.inativos === "1";
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca em paralelo: os processos, as interações entre eles (setas do mapa) e os usuários ativos (donos).
   const [processos, interacoes, usuarios] = await Promise.all([
     listarProcessos(a, { incluirInativos: inativos }),
     listarInteracoes(a),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
   ]);
+  // Se o usuário pode editar a planilha (senão ela é só de leitura).
   const podeGerenciar = podeGerenciarProcessos(a);
+  // Somente os processos ativos (usados no contador e no mapa).
   const ativos = processos.filter((p) => p.ativo);
 
+  // Converte cada processo do banco no formato simples que a planilha espera (texto vazio no lugar de nulo).
   const linhas: LinhaProcesso[] = processos.map((p) => ({
     id: p.id,
     codigo: p.codigo,
@@ -44,6 +54,7 @@ export default async function ProcessosLista({ searchParams }: PageProps<"/proce
     indicadores: p.indicadores.map((i) => i.nome),
   }));
 
+  // Monta o endereço da própria página mantendo a aba e o filtro atuais e trocando só o que for passado em `extra`.
   const href = (extra: Record<string, string>) => {
     const q = new URLSearchParams({ ...(aba === "mapa" ? { aba } : {}), ...(inativos ? { inativos: "1" } : {}), ...extra });
     for (const [k, v] of [...q.entries()]) if (!v) q.delete(k);

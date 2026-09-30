@@ -4,6 +4,7 @@ import { PainelNotificacoes } from "@/paginas/html/componentes/painel-notificaco
 import { NavLateral, type ItemMenuLateral } from "@/paginas/html/componentes/nav-lateral";
 import { Trilha } from "@/paginas/html/componentes/trilha";
 
+// Nome amigável de cada papel de usuário, mostrado no rodapé do menu lateral.
 const ROTULO_PAPEL_CURTO: Record<string, string> = {
   ADMIN: "Administrador",
   GESTOR_SGI: "Gestor SGI",
@@ -11,6 +12,7 @@ const ROTULO_PAPEL_CURTO: Record<string, string> = {
   COLABORADOR: "Colaborador",
 };
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
@@ -83,6 +85,7 @@ export function LayoutApp({
   );
 }
 
+/** Desenho (SVG) do logotipo no menu lateral. */
 function IconeLogo() {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -92,6 +95,7 @@ function IconeLogo() {
   );
 }
 
+/** Ícone de porta com seta, do botão Sair. */
 function IconeSair() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

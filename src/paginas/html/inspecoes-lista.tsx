@@ -14,11 +14,13 @@ import { Entrada, Rotulo, Selecao } from "@/paginas/html/componentes/campo-formu
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/inspecoes-lista.module.css";
 
+// Regra para ler uma data da URL (AAAA-MM-DD): se vier inválida, vira "sem filtro".
 const dataUrl = z
   .preprocess((v) => (Array.isArray(v) ? v[0] : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional())
   .catch(undefined)
   .transform((v) => v ?? "");
 
+// Regra de validação dos filtros da URL (unidade, modelo, status, data inicial e final).
 const esquema = z.object({
   obra: uuidUrl,
   modelo: uuidUrl,
@@ -27,18 +29,29 @@ const esquema = z.object({
   ate: dataUrl,
 });
 
+/**
+ * Página "Inspeções / checklists": cartões com as inspeções (código, status, modelo, unidade, data, inspetor),
+ * % de conformidade, NCs e o que cada uma gerou (RNCs, itens de ação). Tem filtros e um resumo no topo.
+ */
 /** Lista de inspeções/checklists: filtros obra/modelo/status/data, % de conformidade e o que cada uma gerou. */
 export default async function InspecoesLista({ searchParams }: PageProps<"/inspecoes">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Inspeções, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INSPECOES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo as inspeções (já filtradas), as opções dos filtros e o fuso horário da empresa.
   const [lista, op, fuso] = await Promise.all([
     listarInspecoes(a, { obra: f.obra || undefined, modelo: f.modelo || undefined, status: f.status || undefined, de: f.de || undefined, ate: f.ate || undefined }),
     opcoesInspecoes(a),
     fusoDaEmpresa(a),
   ]);
+  // Data de hoje no fuso da empresa (para detectar inspeções paradas há dias).
   const hoje = hojeNoFuso(fuso);
+  // Números do resumo do topo: quantas estão em andamento, conformidade média das concluídas e total de RNCs geradas.
   const emAndamento = lista.filter((i) => i.status === "EM_ANDAMENTO").length;
   const concluidas = lista.filter((i) => i.status === "CONCLUIDA" && i.percentualConformidade !== null);
   const media = concluidas.length ? Math.round(concluidas.reduce((s, i) => s + (i.percentualConformidade ?? 0), 0) / concluidas.length) : null;
@@ -105,6 +118,7 @@ export default async function InspecoesLista({ searchParams }: PageProps<"/inspe
       ) : (
         <ul className={styles.lista}>
           {lista.map((i) => {
+            // Inspeção em andamento cuja data já passou → destaca "em aberto desde ...".
             const parada = i.status === "EM_ANDAMENTO" && i.dataInspecao.toISOString().slice(0, 10) < hoje;
             return (
               <li key={i.id} className={styles.cartao}>

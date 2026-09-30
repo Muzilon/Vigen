@@ -13,6 +13,7 @@ import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/auditorias-lista.module.css";
 
+// Regra de validação dos filtros da URL (status, tipo, ano, unidade): valores inválidos viram "sem filtro".
 const esquema = z.object({
   status: enumUrl(["PLANEJADA", "EM_EXECUCAO", "CONCLUIDA", "CANCELADA"]),
   tipo: enumUrl(["INTERNA", "EXTERNA_CERTIFICACAO"]),
@@ -20,16 +21,26 @@ const esquema = z.object({
   obra: uuidUrl,
 });
 
+/**
+ * Página "Auditorias": lista com filtros (status, tipo, ano, unidade), mostrando código, norma/escopo, período,
+ * auditor líder, status, contagem de constatações por tipo (NC · Obs · OM · PF) e RNCs geradas.
+ */
 /** Lista de auditorias: filtros status/tipo/ano/obra e contagem de constatações por tipo. */
 export default async function AuditoriasLista({ searchParams }: PageProps<"/auditorias">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Auditorias, a página responde "404 - não encontrada".
   exigirModulo(ctx, "AUDITORIAS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo as auditorias (já filtradas) e as opções dos filtros.
   const [lista, op] = await Promise.all([
     listarAuditorias(a, { status: f.status || undefined, tipo: f.tipo || undefined, ano: f.ano, obra: f.obra || undefined }),
     opcoesAuditorias(a),
   ]);
+  // Anos disponíveis no filtro: os dos programas cadastrados mais o ano atual, do mais novo ao mais antigo.
   const anos = [...new Set([...op.programas.map((p) => p.ano), new Date().getFullYear()])].sort((x, y) => y - x);
 
   return (

@@ -7,15 +7,22 @@ import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/mensagens.module.css";
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
-/** Caixa "Mensagens": interações não lidas endereçadas ao usuário. Abrir a thread marca como lida. */
+/**
+ * Página "Mensagens": lista as mensagens novas (não lidas) que outras pessoas enviaram a você.
+ * Clicar numa mensagem abre o registro onde a conversa está e a marca como lida.
+ */
 export default async function Mensagens() {
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Fuso horário da empresa, para mostrar as datas corretamente.
   const fuso = await fusoDaEmpresa(a);
+  // Busca até 100 mensagens não lidas endereçadas ao usuário.
   const msgs = await listarNaoLidas(a, 100);
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>

@@ -17,8 +17,10 @@ import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/inspecao-modelo.module.css";
 
+// Uma pergunta do modelo: texto, tipo de resposta, se exige foto quando não conforme e uma dica opcional.
 type Item = { id: string; pergunta: string; tipoResposta: (typeof TIPOS_RESPOSTA)[number]; obrigatorioFoto: boolean; ajuda: string | null };
 
+/** Os campos de uma pergunta (texto, tipo de resposta, foto obrigatória, dica). Serve para adicionar e para editar (`item` preenche os valores). */
 function CamposItem({ item }: { item?: Item }) {
   return (
     <>
@@ -34,15 +36,27 @@ function CamposItem({ item }: { item?: Item }) {
   );
 }
 
+/**
+ * Página de detalhe de um modelo de checklist: dados do modelo, lista de perguntas (reordenar com ↑↓, editar, remover)
+ * e formulário para adicionar pergunta. Mudanças valem para as próximas inspeções; as já iniciadas guardam o texto antigo.
+ */
 /** Detalhe do modelo de checklist: dados, perguntas reordenáveis (↑↓), adicionar/editar/remover. */
 export default async function InspecaoModelo({ params }: PageProps<"/inspecoes/modelos/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Inspeções, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INSPECOES");
+  // `id`: o identificador do modelo, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarModelos(a)) notFound();
+  // Busca o modelo com todas as suas perguntas.
   const m = await obterModelo(a, id);
+  // Modelo inexistente → 404.
   if (!m) notFound();
 
   return (

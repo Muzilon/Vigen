@@ -11,14 +11,17 @@ export function Tabela({ children, className }: { children: ReactNode; className
   return <table className={`${styles.tabela} ${className ?? ""}`}>{children}</table>;
 }
 
+/** Linha de cabeçalho da tabela (a que contém os títulos das colunas, os <Th>). */
 export function LinhaCabecalhoTabela({ children }: { children: ReactNode }) {
   return <tr className={styles.linhaCabecalho}>{children}</tr>;
 }
 
+/** Célula de título de uma coluna (<th>) já com o estilo padrão das tabelas. */
 export function Th({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
   return <th className={`${styles.th} ${className ?? ""}`} {...props} />;
 }
 
+/** Uma linha de dados da tabela (<tr>) com o estilo padrão (borda, destaque ao passar o mouse). */
 export function LinhaTabela({ children, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr className={styles.linha} {...props}>
@@ -27,6 +30,8 @@ export function LinhaTabela({ children, ...props }: React.HTMLAttributes<HTMLTab
   );
 }
 
+// Estilos possíveis de uma célula: texto normal, texto apagado (secundário), texto cortado com "..."
+// quando é longo demais (truncado) ou fonte de código/número (mono).
 type VarianteTd = "padrao" | "secundario" | "truncado" | "mono";
 const CLASSE_TD: Record<VarianteTd, string> = {
   padrao: styles.td,
@@ -35,6 +40,7 @@ const CLASSE_TD: Record<VarianteTd, string> = {
   mono: styles.tdMono,
 };
 
+/** Célula de dados da tabela (<td>). Escolha o estilo pela propriedade `variante`. */
 export function Td({ variante = "padrao", className, ...props }: TdHTMLAttributes<HTMLTableCellElement> & { variante?: VarianteTd }) {
   return <td className={`${CLASSE_TD[variante]} ${className ?? ""}`} {...props} />;
 }

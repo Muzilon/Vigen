@@ -14,15 +14,27 @@ import { PayloadAprovacao } from "@/paginas/html/componentes/payload-aprovacao";
 import { TrilhaAssinaturas } from "@/paginas/html/componentes/trilha-assinaturas";
 import styles from "@/paginas/css/aprovacao-detalhe.module.css";
 
+// Formato de um id válido (UUID). Serve para recusar endereços com id inventado antes de consultar o banco.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Página de detalhe de uma aprovação: resumo (quem pediu, quando, modo, assinaturas), a alteração proposta,
+ * os botões de decidir/cancelar (conforme a permissão do usuário) e a trilha de assinaturas ao lado.
+ */
 export default async function AprovacaoDetalhe({ params }: PageProps<"/aprovacoes/[id]">) {
+  // `id`: o identificador do fluxo, tirado do endereço (/aprovacoes/ID).
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!UUID.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o fluxo de aprovação; se não existe ou o usuário não pode vê-lo, vem vazio.
   const f = await obterFluxo(a, id);
+  // Fluxo inexistente ou sem acesso → 404.
   if (!f) notFound();
+  // Fuso horário da empresa, para mostrar as datas corretamente.
   const fuso = await fusoDaEmpresa(a);
+  // Quantas assinaturas já foram aprovadas (para o resumo "2 de 3").
   const assinadas = f.etapas.filter((e) => e.status === "APROVADA").length;
 
   return (

@@ -14,7 +14,9 @@ import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/indicadores-lista.module.css";
 
+// Quando a URL repete um parâmetro, o Next entrega uma lista; esta função pega só o primeiro valor.
 const um = (v: unknown) => (Array.isArray(v) ? v[0] : v);
+// Regra de validação dos filtros da URL (processo, situação, mostrar inativos).
 const esquema = z.object({
   processo: z.preprocess(um, z.union([z.uuid(), z.literal("sem")]).optional()).catch(undefined),
   situacao: enumUrl(["ATINGIDO", "NAO_ATINGIDO", "SEM_LANCAMENTO"]),
@@ -26,18 +28,28 @@ const esquema = z.object({
  * badge atingido/não atingido/sem lançamento e os últimos resultados vigentes.
  */
 export default async function IndicadoresLista({ searchParams, meus = false }: { searchParams: Promise<Record<string, string | string[] | undefined>>; meus?: boolean }) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Indicadores, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INDICADORES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Lê e valida os filtros da URL (valores inválidos viram "sem filtro").
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo os indicadores (filtrados; na versão "meus", só os do usuário) e as opções dos filtros.
   const [todos, op] = await Promise.all([
     listarIndicadores(a, { processo: f.processo, inativos: f.inativos === "1", responsavelId: meus ? a.usuarioId : undefined }),
     opcoesIndicadores(a),
   ]);
+  // Aplica o filtro de situação (atingido / não atingido / sem lançamento) sobre a lista.
   const lista = f.situacao ? todos.filter((i) => i.situacao === f.situacao) : todos;
+  // Conta quantos indicadores ativos estão em cada situação (números do resumo do topo).
   const conta = (s: "ATINGIDO" | "NAO_ATINGIDO" | "SEM_LANCAMENTO") => todos.filter((i) => i.situacao === s && i.ativo).length;
+  // `g`: verdadeiro se o usuário pode criar/editar indicadores.
   const g = podeGerenciarIndicadores(a);
+  // Endereço-base da página (muda entre "Indicadores" e "Meus indicadores").
   const base = meus ? "/indicadores/meus" : "/indicadores";
+  // Monta o link do resumo que filtra por uma situação mantendo o filtro de processo.
   const filtroSituacao = (s: string) => `${base}?${new URLSearchParams({ ...(f.processo ? { processo: f.processo } : {}), situacao: s })}`;
 
   return (
@@ -105,6 +117,7 @@ export default async function IndicadoresLista({ searchParams, meus = false }: {
             </thead>
             <tbody>
               {lista.map((i) => {
+                // Indicador ativo sem lançamento no período (a linha ganha destaque e o botão "Lançar").
                 const pendente = i.situacao === "SEM_LANCAMENTO" && i.ativo;
                 return (
                   <tr key={i.id} className={pendente ? styles.linhaPendente : undefined}>

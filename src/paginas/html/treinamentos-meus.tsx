@@ -11,16 +11,28 @@ import { Cartao } from "@/paginas/html/componentes/cartao";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/treinamentos-meus.module.css";
 
+// Ordem de exibição: o que exige mais atenção (vencido) vem primeiro, e o que está em dia por último.
 const ORDEM = { VENCIDO: 0, RECICLAGEM_PENDENTE: 1, A_VENCER: 2, NAO_REALIZADO: 3, EM_DIA: 4 } as const;
 
+/**
+ * Página "Meus treinamentos": a situação do próprio usuário (Apto/Inapto, resumo, o que vence primeiro),
+ * com certificados e o histórico das sessões de que participou.
+ */
 /** "Meus treinamentos": situação própria (o que está vencendo primeiro), certificados e histórico de sessões. */
 export default async function TreinamentosMeus() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Treinamentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "TREINAMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Tudo vem pronto do serviço: itens (um por treinamento), histórico, resumo em números e a aptidão.
   const { itens, historico, resumo, aptidao } = await meusTreinamentos(a);
+  // Dicionário id → nome do treinamento, para citar os nomes nas pendências.
   const nomeTreinamento = new Map(itens.map((c) => [c.treinamento.id, c.treinamento.nome]));
+  // Ordena por urgência (ver ORDEM) e, em empate, por nome.
   const ordenados = [...itens].sort((x, y) => ORDEM[x.status!] - ORDEM[y.status!] || x.treinamento.nome.localeCompare(y.treinamento.nome));
+  // Dicionário "treinamento + data" → certificado, para colocar o link do certificado de cada realização.
   const certificadoDa = new Map(historico.filter((p) => p.presente && p.certificado).map((p) => [`${p.sessao.treinamentoId}:${dataIso(p.sessao.dataRealizacao)}`, p.certificado!]));
 
   return (
@@ -47,6 +59,7 @@ export default async function TreinamentosMeus() {
       ) : (
         <ul className={styles.lista}>
           {ordenados.map((c) => {
+            // Certificado da última realização deste treinamento (se houver).
             const cert = c.dataRealizacao ? certificadoDa.get(`${c.treinamento.id}:${c.dataRealizacao}`) : undefined;
             return (
               <li key={c.treinamento.id} className={styles.item}>

@@ -9,14 +9,24 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { CamposIndicador } from "@/paginas/html/indicador-formulario";
 import styles from "@/paginas/css/indicadores-novo.module.css";
 
-/** Cadastro de indicador (INDICADOR_GERENCIAR). `?processo=` pré-seleciona o processo. */
+/**
+ * Página "Novo indicador". Só quem tem a permissão de gerenciar indicadores acessa.
+ * Se o endereço trouxer `?processo=...`, o processo já vem selecionado no formulário.
+ */
 export default async function IndicadoresNovo({ searchParams }: PageProps<"/indicadores/novo">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Indicadores, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INDICADORES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarIndicadores(a)) notFound();
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Carrega as opções dos campos: lista de processos e de pessoas.
   const op = await opcoesIndicadores(a);
+  // Só aceita o processo da URL se ele realmente existir na lista (evita valor inventado).
   const processo = typeof sp.processo === "string" && op.processos.some((p) => p.id === sp.processo) ? sp.processo : "";
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>

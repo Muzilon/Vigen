@@ -25,7 +25,9 @@ import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/requisitos-legais-lista.module.css";
 
+// Quando a URL repete um parâmetro, o Next entrega uma lista; esta função pega só o primeiro valor.
 const um = (v: unknown) => (Array.isArray(v) ? v[0] : v);
+// Regra de validação dos filtros da URL (tema, esfera, status, unidade, processo, só vencidos).
 const esquema = z.object({
   tema: enumUrl(["QUALIDADE", "SSO", "MEIO_AMBIENTE"]),
   esfera: enumUrl(["FEDERAL", "ESTADUAL", "MUNICIPAL"]),
@@ -35,12 +37,21 @@ const esquema = z.object({
   vencidos: z.preprocess(um, z.literal("1").optional()).catch(undefined),
 });
 
+/**
+ * Página "Requisitos legais": planilha com filtros, status colorido e destaque para verificações vencidas.
+ * O topo mostra o % de atendimento e quantos requisitos estão com a verificação vencida.
+ */
 /** Registro de requisitos legais: planilha densa com filtros, status colorido e verificação vencida. */
 export default async function RequisitosLegaisLista({ searchParams }: PageProps<"/requisitos-legais">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Requisitos Legais, a página responde "404 - não encontrada".
   exigirModulo(ctx, "REQUISITOS_LEGAIS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Lê e valida os filtros da URL (valores inválidos viram "sem filtro").
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo os requisitos (já filtrados), as opções dos filtros e o fuso horário da empresa.
   const [lista, op, fuso] = await Promise.all([
     listarRequisitos(a, {
       tema: f.tema || undefined,
@@ -53,9 +64,13 @@ export default async function RequisitosLegaisLista({ searchParams }: PageProps<
     opcoesRequisitos(a),
     fusoDaEmpresa(a),
   ]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // % de atendimento: atende ÷ (atende + parcial + não atende); "não aplicável" e "em análise" ficam fora da conta.
   const pct = percentualAtendimento(lista.map((r) => r.status));
+  // Quantos requisitos listados estão com a verificação vencida.
   const vencidos = lista.filter((r) => verificacaoVencida(r.proximaVerificacaoEm ? dataIso(r.proximaVerificacaoEm) : null, hoje, r.status)).length;
+  // `g`: verdadeiro se o usuário pode gerenciar (mostra os botões de revisão geral e de novo requisito).
   const g = podeGerenciarRequisitos(a);
 
   return (
@@ -149,6 +164,7 @@ export default async function RequisitosLegaisLista({ searchParams }: PageProps<
             </thead>
             <tbody>
               {lista.map((r) => {
+                // Esta verificação está vencida? (a linha ganha destaque)
                 const venc = verificacaoVencida(r.proximaVerificacaoEm ? dataIso(r.proximaVerificacaoEm) : null, hoje, r.status);
                 return (
                   <tr key={r.id} className={venc ? styles.linhaVencida : undefined}>

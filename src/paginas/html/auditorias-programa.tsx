@@ -12,13 +12,24 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/auditorias-programa.module.css";
 
+/**
+ * Página "Programa anual de auditorias": mostra, para cada ano, o objetivo e o cronograma das auditorias
+ * (período, código, norma/escopo, tipo, auditor líder, status e nº de não conformidades).
+ * Quem gerencia pode editar o objetivo e criar o programa de um novo ano.
+ */
 /** Programa anual de auditorias: objetivo do ano e auditorias vinculadas (cronograma). */
 export default async function AuditoriasPrograma() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Auditorias, a página responde "404 - não encontrada".
   exigirModulo(ctx, "AUDITORIAS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Programas de auditoria já cadastrados, com as auditorias de cada um.
   const programas = await listarProgramas(a);
+  // `g`: verdadeiro se o usuário pode editar objetivos e criar programas.
   const g = podeGerenciarAuditorias(a);
+  // Ano atual: se já existe programa dele, o campo "Ano" do novo programa sugere o ano seguinte.
   const anoAtual = new Date().getFullYear();
 
   return (

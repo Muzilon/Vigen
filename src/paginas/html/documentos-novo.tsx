@@ -11,14 +11,24 @@ import { Cartao } from "@/paginas/html/componentes/cartao";
 import { DocumentoNovoFormulario } from "@/paginas/html/documento-novo-formulario";
 import styles from "@/paginas/css/documentos-novo.module.css";
 
-/** Novo documento (DOCUMENTO_ELABORAR). `?processo=` pré-seleciona o processo. */
+/**
+ * Página "Novo documento": cria o registro do documento controlado. Exige a permissão de elaborar documentos.
+ * Se ainda não houver nenhum tipo de documento ativo, mostra um aviso explicando onde cadastrá-los.
+ */
 export default async function DocumentosNovo({ searchParams }: PageProps<"/documentos/novo">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Documentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "DOCUMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeElaborarDocumentos(a)) notFound();
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Opções dos campos: tipos de documento, processos, unidades, setores e pessoas.
   const op = await opcoesDocumentos(a);
+  // Aceita o processo da URL só se ele existir na lista.
   const processoId = typeof sp.processo === "string" && op.processos.some((p) => p.id === sp.processo) ? sp.processo : "";
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>

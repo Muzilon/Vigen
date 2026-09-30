@@ -17,7 +17,11 @@ const CLASSE_ETAPA: Record<StatusEtapaAprovacao, string> = {
   IGNORADA: styles.neutro,
 };
 
-/** Status do fluxo de aprovação (Pendente / Aprovado / Rejeitado / Cancelado). */
+/**
+ * Etiqueta colorida (badge) com o status do fluxo de aprovação inteiro:
+ * Pendente, Aprovado, Rejeitado ou Cancelado. A cor vem do mapa CLASSE_FLUXO acima,
+ * e o texto em português vem de ROTULO_STATUS_FLUXO.
+ */
 export function BadgeStatusFluxo({ status }: { status: StatusFluxoAprovacao }) {
   return (
     <span className={`${styles.badge} ${CLASSE_FLUXO[status]}`}>
@@ -27,7 +31,10 @@ export function BadgeStatusFluxo({ status }: { status: StatusFluxoAprovacao }) {
   );
 }
 
-/** Status de uma assinatura (etapa) do fluxo. */
+/**
+ * Etiqueta colorida com o status de uma assinatura individual (etapa) do fluxo:
+ * Aguardando, Pendente, Aprovada, Rejeitada ou Ignorada.
+ */
 export function BadgeStatusEtapa({ status }: { status: StatusEtapaAprovacao }) {
   return (
     <span className={`${styles.badge} ${CLASSE_ETAPA[status]}`}>

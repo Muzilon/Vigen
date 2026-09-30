@@ -11,15 +11,28 @@ import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/treinamentos-auditoria.module.css";
 
+/**
+ * Página "Evidências de competência" (modo auditoria, ISO 9001 7.2): reúne, por treinamento, as sessões com
+ * presença, certificados, eficácia e conformidade com a NR-1 — só leitura e com botão para imprimir/salvar em PDF.
+ * Exige a permissão de gerenciar treinamentos.
+ */
 /** Modo auditoria (ISO 9001 7.2): evidências de competência consolidadas, só leitura e pronta para impressão/PDF. */
 export default async function TreinamentosAuditoria() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Treinamentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "TREINAMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarTreinamentos(a)) notFound();
+  // O relatório completo vem pronto do serviço: data de hoje, resumo em números (`r`) e os treinamentos com suas sessões.
   const { hoje, resumo: r, itens } = await relatorioAuditoria(a);
+  // Todas as sessões de todos os treinamentos numa lista só (para somar totais).
   const sessoes = itens.flatMap((t) => t.sessoes);
+  // Quantas sessões têm alguma pendência frente à NR-1 (conteúdo, instrutor qualificado, carga horária).
   const naoConformesNr1 = sessoes.filter((s) => s.pendenciasNr1 && s.pendenciasNr1.length > 0).length;
+  // Soma das avaliações de eficácia que já deveriam ter sido feitas e ainda não foram.
   const eficaciaPendente = sessoes.reduce((n, s) => n + s.eficaciaPendente, 0);
 
   return (

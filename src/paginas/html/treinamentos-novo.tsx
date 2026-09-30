@@ -9,12 +9,20 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { CamposTreinamento } from "@/paginas/html/treinamento-formulario";
 import styles from "@/paginas/css/treinamentos-novo.module.css";
 
-/** Cadastro de treinamento no catálogo (TREINAMENTO_GERENCIAR). */
+/**
+ * Página "Novo treinamento": cadastra um treinamento no catálogo (nome, validade, para quem é obrigatório etc.).
+ * Só quem tem a permissão de gerenciar treinamentos acessa.
+ */
 export default async function TreinamentosNovo() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Treinamentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "TREINAMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarTreinamentos(a)) notFound();
+  // Opções dos campos: setores, funções e documentos publicados.
   const op = await opcoesTreinamentos(a);
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>

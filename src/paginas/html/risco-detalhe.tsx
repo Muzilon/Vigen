@@ -39,6 +39,7 @@ import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { RiscoFormulario, TratamentoFormulario, type ValoresRisco } from "@/paginas/html/riscos-formulario";
 import styles from "@/paginas/css/risco-detalhe.module.css";
 
+// Nome amigável de cada tipo de evento do histórico do risco.
 const ROTULO_ACAO: Record<string, string> = {
   CRIACAO: "Cadastro",
   ALTERACAO: "Alteração",
@@ -49,16 +50,29 @@ const ROTULO_ACAO: Record<string, string> = {
   EXCLUSAO: "Exclusão",
 };
 
+/**
+ * Página de detalhe do risco ou oportunidade: dados, avaliação inicial e residual, tratamento, plano de ação,
+ * histórico de avaliações, aprovações, anexos e comentários.
+ */
 /** Detalhe do risco/oportunidade: avaliação, tratamento, plano, reavaliação, histórico, aprovações, anexos e comentários. */
 export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
+  // `id`: o identificador do risco, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o risco com processo, unidade, responsável e plano de ação.
   const r = await obterRisco(a, id);
+  // Risco inexistente ou sem acesso → 404.
   if (!r) notFound();
+  // Alvo dos anexos (este risco).
   const alvo = { tipo: "RISCO_OPORTUNIDADE" as const, entidadeId: r.id };
+  // Busca em paralelo: histórico, opções dos campos, fuso horário, anexos e se o usuário pode anexar.
   const [historico, op, fuso, anexos, podeAnexar] = await Promise.all([
     listarHistorico(a, r.id),
     opcoesFormulario(a),
@@ -66,12 +80,19 @@ export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">
     listarAnexos(a, alvo),
     podeEnviarAnexo(a, alvo),
   ]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // `g`: pode gerenciar riscos (editar, excluir, pedir alteração por aprovação).
   const g = podeGerenciarRiscos(a);
+  // `t`: pode tratar este risco (reavaliar, definir tratamento, mudar status).
   const t = podeTratarRisco(a, r);
+  // Escala de pontuação da unidade do risco (ou a padrão da empresa).
   const config = op.escalas[r.obraId ?? ""] ?? op.escalas[""];
+  // Os dois eixos da escala (probabilidade e impacto) com seus nomes e níveis.
   const { eixoP, eixoI } = eixosPI(config);
+  // Código de exibição do risco (ex.: R-001).
   const codigo = codigoRisco(r);
+  // Valores atuais do risco no formato que os formulários de edição esperam.
   const valores: ValoresRisco = {
     id: r.id,
     versao: r.versao,
@@ -87,7 +108,9 @@ export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">
     modoReavaliacao: r.modoReavaliacao,
     periodicidadeMeses: r.periodicidadeMeses,
   };
+  // A próxima reavaliação já passou da data? (mostra o aviso "vencida")
   const vencida = r.proximaReavaliacaoEm && r.proximaReavaliacaoEm.toISOString().slice(0, 10) < hoje;
+  // Quem pode aprovar uma alteração: todos os usuários, menos quem está pedindo.
   const aprovadores = op.usuarios.filter((u) => u.id !== a.usuarioId);
 
   return (
@@ -323,6 +346,10 @@ export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">
   );
 }
 
+/**
+ * Caixa de seleção de um nível (1, 2, 3...) usada no formulário de reavaliação.
+ * `opcional` adiciona a escolha em branco (usada nos campos residuais).
+ */
 function SelecaoNivel({
   nome,
   rotulo,

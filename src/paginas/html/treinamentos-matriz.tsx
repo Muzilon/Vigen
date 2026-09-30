@@ -15,21 +15,35 @@ import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/treinamentos-matriz.module.css";
 
+// Regra de validação dos filtros da URL (unidade, pessoa, treinamento).
 const esquema = z.object({ obra: uuidUrl, usuario: uuidUrl, treinamento: uuidUrl });
 
+/**
+ * Página "Matriz de competências": uma grade pessoas × treinamentos, com a aptidão de cada pessoa e o status
+ * (em dia, a vencer, vencido...) em cada treinamento. Filtros por unidade, pessoa e treinamento.
+ * Exige a permissão de gerenciar treinamentos.
+ */
 /** Matriz de competências (TREINAMENTO_GERENCIAR): pessoas × treinamentos com status; filtro por obra, pessoa e treinamento. */
 export default async function TreinamentosMatriz({ searchParams }: PageProps<"/treinamentos/matriz">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Treinamentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "TREINAMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarTreinamentos(a)) notFound();
+  // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo a matriz (já filtrada), as opções dos filtros e o catálogo de treinamentos.
   const [m, op, catalogo] = await Promise.all([
     matrizCompetencias(a, { obraId: f.obra || undefined, usuarioId: f.usuario || undefined, treinamentoId: f.treinamento || undefined }),
     opcoesTreinamentos(a),
     listarTreinamentos(a),
   ]);
+  // `r`: os números do resumo (% em dia, a vencer, vencidos...).
   const r = m.resumo;
+  // Dicionário id → nome do treinamento, para explicar as pendências de cada pessoa.
   const nomeTreinamento = new Map(m.treinamentos.map((t) => [t.id, t.nome]));
 
   return (

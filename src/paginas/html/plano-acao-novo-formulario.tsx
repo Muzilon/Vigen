@@ -8,19 +8,30 @@ import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
 import { Entrada, Rotulo } from "@/paginas/html/componentes/campo-formulario";
 import styles from "@/paginas/css/plano-acao-novo-formulario.module.css";
 
+// Um usuário e as unidades a que tem acesso (`null` = acesso a todas).
 type UsuarioObras = { id: string; nome: string; obras: string[] | null };
 
+/**
+ * Formulário "Novo plano de ação" (avulso): dados do plano, unidade opcional e as linhas do 5W2H.
+ * Todos os campos são controlados pelo React, então um erro do servidor não apaga o que foi digitado.
+ * - `obras`: unidades possíveis. `usuarios`: pessoas (com as unidades a que têm acesso) para o campo "Quem".
+ */
 /** Todos os campos são controlados: um erro do servidor não apaga o que foi digitado. */
 export function FormNovoPlano({ obras, usuarios }: { obras: { id: string; nome: string }[]; usuarios: UsuarioObras[] }) {
+  // Liga o formulário à server action: `res` traz o erro, `pendente` indica que está salvando.
   const [res, acao, pendente] = useActionState(criarPlanoManualAcao, null);
+  // Estado dos campos: título, objetivo, unidade escolhida e as linhas do 5W2H (começa com uma linha em branco).
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [obraId, setObraId] = useState("");
   const [linhas, setLinhas] = useState<Linha5W2H[]>([linhaVazia()]);
 
+  // Esta pessoa pode trabalhar na unidade escolhida? (sem unidade escolhida, qualquer uma pode)
   const acessa = (u: UsuarioObras, obra: string) => !obra || u.obras === null || u.obras.includes(obra);
+  // Só as pessoas que podem ser escolhidas como "Quem" para a unidade atual.
   const usuariosObra = usuarios.filter((u) => acessa(u, obraId));
 
+  /** Ao trocar a unidade, tira o "Quem" das linhas cujo responsável não tem acesso à nova unidade. */
   function trocarObra(nova: string) {
     setObraId(nova);
     // "Quem" sem acesso à nova obra é desmarcado.
@@ -29,6 +40,7 @@ export function FormNovoPlano({ obras, usuarios }: { obras: { id: string; nome: 
   }
 
   // Só exibição: soma do "Quanto" digitado (campo numérico, opcional) nas linhas.
+  // Soma dos valores de "Quanto" das linhas (só para exibir o total previsto).
   const totalPrevisto = linhas.reduce((s, l) => s + (Number(l.quanto) || 0), 0);
 
   return (
@@ -116,6 +128,7 @@ export function FormNovoPlano({ obras, usuarios }: { obras: { id: string; nome: 
   );
 }
 
+/** Ícone de lápis, usado ao lado de "Manual" (origem do plano). */
 function IconeLapis() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -125,6 +138,7 @@ function IconeLapis() {
   );
 }
 
+/** Ícone de lâmpada, do quadro de dicas. */
 function IconeLampada() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -135,6 +149,7 @@ function IconeLampada() {
   );
 }
 
+/** Ícone de sino, da nota sobre notificações. */
 function IconeSino() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

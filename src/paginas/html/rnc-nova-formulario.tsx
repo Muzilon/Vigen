@@ -8,8 +8,10 @@ import { Alerta } from "@/paginas/html/componentes/alerta";
 import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
 import styles from "@/paginas/css/rnc-nova-formulario.module.css";
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
+// Liga cada gravidade à classe de cor do CSS (para colorir as opções Baixa/Média/Alta/Crítica).
 const CLASSE_GRAVIDADE: Record<string, string> = {
   BAIXA: styles.gravidadeBaixa,
   MEDIA: styles.gravidadeMedia,
@@ -32,6 +34,7 @@ function Secao({ numero, titulo, descricao, children, className }: { numero: str
   );
 }
 
+/** Asterisco vermelho (*) que marca um campo obrigatório. */
 function Obrigatorio() {
   return <span className={styles.obrigatorio}> *</span>;
 }
@@ -48,10 +51,14 @@ export function FormNovaRnc({
   usuarios: Opcao[];
   podeSensiveis: boolean;
 }) {
+  // Liga o formulário à server action `criarRncAcao`: `res` é a resposta (erro e valores digitados), `pendente` indica que está salvando.
   const [res, acao, pendente] = useActionState(criarRncAcao, null);
+  // Tipo de RNC escolhido (Qualidade, Meio ambiente ou SSO); SSO com dados pessoais fica restrita automaticamente.
   const [tipo, setTipo] = useState("QUALIDADE");
+  // Se o usuário marcou "Contém dados pessoais (LGPD)" — mostra o bloco de dados sensíveis.
   const [pessoais, setPessoais] = useState(false);
   // Após erro, a action devolve os valores enviados: repovoa os campos (React reseta o form).
+  // Valores que o usuário tinha digitado, devolvidos pelo servidor em caso de erro (para não perder o preenchimento).
   const v = res?.valores ?? {};
 
   return (
@@ -227,6 +234,7 @@ export function FormNovaRnc({
   );
 }
 
+/** Ícone de cadeado, da nota de RNC restrita. */
 function IconeCadeado() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -236,6 +244,7 @@ function IconeCadeado() {
   );
 }
 
+/** Ícone de seta para a direita, do botão "Abrir RNC". */
 function IconeSeta() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

@@ -11,14 +11,24 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { CamposAuditoria } from "@/paginas/html/auditoria-formulario";
 import styles from "@/paginas/css/auditorias-nova.module.css";
 
-/** Planejar auditoria (AUDITORIA_GERENCIAR): dados + itens iniciais do plano (um por linha). */
+/**
+ * Página "Nova auditoria": planeja a auditoria (dados gerais) e, opcionalmente, já cria os itens do plano,
+ * um por linha no formato "requisito | pergunta". Exige permissão de gerenciar auditorias.
+ */
 export default async function AuditoriasNova() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Auditorias, a página responde "404 - não encontrada".
   exigirModulo(ctx, "AUDITORIAS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarAuditorias(a)) notFound();
+  // Opções dos campos (programas, unidades, processos, pessoas) e fuso horário da empresa.
   const [op, fuso] = await Promise.all([opcoesAuditorias(a), fusoDaEmpresa(a)]);
+  // Data de hoje (valor padrão de início e fim).
   const hoje = hojeNoFuso(fuso);
+  // Ano atual, usado para escolher automaticamente o programa de auditorias do ano.
   const ano = Number(hoje.slice(0, 4));
   return (
     <div className={`${styles.pagina} fonteIbmPlex`}>

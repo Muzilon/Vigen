@@ -16,6 +16,7 @@ import { EnvoltorioTabela, LinhaCabecalhoTabela, LinhaTabela, Tabela, Td, Th } f
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/rncs-lista.module.css";
 
+// Regra de validação dos filtros da URL (status, unidade, tipo, responsável, gravidade, busca).
 const esquemaFiltros = z.object({
   status: enumUrl(["ABERTO", "EM_ANALISE", "PLANO_EM_EXECUCAO", "EM_VERIFICACAO", "ENCERRADO", "REABERTO", "CANCELADO"]),
   obra: uuidUrl,
@@ -25,19 +26,29 @@ const esquemaFiltros = z.object({
   q: textoUrl,
 });
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
+/**
+ * Página "Não conformidades": a lista das RNCs que o usuário pode ver (até 200), com busca e filtros,
+ * gravidade, responsável, abertura, status e aviso de itens de plano atrasados. Restritas (LGPD) ganham um cadeado.
+ */
 /** Lista de RNCs — página-modelo da Direção A "Campo" (ver Main.dc.html). */
 export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
+  // Lê e valida os filtros da URL.
   const f = esquemaFiltros.parse(await searchParams);
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Fuso horário da empresa e a data de hoje nele (para achar itens atrasados).
   const fuso = await fusoDaEmpresa(a);
   const hoje = paraDataDb(hojeNoFuso(fuso));
 
+  // Monta a condição da busca no banco: regra de acesso do usuário + cada filtro preenchido + a busca por texto.
   const where: Prisma.RncWhereInput = {
     AND: [
       // B7: mesma regra do detalhe (obra permitida ou abridor/responsável; restritas).
@@ -53,6 +64,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
     ],
   };
 
+  // Busca em paralelo as RNCs (mais novas primeiro, com unidade, responsável e itens atrasados), as unidades permitidas e os usuários.
   const [rncs, obras, usuarios] = await Promise.all([
     a.db.rnc.findMany({
       where,
@@ -72,6 +84,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
     a.db.usuario.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
   ]);
 
+  // Monta uma caixa de filtro (lista suspensa) com a opção "Todos" e as escolhas dadas.
   const sel = (id: string, name: keyof typeof f, opcoes: [string, string][], todos: string) => (
     <Selecao id={id} name={name} defaultValue={f[name]} className={styles.selecaoFiltro}>
       <option value="">{todos}</option>
@@ -135,6 +148,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
           </thead>
           <tbody>
             {rncs.map((r) => {
+              // Quantos itens do plano desta RNC estão atrasados.
               const atrasados = r.planoAcao?.itens.length ?? 0;
               return (
                 <LinhaTabela key={r.id}>
@@ -180,6 +194,7 @@ export default async function RncsLista({ searchParams }: PageProps<"/rncs">) {
   );
 }
 
+/** Cadeado que marca RNCs restritas (contêm dados pessoais protegidos pela LGPD). */
 function IconeRestrita() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Restrita (LGPD)" className={styles.iconeRestrita}>

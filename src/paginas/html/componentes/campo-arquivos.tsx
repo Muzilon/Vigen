@@ -3,11 +3,15 @@
 import { useEffect, useId, useRef, useState } from "react";
 import styles from "@/paginas/css/componentes/campo-arquivos.module.css";
 
+// Extensões de arquivo que o navegador deixa escolher na janela de seleção.
 const ACEITAR = ".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf,.docx,.xlsx,.txt";
+// Tipos de arquivo para os quais mostramos pré-visualização (miniatura) antes do envio.
 const PREVIEW = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+/** Um arquivo escolhido pelo usuário: nome, tamanho em bytes e, se for imagem, um endereço temporário para a miniatura. */
 type Sel = { nome: string; tamanho: number; url: string | null };
 
+/** Converte bytes em texto legível ("120 KB" ou "2.4 MB"). */
 function formatarTamanho(b: number) {
   return b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
@@ -27,10 +31,14 @@ export function CampoArquivos({
   ajuda?: string;
   maxMb?: number;
 }) {
+  // id único para ligar o rótulo e o texto de ajuda ao campo de arquivo (leitores de tela).
   const id = useId();
+  // `ref`: acesso direto ao <input type="file"> do HTML.
   const ref = useRef<HTMLInputElement>(null);
+  // `sel`: lista dos arquivos que o usuário escolheu (atualiza a tela quando muda).
   const [sel, setSel] = useState<Sel[]>([]);
 
+  // Quando o formulário for "resetado" (limpo), esvazia também a lista de arquivos escolhidos.
   useEffect(() => {
     const form = ref.current?.form;
     if (!form) return;
@@ -39,8 +47,10 @@ export function CampoArquivos({
     return () => form.removeEventListener("reset", limpar);
   }, []);
 
+  // Libera da memória as miniaturas antigas sempre que a seleção muda (evita desperdício).
   useEffect(() => () => sel.forEach((s) => s.url && URL.revokeObjectURL(s.url)), [sel]);
 
+  // Arquivos acima do tamanho máximo: geram um aviso em vermelho (o servidor também valida).
   const grandes = sel.filter((s) => s.tamanho > maxMb * 1024 * 1024);
 
   return (
@@ -97,6 +107,7 @@ export function CampoArquivos({
   );
 }
 
+/** Desenho (SVG) de uma seta para cima, ícone da área de envio de arquivos. */
 function IconeEnviar() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

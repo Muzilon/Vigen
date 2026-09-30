@@ -32,6 +32,7 @@ import { Entrada, Rotulo, Selecao } from "@/paginas/html/componentes/campo-formu
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import styles from "@/paginas/css/configuracoes.module.css";
 
+// As abas da administração (chave usada na URL `?aba=...` e o nome mostrado na tela).
 const ABAS = [
   ["usuarios", "Usuários"],
   ["perfis", "Perfis"],
@@ -44,14 +45,17 @@ const ABAS = [
   ["tipos-documento", "Tipos de documento"],
   ["preferencias", "Notificações"],
 ] as const;
+// Tipo que só aceita as chaves acima, para o TypeScript avisar se escrevermos uma aba que não existe.
 type Aba = (typeof ABAS)[number][0];
 
+// Nome amigável de cada tipo de escala de pontuação de risco.
 const ROTULO_TIPO_ESCALA: Record<"RISCO_OPORTUNIDADE" | "HIRA" | "ASPECTO_IMPACTO", string> = {
   RISCO_OPORTUNIDADE: "Riscos e oportunidades",
   HIRA: "HIRA",
   ASPECTO_IMPACTO: "Aspecto e impacto (LAIA)",
 };
 
+// Nome amigável de cada papel de usuário (o papel define as permissões básicas).
 const ROTULO_PAPEL: Record<(typeof PAPEIS)[number], string> = {
   ADMIN: "Administrador",
   GESTOR_SGI: "Gestor do SGI",
@@ -59,6 +63,7 @@ const ROTULO_PAPEL: Record<(typeof PAPEIS)[number], string> = {
   COLABORADOR: "Colaborador",
 };
 
+// Descrição em português de cada permissão que pode ser dada a um perfil.
 const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   RNC_ABRIR: "Abrir RNC",
   RNC_TRATAR: "Tratar RNC",
@@ -88,10 +93,17 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   VER_TODAS_OBRAS: "Ver todas as unidades",
 };
 
+// Formato dos dados da administração (usuários, perfis, unidades, setores, funções), deduzido do que o serviço devolve.
 type Dados = Awaited<ReturnType<typeof dadosAdministracao>>;
+// Formato de um usuário dentro desses dados.
 type Usuario = Dados["usuarios"][number];
 
+/**
+ * Campos do formulário de usuário (nome, e-mail, papel, perfil, setor, função e unidades permitidas).
+ * Sem `u`, é um usuário novo; com `u`, vêm preenchidos os dados atuais.
+ */
 function CamposUsuario({ u, d }: { u?: Usuario; d: Dados }) {
+  // Conjunto das unidades que o usuário já pode acessar (para marcar as caixinhas).
   const obrasUsuario = new Set(u?.acessosObra.map((x) => x.obraId) ?? []);
   return (
     <div className={styles.gradeCampos}>
@@ -152,6 +164,7 @@ function CamposUsuario({ u, d }: { u?: Usuario; d: Dados }) {
   );
 }
 
+/** Campos do formulário de perfil: nome, descrição e a lista de permissões para marcar. Sem `p`, é um perfil novo. */
 function CamposPerfil({ p }: { p?: Dados["perfis"][number] }) {
   return (
     <div className={styles.pilha}>
@@ -180,8 +193,11 @@ function CamposPerfil({ p }: { p?: Dados["perfis"][number] }) {
   );
 }
 
+/** Aba "Usuários": formulário de novo usuário e a lista de usuários, cada um com edição, redefinição de senha e ativar/desativar. */
 function AbaUsuarios({ d, eu }: { d: Dados; eu: string }) {
+  // Dicionário id do perfil → nome.
   const perfil = new Map(d.perfis.map((p) => [p.id, p.nome]));
+  // Dicionário id da unidade → nome.
   const obra = new Map(d.obras.map((o) => [o.id, o.nome]));
   return (
     <div className={styles.secoesAba}>
@@ -250,6 +266,7 @@ function AbaUsuarios({ d, eu }: { d: Dados; eu: string }) {
   );
 }
 
+/** Aba "Perfis": criar perfis e editar as permissões de cada um (perfis do sistema não podem ser excluídos). */
 function AbaPerfis({ d }: { d: Dados }) {
   return (
     <div className={styles.secoesAba}>
@@ -292,7 +309,9 @@ function AbaPerfis({ d }: { d: Dados }) {
   );
 }
 
+/** Aba "Unidades": criar e editar as unidades (obras) da empresa. */
 function AbaObras({ d }: { d: Dados }) {
+  // Monta os campos de uma unidade (nome, código, endereço, ativa); reaproveitado no formulário de nova e no de edição.
   const campos = (o?: Dados["obras"][number]) => (
     <>
       {o && <input type="hidden" name="id" value={o.id} />}
@@ -322,7 +341,9 @@ function AbaObras({ d }: { d: Dados }) {
   );
 }
 
+/** Aba "Setores": criar e editar os setores da empresa. */
 function AbaSetores({ d }: { d: Dados }) {
+  // Monta os campos de um setor (nome e ativo); reaproveitado no formulário de novo e no de edição.
   const campos = (s?: Dados["setores"][number]) => (
     <>
       {s && <input type="hidden" name="id" value={s.id} />}
@@ -350,7 +371,9 @@ function AbaSetores({ d }: { d: Dados }) {
   );
 }
 
+/** Aba "Funções": criar e editar funções/cargos, usadas para definir treinamentos obrigatórios por função. */
 function AbaFuncoes({ d }: { d: Dados }) {
+  // Monta os campos de uma função (nome e ativa); reaproveitado no formulário de nova e no de edição.
   const campos = (f?: Dados["funcoes"][number]) => (
     <>
       {f && <input type="hidden" name="id" value={f.id} />}
@@ -379,9 +402,13 @@ function AbaFuncoes({ d }: { d: Dados }) {
   );
 }
 
+/** Aba "Módulos": escolher quais módulos a empresa contratou (RNC e Plano de Ação ficam sempre ativos). */
 async function AbaModulos({ empresaId }: { empresaId: string }) {
+  // Busca os módulos hoje ativos na empresa.
   const { modulosAtivos } = await dadosModulos(await getAtor());
+  // Conjunto dos módulos ativos, para marcar as caixinhas.
   const ativos = new Set(modulosAtivos);
+  // Os grupos em que os módulos são apresentados (Qualidade, Segurança, Meio ambiente, Gestão).
   const grupos = [GRUPO_MODULO.QUALIDADE, GRUPO_MODULO.SEGURANCA, GRUPO_MODULO.MEIO_AMBIENTE, GRUPO_MODULO.GESTAO];
   return (
     <div className={styles.abaEstreita}>
@@ -411,6 +438,7 @@ async function AbaModulos({ empresaId }: { empresaId: string }) {
   );
 }
 
+/** Aba "Escalas": configurar a escala de pontuação de risco (padrão da empresa ou por unidade) e listar/excluir as configurações. */
 function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
   const obra = new Map(d.obras.map((o) => [o.id, o.nome]));
   return (
@@ -485,6 +513,7 @@ function AbaEscalas({ d }: { d: Awaited<ReturnType<typeof dadosEscalas>> }) {
   );
 }
 
+// Módulos cujas linhas podem exigir aprovação (HIRA e LAIA): chave interna, código do módulo e título exibido.
 const MODULOS_APROVACAO: { m: ModuloAprovavel; modulo: "HIRA" | "LAIA"; titulo: string }[] = [
   { m: "hira", modulo: "HIRA", titulo: "HIRA — perigos e riscos de SST" },
   { m: "laia", modulo: "LAIA", titulo: "LAIA — aspectos e impactos ambientais" },
@@ -493,6 +522,7 @@ const MODULOS_APROVACAO: { m: ModuloAprovavel; modulo: "HIRA" | "LAIA"; titulo: 
 /** Fluxo de aprovação de inclusão/alteração/exclusão de linhas HIRA/LAIA (decisão 5). */
 async function AbaAprovacoes() {
   const a = await getAtor();
+  // Busca em paralelo a configuração e os módulos ativos da empresa, e os usuários ativos (candidatos a aprovador).
   const [empresa, usuarios] = await Promise.all([
     a.db.empresa.findFirst({ where: { id: a.empresaId }, select: { config: true, modulosAtivos: true } }),
     a.db.usuario.findMany({ where: { ativo: true }, select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
@@ -507,8 +537,11 @@ async function AbaAprovacoes() {
         snapshot das linhas vigentes) na lista mestra.
       </p>
       {MODULOS_APROVACAO.map(({ m, modulo, titulo }) => {
+        // Configuração de aprovação atual deste módulo (se exige, modo, aprovadores).
         const c = lerConfigAprovacao(empresa?.config, m);
+        // A empresa contratou o módulo Documentos? (necessário para usar a tramitação de documentos)
         const docs = !!empresa?.modulosAtivos.includes("DOCUMENTOS");
+        // O módulo (HIRA ou LAIA) está contratado?
         const ativo = empresa?.modulosAtivos.includes(modulo);
         return (
           <Cartao key={m} titulo={titulo}>
@@ -560,7 +593,9 @@ async function AbaAprovacoes() {
 /** Tipos de documento da Tramitação de Documentos (sigla compõe o código; periodicidade padrão de revisão). */
 async function AbaTiposDocumento({ ativo }: { ativo: boolean }) {
   if (!ativo) return <p className={styles.explicacao}>Módulo Documentos não contratado.</p>;
+  // Busca os tipos de documento, inclusive os inativos.
   const tipos = await listarTipos(await getAtor(), { incluirInativos: true });
+  // Monta os campos de um tipo de documento (sigla, nome, periodicidade de revisão, ativo); a sigla fica travada se já há documentos do tipo.
   const campos = (t?: (typeof tipos)[number]) => (
     <>
       {t && <input type="hidden" name="id" value={t.id} />}
@@ -601,7 +636,9 @@ async function AbaTiposDocumento({ ativo }: { ativo: boolean }) {
   );
 }
 
+/** Aba "Notificações": dias de antecedência do alerta de prazo, resumo semanal e envio por e-mail. */
 async function AbaPreferencias({ empresaId }: { empresaId: string }) {
+  // Busca as preferências de notificação atuais da empresa.
   const p = await obterPreferencias(empresaId);
   return (
     <div className={styles.abaEstreita}>
@@ -641,13 +678,23 @@ async function AbaPreferencias({ empresaId }: { empresaId: string }) {
   );
 }
 
+/**
+ * Página "Administração" (só para quem tem a permissão ADMIN_CONFIG): mostra uma das abas — usuários, perfis, unidades,
+ * setores, funções, módulos, escalas, aprovações, tipos de documento ou notificações. `?aba=` escolhe a aba.
+ */
 /** Administração (usuários, perfis, obras, setores, funções e preferências de notificação). Exige ADMIN_CONFIG. */
 export default async function Configuracoes({ searchParams }: PageProps<"/configuracoes">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Sem a permissão de administrar, a página responde 404 (não revela que ela existe).
   if (!temPermissao(ctx, "ADMIN_CONFIG")) notFound();
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Aba ativa: a da URL, se for válida; senão, "usuarios".
   const aba: Aba = (ABAS.find(([k]) => k === sp.aba)?.[0] ?? "usuarios") as Aba;
+  // Só busca os dados gerais de administração nas abas que precisam deles (as outras buscam os seus).
   const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" || aba === "aprovacoes" || aba === "tipos-documento" ? null : await dadosAdministracao(await getAtor());
+  // Só busca as escalas quando a aba Escalas está aberta.
   const escalas = aba === "escalas" ? await dadosEscalas(await getAtor()) : null;
 
   return (

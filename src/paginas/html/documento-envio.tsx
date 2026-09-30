@@ -5,6 +5,7 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/documento-envio.module.css";
 
+// Uma pessoa que pode ser revisora ou aprovadora: id e nome.
 type Usuario = { id: string; nome: string };
 
 /**
@@ -12,12 +13,19 @@ type Usuario = { id: string; nome: string };
  * ordenadas, sequencial ou paralelo. O fluxo é único: revisores assinam primeiro, depois os aprovadores.
  */
 export function DocumentoEnvio({ acao, documentoId, versao, usuarios, resumo }: { acao: AcaoServidor; documentoId: string; versao: number; usuarios: Usuario[]; resumo: string }) {
+  // Liga o formulário à server action: `res` é a resposta e `pendente` indica que está enviando.
   const [res, executar, pendente] = useActionState(acao, null);
+  // Ids dos revisores escolhidos (assinam primeiro), na ordem da lista.
   const [revisores, setRevisores] = useState<string[]>([]);
+  // Ids dos aprovadores escolhidos (assinam depois dos revisores), na ordem da lista.
   const [aprovadores, setAprovadores] = useState<string[]>([]);
+  // Modo do fluxo: SEQUENCIAL (um por vez, na ordem) ou PARALELO (todos ao mesmo tempo).
   const [modo, setModo] = useState<"SEQUENCIAL" | "PARALELO">("SEQUENCIAL");
+  // Aviso local (ex.: "Adicione ao menos um aprovador").
   const [aviso, setAviso] = useState("");
+  // Dicionário id → nome, para mostrar o nome de quem foi escolhido.
   const nomes = new Map(usuarios.map((u) => [u.id, u.nome]));
+  // Quem já foi escolhido (em qualquer das duas listas) — não pode ser escolhido de novo.
   const usados = new Set([...revisores, ...aprovadores]);
 
   return (
@@ -69,6 +77,11 @@ export function DocumentoEnvio({ acao, documentoId, versao, usuarios, resumo }: 
   );
 }
 
+/**
+ * Uma lista de pessoas com ordem (revisores ou aprovadores): escolher alguém e adicionar, subir/descer na ordem e remover.
+ * - `ids`/`setIds`: a lista atual e como alterá-la. `usados`: quem não pode mais ser escolhido.
+ * - `numerar`: mostra 1º, 2º... (no modo sequencial). `deslocamento`: continua a numeração depois da outra lista.
+ */
 function ListaOrdenada({
   titulo,
   ajuda,
@@ -90,7 +103,9 @@ function ListaOrdenada({
   numerar: boolean;
   deslocamento?: number;
 }) {
+  // Pessoa selecionada na caixa, ainda não adicionada.
   const [escolha, setEscolha] = useState("");
+  // Sobe (-1) ou desce (+1) a pessoa número `i`, trocando de lugar com a vizinha.
   const mover = (i: number, d: -1 | 1) =>
     setIds((s) => {
       const j = i + d;

@@ -11,16 +11,28 @@ import { Cartao } from "@/paginas/html/componentes/cartao";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/treinamentos-lista.module.css";
 
+/**
+ * Página "Treinamentos": o catálogo (tipo, carga, validade, para quem é obrigatório, nº de sessões, última sessão)
+ * e as 10 sessões realizadas mais recentes. Links para "Meus treinamentos", matriz e cadastro (quem gerencia).
+ */
 /** Catálogo de treinamentos e sessões realizadas recentes. */
 export default async function TreinamentosLista({ searchParams }: PageProps<"/treinamentos">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Treinamentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "TREINAMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Lê os parâmetros do endereço: `?inativos=1` mostra também os treinamentos inativos.
   const sp = await searchParams;
   const inativos = sp.inativos === "1";
+  // Busca em paralelo os treinamentos e as opções (aqui, para traduzir ids de setor em nomes).
   const [lista, op] = await Promise.all([listarTreinamentos(a, { inativos }), opcoesTreinamentos(a)]);
+  // `g`: verdadeiro se o usuário pode gerenciar (mostra os botões de matriz e de novo treinamento).
   const g = podeGerenciarTreinamentos(a);
+  // Dicionário id do setor → nome, para escrever "Segurança" em vez do código interno.
   const nomeSetor = new Map(op.setores.map((s) => [s.id, s.nome]));
+  // Junta as sessões de todos os treinamentos, ordena da mais recente para a mais antiga e guarda as 10 primeiras.
   const sessoes = lista
     .flatMap((t) => t.sessoes.map((s) => ({ ...s, treinamento: { id: t.id, nome: t.nome } })))
     .sort((x, y) => y.dataRealizacao.getTime() - x.dataRealizacao.getTime())

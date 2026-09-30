@@ -5,20 +5,29 @@ import { registrarIncidenteAcao } from "@/app/(app)/incidentes/actions";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/incidentes-novo-formulario.module.css";
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
+// Tipos de ocorrência: valor guardado e texto exibido.
 const TIPOS: [string, string][] = [
   ["QUASE_ACIDENTE", "Quase-acidente"],
   ["ACIDENTE_TIPICO", "Acidente típico"],
   ["ACIDENTE_TRAJETO", "Acidente de trajeto"],
   ["DOENCA_OCUPACIONAL", "Doença ocupacional"],
 ];
+// Gravidades possíveis: valor guardado e texto exibido.
 const GRAVIDADES: [string, string][] = [
   ["SEM_AFASTAMENTO", "Sem afastamento"],
   ["COM_AFASTAMENTO", "Com afastamento"],
   ["FATALIDADE", "Fatalidade"],
 ];
 
+/**
+ * Formulário de registro de incidente: dados do fato, envolvido (colaborador ou terceiro), dados sensíveis (LGPD),
+ * CAT e fotos de evidência. O registro vira "restrito" automaticamente quando há pessoa envolvida ou dado sensível.
+ * - `obras`, `setores`, `usuarios`: listas para as escolhas. `agora`: data/hora atual no fuso da empresa (padrão e limite).
+ * - `podeSensiveis`: se o usuário pode anexar arquivos sensíveis.
+ */
 /** Registro de incidente: dados do fato, envolvido (usuário ou terceiro), toggle de dados sensíveis e fotos. */
 export function IncidenteNovoFormulario({
   obras,
@@ -34,10 +43,15 @@ export function IncidenteNovoFormulario({
   agora: string;
   podeSensiveis: boolean;
 }) {
+  // Quem está envolvido: ninguém identificado, um colaborador do sistema ou um terceiro (muda os campos mostrados).
   const [envolvido, setEnvolvido] = useState<"nenhum" | "usuario" | "terceiro">("nenhum");
+  // Se o usuário marcou "Registrar dados sensíveis" (mostra o bloco de dados protegidos pela LGPD).
   const [sensiveis, setSensiveis] = useState(false);
+  // Gravidade escolhida (só pede "dias perdidos" quando há afastamento).
   const [gravidade, setGravidade] = useState("SEM_AFASTAMENTO");
+  // Se a ocorrência gera CAT (Comunicação de Acidente de Trabalho) — mostra o campo do número.
   const [cat, setCat] = useState(false);
+  // Há dado pessoal no registro? Nesse caso o sistema marca como restrito automaticamente (LGPD).
   const temPessoais = envolvido !== "nenhum" || sensiveis;
 
   return (

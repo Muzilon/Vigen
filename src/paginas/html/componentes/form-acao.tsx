@@ -4,7 +4,12 @@ import { useActionState, type ReactNode } from "react";
 import botoes from "@/paginas/css/componentes/botao.module.css";
 import styles from "@/paginas/css/componentes/form-acao.module.css";
 
+/**
+ * O que uma "server action" devolve à tela depois de executar: `erro` (falhou), `ok` (deu certo),
+ * `aviso` (deu certo, mas com observação) ou `valores` (o que o usuário digitou, para repovoar o formulário).
+ */
 export type ResultadoAcao = { erro?: string; ok?: string; aviso?: string; valores?: Record<string, string> } | null;
+/** O "formato" de uma server action: recebe o resultado anterior e os dados do formulário, devolve um ResultadoAcao. */
 export type AcaoServidor = (prev: ResultadoAcao, fd: FormData) => Promise<ResultadoAcao>;
 
 type VarianteBotao = "primario" | "secundario" | "perigo" | "texto";
@@ -43,7 +48,10 @@ export function FormAcao({
   variante?: VarianteBotao;
   tamanho?: "normal" | "pequeno";
 }) {
+  // useActionState liga o formulário à server action: `executar` é o que o formulário chama ao enviar,
+  // `res` guarda a resposta (erro/ok/aviso) e `pendente` fica verdadeiro enquanto o servidor trabalha.
   const [res, executar, pendente] = useActionState(acao, null);
+  // Decide como o botão será estilizado (veja a explicação acima da função).
   const usarPadrao = variante !== undefined || classeBotao === undefined;
   const classe = usarPadrao
     ? `${botoes.botao} ${CLASSE_VARIANTE[variante ?? "primario"]} ${tamanho === "pequeno" ? styles.botaoPequeno : ""} ${classeBotao ?? ""}`
@@ -52,6 +60,8 @@ export function FormAcao({
     <form
       action={executar}
       className={className}
+      // Se a página pediu confirmação (ex.: "Excluir o anexo?"), pergunta antes de enviar;
+      // se o usuário cancelar, o envio é interrompido.
       onSubmit={(e) => {
         if (confirmar && !window.confirm(confirmar)) e.preventDefault();
       }}

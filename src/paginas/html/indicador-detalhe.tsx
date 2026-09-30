@@ -28,30 +28,53 @@ import { Interacoes } from "@/paginas/html/componentes/interacoes";
 import { CamposIndicador } from "@/paginas/html/indicador-formulario";
 import styles from "@/paginas/css/indicador-detalhe.module.css";
 
+// Quantos períodos aparecem no gráfico conforme a periodicidade (12 meses, 8 trimestres, 6 semestres, 5 anos).
 const PERIODOS_NO_GRAFICO = { MENSAL: 12, TRIMESTRAL: 8, SEMESTRAL: 6, ANUAL: 5 } as const;
 
+/**
+ * Página de detalhe do indicador: gráfico dos resultados contra a meta, formulário para lançar o resultado do período
+ * (ou registrar o valor calculado, nos automáticos), dados cadastrais, histórico de lançamentos e comentários.
+ */
 /** Detalhe do indicador: gráfico do histórico vs meta, lançamento do período, trilha de lançamentos e comentários. */
 export default async function IndicadorDetalhe({ params }: PageProps<"/indicadores/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Indicadores, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INDICADORES");
+  // `id`: o identificador do indicador, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o indicador com seus resultados e a situação no último período fechado.
   const i = await obterIndicador(a, id);
+  // Indicador inexistente → 404.
   if (!i) notFound();
+  // Busca em paralelo as opções (para o formulário de edição) e o fuso horário da empresa.
   const [op, fuso] = await Promise.all([opcoesIndicadores(a), fusoDaEmpresa(a)]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // `g`: verdadeiro se o usuário pode editar/inativar o indicador.
   const g = podeGerenciarIndicadores(a);
+  // Pode lançar resultado? Gestor ou o responsável, e só se o indicador estiver ativo.
   const podeLancar = podeLancarResultado(a, i) && i.ativo;
+  // Indicador automático: o valor é calculado pelo sistema (o usuário só confirma o registro).
   const auto = ehAutomatico(i.fonte);
+  // Período em andamento (ex.: "2026-09" ou "2026-T3").
   const atual = periodoDaData(hoje, i.periodicidade);
+  // Para cada período, o resultado que vale (o lançamento mais recente; correções substituem os anteriores).
   const vigentes = vigentesPorPeriodo(i.resultados);
+  // Os períodos que entram no gráfico, terminando no último período fechado.
   const janela = ultimosPeriodos(i.periodoReferencia, i.periodicidade, PERIODOS_NO_GRAFICO[i.periodicidade]);
+  // Um ponto por período: o valor lançado (ou vazio), a meta vigente e a direção (maior/menor é melhor).
   const pontos = janela.map((p) => {
     const r = vigentes.get(p);
     return { periodo: p, valor: r ? r.valor : null, meta: r ? r.meta : i.meta, direcao: r ? r.direcao : i.direcao };
   });
+  // Períodos que o usuário pode escolher ao lançar (os últimos 12, do mais novo ao mais antigo).
   const opcoesPeriodo = ultimosPeriodos(atual, i.periodicidade, 12).reverse();
+  // Nos automáticos, calcula o valor do último período fechado e do período em andamento.
   const [calcReferencia, calcAtual] = auto
     ? await Promise.all([calcularValorIndicador(a, i.id, i.periodoReferencia), calcularValorIndicador(a, i.id, atual)])
     : [null, null];
@@ -180,6 +203,7 @@ export default async function IndicadorDetalhe({ params }: PageProps<"/indicador
             ) : (
               <ol className={styles.historico}>
                 {i.resultados.map((r) => {
+                  // Este lançamento foi substituído por uma correção posterior do mesmo período?
                   const substituido = vigentes.get(r.periodo) !== r;
                   return (
                     <li key={r.id} className={`${styles.evento} ${substituido ? styles.substituido : ""}`}>

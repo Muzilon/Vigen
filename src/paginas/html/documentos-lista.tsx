@@ -17,6 +17,7 @@ import { CampoBusca, Rotulo, Selecao } from "@/paginas/html/componentes/campo-fo
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/documentos-lista.module.css";
 
+// Regra de validação dos filtros da URL (busca, tipo, status, processo, responsável, vencidas, incluir obsoletos).
 const esquema = z.object({
   busca: textoUrl,
   tipo: uuidUrl,
@@ -27,13 +28,23 @@ const esquema = z.object({
   todos: enumUrl(["1"]),
 });
 
+/**
+ * Página "Lista mestra de documentos" (ISO 9001 7.5): código, título, tipo, revisão vigente, status, processo,
+ * responsável e próxima revisão, com busca e filtros. Quem não tem acesso à lista mestra é levado a "Meus documentos".
+ */
 /** Lista mestra de documentos (ISO 9001 7.5): código, título, tipo, revisão vigente, status, processo, responsável e próxima revisão. */
 export default async function DocumentosLista({ searchParams }: PageProps<"/documentos">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Documentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "DOCUMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Quem só lê documentos publicados para si vai direto para "Meus documentos".
   if (!veListaMestra(a)) redirect("/documentos/meus");
+  // Lê e valida os filtros da URL (valores inválidos viram "sem filtro").
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo a lista (já filtrada), as opções dos filtros e o fuso horário da empresa.
   const [docs, op, fuso] = await Promise.all([
     listarMestra(a, {
       busca: f.busca || undefined,
@@ -47,8 +58,11 @@ export default async function DocumentosLista({ searchParams }: PageProps<"/docu
     opcoesDocumentos(a),
     fusoDaEmpresa(a),
   ]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // Quantos documentos vigentes estão com a revisão periódica vencida (vai para o resumo do topo).
   const vencidas = docs.filter((d) => revisaoVencida(d.proximaRevisaoEm ? dataIso(d.proximaRevisaoEm) : null, hoje) && d.versaoVigente).length;
+  // Quantos estão no meio do caminho (em revisão, em aprovação ou aprovados aguardando publicação).
   const emTramitacao = docs.filter((d) => d.status === "EM_REVISAO" || d.status === "EM_APROVACAO" || d.status === "APROVADO").length;
 
   return (
@@ -137,6 +151,7 @@ export default async function DocumentosLista({ searchParams }: PageProps<"/docu
             </thead>
             <tbody>
               {docs.map((d) => {
+                // Este documento tem revisão vencida? (a data ganha o aviso "vencida")
                 const vencida = !!d.versaoVigente && revisaoVencida(d.proximaRevisaoEm ? dataIso(d.proximaRevisaoEm) : null, hoje);
                 return (
                   <tr key={d.id} className={d.status === "OBSOLETO" || d.status === "CANCELADO" ? styles.linhaInativa : undefined}>

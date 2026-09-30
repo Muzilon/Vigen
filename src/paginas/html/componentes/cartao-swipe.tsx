@@ -3,6 +3,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import styles from "@/paginas/css/componentes/cartao-swipe.module.css";
 
+// Distância mínima (em pixels) que o dedo precisa arrastar para a resposta ser confirmada.
 const LIMIAR_PX = 80;
 
 /**
@@ -13,22 +14,29 @@ const LIMIAR_PX = 80;
  * `valorDireita`/`valorEsquerda` devem ser os `value` exatos dos inputs radio dentro de `children`.
  */
 export function CartaoSwipe({ valorDireita, valorEsquerda, children }: { valorDireita: string; valorEsquerda: string; children: ReactNode }) {
+  // `ref`: aponta para a caixa do cartão no HTML (para procurar os botões de resposta dentro dela).
   const ref = useRef<HTMLDivElement>(null);
+  // `inicioX`: posição horizontal onde o dedo encostou; guardada sem provocar nova renderização.
   const inicioX = useRef<number | null>(null);
+  // `deslocamento`: quanto o cartão já foi arrastado (negativo = esquerda, positivo = direita).
   const [deslocamento, setDeslocamento] = useState(0);
+  // `arrastando`: verdadeiro enquanto o dedo está na tela.
   const [arrastando, setArrastando] = useState(false);
 
+  /** Dedo encostou no cartão: anota onde começou. O mouse é ignorado (usa os botões normais). */
   function aoDescer(e: ReactPointerEvent<HTMLDivElement>) {
     if (e.pointerType === "mouse") return; // swipe é affordance de toque; mouse usa os radios normalmente.
     inicioX.current = e.clientX;
     setArrastando(true);
   }
 
+  /** Dedo se movendo: atualiza o quanto o cartão deslocou para ele acompanhar o dedo. */
   function aoMover(e: ReactPointerEvent<HTMLDivElement>) {
     if (inicioX.current === null) return;
     setDeslocamento(e.clientX - inicioX.current);
   }
 
+  /** Marca a opção de resposta correspondente ao lado arrastado e envia o formulário. */
   function confirmar(valor: string) {
     const raiz = ref.current;
     if (!raiz) return;
@@ -40,6 +48,7 @@ export function CartaoSwipe({ valorDireita, valorEsquerda, children }: { valorDi
     form?.requestSubmit();
   }
 
+  /** Dedo soltou: se arrastou além do limite, confirma a resposta; depois o cartão volta ao centro. */
   function aoSoltar() {
     setArrastando(false);
     inicioX.current = null;

@@ -45,20 +45,35 @@ import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { CausaForm } from "@/paginas/html/rnc-detalhe-causa";
 import styles from "@/paginas/css/incidente-detalhe.module.css";
 
+// Formato da análise de causa raiz guardada: lista de porquês, mapa do Ishikawa ou texto livre.
 type Analise = { porques?: string[]; ishikawa?: Record<string, string>; texto?: string };
 
+/**
+ * Página de detalhe do incidente: registro, envolvidos e dados sensíveis (só para quem pode ver restritos — LGPD),
+ * investigação (causa raiz, conclusão), plano de ação, evidências, comentários e histórico.
+ */
 /** Detalhe do incidente: registro, envolvidos (LGPD), investigação/causa raiz, plano, evidências, comentários e histórico. */
 export default async function IncidenteDetalhe({ params }: PageProps<"/incidentes/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Incidentes, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INCIDENTES");
+  // `id`: o identificador do incidente, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o incidente; dados pessoais/sensíveis só vêm se o usuário tem permissão de ver restritos.
   const i = await obterIncidente(a, id);
+  // Incidente inexistente ou sem acesso → 404.
   if (!i) notFound();
+  // O usuário pode ver dados restritos de incidentes (envolvidos, dados sensíveis)?
   const verRestritos = podeVerRestritosIncidente(a);
+  // Alvos dos anexos: os comuns e os sensíveis (estes últimos só para quem pode ver restritos).
   const alvo = { tipo: "INCIDENTE" as const, entidadeId: i.id };
   const alvoSensivel = { tipo: "INCIDENTE_DADOS_SENSIVEIS" as const, entidadeId: i.id };
+  // Busca em paralelo: histórico, opções, fuso horário e os anexos (comuns e, quando permitido, sensíveis).
   const [historico, op, fuso, anexos, podeAnexar, anexosSensiveis, podeAnexarSensivel] = await Promise.all([
     listarHistoricoIncidente(a, i.id),
     opcoesIncidentes(a),
@@ -69,9 +84,13 @@ export default async function IncidenteDetalhe({ params }: PageProps<"/incidente
     verRestritos && i.contemDadosPessoais ? podeEnviarAnexo(a, alvoSensivel) : Promise.resolve(false),
   ]);
   const hoje = hojeNoFuso(fuso);
+  // `trata`: pode investigar/editar este incidente (responsável ou gestor).
   const trata = podeTratarIncidente(a, i);
+  // `gerencia`: pode designar o responsável pela investigação.
   const gerencia = podeGerenciarIncidentes(a);
+  // A análise de causa raiz guardada no banco, no formato `Analise`.
   const analise = (i.analiseCausa ?? null) as Analise | null;
+  // Há alguém envolvido ou testemunha registrado? (decide se mostra o cartão de dados restritos)
   const temEnvolvidos = !!(i.envolvido || i.terceiroNome || i.testemunhas);
 
   return (

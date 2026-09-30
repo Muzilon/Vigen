@@ -33,6 +33,7 @@ import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { LaiaFormulario } from "@/paginas/html/laia-formulario";
 import styles from "@/paginas/css/laia-detalhe.module.css";
 
+// Formato do "retrato" (snapshot) guardado em cada evento do histórico: só os campos que a tela mostra.
 type Snapshot = {
   severidade?: number;
   frequencia?: number;
@@ -43,16 +44,29 @@ type Snapshot = {
   status?: keyof typeof ROTULO_STATUS_LINHA;
 };
 
+/**
+ * Página de detalhe de uma linha LAIA: dados, pontuação de significância, reavaliação, plano de ação,
+ * histórico, aprovações, anexos e comentários. Se houver pedido de aprovação em andamento, a linha fica bloqueada para alteração.
+ */
 /** Detalhe da linha LAIA: dados, significância, reavaliação, plano, histórico, aprovações, anexos e comentários. */
 export default async function LaiaDetalhe({ params }: PageProps<"/laia/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de LAIA, a página responde "404 - não encontrada".
   exigirModulo(ctx, "LAIA");
+  // `id`: o identificador da linha LAIA, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca a linha LAIA (aspecto, impacto, pontuação, plano...).
   const l = await obterLaia(a, id);
+  // Linha inexistente ou sem acesso → 404.
   if (!l) notFound();
+  // Alvo dos anexos (esta linha).
   const alvo = { tipo: "LAIA" as const, entidadeId: l.id };
+  // Busca em paralelo: histórico, opções, fuso horário, anexos, se pode anexar, pedidos de aprovação e a regra de aprovação da empresa.
   const [historico, op, fuso, anexos, podeAnexar, pendencias, aprovacao] = await Promise.all([
     listarHistoricoLaia(a, l.id),
     opcoesLaia(a),
@@ -63,13 +77,20 @@ export default async function LaiaDetalhe({ params }: PageProps<"/laia/[id]">) {
     infoAprovacaoLaia(a),
   ]);
   const hoje = hojeNoFuso(fuso);
+  // A linha está vigente (em uso)? Só linhas vigentes podem ser alteradas ou reavaliadas.
   const vigente = l.status === "VIGENTE";
+  // Pedido de aprovação em andamento para esta linha, se houver.
   const pend = pendencias.get(l.id);
+  // `g`: pode alterar/excluir (gerencia, linha vigente e sem pedido de aprovação em andamento).
   const g = podeGerenciarLaia(a) && vigente && !pend;
+  // `t`: pode reavaliar e gerar plano (responsável ou gestor, com a linha vigente).
   const t = podeTratarLaia(a, l) && vigente;
+  // Escala de pontuação da unidade (ou a padrão da empresa).
   const config = op.escalas[l.obraId] ?? op.escalas[""];
   const codigo = codigoLaia(l);
+  // A próxima reavaliação já venceu? (a data ganha o aviso "vencida")
   const vencida = vigente && l.proximaReavaliacaoEm && l.proximaReavaliacaoEm.toISOString().slice(0, 10) < hoje;
+  // Nome de um eixo da escala (ex.: "Severidade") conforme a configuração da empresa.
   const rotuloEixo = (k: (typeof EIXOS_LAIA)[number]) => eixoLaia(config, k)?.rotulo ?? k;
 
   return (

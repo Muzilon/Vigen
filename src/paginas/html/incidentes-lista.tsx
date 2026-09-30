@@ -22,6 +22,7 @@ import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/incidentes-lista.module.css";
 
+// Regra de validação dos filtros da URL (unidade, tipo, gravidade, status).
 const esquema = z.object({
   obra: uuidUrl,
   tipo: enumUrl(["ACIDENTE_TIPICO", "ACIDENTE_TRAJETO", "QUASE_ACIDENTE", "DOENCA_OCUPACIONAL"]),
@@ -29,12 +30,21 @@ const esquema = z.object({
   status: enumUrl(["ABERTO", "EM_INVESTIGACAO", "CONCLUIDO"]),
 });
 
+/**
+ * Página "Incidentes e acidentes": tabela com data/hora, tipo, gravidade, unidade/local, responsável, status, dias perdidos,
+ * CAT e plano. Registros restritos por conterem dados pessoais (LGPD) ganham um cadeado.
+ */
 /** Lista de incidentes/acidentes: filtros obra/tipo/gravidade/status; cadeado nos restritos (LGPD). */
 export default async function IncidentesLista({ searchParams }: PageProps<"/incidentes">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Incidentes, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INCIDENTES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo os incidentes (já filtrados, e só os que o usuário pode ver), as opções dos filtros e o fuso horário.
   const [lista, op, fuso] = await Promise.all([
     listarIncidentes(a, { obra: f.obra || undefined, tipo: f.tipo || undefined, gravidade: f.gravidade || undefined, status: f.status || undefined }),
     opcoesIncidentes(a),
@@ -132,6 +142,7 @@ export default async function IncidentesLista({ searchParams }: PageProps<"/inci
   );
 }
 
+/** Cadeado que marca incidentes restritos (contêm dados pessoais protegidos pela LGPD). */
 function IconeRestrito() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Restrito (LGPD)" className={styles.iconeRestrito}>

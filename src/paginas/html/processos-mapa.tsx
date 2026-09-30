@@ -3,6 +3,7 @@ import { montarLayoutMapa, ROTULO_TIPO_PROCESSO } from "@/lib/processos/regras";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/processos-mapa.module.css";
 
+// Classes de CSS (cores) de cada raia do mapa e, logo abaixo, de cada caixa de processo, conforme o tipo.
 const CLASSE_RAIA: Record<TipoProcesso, string> = {
   GESTAO: styles.raiaGestao,
   FINALISTICO: styles.raiaFinalistico,
@@ -30,6 +31,11 @@ function linhasNome(nome: string, max = 22): string[] {
   return linhas;
 }
 
+/**
+ * O mapa visual dos processos: um desenho (SVG) em 3 raias (gestão, finalísticos, apoio) com uma caixa por processo,
+ * setas de sequência e de interação, e o "Cliente" nas pontas. Cada caixa é um link para o detalhe do processo.
+ * As posições são calculadas por `montarLayoutMapa` (lib/processos/regras). Sem processos, mostra uma mensagem.
+ */
 /** Diagrama SVG em 3 raias gerado da ordem da planilha; cada caixa leva ao detalhe. */
 export function MapaProcessos({
   processos,
@@ -39,6 +45,7 @@ export function MapaProcessos({
   interacoes: { origemId: string; destinoId: string; descricao: string | null }[];
 }) {
   if (processos.length === 0) return <EstadoVazio>Nenhum processo cadastrado. Adicione processos na aba Planilha.</EstadoVazio>;
+  // `L` é o "desenho pronto": tamanho total, raias, caixas, setas e clientes, todos com posição calculada.
   const L = montarLayoutMapa(processos, interacoes);
   return (
     <div className={styles.envoltorio}>

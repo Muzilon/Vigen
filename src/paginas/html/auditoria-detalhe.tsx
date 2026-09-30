@@ -24,22 +24,40 @@ import { Interacoes } from "@/paginas/html/componentes/interacoes";
 import { CamposAuditoria } from "@/paginas/html/auditoria-formulario";
 import styles from "@/paginas/css/auditoria-detalhe.module.css";
 
+/**
+ * Página de detalhe da auditoria: dados gerais, plano (itens reordenáveis), constatações com evidências e botão
+ * de abrir RNC (nas não conformidades), conclusão/cancelamento e comentários. O que aparece depende do status da
+ * auditoria e das permissões do usuário (gerenciar ou executar).
+ */
 /** Detalhe da auditoria: dados, status, plano (itens), constatações com evidências e RNC, conclusão e comentários. */
 export default async function AuditoriaDetalhe({ params }: PageProps<"/auditorias/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Auditorias, a página responde "404 - não encontrada".
   exigirModulo(ctx, "AUDITORIAS");
+  // `id`: o identificador da auditoria, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca a auditoria com plano, constatações e dados de quem a criou.
   const au = await obterAuditoria(a, id);
+  // Auditoria inexistente → 404.
   if (!au) notFound();
+  // Busca em paralelo as opções (unidades, pessoas, programas...), o fuso horário e os anexos de evidência de cada constatação.
   const [op, fuso, anexos] = await Promise.all([opcoesAuditorias(a), fusoDaEmpresa(a), listarAnexosDe(a, "CONSTATACAO_AUDITORIA", au.constatacoes.map((c) => c.id))]);
+  // `g`: verdadeiro se o usuário pode gerenciar (editar dados, cancelar).
   const g = podeGerenciarAuditorias(a);
+  // `ex`: verdadeiro se o usuário executa esta auditoria (é o auditor líder ou gerencia).
   const ex = podeExecutarAuditoria(a, au);
+  // Três permissões que dependem do status da auditoria: editar o plano, registrar constatações e abrir RNC.
   const plano = ex && permitido(au.status, "EDITAR_PLANO");
   const constatar = ex && permitido(au.status, "CONSTATAR");
   const rnc = ex && permitido(au.status, "GERAR_RNC");
+  // Contagem de constatações por tipo (NC, observação, oportunidade, ponto forte) para o resumo do topo.
   const cont = contarPorTipo(au.constatacoes);
+  // Atalho para criar um campo escondido (<input type="hidden">) que leva um valor junto com o formulário.
   const hid = (n: string, v: string | number) => <input type="hidden" name={n} value={v} />;
 
   return (
@@ -125,7 +143,9 @@ export default async function AuditoriaDetalhe({ params }: PageProps<"/auditoria
             {au.constatacoes.length === 0 ? <p className={styles.vazio}>{au.status === "PLANEJADA" ? "Inicie a execução para registrar constatações." : "Nenhuma constatação."}</p> : (
               <ul className={styles.constatacoes}>
                 {au.constatacoes.map((c) => {
+                  // Sugestão de título, descrição e tipo para a RNC que pode nascer desta constatação.
                   const sug = sugestaoRncConstatacao(au, c);
+                  // Anexos de evidência desta constatação.
                   const ev = anexos.get(c.id) ?? [];
                   return (
                     <li key={c.id} className={`${styles.constatacao} ${c.tipo === "NAO_CONFORMIDADE" ? styles.constatacaoNc : ""}`}>

@@ -31,8 +31,10 @@ import { LaiaArvore } from "@/paginas/html/laia-arvore";
 import { clonarLaiaObraAcao } from "@/app/(app)/laia/actions";
 import styles from "@/paginas/css/laia-lista.module.css";
 
+// Regra para ler uma nota (1 a 10) da URL; se vier inválida, vira "sem filtro".
 const nota = z.preprocess((v) => (Array.isArray(v) ? v[0] : v), z.coerce.number().int().min(1).max(10).optional()).catch(undefined);
 
+// Regra de validação dos filtros da URL (unidade, processo, nível, status, só significativos, célula S×F e vista em árvore).
 const esquema = z.object({
   obra: uuidUrl,
   processo: z.preprocess((v) => (Array.isArray(v) ? v[0] : v), z.union([z.literal("sem"), z.uuid()]).optional()).catch(undefined),
@@ -44,32 +46,52 @@ const esquema = z.object({
   vista: enumUrl(["arvore"]),
 });
 
+/**
+ * Página "Aspectos e impactos (LAIA)": filtros (inclui "somente significativos"), mapa de calor severidade × frequência,
+ * resumo de quantos aspectos são significativos e a planilha densa (ou a visão em árvore).
+ */
 /** Planilha LAIA (ISO 14001): filtros (inclui "somente significativos"), heatmap severidade × frequência e planilha densa. */
 export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de LAIA, a página responde "404 - não encontrada".
   exigirModulo(ctx, "LAIA");
+  // Lê e valida os filtros da URL (valores inválidos viram "sem filtro").
   const q = esquema.parse(await searchParams);
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca em paralelo as linhas (já filtradas), as opções dos filtros, a escala de pontuação e os pedidos de aprovação em andamento.
   const [todas, opcoes, config, pendencias] = await Promise.all([
     listarLaia(a, { obra: q.obra || undefined, processo: q.processo, faixa: q.faixa || undefined, status: q.status || undefined, significativos: q.sig === "1" }),
     opcoesLaia(a),
     configLaia(a.db, q.obra || null),
     pendenciasLaia(a),
   ]);
+  // Célula clicada no mapa de calor (severidade e frequência), se houver.
   const celula = q.s && q.f ? { s: q.s, f: q.f } : null;
+  // Se uma célula foi clicada, mostra só as linhas dela; senão, todas.
   const linhas = celula ? todas.filter((l) => l.severidade === celula.s && l.frequencia === celula.f) : todas;
+  // Só as linhas vigentes entram nas contagens.
   const vigentes = todas.filter((l) => l.status === "VIGENTE");
+  // Quantas linhas da lista têm um pedido de aprovação em andamento (aparece como aviso no topo).
   const nPendentes = [...pendencias.values()].filter((p) => todas.some((l) => l.id === p.entidadeId)).length;
+  // Quantos aspectos vigentes são significativos (nível alto ou crítico).
   const nSignificativos = vigentes.filter((l) => l.significativo).length;
 
+  // Filtros atuais da URL, repassados aos links (para não perdê-los ao clicar).
   const base: Record<string, string> = {};
   for (const k of ["obra", "processo", "faixa", "status", "sig"] as const) if (q[k]) base[k] = String(q[k]);
+  // Monta um endereço da própria página mantendo os filtros e acrescentando/trocando o que vier em `extra`.
   const href = (extra: Record<string, string>) => `/laia?${new URLSearchParams({ ...base, ...extra }).toString()}`;
+  // Os três eixos da escala (severidade, frequência, abrangência), quando a empresa os configurou.
   const eS = eixoLaia(config, "severidade");
   const eF = eixoLaia(config, "frequencia");
   const eA = eixoLaia(config, "abrangencia");
+  // Calcula as células do mapa (quantas linhas em cada combinação) já com o link de filtro de cada uma.
   const celulas = celulasHeatmapLaia(config, vigentes).map((c) => ({ ...c, href: href({ s: String(c.linha), f: String(c.coluna) }) }));
+  // `gerencia`: verdadeiro se o usuário pode criar, revisar e duplicar linhas.
   const gerencia = podeGerenciarLaia(a);
+  // Está na visão em árvore (?vista=arvore) em vez da planilha?
   const emArvore = q.vista === "arvore";
 
   return (
@@ -198,6 +220,7 @@ export default async function LaiaLista({ searchParams }: PageProps<"/laia">) {
             </thead>
             <tbody>
               {linhas.map((l) => {
+                // Pedido de aprovação em andamento para esta linha (mostra o aviso "pendente" ao lado do status).
                 const pend = pendencias.get(l.id);
                 return (
                   <tr key={l.id} className={l.status !== "VIGENTE" ? styles.linhaInativa : undefined}>

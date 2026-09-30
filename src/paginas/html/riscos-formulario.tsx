@@ -8,6 +8,7 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/riscos-formulario.module.css";
 
+/** Todos os valores de um risco/oportunidade que o formulário controla (com `id` e `versao` só na edição). */
 export interface ValoresRisco {
   id?: string;
   versao?: number;
@@ -24,6 +25,7 @@ export interface ValoresRisco {
   periodicidadeMeses: number;
 }
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
 /**
@@ -55,19 +57,27 @@ export function RiscoFormulario({
   botao: string;
   rodape?: ReactNode;
 }) {
+  // Liga o formulário à server action: `res` é a resposta, `pendente` indica que está enviando.
   const [res, executar, pendente] = useActionState(acao, null);
+  // `v`: todos os valores do formulário (começam com os iniciais); a tela se redesenha quando mudam.
   const [v, setV] = useState(inicial);
+  // Tratamento inicial escolhido (só existe no modo "criar").
   const [tratamento, setTratamento] = useState("");
+  // Atualiza UM campo do formulário mantendo os demais.
   const set = <K extends keyof ValoresRisco>(k: K, valor: ValoresRisco[K]) => setV((x) => ({ ...x, [k]: valor }));
+  // Escala de pontuação da unidade escolhida (ou a padrão da empresa, se a unidade não tiver a sua).
   const config = escalas[v.obraId] ?? escalas[""];
   const { eixoP, eixoI } = eixosPI(config);
+  // Nível calculado ao vivo (faixa e pontuação); fica vazio se os valores estiverem fora da escala.
   let aval: Avaliacao | null = null;
   try {
     aval = avaliar(config, v.probabilidade, v.impacto);
   } catch {
     aval = null;
   }
+  // Tratamentos possíveis: riscos podem ser aceitos, mitigados, transferidos ou evitados; oportunidades, aceitas ou exploradas.
   const tratamentos = v.tipo === "RISCO" ? (["ACEITAR", "MITIGAR", "TRANSFERIR", "EVITAR"] as const) : (["ACEITAR", "EXPLORAR"] as const);
+  // Este tratamento, com este nível, exige plano de ação? (mitigar/evitar em nível alto ou crítico)
   const precisaPlano = !!aval && exigePlano(tratamento as never, aval.faixa);
 
   return (
@@ -240,6 +250,7 @@ export function TratamentoFormulario({
   const [v, setV] = useState(inicial);
   const { eixoP, eixoI } = eixosPI(config);
   const tratamentos = tipo === "RISCO" ? (["ACEITAR", "MITIGAR", "TRANSFERIR", "EVITAR"] as const) : (["ACEITAR", "EXPLORAR"] as const);
+  // Nível residual (após o tratamento), calculado ao vivo quando os dois valores foram preenchidos.
   let residual: Avaliacao | null = null;
   if (v.probabilidadeResidual && v.impactoResidual) {
     try {
@@ -248,6 +259,7 @@ export function TratamentoFormulario({
       residual = null;
     }
   }
+  // Só pede a primeira ação se o tratamento exige plano e o registro ainda não tem um.
   const precisaPlano = !temPlano && exigePlano(v.tratamento as never, faixa);
   return (
     <form action={executar} className={styles.formulario}>

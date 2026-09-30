@@ -41,6 +41,7 @@ import { BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/ba
 import { CausaForm } from "@/paginas/html/rnc-detalhe-causa";
 import styles from "@/paginas/css/rnc-detalhe.module.css";
 
+// As abas da página (chave usada na URL `?aba=...` e o nome mostrado na tela).
 const ABAS = [
   ["resumo", "Resumo"],
   ["causa", "Causa raiz"],
@@ -50,8 +51,10 @@ const ABAS = [
   ["historico", "Histórico"],
   ["cancelamento", "Cancelamento"],
 ] as const;
+// Tipo que só aceita as chaves acima (resumo, causa, plano...), para o TypeScript avisar se escrevermos uma aba que não existe.
 type Aba = (typeof ABAS)[number][0];
 
+// Nome amigável dos eventos especiais do histórico (cancelamento, troca de responsável, anexo excluído).
 const ROTULO_EVENTO: Record<string, string> = {
   CANCELAMENTO_SOLICITADO: "Cancelamento solicitado",
   RESPONSAVEL_ALTERADO: "Responsável alterado",
@@ -74,25 +77,40 @@ function Etiqueta({ classe, children }: { classe: string; children: React.ReactN
   return <span className={`${styles.etiqueta} ${classe}`}>{children}</span>;
 }
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
+/** Formata um número como dinheiro em reais: 1500 → "R$ 1.500,00". */
 function moeda(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+/**
+ * Página de detalhe da RNC (registro de não conformidade). Tem cabeçalho com as ações do momento, um passo a passo
+ * (stepper) do ciclo de vida e abas: Resumo, Causa raiz, Plano de ação (5W2H por ciclo), Verificação de eficácia,
+ * Interações, Histórico e Cancelamento. `?aba=` escolhe a aba. O que cada pessoa vê e pode fazer depende das permissões.
+ */
 /** Detalhe da RNC — Direção A "Campo" (ver A-Detalhe.dc.html e Verificacao.dc.html). */
 export default async function RncDetalhe({ params, searchParams }: PageProps<"/rncs/[id]">) {
+  // `id`: o identificador da RNC, tirado do endereço.
   const { id } = await params;
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Aba ativa: a da URL, se for válida; senão, "resumo".
   const aba: Aba = (ABAS.find(([k]) => k === sp.aba)?.[0] ?? "resumo") as Aba;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Fuso horário da empresa, para mostrar as datas corretamente.
   const fuso = await fusoDaEmpresa(a);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // Busca a RNC (só se o usuário tem acesso a ela) junto com unidade, plano de ação, verificações, histórico e solicitações de cancelamento.
   const rnc = await a.db.rnc.findFirst({
     where: { AND: [{ id }, filtroAcessoRnc(a)] },
     include: {
@@ -111,9 +129,12 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
       },
     },
   });
+  // RNC inexistente ou sem acesso → 404.
   if (!rnc) notFound();
 
+  // Usuários ativos da empresa, em ordem alfabética.
   const ativos = (await usuariosAtivos(a.db)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
+  // Versão simplificada (só id e nome) para as listas de escolha.
   const usuarios = ativos.map((u) => ({ id: u.id, nome: u.nome }));
   // "Quem" dos itens: só usuários ativos com acesso à obra da RNC.
   const usuariosObra = ativos.filter((u) => u.obras === null || u.obras.includes(rnc.obraId)).map((u) => ({ id: u.id, nome: u.nome }));
@@ -124,20 +145,32 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
       (u.obras === null || u.obras.includes(rnc.obraId)) &&
       (!rnc.restrita || u.permissoes.includes("RNC_VER_RESTRITAS")),
   );
+  // Todos os itens do plano de ação (de todos os ciclos); vazio se ainda não há plano.
   const itens = rnc.planoAcao?.itens ?? [];
+  // Ciclo atual da RNC (começa em 1 e sobe a cada verificação ineficaz).
   const ciclo = cicloAtual(rnc.verificacoes);
+  // Só os itens do ciclo atual.
   const itensCiclo = itens.filter((i) => i.ciclo === ciclo);
+  // `gerenciar`: pode gerenciar o plano de ação desta RNC.
   const gerenciar = podeGerenciarPlanoRnc(a, rnc);
+  // `tratar`: pode tratar esta RNC (analisar, registrar causa, conduzir o plano).
   const tratar = podeTratarRnc(a, rnc);
+  // Resumo do estado da RNC usado pelas regras de transição de status.
   const snap = { status: rnc.status, causaRaiz: rnc.causaRaiz, itensCicloAtual: itensCiclo.map((i) => i.status) };
+  // Pode assumir (ou retomar) a análise? Depende do status, da permissão e de quem já é o responsável.
   const podeAssumir =
     avaliarTransicao(snap, "ASSUMIR").ok &&
     atorTem(a, "RNC_TRATAR") &&
     (!rnc.responsavelId || rnc.responsavelId === a.usuarioId || atorTem(a, "PLANO_GERENCIAR"));
+  // A RNC está num status final (encerrada ou cancelada)?
   const final = STATUS_FINAIS.includes(rnc.status);
+  // O plano ainda pode ser editado (quem gerencia e RNC em análise ou em execução)?
   const editavelPlano = gerenciar && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO");
+  // Solicitação de cancelamento que está aguardando decisão, se houver.
   const pendente = rnc.solicitacoesCancelamento.find((s) => s.status === "PENDENTE");
+  // A RNC tem dados pessoais E o usuário pode vê-los (LGPD)?
   const sensivelVisivel = rnc.contemDadosPessoais && podeVerDadosSensiveis(a);
+  // Busca em paralelo só os anexos da aba aberta (para não carregar à toa): da RNC, sensíveis, dos itens e das verificações.
   const [anexosRnc, anexosSensiveis, anexosItens, anexosVerif] = await Promise.all([
     aba === "resumo" ? listarAnexos(a, { tipo: "RNC", entidadeId: rnc.id }) : [],
     aba === "resumo" && sensivelVisivel ? listarAnexos(a, { tipo: "RNC_DADOS_SENSIVEIS", entidadeId: rnc.id }) : [],
@@ -145,6 +178,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
     aba === "verificacao" ? listarAnexosDe(a, "VERIFICACAO_EFICACIA", rnc.verificacoes.map((v) => v.id)) : new Map<string, AnexoListado[]>(),
   ]);
 
+  // Monta um botão de transição de status (ex.: "Assumir análise") já ligado à ação do servidor, enviando o id e a versão da RNC.
   const transicao = (acao: typeof assumirAcao, rotulo: string, primario = true) => (
     <FormAcao acao={acao} botao={rotulo} variante={primario ? "primario" : "secundario"} className={styles.formTransicao}>
       <input type="hidden" name="id" value={rnc.id} />
@@ -152,19 +186,28 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
     </FormAcao>
   );
 
+  // A análise de causa raiz guardada (5 Porquês, Ishikawa ou texto livre).
   const analise = (rnc.analiseCausa ?? null) as { porques?: string[]; ishikawa?: Record<string, string>; texto?: string } | null;
 
   // ---------------------------------------------------------------- apresentação (derivados, sem regra nova)
+  // Formata uma data como dia/mês (ex.: 05/03) no fuso da empresa.
   const diaMes = (d: Date) => new Intl.DateTimeFormat("pt-BR", { timeZone: fuso, day: "2-digit", month: "2-digit" }).format(d);
+  // Acha o último registro do histórico em que a RNC passou para o status dado.
   const ultimoHistorico = (s: StatusRnc) => [...rnc.historicoStatus].reverse().find((h) => h.statusNovo === s);
+  // Em que etapa do passo a passo a RNC está; se foi cancelada, usa a etapa em que estava antes.
   const statusBaseStepper: StatusRnc =
     rnc.status === "CANCELADO" ? (ultimoHistorico("CANCELADO")?.statusAnterior ?? "ABERTO") : rnc.status;
+  // Posição (0, 1, 2...) da etapa atual no passo a passo; RNC reaberta volta para a primeira.
   const etapaAtual = statusBaseStepper === "REABERTO" ? 0 : Math.max(0, ETAPAS.findIndex(([s]) => s === statusBaseStepper));
+  // Quantos dias a RNC está aberta (vazio se já terminou).
   const diasEmAberto = final
     ? null
     : Math.max(0, Math.round((paraDataDb(hoje).getTime() - paraDataDb(hojeNoFuso(fuso, rnc.dataAbertura)).getTime()) / 86_400_000));
+  // Pode pedir o cancelamento? (sem pedido pendente, RNC não finalizada e com a permissão)
   const podeSolicitarCancelamento = !pendente && !final && atorTem(a, "RNC_SOLICITAR_CANCELAMENTO");
+  // Lista dos ciclos que têm itens, do mais recente para o mais antigo.
   const ciclosPlano = [...new Set([ciclo, ...itens.map((i) => i.ciclo)])].sort((x, y) => y - x);
+  // Pode registrar a verificação de eficácia? (RNC em verificação e com a permissão)
   const podeVerificar = rnc.status === "EM_VERIFICACAO" && atorTem(a, "RNC_VERIFICAR_EFICACIA");
 
   return (
@@ -801,6 +844,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
   );
 }
 
+/** Um par "rótulo + valor" das listas de dados. `largo` faz o campo ocupar a linha toda. */
 function Campo({ rotulo, largo, children }: { rotulo: string; largo?: boolean; children: React.ReactNode }) {
   return (
     <div className={largo ? styles.campoLargo : undefined}>
@@ -810,6 +854,7 @@ function Campo({ rotulo, largo, children }: { rotulo: string; largo?: boolean; c
   );
 }
 
+/** Ícone de "certo" (✓) usado nas etapas e nos resultados. */
 function IconeCheck() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -818,6 +863,7 @@ function IconeCheck() {
   );
 }
 
+/** Ícone de cadeado das RNCs restritas e dos dados sensíveis. */
 function IconeCadeado() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -827,6 +873,7 @@ function IconeCadeado() {
   );
 }
 
+/** Ícone de informação (i) das notas e avisos. */
 function IconeInfo() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={styles.iconeInfo}>

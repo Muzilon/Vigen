@@ -22,6 +22,7 @@ import styles from "@/paginas/css/plano-acao-lista.module.css";
 /** Rótulo curto da origem de planos sem RNC (lista de itens). */
 const ROTULO_ORIGEM_PLANO: Partial<Record<string, string>> = { MANUAL: "Manual", RISCO_OPORTUNIDADE: "Risco", HIRA: "HIRA", LAIA: "LAIA", INSPECAO: "Inspeção", AUDITORIA: "Auditoria", REQUISITO_LEGAL: "Requisito legal", INCIDENTE: "Incidente" };
 
+// Regra de validação dos filtros da URL (escopo, status, responsável e prazo); valores inválidos viram "sem filtro".
 const esquemaFiltros = z.object({
   escopo: enumUrl(["meus", "todos"]),
   status: enumUrl(["PENDENTE", "EM_ANDAMENTO", "CONCLUIDO", "CANCELADO", "ATRASADO"]),
@@ -29,41 +30,57 @@ const esquemaFiltros = z.object({
   prazo: enumUrl(["vencidos", "7dias"]),
 });
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
+// Quantos milissegundos tem um dia (usado para calcular os dias de atraso).
 const DIA_MS = 86_400_000;
 // Colunas @db.Date chegam como meia-noite UTC: o dia da semana é lido em UTC para não deslocar.
 const fmtDiaSemana = new Intl.DateTimeFormat("pt-BR", { weekday: "short", timeZone: "UTC" });
 
 /** Grupos de prazo da tabela — derivados só do status efetivo e da data "quando" do item. */
 type Grupo = "atrasados" | "semana" | "depois" | "encerrados";
+// Decide em qual grupo da tabela o item entra: atrasados, próximos 7 dias, depois ou encerrados.
 function grupoDoItem(st: StatusEfetivoItem, quando: Date, em7: Date): Grupo {
   if (st === "ATRASADO") return "atrasados";
   if (st === "CONCLUIDO" || st === "CANCELADO") return "encerrados";
   return quando <= em7 ? "semana" : "depois";
 }
 
+/**
+ * Página "Plano de Ação": lista unificada dos itens 5W2H (de RNCs e de planos avulsos), agrupados por prazo.
+ * Tem abas "Meus itens" / "Todos" (só quem gerencia vê todos) e filtros de status, responsável e prazo.
+ */
 /** Plano de Ação — visão unificada dos itens 5W2H (RNC + planos avulsos). Ver PlanoAcao.dc.html. */
 export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano-acao">) {
+  // Lê e valida os filtros da URL.
   const sp = esquemaFiltros.parse(await searchParams);
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // `podeTodos`: verdadeiro se o usuário pode gerenciar planos (então pode ver os itens de todos).
   const podeTodos = atorTem(a, "PLANO_GERENCIAR");
+  // Filtros efetivos: quem não gerencia sempre vê só "meus", mesmo que peça "todos" na URL.
   const f = {
     escopo: podeTodos && sp.escopo === "todos" ? "todos" : "meus",
     status: sp.status,
     responsavel: sp.responsavel,
     prazo: sp.prazo,
   };
+  // Fuso horário da empresa, para calcular "hoje" corretamente.
   const fuso = await fusoDaEmpresa(a);
+  // Data de hoje (no fuso da empresa) e, nas linhas seguintes, versões para comparar com as datas do banco.
   const hoje = hojeNoFuso(fuso);
   const hojeDb = paraDataDb(hoje);
+  // Data daqui a 7 dias (limite do grupo "Próximos 7 dias").
   const em7Iso = somarDias(hoje, 7);
   const em7 = paraDataDb(em7Iso);
+  // Filtro reaproveitado: itens ainda em aberto (pendentes ou em andamento).
   const abertos: Prisma.ItemAcaoWhereInput = { status: { in: ["PENDENTE", "EM_ANDAMENTO"] } };
 
+  // Monta a consulta ao banco juntando as condições: escopo, status, responsável e prazo.
   const where: Prisma.ItemAcaoWhereInput = {
     AND: [
       // "Meus": todos os itens em que sou o quem, mesmo de RNC que não vejo (B4).
@@ -81,6 +98,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
     ],
   };
 
+  // Busca em paralelo os itens (com responsável e plano/RNC de origem, no máximo 300) e a lista de usuários ativos para o filtro.
   const [itens, usuarios] = await Promise.all([
     a.db.itemAcao.findMany({
       where,
@@ -102,13 +120,16 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
     a.db.usuario.findMany({ where: { ativo: true }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
   ]);
 
+  // Ids das RNCs de origem dos itens (sem repetir).
   const idsRnc = [...new Set(itens.flatMap((i) => (i.planoAcao.rnc ? [i.planoAcao.rnc.id] : [])))];
+  // Dessas RNCs, quais o usuário realmente pode ver (para só criar link para as permitidas).
   const rncsVisiveis = new Set(
     idsRnc.length
       ? (await a.db.rnc.findMany({ where: { AND: [{ id: { in: idsRnc } }, filtroAcessoRnc(a)] }, select: { id: true } })).map((r) => r.id)
       : [],
   );
 
+  // Monta um endereço da própria página mantendo os filtros atuais e trocando o que vier em `p`.
   const link = (p: Record<string, string>) => `?${new URLSearchParams({ ...f, ...p }).toString()}`;
 
   // Agrupamento por prazo: a query já vem ordenada por "quando", então cada grupo preserva a ordem.
@@ -217,9 +238,13 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
                     </th>
                   </tr>
                   {doGrupo.map(({ i, st }) => {
+                    // RNC de origem do item (vazia se o plano é avulso).
                     const rnc = i.planoAcao.rnc;
+                    // O usuário pode abrir essa RNC?
                     const rncVisivel = !!rnc && rncsVisiveis.has(rnc.id);
+                    // O item pertence ao ciclo atual da RNC? Itens de ciclos antigos ficam sem botões de ação.
                     const atual = !rnc || i.ciclo === cicloAtual(rnc.verificacoes);
+                    // Quantos dias o item está atrasado (0 se não estiver).
                     const diasAtraso = st === "ATRASADO" ? Math.round((hojeDb.getTime() - i.quando.getTime()) / DIA_MS) : 0;
                     return (
                       <LinhaTabela key={i.id}>
@@ -297,6 +322,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
   );
 }
 
+/** Ícone de "+" do botão Novo plano de ação. */
 function IconeMais() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -306,6 +332,7 @@ function IconeMais() {
   );
 }
 
+/** Ícone de relógio do título do grupo "Atrasados". */
 function IconeRelogio() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -315,6 +342,7 @@ function IconeRelogio() {
   );
 }
 
+/** Ícone de lápis que marca a origem dos planos avulsos. */
 function IconeLapis() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

@@ -15,6 +15,7 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/requisitos-legais-revisao-geral.module.css";
 
+// Regra de validação do parâmetro `?tema=` da URL: só aceita os temas conhecidos (evita valores inventados).
 const esquema = z.object({ tema: enumUrl(["QUALIDADE", "SSO", "MEIO_AMBIENTE"]) });
 
 /**
@@ -22,13 +23,21 @@ const esquema = z.object({ tema: enumUrl(["QUALIDADE", "SSO", "MEIO_AMBIENTE"]) 
  * e nova data de verificação). Para mudar o status de um requisito, use "Registrar verificação" no detalhe.
  */
 export default async function RequisitosLegaisRevisaoGeral({ searchParams }: PageProps<"/requisitos-legais/revisao-geral">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Requisitos Legais, a página responde "404 - não encontrada".
   exigirModulo(ctx, "REQUISITOS_LEGAIS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarRequisitos(a)) notFound();
+  // Lê e valida os filtros da URL (aqui, só o tema).
   const f = esquema.parse(await searchParams);
+  // Busca em paralelo os requisitos (filtrados pelo tema) e o fuso horário da empresa.
   const [lista, fuso] = await Promise.all([listarRequisitos(a, { tema: f.tema || undefined }), fusoDaEmpresa(a)]);
+  // Data de hoje: valor padrão e limite máximo da data da revisão.
   const hoje = hojeNoFuso(fuso);
+  // Tira da revisão os requisitos "não aplicáveis".
   const ativos = lista.filter((r) => r.status !== "NAO_APLICAVEL");
 
   return (
@@ -64,6 +73,7 @@ export default async function RequisitosLegaisRevisaoGeral({ searchParams }: Pag
               </thead>
               <tbody>
                 {ativos.map((r) => {
+                  // Esta verificação está vencida? (a linha ganha o aviso "vencida")
                   const venc = verificacaoVencida(r.proximaVerificacaoEm ? dataIso(r.proximaVerificacaoEm) : null, hoje, r.status);
                   return (
                     <tr key={r.id}>

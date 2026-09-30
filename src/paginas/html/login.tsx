@@ -1,6 +1,10 @@
 import { LoginFormulario } from "@/paginas/html/login-formulario";
 import styles from "@/paginas/css/login.module.css";
 
+/**
+ * Página de entrada (login): à esquerda o painel da marca (texto de apresentação e destaques),
+ * à direita o formulário de e-mail e senha (login-formulario.tsx).
+ */
 /** Página de entrada — Direção A "Campo" (ver Login.dc.html). */
 export function LoginPagina() {
   return (
@@ -44,6 +48,7 @@ export function LoginPagina() {
   );
 }
 
+/** Desenho (SVG) do logotipo da marca. */
 function IconeLogo() {
   return (
     <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -52,6 +57,7 @@ function IconeLogo() {
     </svg>
   );
 }
+/** Ícone de relógio, usado no destaque "registro em campo em poucos minutos". */
 function IconeRelogio() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -60,6 +66,7 @@ function IconeRelogio() {
     </svg>
   );
 }
+/** Ícone de lista com marcas de verificação, usado no destaque dos planos 5W2H. */
 function IconeLista() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -72,6 +79,7 @@ function IconeLista() {
     </svg>
   );
 }
+/** Ícone de cadeado, usado no destaque de proteção de dados pessoais (LGPD). */
 function IconeCadeado() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

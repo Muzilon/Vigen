@@ -5,10 +5,16 @@ import { LinkBotao } from "@/paginas/html/componentes/botao";
 import { FormNovaRnc } from "@/paginas/html/rnc-nova-formulario";
 import styles from "@/paginas/css/rnc-nova.module.css";
 
-/** Nova RNC — Direção A "Campo" (ver NovaRnc.dc.html e Mobile-NovaRnc.dc.html). */
+/**
+ * Página "Nova RNC". Qualquer pessoa com a permissão RNC_ABRIR pode abrir uma não conformidade.
+ * Mostra o formulário (rnc-nova-formulario.tsx) ou, se o usuário não tem nenhuma unidade liberada, um aviso.
+ */
 export default async function RncNova() {
+  // Exige a permissão de abrir RNC; devolve o contexto do usuário.
   const ctx = await exigirPermissao("RNC_ABRIR");
+  // Conexão com o banco já limitada à empresa do usuário.
   const db = await getDb();
+  // Busca em paralelo: unidades permitidas ao usuário, setores ativos e usuários ativos.
   const [obras, setores, ativos] = await Promise.all([
     db.obraUnidade.findMany({
       where: { ativo: true, ...(ctx.obrasPermitidas ? { id: { in: ctx.obrasPermitidas } } : {}) },

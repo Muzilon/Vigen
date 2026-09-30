@@ -35,17 +35,31 @@ import { ACEITAR_DOCUMENTO } from "@/paginas/html/documento-novo-formulario";
 import { DocumentoEnvio } from "@/paginas/html/documento-envio";
 import styles from "@/paginas/css/documento-detalhe.module.css";
 
+// Converte bytes em texto legível: "350 KB" ou "2.4 MB".
 const tamanho = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`);
 
+/**
+ * Página de detalhe do documento controlado: dados, revisão em trabalho (envio para aprovação, trilha e publicação),
+ * tabela de versões, público da publicação, ciências (quem já leu), aprovações, histórico e comentários.
+ * Quem não tem acesso completo vê só o essencial (dados e a revisão vigente).
+ */
 /** Detalhe do documento: dados, revisão em trabalho (envio, trilha, publicação), versões, publicação, ciências, aprovações e histórico. */
 export default async function DocumentoDetalhe({ params }: PageProps<"/documentos/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Documentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "DOCUMENTOS");
+  // `id`: o identificador do documento, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o documento com tipo, responsável, processo e a versão vigente.
   const d = await obterDocumento(a, id);
+  // Documento inexistente ou sem acesso → 404.
   if (!d) notFound();
+  // Busca em paralelo: versões, histórico, situação das ciências, opções dos campos, fuso horário e os documentos do próprio usuário.
   const [versoes, historico, ciencias, op, fuso, meus] = await Promise.all([
     listarVersoes(a, id),
     listarHistorico(a, id),
@@ -54,17 +68,29 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
     fusoDaEmpresa(a),
     meusDocumentos(a),
   ]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // Como este documento aparece para o usuário (exige ciência? já confirmou?), se ele estiver no público.
   const meu = meus.find((m) => m.id === id);
+  // Versão vigente (a que está valendo hoje), se houver.
   const vigente = d.versaoVigente;
+  // Dados da publicação da versão vigente (público, notificação, ciência, perguntas).
   const pub = vigente?.publicacao ?? null;
+  // A revisão periódica já passou da data? (mostra o aviso "vencida")
   const vencida = !!vigente && revisaoVencida(d.proximaRevisaoEm ? dataIso(d.proximaRevisaoEm) : null, hoje);
+  // Revisão em andamento (rascunho, em aprovação ou aprovada e ainda não publicada), se existir.
   const trabalho = versoes.find((v) => v.status === "RASCUNHO" || v.status === "EM_APROVACAO" || v.status === "APROVADA") ?? null;
+  // `elabora`: pode elaborar documentos (criar revisões, enviar para aprovação, cancelar).
   const elabora = podeElaborarDocumentos(a);
+  // `gerencia`: pode gerenciar documentos (publicar e tornar obsoleto).
   const gerencia = podeGerenciarDocumentos(a);
+  // O documento já foi encerrado (obsoleto ou cancelado)?
   const finalizado = d.status === "OBSOLETO" || d.status === "CANCELADO";
+  // Transforma uma lista de {id, nome} num dicionário id → nome.
   const nome = (lista: { id: string; nome: string }[]) => new Map(lista.map((x) => [x.id, x.nome]));
+  // Dicionários para traduzir ids de setor, unidade, perfil e usuário em nomes.
   const [nSetor, nObra, nPerfil, nUsuario] = [nome(op.setores), nome(op.obras), nome(op.perfis), nome(op.usuarios)];
+  // Transforma o público da publicação numa lista de textos ("Setor: X", "Unidade: Y"...).
   const descreverPublico = (p: NonNullable<typeof pub>) =>
     p.publicoTodos
       ? ["Todos os usuários da empresa"]
@@ -74,6 +100,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
           ...p.perfilIds.map((x) => `Perfil: ${nPerfil.get(x) ?? "?"}`),
           ...p.usuarioIds.map((x) => nUsuario.get(x) ?? "?"),
         ];
+  // O usuário ainda precisa registrar ciência deste documento?
   const podeCiencia = !!meu && meu.exigirCiencia && !meu.cienciaEm;
 
   return (
@@ -420,6 +447,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
   );
 }
 
+/** Grupo de caixinhas de marcar (setores, unidades, perfis ou usuários) usado ao escolher o público da publicação. */
 function GrupoMarcar({ titulo, nome, itens }: { titulo: string; nome: string; itens: { id: string; nome: string }[] }) {
   if (itens.length === 0) return null;
   return (
@@ -436,6 +464,7 @@ function GrupoMarcar({ titulo, nome, itens }: { titulo: string; nome: string; it
   );
 }
 
+/** Mostra quem são os revisores e os aprovadores escolhidos no envio da revisão. */
 function PapeisFluxo({ payload, nomes }: { payload: unknown; nomes: Map<string, string> }) {
   const p = (payload ?? {}) as { revisorIds?: string[]; aprovadorIds?: string[] };
   if (!p.revisorIds && !p.aprovadorIds) return null;

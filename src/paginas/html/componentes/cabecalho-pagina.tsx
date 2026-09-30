@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import styles from "@/paginas/css/componentes/cabecalho-pagina.module.css";
 
-/** Faixa de título no topo do conteúdo de cada página (título + contador + subtítulo + ações). */
+/**
+ * Faixa de título no topo de cada página: título, contador (ex.: "32 registros"),
+ * subtítulo explicativo e, à direita, os botões de ação da página (ex.: "+ Nova RNC").
+ * Só `titulo` é obrigatório; o resto aparece se for informado.
+ */
 export function CabecalhoPagina({
   titulo,
   contador,

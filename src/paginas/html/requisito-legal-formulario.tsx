@@ -2,8 +2,10 @@ import type { EsferaRequisito, TemaRequisito, TipoRequisitoLegal } from "@prisma
 import { ESFERAS, ROTULO_ESFERA, ROTULO_STATUS_REQUISITO, ROTULO_TEMA, ROTULO_TIPO_REQUISITO, STATUS_REQUISITO, TEMAS, TIPOS_REQUISITO } from "@/lib/requisitos-legais/regras";
 import styles from "@/paginas/css/requisito-legal-formulario.module.css";
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
+/** Os valores de um requisito legal que o formulário mostra (todos opcionais: vazios na criação, preenchidos na edição). */
 export interface ValoresRequisito {
   tipo: TipoRequisitoLegal;
   numero: string;
@@ -20,6 +22,10 @@ export interface ValoresRequisito {
   periodicidadeMeses: string;
 }
 
+/**
+ * Os campos cadastrais do requisito legal (tipo, número, título, esfera, tema, órgão, resumo, aplicabilidade, vínculos,
+ * responsável e periodicidade), reaproveitados na criação e na edição dentro de um <FormAcao>.
+ */
 /** Campos cadastrais do requisito legal (novo e edição), usados dentro de um FormAcao. */
 export function CamposRequisito({
   v,
@@ -92,6 +98,11 @@ export function CamposRequisito({
   );
 }
 
+/**
+ * Os campos de uma verificação: status de atendimento, observação/evidência e, se o requisito ainda não tem plano,
+ * a primeira ação (obrigatória quando o status é "Não atende" ou "Atende parcialmente").
+ * - `comData`: mostra o campo de data da verificação. `temPlano`: se já existe plano, a seção da primeira ação some.
+ */
 /** Status + observação + primeira ação (exigida para "Não atende"/"Atende parcialmente" sem plano). */
 export function CamposVerificacao({
   usuarios,

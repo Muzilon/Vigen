@@ -7,6 +7,7 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/componentes/solicitar-aprovacao.module.css";
 
+/** Uma pessoa que pode ser escolhida como aprovadora: só precisa de id e nome. */
 export interface UsuarioAprovador {
   id: string;
   nome: string;
@@ -38,21 +39,30 @@ export function SolicitarAprovacao({
   resumoInicial?: string;
   botao?: string;
 }) {
+  // Liga o formulário à server action: `executar` envia, `res` guarda a resposta e `pendente` indica que está enviando.
   const [res, executar, pendente] = useActionState(acao, null);
+  // Ids dos aprovadores escolhidos, na ordem em que foram adicionados (a ordem vale no modo sequencial).
   const [selecionados, setSelecionados] = useState<string[]>([]);
+  // Usuário selecionado na lista suspensa, ainda não adicionado.
   const [escolha, setEscolha] = useState("");
+  // Modo do fluxo: SEQUENCIAL (um aprovador por vez) ou PARALELO (todos ao mesmo tempo).
   const [modo, setModo] = useState<"SEQUENCIAL" | "PARALELO">("SEQUENCIAL");
+  // Mensagem de aviso local (ex.: "Adicione ao menos um aprovador").
   const [aviso, setAviso] = useState("");
   const id = useId();
+  // Dicionário id → nome, para mostrar o nome de quem já foi escolhido.
   const nomes = new Map(usuarios.map((u) => [u.id, u.nome]));
+  // Quem ainda pode ser escolhido (tira da lista os que já foram adicionados).
   const disponiveis = usuarios.filter((u) => !selecionados.includes(u.id));
 
+  /** Adiciona o usuário selecionado à lista de aprovadores e limpa a seleção. */
   function adicionar() {
     if (!escolha) return;
     setSelecionados((s) => [...s, escolha]);
     setEscolha("");
     setAviso("");
   }
+  /** Sobe (-1) ou desce (+1) um aprovador na lista, trocando de lugar com o vizinho. */
   function mover(i: number, delta: -1 | 1) {
     setSelecionados((s) => {
       const j = i + delta;
@@ -62,6 +72,7 @@ export function SolicitarAprovacao({
       return n;
     });
   }
+  /** Tira o aprovador número `i` da lista. */
   function remover(i: number) {
     setSelecionados((s) => s.filter((_, k) => k !== i));
   }

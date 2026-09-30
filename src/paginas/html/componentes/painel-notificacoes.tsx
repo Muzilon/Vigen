@@ -17,18 +17,22 @@ import styles from "@/paginas/css/componentes/painel-notificacoes.module.css";
  * navegação e devolve o foco ao sino. Ver docs/05-guia-paginas-css.md §6.
  */
 export function PainelNotificacoes({ naoLidas }: { naoLidas: number }) {
+  // Estado do painel: aberto/fechado, filtro "somente não lidas", lista carregada, erro e se está buscando.
   const [aberto, setAberto] = useState(false);
   const [somenteNaoLidas, setSomenteNaoLidas] = useState(false);
   const [lista, setLista] = useState<NotificacaoPainel[] | null>(null);
   const [erro, setErro] = useState(false);
   const [pendente, iniciar] = useTransition();
+  // Ids e referências a elementos do HTML (painel, sino, raiz) para foco e cliques fora do painel.
   const idPainel = useId();
   const raiz = useRef<HTMLDivElement>(null);
   const painel = useRef<HTMLDivElement>(null);
   const sino = useRef<HTMLButtonElement>(null);
+  // `router` atualiza a página sem recarregar; `pathname` é o endereço atual.
   const router = useRouter();
   const pathname = usePathname();
 
+  // Busca as notificações no servidor (server action). `filtro` = true traz só as não lidas.
   const carregar = useCallback((filtro: boolean) => {
     setErro(false);
     iniciar(async () => {
@@ -40,11 +44,13 @@ export function PainelNotificacoes({ naoLidas }: { naoLidas: number }) {
     });
   }, []);
 
+  // Fecha o painel; por padrão devolve o foco ao sino (bom para quem usa teclado).
   const fechar = useCallback((devolverFoco = true) => {
     setAberto(false);
     if (devolverFoco) sino.current?.focus();
   }, []);
 
+  /** Clique no sino: se está aberto, fecha; se está fechado, abre e carrega a lista. */
   function alternar() {
     if (aberto) return fechar();
     setAberto(true);
@@ -76,11 +82,13 @@ export function PainelNotificacoes({ naoLidas }: { naoLidas: number }) {
     };
   }, [aberto, fechar]);
 
+  /** Alterna entre "Todas" e "Não lidas" e recarrega a lista. */
   function trocarFiltro(filtro: boolean) {
     setSomenteNaoLidas(filtro);
     carregar(filtro);
   }
 
+  /** Marca todas as notificações como lidas, atualiza a página (contador do sino) e recarrega a lista. */
   function marcarTodas() {
     iniciar(async () => {
       await marcarTodasAcao();
@@ -89,6 +97,7 @@ export function PainelNotificacoes({ naoLidas }: { naoLidas: number }) {
     });
   }
 
+  // Mostra o botão "Marcar todas como lidas" só se existir alguma não lida.
   const temNaoLidas = (lista ?? []).some((n) => !n.lida) || naoLidas > 0;
 
   return (
@@ -181,6 +190,7 @@ export function PainelNotificacoes({ naoLidas }: { naoLidas: number }) {
   );
 }
 
+/** Converte uma data em texto relativo: "agora", "há 5 min", "há 2 h", "há 3 dias" ou a data completa. */
 function tempoRelativo(iso: string) {
   const seg = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
   if (seg < 60) return "agora";
@@ -193,6 +203,7 @@ function tempoRelativo(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
+// Configuração comum dos ícones (SVG): tamanho, traço e cor que todos os desenhos abaixo compartilham.
 const svg = {
   width: 16,
   height: 16,
@@ -204,6 +215,7 @@ const svg = {
   strokeLinejoin: "round" as const,
 };
 
+/** Escolhe o ícone certo para cada tipo de notificação (mensagem, relógio, cancelamento, etc.). */
 function IconeTipo({ tipo }: { tipo: string }) {
   switch (tipo) {
     case "INTERACAO_NOVA":
@@ -258,6 +270,7 @@ function IconeTipo({ tipo }: { tipo: string }) {
   }
 }
 
+/** Desenho (SVG) do sino do cabeçalho. */
 function IconeSino() {
   return (
     <svg {...svg} width={18} height={18} aria-hidden="true">

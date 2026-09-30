@@ -9,12 +9,20 @@ import { listarInteracoes, marcarLidas } from "@/lib/interacoes/servico";
 import { marcarLidasDaEntidade } from "@/lib/notificacoes/servico";
 import styles from "@/paginas/css/componentes/interacoes.module.css";
 
+/** Pega as iniciais do nome para o "avatar" redondo: "Maria Silva" → "MS". */
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
   return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
 }
 
-/** Seção "Interações" (thread da entidade). Ao exibir, marca as mensagens recebidas como lidas. */
+/**
+ * Seção "Interações": a conversa (comentários) de um registro — uma RNC, um documento etc.
+ * Mostra as mensagens, o formulário para escrever uma nova e, ao ser exibida, marca como lidas
+ * as mensagens que o usuário recebeu. É um componente de servidor ("async"): busca os dados
+ * no banco antes de desenhar a tela.
+ * - `a`: quem está logado. `tipo` + `entidadeId`: a qual registro a conversa pertence.
+ * - `usuarios`: pessoas que podem receber a mensagem. `fuso`: fuso horário da empresa (para as datas).
+ */
 export async function Interacoes({
   a,
   tipo,
@@ -42,7 +50,9 @@ export async function Interacoes({
       ) : (
         <ul className={styles.lista}>
           {msgs.map((m) => {
+            // `minha`: fui eu quem escreveu (muda o estilo do balão).
             const minha = m.autorId === a.usuarioId;
+            // `nova`: mensagem endereçada a mim que ainda não tinha sido lida (ganha o selo "nova").
             const nova = m.destinatarioId === a.usuarioId && !minha && m.leituras.length === 0;
             return (
               <li key={m.id} className={`${styles.mensagem} ${minha ? styles.mensagemPropria : ""}`}>

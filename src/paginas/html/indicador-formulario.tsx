@@ -2,6 +2,7 @@ import type { DirecaoIndicador, FonteIndicador, PeriodicidadeIndicador } from "@
 import { DIRECOES, FONTES, PERIODICIDADES, ROTULO_DIRECAO, ROTULO_FONTE, ROTULO_PERIODICIDADE } from "@/lib/indicadores/periodos";
 import styles from "@/paginas/css/indicador-formulario.module.css";
 
+/** Os valores de um indicador que o formulário mostra (nome, meta, periodicidade, responsável etc.). */
 export interface ValoresIndicador {
   nome: string;
   descricao: string;
@@ -15,6 +16,11 @@ export interface ValoresIndicador {
   responsavelId: string;
 }
 
+/**
+ * Os campos cadastrais do indicador, reaproveitados na criação e na edição (dentro de um <FormAcao>).
+ * - `v`: valores iniciais. `processos` e `usuarios`: listas para as caixas de seleção.
+ * As opções de fonte, direção e periodicidade vêm prontas de lib/indicadores/periodos.
+ */
 /** Campos cadastrais do indicador (novo e edição), usados dentro de um FormAcao. */
 export function CamposIndicador({
   v,

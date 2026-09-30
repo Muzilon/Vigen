@@ -14,13 +14,24 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/documentos-meus.module.css";
 
+/**
+ * Página "Meus documentos": os documentos vigentes que foram publicados para o usuário (por setor, unidade,
+ * perfil ou nominalmente), com opção de baixar e de confirmar ciência ("Li e estou ciente").
+ * Os que aguardam ciência aparecem primeiro, com um aviso no topo.
+ */
 /** "Meus documentos": revisões vigentes publicadas para o usuário (público), com download e "Li e estou ciente". */
 export default async function DocumentosMeus() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Documentos, a página responde "404 - não encontrada".
   exigirModulo(ctx, "DOCUMENTOS");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca em paralelo os documentos do usuário e o fuso horário da empresa.
   const [docs, fuso] = await Promise.all([meusDocumentos(a), fusoDaEmpresa(a)]);
+  // Documentos que exigem ciência e o usuário ainda não confirmou.
   const pendentes = docs.filter((d) => d.exigirCiencia && !d.cienciaEm);
+  // Lista final: primeiro os pendentes de ciência, depois os demais.
   const ordenados = [...pendentes, ...docs.filter((d) => !(d.exigirCiencia && !d.cienciaEm))];
 
   return (
@@ -41,6 +52,7 @@ export default async function DocumentosMeus() {
       ) : (
         <ul className={styles.lista}>
           {ordenados.map((d) => {
+            // Este documento específico está pendente de ciência? (muda o destaque do item)
             const pendente = d.exigirCiencia && !d.cienciaEm;
             return (
               <li key={d.id} className={`${styles.item} ${pendente ? styles.itemPendente : ""}`}>

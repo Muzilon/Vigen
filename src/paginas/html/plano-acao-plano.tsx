@@ -18,23 +18,37 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { EditarPlanoForm } from "@/paginas/html/plano-acao-plano-editar";
 import styles from "@/paginas/css/plano-acao-plano.module.css";
 
+/**
+ * Página de detalhe de um plano de ação que não é de RNC (avulso ou vindo de risco, HIRA, LAIA, inspeção, incidente
+ * ou requisito legal): dados, itens 5W2H com ações, formulário para adicionar itens e anexos.
+ * Quem não tem visão completa vê só os próprios itens.
+ */
 /** Detalhe de um plano de ação avulso (sem RNC de origem). */
 export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/planos/[id]">) {
+  // `id`: o identificador do plano, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o plano com seus itens, já respeitando o que o usuário pode ver.
   const plano = await obterPlanoManual(a, id);
+  // Plano inexistente ou sem acesso → 404.
   if (!plano) notFound();
+  // Fuso horário da empresa.
   const fuso = await fusoDaEmpresa(a);
+  // Usuários ativos em ordem alfabética.
   const ativos = (await usuariosAtivos(a.db)).sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR"));
   // "Quem": ativos com acesso à obra do plano (o serviço valida de novo).
   const usuariosQuem = ativos
     .filter((u) => !plano.obraId || u.obras === null || u.obras.includes(plano.obraId))
     .map((u) => ({ id: u.id, nome: u.nome }));
+  // Alvo dos anexos (este plano). Só quem tem visão completa vê/envia anexos.
   const alvoAnexo = { tipo: "PLANO_ACAO" as const, entidadeId: plano.id };
   const [anexos, podeAnexar] = plano.visaoCompleta
     ? await Promise.all([listarAnexos(a, alvoAnexo), podeEnviarAnexo(a, alvoAnexo)])
     : [[], false];
+  // Itens que contam para o progresso (tira os cancelados) e quantos deles já foram concluídos.
   const ativosNoPlano = plano.itens.filter((i) => i.status !== "CANCELADO");
   const concluidos = ativosNoPlano.filter((i) => i.status === "CONCLUIDO").length;
 
@@ -129,7 +143,9 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
               </LinhaCabecalhoTabela>
             </thead>
             {plano.itens.map((i) => {
+              // Status real do item (calculado: pendente com prazo vencido vira "atrasado").
               const st = statusEfetivoItem(i, plano.hoje);
+              // Só o responsável do item pode iniciar/concluir.
               const podeExecutar = i.quemId === a.usuarioId;
               return (
                 // Um <tbody> por item: linha de dados + (opcional) linha de ações abaixo

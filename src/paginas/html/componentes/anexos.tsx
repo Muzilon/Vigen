@@ -6,17 +6,22 @@ import type { AnexoListado } from "@/lib/anexos/servico";
 import { formatarDataHora } from "@/lib/datas";
 import styles from "@/paginas/css/componentes/anexos.module.css";
 
+// Tipos de arquivo que são imagens: só esses ganham miniatura na galeria.
 const MINIATURA = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+/** Converte um tamanho em bytes para um texto legível: "120 KB" ou "2.4 MB". */
 function tamanho(b: number) {
   return b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
 /** Galeria de anexos: miniaturas para imagens, lista para documentos. Download sempre via /api/anexos/[id]. */
 export function GaleriaAnexos({ anexos, fuso, vazio = "Nenhum anexo." }: { anexos: AnexoListado[]; fuso: string; vazio?: string }) {
+  // Sem anexos: mostra só a mensagem (por padrão "Nenhum anexo.").
   if (anexos.length === 0) return <p className={styles.vazio}>{vazio}</p>;
+  // Separa os anexos em dois grupos: imagens (viram miniaturas) e demais documentos (viram lista).
   const imagens = anexos.filter((x) => MINIATURA.has(x.mimeType));
   const docs = anexos.filter((x) => !MINIATURA.has(x.mimeType));
+  // Monta o botão "Excluir" de um anexo — só aparece se o usuário tem permissão (`podeExcluir`).
   const excluir = (x: AnexoListado) =>
     x.podeExcluir && (
       <FormAcao acao={excluirAnexoAcao} botao="Excluir" confirmar={`Excluir o anexo "${x.nomeArquivo}"?`} classeBotao={styles.botaoExcluir}>
@@ -58,7 +63,11 @@ export function GaleriaAnexos({ anexos, fuso, vazio = "Nenhum anexo." }: { anexo
   );
 }
 
-/** Formulário para anexar arquivos a uma entidade existente. */
+/**
+ * Formulário para anexar arquivos a um registro que já existe (uma RNC, um documento etc.).
+ * - `tipo` + `entidadeId` dizem a qual registro o arquivo pertence; vão escondidos no formulário.
+ * - `rotulo`: texto do campo de escolher arquivos.
+ */
 export function EnviarAnexos({ tipo, entidadeId, rotulo = "Adicionar anexos" }: { tipo: TipoEntidadeAnexo; entidadeId: string; rotulo?: string }) {
   return (
     <FormAcao acao={enviarAnexosAcao} botao="Enviar" variante="secundario" tamanho="pequeno" className={styles.formEnviar}>

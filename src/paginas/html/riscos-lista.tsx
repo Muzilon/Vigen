@@ -27,8 +27,10 @@ import { EnvoltorioTabela, LinhaCabecalhoTabela, LinhaTabela, Tabela, Td, Th } f
 import { Botao } from "@/paginas/html/componentes/botao";
 import styles from "@/paginas/css/riscos-lista.module.css";
 
+// Regra para ler uma nota (1 a 10) da URL; se vier inválida, vira "sem filtro".
 const nota = z.preprocess((v) => (Array.isArray(v) ? v[0] : v), z.coerce.number().int().min(1).max(10).optional()).catch(undefined);
 
+// Regra de validação dos filtros da URL (processo, tipo, nível, status, unidade, encerrados, célula P×I e se é residual).
 const esquema = z.object({
   processo: z.preprocess((v) => (Array.isArray(v) ? v[0] : v), z.union([z.literal("sem"), z.uuid()]).optional()).catch(undefined),
   tipo: enumUrl(["RISCO", "OPORTUNIDADE"]),
@@ -41,12 +43,21 @@ const esquema = z.object({
   res: enumUrl(["1"]),
 });
 
+/**
+ * Página "Riscos e oportunidades": filtros, o mapa de calor (probabilidade × impacto) com alternância entre risco
+ * inicial e residual — cada célula é clicável e filtra a lista — e a tabela de registros.
+ */
 /** Matriz de riscos e oportunidades (ISO 9001 6.1): filtros, heatmap P×I com toggle inicial/residual e lista. */
 export default async function RiscosLista({ searchParams }: PageProps<"/riscos">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
+  // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca em paralelo os registros (filtrados), as opções dos filtros e a escala de pontuação da unidade filtrada.
   const [todos, opcoes, config] = await Promise.all([
     listarRiscos(a, {
       processo: f.processo,
@@ -59,20 +70,28 @@ export default async function RiscosLista({ searchParams }: PageProps<"/riscos">
     opcoesFormulario(a),
     configRisco(a.db, f.obra || null),
   ]);
+  // Mostrando o nível residual (após tratamento) em vez do inicial?
   const residual = f.res === "1";
+  // Célula clicada no mapa de calor (probabilidade e impacto), se houver.
   const celula = f.p && f.i ? { p: f.p, i: f.i } : null;
+  // Se uma célula foi clicada, mostra só os registros dela; senão, todos.
   const lista = celula
     ? todos.filter((r) => (residual ? r.probabilidadeResidual === celula.p && r.impactoResidual === celula.i : r.probabilidade === celula.p && r.impacto === celula.i))
     : todos;
 
+  // Filtros atuais da URL, repassados aos links do mapa e do botão de alternar (para não perdê-los ao clicar).
   const base: Record<string, string> = {};
   for (const k of ["processo", "tipo", "faixa", "status", "obra", "encerrados"] as const) if (f[k]) base[k] = String(f[k]);
+  // Monta um endereço da própria página mantendo os filtros e acrescentando/trocando o que vier em `extra`.
   const href = (extra: Record<string, string>) => `/riscos?${new URLSearchParams({ ...base, ...extra }).toString()}`;
+  // Os dois eixos da escala (probabilidade e impacto) e, abaixo, no formato que o mapa de calor espera.
   const { eixoP, eixoI } = eixosPI(config);
   const eixoColuna = { rotulo: eixoP.rotulo, valores: eixoP.niveis };
   const eixoLinha = { rotulo: eixoI.rotulo, valores: eixoI.niveis };
+  // Calcula as células do mapa (quantos registros em cada combinação) já com o link de filtro de cada uma.
   const celulas = (res: boolean) =>
     celulasHeatmap(config, todos, res).map((c) => ({ ...c, href: href({ p: String(c.coluna), i: String(c.linha), ...(res ? { res: "1" } : {}) }) }));
+  // `gerencia`: verdadeiro se o usuário pode criar e fazer revisão geral.
   const gerencia = podeGerenciarRiscos(a);
 
   return (

@@ -7,6 +7,7 @@ import { definirAtivoAcao, moverProcessoAcao, salvarProcessoAcao } from "@/app/(
 import type { ResultadoAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/processos-planilha.module.css";
 
+/** Os dados de um processo como a planilha precisa (já com nome do dono e listas de indicadores prontos). */
 export interface LinhaProcesso {
   id: string;
   codigo: string;
@@ -24,16 +25,24 @@ export interface LinhaProcesso {
   indicadores: string[];
 }
 
+// Formato de uma server action de formulário (recebe o estado anterior e o FormData, devolve o resultado).
 type Acao = (prev: ResultadoAcao, fd: FormData) => Promise<ResultadoAcao>;
 
+// Os três tipos de processo (raias) com o nome longo e o curto, na ordem em que aparecem.
 const TIPOS: { tipo: TipoProcesso; rotulo: string; curto: string }[] = [
   { tipo: "GESTAO", rotulo: "Processos de gestão", curto: "Gestão" },
   { tipo: "FINALISTICO", rotulo: "Processos finalísticos", curto: "Finalístico" },
   { tipo: "APOIO", rotulo: "Processos de apoio", curto: "Apoio" },
 ];
 
+// Número de colunas da tabela (usado para as linhas de título ocuparem a largura toda).
 const COLUNAS = 11;
 
+/**
+ * A planilha de processos: uma raia (grupo de linhas) por tipo. Cada linha pode ser editada ali mesmo,
+ * movida para cima/baixo, reativada (se inativa) e novas linhas podem ser adicionadas.
+ * `podeGerenciar` liga os botões de edição.
+ */
 /** Planilha editável: uma raia por tipo, edição inline por linha, ↑↓ e mover de tipo. */
 export function PlanilhaProcessos({
   linhas,
@@ -44,7 +53,9 @@ export function PlanilhaProcessos({
   usuarios: { id: string; nome: string }[];
   podeGerenciar: boolean;
 }) {
+  // Lista das linhas novas em preenchimento (uma entrada por clique em "+ Adicionar linha"); a tela se redesenha quando muda.
   const [novos, setNovos] = useState<TipoProcesso[]>([]);
+  // Processos inativos, mostrados numa raia à parte no fim.
   const inativas = linhas.filter((l) => !l.ativo);
   return (
     <div className={styles.envoltorio}>
@@ -122,6 +133,10 @@ export function PlanilhaProcessos({
   );
 }
 
+/**
+ * Uma linha da planilha. Tem dois modos: leitura (mostra os dados e os botões) e edição (campos para preencher).
+ * Sem `linha`, é uma linha nova (`tipoNovo` diz em qual raia). `aoCancelar` é chamado ao descartar uma linha nova.
+ */
 function Linha({
   linha,
   usuarios,
@@ -139,24 +154,33 @@ function Linha({
   tipoNovo?: TipoProcesso;
   aoCancelar?: () => void;
 }) {
+  // É uma linha nova (ainda não existe no banco)?
   const novo = !linha;
+  // Está no modo de edição? (linhas novas já começam editando)
   const [editando, setEditando] = useState(novo);
+  // Resposta da última ação (guarda a mensagem de erro, se houver).
   const [res, setRes] = useState<ResultadoAcao>(null);
+  // `pendente` fica verdadeiro enquanto uma ação está sendo enviada ao servidor (desliga os botões).
   const [pendente, iniciar] = useTransition();
+  // Referência ao formulário, para ler os campos na hora de salvar.
   const formRef = useRef<HTMLFormElement>(null);
+  // Nome único do formulário; os campos da linha apontam para ele (`form={formId}`) mesmo estando em colunas diferentes.
   const formId = `f-${linha?.id ?? `novo-${tipoNovo}`}`;
 
+  // Roda uma server action, guarda a resposta e, se deu certo, chama `aoOk`.
   const executar = (acao: Acao, fd: FormData, aoOk?: () => void) =>
     iniciar(async () => {
       const r = await acao(null, fd);
       setRes(r);
       if (r && !r.erro) aoOk?.();
     });
+  // Atalho para ações sem formulário (mover, reativar): monta o FormData com os campos dados e executa.
   const simples = (acao: Acao, campos: Record<string, string>) => {
     const fd = new FormData();
     for (const [k, v] of Object.entries(campos)) fd.set(k, v);
     executar(acao, fd);
   };
+  // Salva a linha: envia o formulário e, se deu certo, fecha o modo de edição (ou descarta a linha nova).
   const salvar = () => {
     if (!formRef.current) return;
     executar(salvarProcessoAcao, new FormData(formRef.current), () => {
@@ -165,6 +189,7 @@ function Linha({
     });
   };
 
+  // Linha extra com a mensagem de erro, mostrada abaixo da linha quando a ação falha.
   const retorno = res?.erro ? (
     <tr className={styles.linhaRetorno}>
       <td colSpan={COLUNAS}>
@@ -173,6 +198,7 @@ function Linha({
     </tr>
   ) : null;
 
+  // Modo leitura: mostra os dados do processo e os botões (↑ ↓, Editar ou Reativar).
   if (!editando && linha) {
     return (
       <>
@@ -217,7 +243,9 @@ function Linha({
     );
   }
 
+  // Tipo inicial no modo edição: o da linha, o da raia onde foi criada ou Finalístico por padrão.
   const tipo = linha?.tipo ?? tipoNovo ?? "FINALISTICO";
+  // Cria uma célula com campo de texto grande (entradas, saídas, fornecedores, clientes).
   const area = (nome: keyof LinhaProcesso, rotulo: string) => (
     <td>
       <textarea

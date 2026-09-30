@@ -34,6 +34,7 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
 import styles from "@/paginas/css/inspecao-detalhe.module.css";
 
+// Texto exibido para cada classificação de uma resposta (conforme, não conforme, N.A., informativa, pendente).
 const ROTULO_CLASSE = { CONFORME: "Conforme", NAO_CONFORME: "Não conforme", NAO_APLICAVEL: "N.A.", INFORMATIVA: "Informativa", PENDENTE: "Pendente" } as const;
 
 /**
@@ -41,21 +42,36 @@ const ROTULO_CLASSE = { CONFORME: "Conforme", NAO_CONFORME: "Não conforme", NAO
  * foto por resposta) e resumo final. Resposta não conforme oferece "Abrir RNC" ou "Criar item de ação".
  */
 export default async function InspecaoDetalhe({ params }: PageProps<"/inspecoes/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Inspeções, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INSPECOES");
+  // `id`: o identificador da inspeção, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca a inspeção com todas as respostas e dados do modelo.
   const i = await obterInspecao(a, id);
+  // Inspeção inexistente ou sem acesso → 404.
   if (!i) notFound();
+  // Busca em paralelo as opções, o fuso horário e as fotos anexadas a cada resposta.
   const [op, fuso, fotos] = await Promise.all([opcoesInspecoes(a), fusoDaEmpresa(a), listarAnexosDe(a, "RESPOSTA_INSPECAO", i.respostas.map((r) => r.id))]);
   const hoje = hojeNoFuso(fuso);
+  // `exec`: pode executar esta inspeção (é o inspetor ou gerencia).
   const exec = podeExecutarInspecao(a, i);
+  // A inspeção está em andamento?
   const aberta = i.status === "EM_ANDAMENTO";
+  // `editar`: pode responder agora (executa e ainda está em andamento).
   const editar = exec && aberta;
+  // Nota mínima do modelo: respostas com nota abaixo dela contam como não conforme.
   const notaMin = i.modelo.notaMinima;
+  // Contagem de respostas (respondidas, conformes, não conformes, N.A.) para o progresso e o resumo.
   const cont = contarRespostas(i.respostas, notaMin);
+  // % de conformidade: o valor gravado ao concluir ou, se ainda em andamento, o calculado agora.
   const pct = i.percentualConformidade ?? percentualConformidade(i.respostas, notaMin);
+  // Respostas que já geraram uma RNC ou um item de ação.
   const gerados = i.respostas.filter((r) => r.geradaRnc || r.geradoItemAcao);
 
   return (
@@ -112,8 +128,10 @@ export default async function InspecaoDetalhe({ params }: PageProps<"/inspecoes/
 
       <ol className={styles.perguntas}>
         {i.respostas.map((r) => {
+          // Classificação desta resposta (conforme, não conforme, N.A...) e se é não conforme (`nc`).
           const k = classificar(r, notaMin);
           const nc = k === "NAO_CONFORME";
+          // Fotos desta resposta e sugestão de título/descrição para uma RNC, caso seja aberta.
           const fotosR = fotos.get(r.id) ?? [];
           const sug = sugestaoRnc(i, r);
           return (

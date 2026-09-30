@@ -8,6 +8,7 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/laia-formulario.module.css";
 
+/** Todos os valores de uma linha LAIA que o formulário controla (com `id` e `versao` só na edição). */
 export interface ValoresLaia {
   id?: string;
   versao?: number;
@@ -30,6 +31,7 @@ export interface ValoresLaia {
   periodicidadeMeses: number;
 }
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
 /**
@@ -57,17 +59,24 @@ export function LaiaFormulario({
   aprovacao: { aprovadores: string[] } | null;
   botao: string;
 }) {
+  // Liga o formulário à server action: `res` é a resposta, `pendente` indica que está enviando.
   const [res, executar, pendente] = useActionState(acao, null);
+  // `v`: todos os valores do formulário (começam com os iniciais); `set` troca um campo e o React redesenha a tela.
   const [v, setV] = useState(inicial);
+  // Atualiza UM campo do formulário mantendo os demais.
   const set = <K extends keyof ValoresLaia>(k: K, valor: ValoresLaia[K]) => setV((x) => ({ ...x, [k]: valor }));
+  // Cria o tratador de mudança de um campo de texto/lista: copia o que foi digitado para o estado.
   const valor = (k: keyof ValoresLaia) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => set(k, e.target.value as never);
+  // Escala de pontuação da unidade escolhida (ou a padrão da empresa, se a unidade não tiver a sua).
   const config = escalas[v.obraId] ?? escalas[""];
+  // Pontuação calculada ao vivo (score, faixa e se é significativo); fica vazia se os valores estiverem fora da escala.
   let p: PontuacaoLaia | null = null;
   try {
     p = pontuarLaia(config, v);
   } catch {
     p = null;
   }
+  // Procura um critério extra (requisito legal, partes interessadas) na escala, para mostrar quanto ele eleva o nível.
   const criterio = (chave: string) => config.criteriosExtras?.find((c) => c.chave === chave);
 
   return (

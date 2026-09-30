@@ -2,6 +2,7 @@ import { atingido, formatarValor, rotuloPeriodo } from "@/lib/indicadores/period
 import type { DirecaoIndicador } from "@prisma/client";
 import styles from "@/paginas/css/componentes/grafico-indicador.module.css";
 
+/** Um ponto do gráfico: um período (ex.: "2026-03") com o valor lançado, a meta e a direção (maior/menor é melhor). */
 export interface PontoIndicador {
   periodo: string;
   /** null = sem lançamento no período. */
@@ -17,18 +18,25 @@ export interface PontoIndicador {
  * Cores só por classes do .module.css (tokens de base.css).
  */
 export function GraficoIndicador({ pontos, unidade }: { pontos: PontoIndicador[]; unidade: string }) {
+  // Só os períodos que têm valor lançado (os sem lançamento ficam como pontos vazios).
   const comValor = pontos.filter((p): p is PontoIndicador & { valor: number } => p.valor !== null);
   if (pontos.length === 0) return <p className={styles.vazio}>Sem períodos para exibir.</p>;
+  // Medidas do desenho (em pixels): largura, altura e margens esquerda/direita/topo/base.
   const W = 640, H = 220, ml = 56, mr = 28, mt = 16, mb = 34;
+  // Descobre o menor e o maior valor (entre resultados e metas) para dimensionar o eixo vertical.
   const valores = [...comValor.map((p) => p.valor), ...pontos.map((p) => p.meta)];
   let min = Math.min(...valores);
   let max = Math.max(...valores);
   if (min === max) { min -= 1; max += 1; }
+  // Acrescenta uma folga de 12% em cima e embaixo para os pontos não colarem na borda.
   const folga = (max - min) * 0.12;
   min = min >= 0 && min - folga < 0 ? 0 : min - folga;
   max += folga;
+  // x(i): posição horizontal do período número i, espalhado igualmente entre as margens.
   const x = (i: number) => ml + (pontos.length === 1 ? (W - ml - mr) / 2 : (i * (W - ml - mr)) / (pontos.length - 1));
+  // y(v): posição vertical de um valor (o eixo é invertido: valor maior fica mais alto na tela).
   const y = (v: number) => mt + (H - mt - mb) * (1 - (v - min) / (max - min));
+  // Três marcas do eixo vertical: mínimo, meio e máximo.
   const ticks = [min, (min + max) / 2, max];
 
   // Linha de resultados: segmentos só entre períodos consecutivos com valor.
@@ -39,6 +47,7 @@ export function GraficoIndicador({ pontos, unidade }: { pontos: PontoIndicador[]
     atual += `${atual ? " L" : "M"} ${x(i).toFixed(1)} ${y(p.valor).toFixed(1)}`;
   });
   if (atual) segmentos.push(atual);
+  // Caminho (texto "M x y L x y...") da linha tracejada da meta, que atravessa todos os períodos.
   const meta = pontos.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.meta).toFixed(1)}`).join(" ");
 
   return (

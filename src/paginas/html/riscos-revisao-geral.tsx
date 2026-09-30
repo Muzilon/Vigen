@@ -20,15 +20,24 @@ import styles from "@/paginas/css/riscos-revisao-geral.module.css";
  * e nova data de reavaliação.
  */
 export default async function RiscosRevisaoGeral({ searchParams }: PageProps<"/riscos/revisao-geral">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarRiscos(a)) notFound();
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Opções dos campos: processos e as escalas de pontuação.
   const op = await opcoesFormulario(a);
+  // Escopo escolhido na URL: um processo, "sem" (registros sem processo) ou vazio (empresa toda).
   const processo =
     typeof sp.processo === "string" && (sp.processo === "sem" || op.processos.some((p) => p.id === sp.processo)) ? sp.processo : "";
+  // Registros abertos dentro do escopo escolhido.
   const itens = await listarRiscos(a, { processo: processo || undefined });
+  // Descrição do escopo em texto, usada na mensagem de confirmação.
   const nomeEscopo =
     processo === "sem" ? "registros sem processo" : processo ? `processo ${op.processos.find((p) => p.id === processo)?.codigo}` : "toda a empresa";
 
@@ -77,8 +86,11 @@ export default async function RiscosRevisaoGeral({ searchParams }: PageProps<"/r
               </thead>
               <tbody>
                 {itens.map((r) => {
+                  // Escala de pontuação da unidade do registro (ou a padrão da empresa).
                   const cfg = op.escalas[r.obraId ?? ""] ?? op.escalas[""];
+                  // Os dois eixos da escala (probabilidade e impacto) com seus níveis.
                   const { eixoP, eixoI } = eixosPI(cfg);
+                  // Monta uma caixa de seleção de nível (1, 2, 3...) para uma linha; `opcional` permite deixar em branco ("—").
                   const sel = (nome: string, niveis: { valor: number }[], valor: number | null, rotulo: string, opcional = false) => (
                     <select
                       name={`${nome}_${r.id}`}

@@ -12,12 +12,21 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/inspecoes-modelos.module.css";
 
+/**
+ * Página "Modelos de checklist": lista os modelos (conjuntos de perguntas) usados nas inspeções e permite criar
+ * um novo. As perguntas de cada modelo são editadas na página de detalhe. Exige permissão de gerenciar modelos.
+ */
 /** Modelos de checklist (INSPECAO_GERENCIAR): lista e cadastro; as perguntas são editadas no detalhe. */
 export default async function InspecoesModelos() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Inspeções, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INSPECOES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarModelos(a)) notFound();
+  // Todos os modelos (ativos e inativos) com a contagem de perguntas e de inspeções.
   const modelos = await listarModelos(a, { todos: true });
 
   return (

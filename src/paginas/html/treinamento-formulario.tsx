@@ -2,6 +2,7 @@ import type { TipoTreinamento } from "@prisma/client";
 import { ROTULO_TIPO_TREINAMENTO, TIPOS_TREINAMENTO } from "@/lib/treinamentos/regras";
 import styles from "@/paginas/css/treinamento-formulario.module.css";
 
+/** Os valores de um treinamento que o formulário mostra (todos opcionais: vazios na criação, preenchidos na edição). */
 export interface ValoresTreinamento {
   nome: string;
   tipo: TipoTreinamento;
@@ -16,9 +17,16 @@ export interface ValoresTreinamento {
   diasAvaliacaoEficacia: string;
 }
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 /** Campos cadastrais do treinamento (novo e edição), usados dentro de um FormAcao. */
 type Opcao = { id: string; nome: string };
 
+/**
+ * Os campos cadastrais do treinamento, reaproveitados na criação e na edição (dentro de um <FormAcao>):
+ * nome, tipo, carga horária, validade, para quem é obrigatório (todos/setores/funções), documento de
+ * conscientização, se é crítico para aptidão e prazo da avaliação de eficácia.
+ * - `v`: valores iniciais. `setores`, `funcoes` e `documentos`: listas para as escolhas.
+ */
 export function CamposTreinamento({
   v,
   setores,

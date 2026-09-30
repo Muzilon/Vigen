@@ -19,15 +19,25 @@ import styles from "@/paginas/css/hira-revisao-geral.module.css";
  * planilha da obra; cada uma ganha histórico REVISAO_GERAL e nova data de reavaliação.
  */
 export default async function HiraRevisaoGeral({ searchParams }: PageProps<"/hira/revisao-geral">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de HIRA, a página responde "404 - não encontrada".
   exigirModulo(ctx, "HIRA");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeGerenciarHira(a)) notFound();
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Opções dos campos: unidades e as escalas de pontuação.
   const op = await opcoesHira(a);
+  // Aceita a unidade da URL só se ela existir na lista.
   const obraId = typeof sp.obra === "string" && op.obras.some((o) => o.id === sp.obra) ? sp.obra : "";
+  // Linhas vigentes da unidade escolhida (vazio enquanto nenhuma unidade foi escolhida).
   const itens = obraId ? await listarHira(a, { obra: obraId, status: "VIGENTE" }) : [];
+  // Nome da unidade, usado na mensagem de confirmação.
   const obraNome = op.obras.find((o) => o.id === obraId)?.nome ?? "";
+  // Os dois eixos da escala (probabilidade e severidade) com seus níveis, da unidade ou da empresa.
   const { eixoP, eixoS } = eixosPS(op.escalas[obraId] ?? op.escalas[""]);
 
   return (
@@ -76,6 +86,7 @@ export default async function HiraRevisaoGeral({ searchParams }: PageProps<"/hir
               </thead>
               <tbody>
                 {itens.map((l) => {
+                  // Monta uma caixa de seleção de nível (1, 2, 3...) para uma linha; `opcional` permite deixar em branco ("—").
                   const sel = (nome: string, niveis: { valor: number }[], valor: number | null, rotulo: string, opcional = false) => (
                     <select name={`${nome}_${l.id}`} defaultValue={valor ?? ""} required={!opcional} aria-label={`${rotulo} de ${codigoHira(l)}`} className={styles.selecao}>
                       {opcional && <option value="">—</option>}

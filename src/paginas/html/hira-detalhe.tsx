@@ -31,6 +31,7 @@ import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { HiraFormulario } from "@/paginas/html/hira-formulario";
 import styles from "@/paginas/css/hira-detalhe.module.css";
 
+// Formato do "retrato" (snapshot) guardado em cada evento do histórico: só os campos que a tela mostra.
 type Snapshot = {
   probabilidade?: number;
   severidade?: number;
@@ -43,16 +44,29 @@ type Snapshot = {
   status?: keyof typeof ROTULO_STATUS_LINHA;
 };
 
+/**
+ * Página de detalhe de uma linha HIRA: dados do perigo, avaliação inicial e residual, reavaliação, plano de ação,
+ * histórico, aprovações, anexos e comentários. Se houver pedido de aprovação em andamento, a linha fica bloqueada para alteração.
+ */
 /** Detalhe da linha HIRA: dados, avaliação, reavaliação, plano, histórico, aprovações, anexos e comentários. */
 export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de HIRA, a página responde "404 - não encontrada".
   exigirModulo(ctx, "HIRA");
+  // `id`: o identificador da linha HIRA, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca a linha HIRA (perigo, risco, controles, avaliações, plano...).
   const l = await obterHira(a, id);
+  // Linha inexistente ou sem acesso → 404.
   if (!l) notFound();
+  // Alvo dos anexos (esta linha).
   const alvo = { tipo: "HIRA" as const, entidadeId: l.id };
+  // Busca em paralelo: histórico, opções, fuso horário, anexos, se pode anexar, pedidos de aprovação e a regra de aprovação da empresa.
   const [historico, op, fuso, anexos, podeAnexar, pendencias, aprovacao] = await Promise.all([
     listarHistoricoHira(a, l.id),
     opcoesHira(a),
@@ -63,13 +77,20 @@ export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
     infoAprovacaoHira(a),
   ]);
   const hoje = hojeNoFuso(fuso);
+  // A linha está vigente (em uso)? Só linhas vigentes podem ser alteradas ou reavaliadas.
   const vigente = l.status === "VIGENTE";
+  // Pedido de aprovação em andamento para esta linha, se houver.
   const pend = pendencias.get(l.id);
+  // `g`: pode alterar/excluir (gerencia, linha vigente e sem pedido de aprovação em andamento).
   const g = podeGerenciarHira(a) && vigente && !pend;
+  // `t`: pode reavaliar e gerar plano (responsável ou gestor, com a linha vigente).
   const t = podeTratarHira(a, l) && vigente;
+  // Escala de pontuação da unidade (ou a padrão da empresa).
   const config = op.escalas[l.obraId] ?? op.escalas[""];
+  // Os dois eixos da escala (probabilidade e severidade).
   const { eixoP, eixoS } = eixosPS(config);
   const codigo = codigoHira(l);
+  // A próxima reavaliação já venceu? (a data ganha o aviso "vencida")
   const vencida = vigente && l.proximaReavaliacaoEm && l.proximaReavaliacaoEm.toISOString().slice(0, 10) < hoje;
 
   return (
@@ -289,6 +310,10 @@ export default async function HiraDetalhe({ params }: PageProps<"/hira/[id]">) {
   );
 }
 
+/**
+ * Caixa de seleção de um nível (1, 2, 3...) usada no formulário de reavaliação.
+ * `opcional` adiciona a escolha em branco (usada nos campos residuais).
+ */
 function SelecaoNivel({
   nome,
   rotulo,

@@ -32,6 +32,7 @@ import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Heatmap } from "@/paginas/html/componentes/heatmap";
 import styles from "@/paginas/css/swot-ciclo.module.css";
 
+// Liga cada quadrante (Forças, Fraquezas, Oportunidades, Ameaças) à sua classe de cor do CSS.
 const CLASSE_QUADRANTE: Record<QuadranteSwot, string> = {
   FORCA: styles.quadranteForca,
   FRAQUEZA: styles.quadranteFraqueza,
@@ -39,22 +40,41 @@ const CLASSE_QUADRANTE: Record<QuadranteSwot, string> = {
   AMEACA: styles.quadranteAmeaca,
 };
 
+// Escala de 1 a 5 usada nos eixos da matriz de partes interessadas.
 const NIVEIS_15 = [1, 2, 3, 4, 5].map((v) => ({ valor: v, rotulo: String(v) }));
 
+/**
+ * Página de um ciclo SWOT com duas abas: o quadro 2×2 (itens ordenados por relevância, com opção de gerar
+ * risco/oportunidade a partir de um item) e as partes interessadas (matriz influência × interesse e lista).
+ * `?aba=partes` escolhe a segunda aba.
+ */
 /** Ciclo SWOT: quadro 2×2 (itens por relevância) e aba de partes interessadas (matriz influência × interesse). */
 export default async function SwotCiclo({ params, searchParams }: PageProps<"/swot/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de SWOT, a página responde "404 - não encontrada".
   exigirModulo(ctx, "SWOT");
+  // `id`: o identificador do ciclo, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // Lê os parâmetros do endereço (a parte depois do "?" na URL).
   const sp = await searchParams;
+  // Aba ativa: "partes" se pedida na URL; senão, o quadro.
   const aba = sp.aba === "partes" ? "partes" : "quadro";
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o ciclo com itens, partes interessadas e quem o criou.
   const c = await obterCiclo(a, id);
+  // Ciclo inexistente ou sem acesso → 404.
   if (!c) notFound();
+  // `g`: pode editar (tem permissão e o ciclo não está encerrado).
   const g = podeGerenciarSwot(a) && !c.encerrado;
+  // A empresa contratou o módulo de Riscos e Oportunidades?
   const riscosAtivos = temModulo(ctx, "RISCOS_OPORTUNIDADES");
+  // Pode transformar um item do SWOT em risco/oportunidade (edita o ciclo, tem o módulo e a permissão)?
   const podeGerarRisco = g && riscosAtivos && atorTem(a, "RISCO_GERENCIAR");
+  // Só quando pode gerar riscos, busca a escala de pontuação e a lista de processos para o formulário.
   const [config, processos] = podeGerarRisco
     ? await Promise.all([
         configRisco(a.db, null),
@@ -257,6 +277,7 @@ export default async function SwotCiclo({ params, searchParams }: PageProps<"/sw
   );
 }
 
+/** Campos do formulário de um item do SWOT (descrição, quadrante e relevância), usados para adicionar e editar. */
 function CamposItem({ quadrante, descricao, relevancia }: { quadrante: QuadranteSwot; descricao: string; relevancia: number }) {
   return (
     <>
@@ -279,6 +300,7 @@ function CamposItem({ quadrante, descricao, relevancia }: { quadrante: Quadrante
   );
 }
 
+/** Campos do formulário de uma parte interessada (nome, necessidades, expectativas, influência e interesse). Sem `p`, é uma nova. */
 function CamposParte({ p }: { p?: { nome: string; necessidades: string | null; expectativas: string | null; influencia: number; interesse: number } }) {
   return (
     <>

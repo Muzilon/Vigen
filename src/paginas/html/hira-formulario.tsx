@@ -8,6 +8,7 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/hira-formulario.module.css";
 
+/** Todos os valores de uma linha HIRA que o formulário controla (com `id` e `versao` só na edição). */
 export interface ValoresHira {
   id?: string;
   versao?: number;
@@ -32,8 +33,10 @@ export interface ValoresHira {
   periodicidadeMeses: number;
 }
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
+/** Calcula o nível (probabilidade × severidade) pela escala; se os valores estiverem fora dela, devolve vazio em vez de dar erro. */
 function tentar(config: ConfigEscala, p: number, s: number): AvaliacaoPS | null {
   try {
     return avaliarPS(config, p, s);
@@ -70,15 +73,25 @@ export function HiraFormulario({
   aprovacao: { aprovadores: string[] } | null;
   botao: string;
 }) {
+  // Liga o formulário à server action: `res` é a resposta, `pendente` indica que está enviando.
   const [res, executar, pendente] = useActionState(acao, null);
+  // `v`: todos os valores do formulário (começam com os iniciais); a tela se redesenha quando mudam.
   const [v, setV] = useState(inicial);
+  // Atualiza UM campo do formulário mantendo os demais.
   const set = <K extends keyof ValoresHira>(k: K, valor: ValoresHira[K]) => setV((x) => ({ ...x, [k]: valor }));
+  // Escala de pontuação da unidade escolhida (ou a padrão da empresa, se a unidade não tiver a sua).
   const config = escalas[v.obraId] ?? escalas[""];
+  // Os dois eixos da escala (probabilidade e severidade) com seus níveis.
   const { eixoP, eixoS } = eixosPS(config);
+  // Nível inicial calculado ao vivo (faixa e pontuação).
   const aval = tentar(config, v.probabilidade, v.severidade);
+  // Nível residual (após os controles), só calculado quando os dois valores residuais foram preenchidos.
   const residual = v.probabilidadeResidual && v.severidadeResidual ? tentar(config, Number(v.probabilidadeResidual), Number(v.severidadeResidual)) : null;
+  // Cria o tratador de mudança de um campo de texto/lista: copia o que foi digitado para o estado.
   const valor = (k: keyof ValoresHira) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => set(k, e.target.value as never);
+  // O risco inicial é alto ou crítico?
   const riscoAltoOuCritico = aval?.faixa === "ALTO" || aval?.faixa === "CRITICO";
+  // Mostra o aviso da ISO 45001 quando o risco é alto/crítico e o controle escolhido é só EPI (o mais fraco da hierarquia).
   const avisoHierarquiaBaixa = riscoAltoOuCritico && v.hierarquiaControle === "EPI";
 
   return (

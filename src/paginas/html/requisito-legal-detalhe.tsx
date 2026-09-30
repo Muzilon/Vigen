@@ -40,16 +40,29 @@ import { ItensForm } from "@/paginas/html/componentes/tabela-5w2h";
 import { CamposRequisito, CamposVerificacao } from "@/paginas/html/requisito-legal-formulario";
 import styles from "@/paginas/css/requisito-legal-detalhe.module.css";
 
+/**
+ * Página de detalhe do requisito legal: dados, verificação de atendimento (com data de próxima verificação),
+ * plano de ação, histórico, evidências anexadas e comentários.
+ */
 /** Detalhe do requisito legal: dados, verificação de atendimento, plano, histórico (evidência), anexos e comentários. */
 export default async function RequisitoLegalDetalhe({ params }: PageProps<"/requisitos-legais/[id]">) {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Requisitos legais, a página responde "404 - não encontrada".
   exigirModulo(ctx, "REQUISITOS_LEGAIS");
+  // `id`: o identificador do requisito, tirado do endereço.
   const { id } = await params;
+  // Id em formato inválido → página 404.
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca o requisito legal com responsável, processo, unidade e plano de ação.
   const r = await obterRequisito(a, id);
+  // Requisito inexistente ou sem acesso → 404.
   if (!r) notFound();
+  // Alvo dos anexos (evidências deste requisito).
   const alvo = { tipo: "REQUISITO_LEGAL" as const, entidadeId: r.id };
+  // Busca em paralelo: histórico, opções dos campos, fuso horário, anexos e se o usuário pode anexar.
   const [historico, op, fuso, anexos, podeAnexar] = await Promise.all([
     listarHistoricoRequisito(a, r.id),
     opcoesRequisitos(a),
@@ -57,9 +70,13 @@ export default async function RequisitoLegalDetalhe({ params }: PageProps<"/requ
     listarAnexos(a, alvo),
     podeEnviarAnexo(a, alvo),
   ]);
+  // Data de hoje no fuso da empresa.
   const hoje = hojeNoFuso(fuso);
+  // `g`: pode gerenciar requisitos (editar dados, excluir).
   const g = podeGerenciarRequisitos(a);
+  // `v`: pode registrar verificação (quem gerencia ou é o responsável deste requisito).
   const v = podeVerificarRequisito(a, r);
+  // A próxima verificação já passou da data? (mostra o aviso "vencida")
   const vencida = verificacaoVencida(r.proximaVerificacaoEm ? dataIso(r.proximaVerificacaoEm) : null, hoje, r.status);
 
   return (

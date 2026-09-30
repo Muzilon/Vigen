@@ -12,13 +12,23 @@ import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/inspecoes-nova.module.css";
 
+/**
+ * Página "Nova inspeção": escolhe o modelo de checklist, a unidade, a data e (opcionais) setor e processo,
+ * e abre a execução. Exige permissão de realizar inspeções.
+ */
 /** Nova inspeção: escolhe modelo + obra (setor/processo opcionais) e abre a execução. */
 export default async function InspecoesNova() {
+  // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
+  // Se a empresa não contratou o módulo de Inspeções, a página responde "404 - não encontrada".
   exigirModulo(ctx, "INSPECOES");
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Sem a permissão necessária, a página responde 404 (não revela que ela existe).
   if (!podeRealizarInspecao(a)) notFound();
+  // Opções dos campos (modelos, unidades, setores, processos, pessoas) e fuso horário da empresa.
   const [op, fuso] = await Promise.all([opcoesInspecoes(a), fusoDaEmpresa(a)]);
+  // Só aparecem modelos que já têm pelo menos uma pergunta.
   const modelos = op.modelos.filter((m) => m.totalItens > 0);
 
   return (

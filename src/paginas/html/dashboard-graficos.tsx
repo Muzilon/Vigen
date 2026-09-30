@@ -22,11 +22,14 @@ const CLASSE_GRAV: Record<string, string> = {
   CRITICA: styles.corGravCritica,
 };
 
+/** Mensagem exibida quando um gráfico não tem dados. O texto pode ser trocado pela propriedade `texto`. */
 export function Vazio({ texto = "Sem dados no período e filtros selecionados." }: { texto?: string }) {
   return <p className={styles.vazio}>{texto}</p>;
 }
 
+// Abreviações dos meses, usadas nos rótulos do gráfico mensal.
 const NOMES_MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+/** Transforma "2026-03" em "mar/26". */
 const rotuloMes = (m: string) => `${NOMES_MES[Number(m.slice(5, 7)) - 1]}/${m.slice(2, 4)}`;
 
 /**
@@ -34,14 +37,23 @@ const rotuloMes = (m: string) => `${NOMES_MES[Number(m.slice(5, 7)) - 1]}/${m.sl
  * "none", traço sem escala); os rótulos dos eixos são HTML fora do SVG, então o tamanho da
  * fonte é o mesmo do resto da página em qualquer largura (antes o viewBox escalava o texto).
  */
+/**
+ * Gráfico de barras mensal: duas barras por mês (RNCs abertas e encerradas).
+ * `dados` tem uma linha por mês com as duas contagens. Sem nenhum valor, mostra a mensagem de vazio.
+ */
 export function GraficoMensal({ dados }: { dados: { mes: string; abertas: number; encerradas: number }[] }) {
   if (dados.every((d) => d.abertas === 0 && d.encerradas === 0)) return <Vazio />;
+  // Maior valor entre todas as barras (define a altura da escala; no mínimo 1 para não dividir por zero).
   const max = Math.max(1, ...dados.flatMap((d) => [d.abertas, d.encerradas]));
+  // Medidas do desenho (largura, altura, margem de cima), largura de cada mês e largura de cada barra.
   const W = 720, H = 200, mt = 8;
   const larg = W / dados.length;
   const bw = Math.max(4, Math.min(18, larg / 3));
+  // y(v): posição vertical de um valor (invertida: valor maior fica mais alto).
   const y = (v: number) => mt + (H - mt) * (1 - v / max);
+  // Marcas do eixo vertical: 0, metade e máximo (sem repetir números iguais).
   const ticks = [0, Math.round(max / 2), max].filter((v, i, a) => a.indexOf(v) === i);
+  // Converte uma posição em porcentagem da largura/altura (os rótulos de texto ficam em HTML, fora do SVG).
   const pct = (v: number, total: number) => `${(v / total) * 100}%`;
   return (
     <div>
@@ -86,6 +98,7 @@ export function GraficoMensal({ dados }: { dados: { mes: string; abertas: number
   );
 }
 
+/** Um item da legenda: quadradinho colorido + texto. */
 function Legenda({ classe, texto }: { classe: string; texto: string }) {
   return (
     <span className={styles.itemLegenda}>
@@ -96,10 +109,16 @@ function Legenda({ classe, texto }: { classe: string; texto: string }) {
 }
 
 /** Barras horizontais com rótulo e valor em texto (legível sem depender de cor). */
+/**
+ * Gráfico de barras horizontais: uma linha por categoria, com o valor e a porcentagem em texto
+ * (assim não depende só da cor para ser entendido). `paleta` escolhe o conjunto de cores.
+ */
 export function Barras({ dados, paleta, vazio }: { dados: Contagem[]; paleta?: "gravidade" | "status" | "alerta"; vazio?: string }) {
+  // Soma de todos os valores (usada na porcentagem e para detectar "sem dados").
   const total = dados.reduce((s, d) => s + d.valor, 0);
   if (total === 0) return <Vazio texto={vazio} />;
   const max = Math.max(...dados.map((d) => d.valor));
+  // Escolhe a cor da barra conforme a paleta e a chave da categoria (cai na cor padrão se não houver).
   const cor = (k: string) =>
     (paleta === "gravidade" ? CLASSE_GRAV[k] : paleta === "status" ? CLASSE_STATUS[k] : paleta === "alerta" ? styles.corAlerta : undefined) ??
     styles.corBarra;

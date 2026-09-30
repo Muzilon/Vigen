@@ -5,8 +5,10 @@ import { Botao } from "@/paginas/html/componentes/botao";
 import { RetornoAcao, type AcaoServidor } from "@/paginas/html/componentes/form-acao";
 import styles from "@/paginas/css/documento-novo-formulario.module.css";
 
+// Uma opção de lista: o id (valor guardado) e o nome (o que aparece).
 type Opcao = { id: string; nome: string };
 
+// Extensões de arquivo que o navegador deixa escolher ao anexar o documento.
 export const ACEITAR_DOCUMENTO = ".pdf,.docx,.xlsx,.txt,.jpg,.jpeg,.png,.webp";
 
 /**
@@ -31,9 +33,13 @@ export function DocumentoNovoFormulario({
   usuarios: Opcao[];
   inicial: { processoId: string; responsavelId: string };
 }) {
+  // Liga o formulário à server action: `res` é a resposta (inclui os valores digitados se houve erro), `pendente` indica que está enviando.
   const [res, executar, pendente] = useActionState(acao, null);
+  // Valores que o usuário tinha digitado, devolvidos pelo servidor em caso de erro (para não perder o preenchimento).
   const v = res?.valores ?? {};
+  // Tipo de documento escolhido no momento (muda a sigla do código e a periodicidade padrão sugerida).
   const [tipoId, setTipoId] = useState(v.tipoId ?? tipos[0]?.id ?? "");
+  // Os dados do tipo escolhido (sigla, periodicidade padrão).
   const tipo = tipos.find((t) => t.id === tipoId);
 
   return (

@@ -4,6 +4,7 @@ import { ROTULO_MODO_APROVACAO } from "@/lib/aprovacao/rotulos";
 import { BadgeStatusEtapa } from "@/paginas/html/componentes/badge-aprovacao";
 import styles from "@/paginas/css/componentes/trilha-assinaturas.module.css";
 
+/** Dados de uma assinatura (etapa) que a trilha precisa para se desenhar. */
 export interface EtapaTrilha {
   id: string;
   ordem: number;
@@ -13,6 +14,7 @@ export interface EtapaTrilha {
   aprovador: { nome: string };
 }
 
+// Cor da bolinha da linha do tempo, conforme o status da assinatura.
 const CLASSE_MARCADOR: Record<StatusEtapaAprovacao, string> = {
   AGUARDANDO: styles.marcadorAguardando,
   PENDENTE: styles.marcadorPendente,
@@ -21,6 +23,7 @@ const CLASSE_MARCADOR: Record<StatusEtapaAprovacao, string> = {
   IGNORADA: styles.marcadorIgnorada,
 };
 
+// Símbolo dentro da bolinha: ✓ aprovada, ✕ rejeitada, – ignorada. Nos demais mostra o número da ordem.
 const SIMBOLO: Partial<Record<StatusEtapaAprovacao, string>> = {
   APROVADA: "✓",
   REJEITADA: "✕",
@@ -43,6 +46,7 @@ export function TrilhaAssinaturas({
   /** Opcional: primeiro marco da linha do tempo ("Solicitou"). */
   solicitante?: { nome: string; em: Date };
 }) {
+  // Conta quantas assinaturas já foram aprovadas, para o resumo "2 de 3 assinatura(s)".
   const assinadas = etapas.filter((e) => e.status === "APROVADA").length;
   return (
     <div className={styles.trilha}>

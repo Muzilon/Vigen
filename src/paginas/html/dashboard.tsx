@@ -22,11 +22,13 @@ import { Entrada, Rotulo, Selecao } from "@/paginas/html/componentes/campo-formu
 import { Barras, GraficoMensal } from "@/paginas/html/dashboard-graficos";
 import styles from "@/paginas/css/dashboard.module.css";
 
+// Regra para ler uma data AAAA-MM-DD da URL; se vier inválida, vira vazio (sem filtro).
 const dataUrl = z
   .preprocess((v) => (Array.isArray(v) ? v[0] : v), z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional())
   .catch(undefined)
   .transform((v) => v ?? "");
 
+// Regra de validação dos filtros da URL: período (início e fim), unidade, tipo de RNC e setor.
 const esquema = z.object({
   inicio: dataUrl,
   fim: dataUrl,
@@ -35,10 +37,18 @@ const esquema = z.object({
   setor: uuidUrl,
 });
 
+/**
+ * Página "Dashboard": painel geral com os indicadores de RNC (filtráveis por período, unidade, tipo e setor)
+ * e um resumo de cada módulo contratado (documentos, inspeções, auditorias, incidentes, treinamentos, metas,
+ * requisitos legais, riscos, HIRA e LAIA). Cada bloco só aparece se o usuário tem acesso ao módulo.
+ */
 /** Dashboard de indicadores (ver A-Dashboard.dc.html, Direção A "Campo"). */
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
+  // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
+  // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
+  // Busca tudo em paralelo (mais rápido): indicadores de RNC, unidades e setores para os filtros, e o resumo de cada módulo (vem vazio se o módulo não está disponível).
   const [{ indicadores: ind, periodo }, obras, setores, riscosPorFaixa, hira, laia, docs, inspecoes, auditorias, requisitos, incidentes, metas, treinos] = await Promise.all([
     carregarIndicadores(a, {
       inicio: f.inicio, fim: f.fim, obraId: f.obra || undefined, tipo: f.tipo || undefined, setorId: f.setor || undefined,
@@ -60,6 +70,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     resumoIndicadores(a),
     resumoTreinamentos(a),
   ]);
+  // Os números principais (KPIs) dos indicadores de RNC.
   const k = ind.kpis;
 
   return (
@@ -330,6 +341,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
   );
 }
 
+/** Caixa com título (e subtítulo opcional) que agrupa um gráfico ou um conjunto de números do dashboard. */
 function Painel({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children: ReactNode }) {
   return (
     <section className={styles.painel}>
@@ -340,6 +352,7 @@ function Painel({ titulo, subtitulo, children }: { titulo: string; subtitulo?: s
   );
 }
 
+/** Um número de destaque: título, valor grande e uma dica embaixo. `alerta` pinta o valor de vermelho. */
 function Kpi({ titulo, valor, dica, alerta }: { titulo: string; valor: number | string; dica: string; alerta?: boolean }) {
   return (
     <div className={styles.kpi}>
