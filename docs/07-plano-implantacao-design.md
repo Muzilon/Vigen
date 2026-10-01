@@ -157,18 +157,18 @@ campos "requisito legal" do HIRA/LAIA ficam (P3); só os textos do HIRA mudam (P
 |---|---|---|
 | 0. Preparação | ✅ | Assets lidos; logos cortados do quadro "Logo e Ícones — Vigen" em `public/marca/`; pasta do Figma no `.gitignore`. |
 | 1. Fundação | ✅ | `base.css` reescrito com a paleta teal (primitivos `--cor-primaria-*`, `--cor-neutro-*`, semânticas), tokens de fonte/raio/sombra/badges; **Inter** no lugar de IBM Plex (`layout.tsx`); classe `fonteIbmPlex` → `fonteBase` (55 arquivos); `cartao` com raio 16 + sombra; ícone do app (`src/app/icon.svg`). |
-| 2. Casca | 🟡 em andamento | **Login** refeito conforme o Figma (logo principal + frase, chamada, selos ISO, cartão com sombra, aviso de bloqueio; logo escura no celular). **Falta:** sidebar (aguarda as respostas abaixo) e cabeçalho. |
+| 2. Casca | ✅ (falta só o cabeçalho) | **Login** refeito conforme o Figma. **Sidebar** nova: topo fixo + seções que abrem ao clique (a da página atual abre sozinha), ícones UIcons herdando a cor do texto, cartão do usuário, celular com painel "Menu". Sub-páginas viram **abas** (`AbasModulo`). Nomes: Ameaças e Oportunidades, Perigos e Riscos, Acidentes e Incidentes, Aspectos e Impactos, Auditoria. **Falta:** cabeçalho do app. |
 | 3–5 | ⏳ | Componentes, módulos e fechamento, na ordem do §5. |
 
 **Logos em `public/marca/`:** `vigen-logo-principal(.claro).svg` (com "Sistema de Gestão Integrado"; claro = fundo escuro),
 `vigen-logo(.claro).svg` (horizontal), `vigen-icone.svg` e `vigen-icone-app.svg` (favicon). As versões `-claro` usam o mesmo
 mapeamento de cores da variante oficial "sobre escuro" do Figma (#0F2B34→branco, #4B798F→#90AFBD).
 
-**Sidebar do Figma ("Sidebar atual") × sistema real — pontos para decidir (P6):**
-1. O Figma lista **Gestão** (Indicadores, Documentos, Plano de Ação), **Qualidade** (Mapa de Processos, *Ameaças e Oportunidades*, Auditoria),
-   **Segurança do Trabalho** (Perigos e Riscos, Acidentes e Incidentes, Auditoria) e **Meio Ambiente** (Aspectos e Impactos). Faltam itens que
-   existem no sistema: **RNC, Dashboard, Aprovações, Mensagens, Notificações, SWOT, Inspeções, Treinamentos**.
-2. "Ameaças e Oportunidades" é o **Riscos e Oportunidades** renomeado? (ele está em Qualidade no desenho, e hoje está em Gestão.)
-3. "Auditoria" aparece **duas vezes** (Qualidade e Segurança). Hoje há um só módulo de Auditorias internas.
-4. Documentos e Plano de Ação estão em **Gestão** no desenho; hoje Documentos está em Qualidade.
-5. Itens do desenho usam ícones repetidos (provisórios). Precisam dos ícones finais (Casa e usuário já exportados).
+**Decisões da sidebar (respondidas pelo Eric em 2026-09-30):** itens que faltavam no desenho foram categorizados pela área do módulo
+(Gestão: Indicadores, Documentos, Plano de Ação, Ameaças e Oportunidades, SWOT, Treinamentos · Qualidade: RNCs, Mapa de Processos, Inspeções,
+Auditoria · Segurança do Trabalho: Perigos e Riscos, Acidentes e Incidentes · Meio Ambiente: Aspectos e Impactos); "Riscos e Oportunidades"
+virou **Ameaças e Oportunidades** (em Gestão); "Auditoria" aparece **uma vez só** (o duplicado do desenho era erro); Documentos fica em **Gestão**;
+ícones livres da galeria **UIcons (Flaticon)** já exportada, na cor da nossa paleta (`componentes/icone.tsx`).
+
+**Licença dos ícones:** o UIcons no plano **gratuito** do Flaticon exige **crédito** ("Icons by Flaticon UIcons", com link). Antes de publicar,
+ou se assina o plano que dispensa o crédito ou se cria uma página/rodapé de créditos. Decisão do Eric.

@@ -58,7 +58,7 @@ const ROTULO_ACAO: Record<string, string> = {
 export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Ameaças e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
   // `id`: o identificador do risco, tirado do endereço.
   const { id } = await params;
@@ -116,7 +116,7 @@ export default async function RiscoDetalhe({ params }: PageProps<"/riscos/[id]">
   return (
     <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
-        <Link href="/riscos" className={styles.linkVoltar}>← Riscos e oportunidades</Link>
+        <Link href="/riscos" className={styles.linkVoltar}>← Ameaças e Oportunidades</Link>
       </nav>
 
       <header className={styles.cabecalho}>

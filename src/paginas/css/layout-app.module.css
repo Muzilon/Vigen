@@ -2,9 +2,9 @@
    ÍNDICE
    01. Casca — grid raiz (sidebar + coluna principal)
    02. Sidebar — fixa, escura, 100vh
-   03. Logo e seletor de empresa
-   04. Navegação lateral (itens de menu + contadores + botão "Menu")
-   05. Rodapé da sidebar (usuário + sair)
+   03. Logo
+   04. Navegação lateral (topo, seções que abrem/fecham, itens, contadores, botão "Menu")
+   05. Cartão do usuário (rodapé da sidebar)
    06. Cabeçalho do app (sticky, trilha, sino)
    07. Área de conteúdo — isolada, nunca acima do cabeçalho/sidebar
    08. Responsivo — até 900px a sidebar vira barra superior
@@ -42,73 +42,34 @@
 }
 
 /* ==========================================================
-   03. LOGO E SELETOR DE EMPRESA
+   03. LOGO
+   Desktop: logo horizontal clara. Celular (até 900px): só o "V" — ver seção 08.
    ========================================================== */
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 8px 18px 8px;
-  color: var(--cor-acento-claro); /* traço do ícone (currentColor) */
+  padding: var(--espaco-2) var(--espaco-3) var(--espaco-6) var(--espaco-3);
 }
-.logoTexto {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--cor-sidebar-texto-ativo);
+.logoCompleta {
+  width: 112px;
+  height: auto;
 }
-
-.seletorEmpresa {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 10px;
-  background: var(--cor-sidebar-fundo-alt);
-  border: 1px solid var(--cor-sidebar-borda);
-  border-radius: var(--raio-padrao);
-  color: var(--cor-sidebar-texto);
-  text-align: left;
-  margin-bottom: 18px;
-}
-.iniciaisEmpresa {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--raio-padrao);
-  background: var(--cor-sidebar-elevado);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--cor-sidebar-texto-ativo);
-}
-.textoEmpresa {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-  overflow: hidden;
-}
-.nomeEmpresa {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.detalheEmpresa {
-  font-size: 12px;
-  color: var(--cor-sidebar-texto-secundario);
+.logoIcone {
+  display: none;
+  width: 26px;
+  height: auto;
 }
 
 /* ==========================================================
    04. NAVEGAÇÃO LATERAL
+   Topo fixo + seções que abrem/fecham + Configurações no rodapé.
    O botão "Menu" (hambúrguer) só aparece até 900px — ver seção 08.
    ========================================================== */
 .menuPrincipal {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .botaoMenu {
@@ -118,38 +79,91 @@
 .navLateral {
   display: flex;
   flex-direction: column;
+  flex: 1;
+}
+
+.listaNav {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+}
+/* Configurações: empurrada para o fim da barra, logo acima do cartão do usuário */
+.listaNavRodape {
+  margin-top: auto;
+  padding-top: var(--espaco-4);
+}
+
+.secaoNav {
+  margin-top: var(--espaco-4);
+}
+
+/* Título de seção (GESTÃO, QUALIDADE...): botão que abre/fecha a lista */
+.tituloSecao,
+.tituloSecaoFixo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  width: 100%;
+  margin: 0 0 var(--espaco-1) 0;
+  padding: var(--espaco-2) var(--espaco-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+  color: var(--cor-sidebar-texto-rotulo);
+}
+.tituloSecao {
+  border-radius: var(--raio-padrao);
+  cursor: pointer;
+}
+.tituloSecao:hover {
+  color: var(--cor-sidebar-texto-item);
+}
+.tituloSecao:focus-visible,
+.itemNav:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: -2px;
+}
+.setaSecao {
+  margin-left: auto;
+  flex: none;
+  transform: rotate(-90deg); /* seta para a direita = fechada */
+}
+.setaSecaoAberta {
+  transform: rotate(0deg); /* seta para baixo = aberta */
+}
+@media (prefers-reduced-motion: no-preference) {
+  .setaSecao {
+    transition: transform 0.15s ease;
+  }
 }
 
 .itemNav {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 38px;
-  padding: 0 12px;
+  gap: var(--espaco-3);
+  height: 40px;
+  padding: 0 var(--espaco-3);
   border-radius: var(--raio-padrao);
   color: var(--cor-sidebar-texto-item);
   text-decoration: none;
-  font-size: 14px;
+  font-size: var(--texto-corpo);
 }
 .itemNav:hover {
   background: var(--cor-sidebar-fundo-alt);
   color: var(--cor-sidebar-texto-ativo);
 }
 
-/* Item ativo: fundo destacado + barra de acento à esquerda (inset shadow) */
+/* Item ativo: fundo destacado (primária 800) e texto branco, como no Figma */
 .itemNavAtivo {
   color: var(--cor-sidebar-texto-ativo);
   background: var(--cor-sidebar-item-ativo-fundo);
-  box-shadow: inset 3px 0 0 var(--cor-acento-claro);
   font-weight: 500;
-}
-.itemNavAtivo .iconeItemNav {
-  color: var(--cor-acento-claro);
 }
 
 .iconeItemNav {
-  display: inline-flex;
   flex: none;
 }
 
@@ -172,7 +186,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
 }
 .contadorItemNav {
   background: var(--cor-sidebar-elevado);
@@ -183,47 +197,28 @@
   color: var(--cor-sidebar-fundo);
 }
 
-.espacador {
-  flex: 1;
-}
-
 /* ==========================================================
-   05. RODAPÉ DA SIDEBAR
+   05. CARTÃO DO USUÁRIO (rodapé da sidebar)
    ========================================================== */
-.linkConfiguracoes {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 38px;
-  padding: 0 12px;
-  border-radius: var(--raio-padrao);
-  color: var(--cor-sidebar-texto-item);
-  text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-.linkConfiguracoes:hover {
-  background: var(--cor-sidebar-fundo-alt);
-  color: var(--cor-sidebar-texto-ativo);
-}
-
 .rodapeUsuario {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 8px 4px 8px;
-  border-top: 1px solid var(--cor-sidebar-borda);
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-3);
+  padding: var(--espaco-3);
+  background: var(--cor-sidebar-fundo-alt);
+  border-radius: var(--raio-cartao);
 }
 .avatarUsuario {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--raio-pill);
-  background: var(--cor-acento-claro);
-  color: var(--cor-sidebar-fundo);
+  background: var(--cor-primaria-400);
+  color: var(--cor-neutro-0);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: var(--texto-pequeno);
   font-weight: 600;
   flex: none;
 }
@@ -235,16 +230,19 @@
   overflow: hidden;
 }
 .nomeUsuario {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--texto-corpo);
+  font-weight: 600;
   color: var(--cor-sidebar-texto-ativo);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .cargoUsuario {
-  font-size: 12px;
-  color: var(--cor-sidebar-texto-secundario);
+  font-size: 13px;
+  color: var(--cor-sidebar-texto-item);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .botaoSair {
   width: 32px;
@@ -261,7 +259,11 @@
 }
 .botaoSair:hover {
   color: var(--cor-sidebar-texto-ativo);
-  background: var(--cor-sidebar-fundo-alt);
+  background: var(--cor-sidebar-item-ativo-fundo);
+}
+.botaoSair:focus-visible {
+  outline: 2px solid var(--cor-acento-claro);
+  outline-offset: 1px;
 }
 
 /* ==========================================================
@@ -321,7 +323,7 @@
 
 /* ==========================================================
    08. RESPONSIVO
-   Até 900px a sidebar vira uma barra horizontal no topo (logo +
+   Até 900px a sidebar vira uma barra horizontal no topo (logo "V" +
    botão "Menu" + sair) que rola junto com a página. O menu abre
    como painel logo abaixo da barra: a sidebar ganha z-dropdown
    para o painel ficar acima do cabeçalho sticky (que vem depois
@@ -347,12 +349,13 @@
   .logo {
     padding: 0 var(--espaco-1);
   }
-  .logoTexto,
-  .seletorEmpresa,
-  .espacador,
+  .logoCompleta,
   .textoUsuario,
   .avatarUsuario {
     display: none;
+  }
+  .logoIcone {
+    display: block;
   }
 
   .menuPrincipal {
@@ -366,13 +369,13 @@
     align-items: center;
     gap: var(--espaco-2);
     max-width: 100%;
-    height: 36px;
+    height: 40px;
     padding: 0 var(--espaco-3);
     border: 1px solid var(--cor-sidebar-borda);
     border-radius: var(--raio-padrao);
     background: var(--cor-sidebar-fundo-alt);
     color: var(--cor-sidebar-texto-ativo);
-    font-size: 13px;
+    font-size: var(--texto-corpo);
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
@@ -392,7 +395,7 @@
     color: var(--cor-sidebar-texto-secundario);
   }
 
-  /* Painel do menu: recolhido por padrão, abre sob a barra (largura total) */
+  /* Painel do menu: recolhido por padrão, abre sob a barra (largura total, com rolagem se for grande) */
   .navLateral {
     display: none;
   }
@@ -402,6 +405,8 @@
     top: 100%;
     left: 0;
     right: 0;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
     padding: var(--espaco-2) var(--espaco-3) var(--espaco-3);
     background: var(--cor-sidebar-fundo);
     border-top: 1px solid var(--cor-sidebar-borda);
@@ -410,10 +415,14 @@
   .itemNav {
     height: 44px; /* alvo de toque confortável */
   }
+  .tituloSecao {
+    min-height: 44px;
+  }
 
   .rodapeUsuario {
-    border-top: 0;
+    margin-top: 0;
     padding: 0;
+    background: transparent;
   }
 
   .cabecalho {

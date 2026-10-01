@@ -3,7 +3,7 @@ import type { CorFaixa } from "@/lib/escala/tipos";
 import styles from "@/paginas/css/componentes/heatmap.module.css";
 
 /**
- * Heatmap genérico (matriz P×S) reaproveitável por Riscos e Oportunidades, HIRA, LAIA e,
+ * Heatmap genérico (matriz P×S) reaproveitável por Ameaças e Oportunidades, HIRA, LAIA e,
  * futuramente, Partes Interessadas — ver docs/06-desenho-modulos.md, "Base comum".
  * Recebe apenas dados já calculados (rótulos dos eixos e contagem/cor por célula); não
  * conhece regra de negócio nenhuma — quem chama usa src/lib/escala/calculo.ts para chegar

@@ -50,7 +50,7 @@ type Aba = (typeof ABAS)[number][0];
 
 // Nome amigável de cada tipo de escala de pontuação de risco.
 const ROTULO_TIPO_ESCALA: Record<"RISCO_OPORTUNIDADE" | "HIRA" | "ASPECTO_IMPACTO", string> = {
-  RISCO_OPORTUNIDADE: "Riscos e oportunidades",
+  RISCO_OPORTUNIDADE: "Ameaças e Oportunidades",
   HIRA: "HIRA",
   ASPECTO_IMPACTO: "Aspecto e impacto (LAIA)",
 };
@@ -73,8 +73,8 @@ const ROTULO_PERMISSAO: Record<(typeof TODAS_PERMISSOES)[number], string> = {
   RNC_VER_RESTRITAS: "Ver RNCs restritas e dados sensíveis",
   PLANO_GERENCIAR: "Gerenciar planos de ação",
   PROCESSO_GERENCIAR: "Gerenciar mapa de processos",
-  RISCO_GERENCIAR: "Gerenciar riscos e oportunidades",
-  RISCO_TRATAR: "Tratar riscos e oportunidades",
+  RISCO_GERENCIAR: "Gerenciar ameaças e oportunidades",
+  RISCO_TRATAR: "Tratar ameaças e oportunidades",
   SWOT_GERENCIAR: "Gerenciar SWOT e partes interessadas",
   HIRA_GERENCIAR: "Gerenciar HIRA (perigos e riscos SST)",
   LAIA_GERENCIAR: "Gerenciar LAIA (aspectos e impactos)",

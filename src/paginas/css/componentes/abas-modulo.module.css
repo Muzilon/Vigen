@@ -1,0 +1,50 @@
+/* ==========================================================
+   ÍNDICE
+   01. Faixa de abas do módulo (links sublinhados)
+   ========================================================== */
+
+/* ==========================================================
+   01. ABAS DO MÓDULO
+   Fica logo abaixo do título da página. Não sai na impressão.
+   ========================================================== */
+.abas {
+  display: flex;
+  gap: var(--espaco-1);
+  margin-bottom: var(--espaco-5);
+  border-bottom: 1px solid var(--cor-borda);
+  overflow-x: auto; /* no celular as abas rolam por dentro, nunca a página */
+}
+
+.aba,
+.abaAtiva {
+  flex: none;
+  padding: var(--espaco-3) var(--espaco-4);
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  font-size: var(--texto-corpo);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.aba {
+  color: var(--cor-texto-secundario);
+}
+.aba:hover {
+  color: var(--cor-texto);
+}
+.abaAtiva {
+  color: var(--cor-texto);
+  border-bottom-color: var(--cor-acento);
+}
+.aba:focus-visible,
+.abaAtiva:focus-visible {
+  outline: 2px solid var(--cor-acento);
+  outline-offset: -2px;
+  border-radius: var(--raio-pequeno);
+}
+
+@media print {
+  .abas {
+    display: none;
+  }
+}

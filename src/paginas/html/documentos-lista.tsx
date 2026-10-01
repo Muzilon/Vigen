@@ -12,6 +12,7 @@ import { exigirModulo } from "@/lib/modulos";
 import { getContexto } from "@/lib/tenant";
 import { BadgeAtrasado, BadgeStatusDocumento } from "@/paginas/html/componentes/badge";
 import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { CampoBusca, Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
@@ -78,6 +79,7 @@ export default async function DocumentosLista({ searchParams }: PageProps<"/docu
           </>
         }
       />
+      <AbasModulo chave="documentos" />
 
       <div className={styles.resumo}>
         <Link href="/documentos?vencidas=1" className={`${styles.indicador} ${vencidas ? styles.indicadorAlerta : ""}`}>

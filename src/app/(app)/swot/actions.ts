@@ -74,7 +74,7 @@ export async function gerarRiscoAcao(_: ResultadoAcao, fd: FormData): Promise<Re
   const { id, cicloId, ...dados } = d.data;
   return executar(async () => {
     await swot.gerarRiscoDoItem(await getAtor(), id, dados);
-    return { ok: "Registro criado em Riscos e oportunidades e vinculado ao item." };
+    return { ok: "Registro criado em Ameaças e Oportunidades e vinculado ao item." };
   }, [...caminhos(cicloId), "/riscos", "/dashboard"]);
 }
 

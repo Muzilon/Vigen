@@ -6,6 +6,7 @@ import { getContexto } from "@/lib/tenant";
 import { ROTULO_STATUS_COMPETENCIA, ROTULO_TIPO_TREINAMENTO } from "@/lib/treinamentos/regras";
 import { meusTreinamentos } from "@/lib/treinamentos/servico";
 import { BadgeAptidao, BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
@@ -38,6 +39,7 @@ export default async function TreinamentosMeus() {
   return (
     <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina titulo="Meus treinamentos" subtitulo="Sua situação nos treinamentos obrigatórios e nos que você já fez, com validade e certificados." />
+      <AbasModulo chave="treinamentos" />
       <div className={styles.aptidao}>
         <BadgeAptidao apto={aptidao.apto} />
         <span>

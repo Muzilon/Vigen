@@ -22,7 +22,7 @@ import styles from "@/paginas/css/riscos-revisao-geral.module.css";
 export default async function RiscosRevisaoGeral({ searchParams }: PageProps<"/riscos/revisao-geral">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Ameaças e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
   // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
@@ -44,9 +44,9 @@ export default async function RiscosRevisaoGeral({ searchParams }: PageProps<"/r
   return (
     <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
-        <Link href="/riscos" className={styles.linkVoltar}>← Riscos e oportunidades</Link>
+        <Link href="/riscos" className={styles.linkVoltar}>← Ameaças e Oportunidades</Link>
       </nav>
-      <h1 className={styles.titulo}>Revisão geral de riscos e oportunidades</h1>
+      <h1 className={styles.titulo}>Revisão geral de ameaças e oportunidades</h1>
       <p className={styles.subtitulo}>Confirme ou ajuste a avaliação de cada registro aberto do escopo e registre a revisão de uma vez.</p>
 
       <form method="get" className={styles.barraEscopo}>

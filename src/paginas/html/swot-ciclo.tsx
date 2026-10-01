@@ -70,7 +70,7 @@ export default async function SwotCiclo({ params, searchParams }: PageProps<"/sw
   if (!c) notFound();
   // `g`: pode editar (tem permissão e o ciclo não está encerrado).
   const g = podeGerenciarSwot(a) && !c.encerrado;
-  // A empresa contratou o módulo de Riscos e Oportunidades?
+  // A empresa contratou o módulo de Ameaças e Oportunidades?
   const riscosAtivos = temModulo(ctx, "RISCOS_OPORTUNIDADES");
   // Pode transformar um item do SWOT em risco/oportunidade (edita o ciclo, tem o módulo e a permissão)?
   const podeGerarRisco = g && riscosAtivos && atorTem(a, "RISCO_GERENCIAR");

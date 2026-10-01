@@ -6,6 +6,7 @@ import { getContexto } from "@/lib/tenant";
 import { ROTULO_TIPO_TREINAMENTO } from "@/lib/treinamentos/regras";
 import { listarTreinamentos, opcoesTreinamentos, podeGerenciarTreinamentos } from "@/lib/treinamentos/servico";
 import { LinkBotao } from "@/paginas/html/componentes/botao";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
@@ -52,6 +53,7 @@ export default async function TreinamentosLista({ searchParams }: PageProps<"/tr
           </>
         }
       />
+      <AbasModulo chave="treinamentos" />
       <p className={styles.filtro}>
         {inativos ? <Link href="/treinamentos">Ocultar inativos</Link> : <Link href="/treinamentos?inativos=1">Mostrar inativos</Link>}
       </p>

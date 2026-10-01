@@ -7,6 +7,7 @@ import { getContexto } from "@/lib/tenant";
 import { ROTULO_MODALIDADE, ROTULO_TIPO_TREINAMENTO } from "@/lib/treinamentos/regras";
 import { podeGerenciarTreinamentos, relatorioAuditoria } from "@/lib/treinamentos/servico";
 import { BotaoImprimir } from "@/paginas/html/componentes/botao-imprimir";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/treinamentos-auditoria.module.css";
@@ -41,6 +42,7 @@ export default async function TreinamentosAuditoria() {
         titulo="Evidências de competência"
         subtitulo={`${ctx.usuario.empresaNome} · ISO 9001:2015 7.2 · posição em ${formatarData(hoje)}`}
       />
+      <AbasModulo chave="treinamentos" />
       <div className={styles.acoes}>
         <BotaoImprimir />
         <Link href="/treinamentos/matriz" className={styles.link}>Matriz de competências →</Link>

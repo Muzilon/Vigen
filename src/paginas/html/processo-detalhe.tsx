@@ -248,7 +248,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
 
           {riscos && (
             <Cartao
-              titulo={`Riscos e oportunidades · ${riscos.length}`}
+              titulo={`Ameaças e Oportunidades · ${riscos.length}`}
               acoes={
                 podeGerenciarRiscos(a) ? (
                   <Link href={`/riscos/novo?processo=${p.id}`} className={styles.linkProcesso}>+ Novo</Link>
@@ -396,7 +396,7 @@ export default async function ProcessoDetalhe({ params }: PageProps<"/processos/
           {(!riscos || !linhasHira || !linhasLaia || !documentos || !indicadores) && (
           <Cartao titulo="Vínculos com outros módulos">
             <ul className={styles.placeholders}>
-              {!riscos && <li>Riscos e oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
+              {!riscos && <li>Ameaças e Oportunidades <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasHira && <li>Perigos e Riscos <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!linhasLaia && <li>Aspectos e impactos (LAIA) <span className={styles.emBreve}>módulo não contratado</span></li>}
               {!documentos && <li>Documentos vinculados <span className={styles.emBreve}>módulo não contratado</span></li>}

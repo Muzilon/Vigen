@@ -44,14 +44,14 @@ const esquema = z.object({
 });
 
 /**
- * Página "Riscos e oportunidades": filtros, o mapa de calor (probabilidade × impacto) com alternância entre risco
+ * Página "Ameaças e Oportunidades": filtros, o mapa de calor (probabilidade × impacto) com alternância entre risco
  * inicial e residual — cada célula é clicável e filtra a lista — e a tabela de registros.
  */
-/** Matriz de riscos e oportunidades (ISO 9001 6.1): filtros, heatmap P×I com toggle inicial/residual e lista. */
+/** Matriz de ameaças e oportunidades (ISO 9001 6.1): filtros, heatmap P×I com toggle inicial/residual e lista. */
 export default async function RiscosLista({ searchParams }: PageProps<"/riscos">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Ameaças e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
   // Lê e valida os filtros da URL.
   const f = esquema.parse(await searchParams);
@@ -97,9 +97,9 @@ export default async function RiscosLista({ searchParams }: PageProps<"/riscos">
   return (
     <div className={`${styles.pagina} fonteBase`}>
       <CabecalhoPagina
-        titulo="Riscos e oportunidades"
+        titulo="Ameaças e Oportunidades"
         contador={todos.length}
-        subtitulo="Matriz de riscos e oportunidades por processo (ISO 9001 6.1) — nível = probabilidade × impacto pela escala da empresa/unidade."
+        subtitulo="Matriz de ameaças e oportunidades por processo (ISO 9001 6.1) — nível = probabilidade × impacto pela escala da empresa/unidade."
         acoes={
           <>
             {gerencia && <LinkBotao href="/riscos/revisao-geral" variante="secundario">Revisão geral</LinkBotao>}

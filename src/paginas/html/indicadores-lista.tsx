@@ -9,6 +9,7 @@ import { exigirModulo } from "@/lib/modulos";
 import { getContexto } from "@/lib/tenant";
 import { BadgeSituacaoIndicador } from "@/paginas/html/componentes/badge";
 import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
@@ -64,6 +65,7 @@ export default async function IndicadoresLista({ searchParams, meus = false }: {
         }
         acoes={g ? <LinkBotao href="/indicadores/novo">Novo indicador</LinkBotao> : undefined}
       />
+      <AbasModulo chave="indicadores" />
 
       <div className={styles.resumo}>
         <Link href={filtroSituacao("ATINGIDO")}><strong className={`${styles.numero} ${styles.ok}`}>{conta("ATINGIDO")}</strong> meta atingida</Link>

@@ -1,5 +1,5 @@
 /**
- * Riscos e Oportunidades (ISO 9001 6.1) — serviço de domínio (docs/06-desenho-modulos.md, seção 2).
+ * Ameaças e Oportunidades (ISO 9001 6.1) — serviço de domínio (docs/06-desenho-modulos.md, seção 2).
  * Leitura: usuários da empresa com o módulo RISCOS_OPORTUNIDADES (respeitando o escopo de obras).
  * Cadastro/edição/exclusão/revisão geral: RISCO_GERENCIAR. Tratamento, plano de ação, status e
  * reavaliação do item: RISCO_TRATAR, RISCO_GERENCIAR ou o responsável do registro.
@@ -41,7 +41,7 @@ export async function moduloRiscosAtivo(a: Pick<Ator, "db" | "empresaId">): Prom
 }
 
 export async function exigirModuloRiscos(a: Pick<Ator, "db" | "empresaId">) {
-  if (!(await moduloRiscosAtivo(a))) throw new ErroNegocio("Módulo Riscos e Oportunidades não contratado para esta empresa.");
+  if (!(await moduloRiscosAtivo(a))) throw new ErroNegocio("Módulo Ameaças e Oportunidades não contratado para esta empresa.");
 }
 
 export const podeGerenciarRiscos = (a: Pick<Ator, "permissoes">) => atorTem(a, "RISCO_GERENCIAR");
@@ -51,7 +51,7 @@ export const podeTratarRisco = (a: Pick<Ator, "permissoes" | "usuarioId">, r: { 
 
 async function exigirGestao(a: Ator) {
   await exigirModuloRiscos(a);
-  if (!podeGerenciarRiscos(a)) throw new ErroNegocio("Sem permissão para gerenciar riscos e oportunidades (RISCO_GERENCIAR).");
+  if (!podeGerenciarRiscos(a)) throw new ErroNegocio("Sem permissão para gerenciar ameaças e oportunidades (RISCO_GERENCIAR).");
 }
 
 /** Escopo de obras: registros sem obra são da empresa toda. */

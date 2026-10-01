@@ -1,6 +1,6 @@
 ---
 name: agente-riscos-hira-laia
-description: Riscos e Oportunidades (ISO 9001 6.1), SWOT/Partes Interessadas (4.1/4.2), Perigos e Riscos (antigo HIRA, ISO 45001 6.1.2) e LAIA (ISO 14001 6.1.2) — escalas P×I/P×S, heatmap, tratamento, residual, reavaliação, aprovação de linhas, vista em árvore e clonagem.
+description: Ameaças e Oportunidades (antigo Riscos e Oportunidades, ISO 9001 6.1), SWOT/Partes Interessadas (4.1/4.2), Perigos e Riscos (antigo HIRA, ISO 45001 6.1.2) e LAIA (ISO 14001 6.1.2) — escalas P×I/P×S, heatmap, tratamento, residual, reavaliação, aprovação de linhas, vista em árvore e clonagem.
 model: opus
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---

@@ -255,7 +255,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       )}
 
       {riscosPorFaixa && (
-        <Painel titulo="Riscos e oportunidades abertos por nível" subtitulo="Situação atual (nível inicial), sem os encerrados">
+        <Painel titulo="Ameaças e Oportunidades abertos por nível" subtitulo="Situação atual (nível inicial), sem os encerrados">
           <Barras
             paleta="gravidade"
             vazio="Nenhum risco ou oportunidade aberto."

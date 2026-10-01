@@ -208,8 +208,10 @@ page.tsx (casca) → paginas/html/<pagina>.tsx → lib/<modulo>/servico.ts → l
 ### 5.5 Módulos contratados (gating)
 - `Empresa.modulosAtivos: Modulo[]`. Na página: `exigirModulo(ctx, "X")` (404 se desligado). No serviço: `exigirModuloX(a)`, que lê a
   empresa, porque o `Ator` não carrega módulos.
-- Menu: `src/lib/menu-registro.ts`. O item aparece se `implementado: true` **e** o módulo está ativo **e** a permissão (opcional)
-  está presente.
+- Menu: `src/lib/menu-registro.ts` (puro, testado em `tests/menu.test.ts`). Tem **topo** (Início, Dashboard, Aprovações, Mensagens), **seções**
+  que abrem/fecham (Gestão, Qualidade, Segurança do Trabalho, Meio Ambiente) e **rodapé** (Configurações). Cada item é **um módulo**; se o
+  módulo tem várias páginas (ex.: Documentos), a 1ª visível é o link do menu e as demais viram **abas** no topo da página
+  (`<AbasModulo chave="..." />`). Uma página só aparece se o módulo está ativo **e** a permissão (opcional) está presente.
 - Configurações → aba **Módulos** liga e desliga os módulos (a Demo tem só RNC e Plano de Ação: isso é usado nos testes de gating).
 
 ### 5.6 Integridade e trilha de auditoria
@@ -409,7 +411,7 @@ Ver §6.1. **Preenchimento:** cada linha 5W2H exige **o quê**, **quem** e **qua
   indicadores vinculados a ele.
 - **Quem:** leitura com o módulo; escrita com `PROCESSO_GERENCIAR`.
 
-### 8.5 Riscos e Oportunidades (ISO 9001 6.1) · `RISCOS_OPORTUNIDADES`
+### 8.5 Ameaças e Oportunidades (ISO 9001 6.1) · `RISCOS_OPORTUNIDADES` — antes chamado "Riscos e Oportunidades" (só o nome mudou)
 - **Cadastro:** tipo RISCO/OPORTUNIDADE (código R-/O-), processo e obra opcionais, causa, consequência, **P × I** pela escala (score e
   faixa calculados), tratamento (ACEITAR/MITIGAR/TRANSFERIR/EVITAR para risco; EXPLORAR para oportunidade), avaliação residual,
   responsável, periodicidade de reavaliação.
@@ -427,7 +429,7 @@ Ver §6.1. **Preenchimento:** cada linha 5W2H exige **o quê**, **quem** e **qua
   (fraqueza/ameaça → risco; força/oportunidade → oportunidade, com vínculo). Ciclo encerrado fica somente leitura.
 - **Quem:** `SWOT_GERENCIAR`.
 
-### 8.7 HIRA — Perigos e Riscos ocupacionais (ISO 45001 6.1.2) · `HIRA`
+### 8.7 Perigos e Riscos ocupacionais — antes "HIRA" (ISO 45001 6.1.2) · `HIRA` (só o nome mudou; URL `/hira` e permissão `HIRA_GERENCIAR` continuam)
 - **Cadastro (linha):** obra (**obrigatória**), setor, processo, atividade (rotineira ou não), perigo, risco/dano, condição
   (NORMAL/ANORMAL/EMERGENCIA), controles existentes, **hierarquia de controle** (eliminação → substituição → engenharia →
   administrativo → EPI, escolhida num funil que avisa quando o risco é Alto/Crítico e o controle é só EPI), P × S inicial e residual,

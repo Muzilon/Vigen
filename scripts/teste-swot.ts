@@ -134,7 +134,7 @@ async function main() {
       try {
         const cd = (await criarCiclo(adminDemo, { ano: ANO })).id;
         const it = (await adicionarItem(adminDemo, cd, { quadrante: "AMEACA", descricao: "Concorrência", relevancia: 3 })).id;
-        await assert.rejects(gerarRiscoDoItem(adminDemo, it, { probabilidade: 1, impacto: 1 }), erro(/Riscos e Oportunidades não contratado/));
+        await assert.rejects(gerarRiscoDoItem(adminDemo, it, { probabilidade: 1, impacto: 1 }), erro(/Ameaças e Oportunidades não contratado/));
         await admin.itemSwot.deleteMany({ where: { cicloId: cd } });
         await admin.cicloSwot.delete({ where: { id: cd } });
       } finally {

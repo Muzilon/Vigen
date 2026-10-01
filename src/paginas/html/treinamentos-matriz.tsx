@@ -10,6 +10,7 @@ import { ROTULO_STATUS_COMPETENCIA } from "@/lib/treinamentos/regras";
 import { listarTreinamentos, matrizCompetencias, opcoesTreinamentos, podeGerenciarTreinamentos } from "@/lib/treinamentos/servico";
 import { BadgeAptidao, BadgeStatusCompetencia } from "@/paginas/html/componentes/badge";
 import { Botao } from "@/paginas/html/componentes/botao";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
@@ -53,6 +54,7 @@ export default async function TreinamentosMatriz({ searchParams }: PageProps<"/t
         contador={m.linhas.length}
         subtitulo="Situação de cada pessoa em cada treinamento (última realização válida). Célula vazia: não obrigatório e não realizado."
       />
+      <AbasModulo chave="treinamentos" />
 
       <div className={styles.resumo}>
         <span><strong className={styles.numero}>{r.percentualEmDia === null ? "—" : `${r.percentualEmDia}%`}</strong> em dia ({r.emDia} de {r.obrigatorias} obrigatórios)</span>

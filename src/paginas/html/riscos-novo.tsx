@@ -17,7 +17,7 @@ import styles from "@/paginas/css/riscos-novo.module.css";
 export default async function RiscosNovo({ searchParams }: PageProps<"/riscos/novo">) {
   // Descobre quem está logado: usuário, empresa, permissões e módulos contratados.
   const ctx = await getContexto();
-  // Se a empresa não contratou o módulo de Riscos e Oportunidades, a página responde "404 - não encontrada".
+  // Se a empresa não contratou o módulo de Ameaças e Oportunidades, a página responde "404 - não encontrada".
   exigirModulo(ctx, "RISCOS_OPORTUNIDADES");
   // `a` (o "ator") é quem faz a operação; os serviços usam ele para ler só os dados desta empresa.
   const a = await getAtor();
@@ -32,7 +32,7 @@ export default async function RiscosNovo({ searchParams }: PageProps<"/riscos/no
   return (
     <div className={`${styles.pagina} fonteBase`}>
       <nav aria-label="Trilha da página" className={styles.trilha}>
-        <Link href="/riscos" className={styles.linkVoltar}>← Riscos e oportunidades</Link>
+        <Link href="/riscos" className={styles.linkVoltar}>← Ameaças e Oportunidades</Link>
       </nav>
       <h1 className={styles.titulo}>Novo risco ou oportunidade</h1>
       <Cartao>

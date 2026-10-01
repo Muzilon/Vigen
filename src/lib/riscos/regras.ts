@@ -1,5 +1,5 @@
 /**
- * Regras puras de Riscos e Oportunidades (ISO 9001 6.1) — sem banco, testadas em
+ * Regras puras de Ameaças e Oportunidades (ISO 9001 6.1) — sem banco, testadas em
  * tests/riscos.test.ts: cálculo do nível pela escala configurável, regra "tratamento exige
  * plano de ação", normalização dos dados, células do heatmap e itens de reavaliação.
  */

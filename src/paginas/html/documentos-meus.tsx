@@ -9,6 +9,7 @@ import { meusDocumentos } from "@/lib/documentos/servico";
 import { exigirModulo } from "@/lib/modulos";
 import { getContexto } from "@/lib/tenant";
 import { LinkBotao } from "@/paginas/html/componentes/botao";
+import { AbasModulo } from "@/paginas/html/componentes/abas-modulo";
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
@@ -42,6 +43,7 @@ export default async function DocumentosMeus() {
         subtitulo="Documentos vigentes publicados para você (por setor, unidade, perfil ou nominalmente)."
         acoes={veListaMestra(a) ? <LinkBotao href="/documentos" variante="secundario">Lista mestra</LinkBotao> : undefined}
       />
+      <AbasModulo chave="documentos" />
       {pendentes.length > 0 && (
         <p className={styles.aviso}>
           Você tem <strong>{pendentes.length}</strong> documento(s) aguardando sua ciência. Leia e confirme em &quot;Li e estou ciente&quot;.
