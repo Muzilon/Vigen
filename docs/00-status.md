@@ -23,5 +23,6 @@ Testes: unit 53 · fluxo 27 · anexos 11 · notificações 11 · isolamento 11 �
 - Backup em nuvem gratuito do Postgres.
 - Criptografia em nível de campo (schema já preparado).
 - Dashboard: agregar no banco quando crescer; plano de ação MANUAL (tela).
+- **Testes não verificados** da janela flutuante e da conclusão de ações (01/10/2026): ver [relatório](relatorios/2026-10-01-testes-nao-verificados.md).
 
 Relatórios: [01 schema e marcos](01-schema-proposta.md) · [02 revisão de segurança](02-revisao-seguranca.md) · [03 revisão final](03-revisao-final.md)
