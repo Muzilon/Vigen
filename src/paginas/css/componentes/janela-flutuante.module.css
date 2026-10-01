@@ -23,6 +23,11 @@
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
 }
 
+/* Detalhes com duas colunas ou tabelas pedem mais largura. */
+.ampla {
+  width: min(1100px, calc(100vw - 24px));
+}
+
 .janela::backdrop {
   background: rgba(15, 23, 42, 0.5);
 }
@@ -64,4 +69,9 @@
   padding: var(--espaco-4);
   padding-top: calc(var(--espaco-4) + 44px);
   overflow-y: auto;
+}
+
+/* A trilha "← Voltar para a lista" das páginas de detalhe leva para fora da janela; aqui ela é escondida. */
+.conteudo :global(nav[aria-label="Trilha da página"]) {
+  display: none;
 }

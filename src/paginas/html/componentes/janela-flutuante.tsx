@@ -9,7 +9,7 @@ import styles from "@/paginas/css/componentes/janela-flutuante.module.css";
  * dentro da janela e o fundo fica inerte. Ao fechar (X, Esc ou clique fora) volta uma página no histórico,
  * que é o que fecha a rota interceptada e devolve a lista por baixo.
  */
-export function JanelaFlutuante({ titulo, children }: { titulo: string; children: ReactNode }) {
+export function JanelaFlutuante({ titulo, ampla = false, children }: { titulo: string; ampla?: boolean; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
 
@@ -22,7 +22,7 @@ export function JanelaFlutuante({ titulo, children }: { titulo: string; children
   return (
     <dialog
       ref={ref}
-      className={styles.janela}
+      className={ampla ? `${styles.janela} ${styles.ampla}` : styles.janela}
       aria-label={titulo}
       onClose={() => router.back()}
       onClick={(e) => {
