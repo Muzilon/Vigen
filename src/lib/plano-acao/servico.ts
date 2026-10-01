@@ -5,6 +5,7 @@ import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { notificarItemSemEvidencia, notificarItensAtribuidos } from "@/lib/notificacoes/gatilhos";
+import { exigenciaJustificativaData, semEvidenciaCalculado } from "@/lib/plano-acao/evidencia";
 import { filtroAcessoPlanoManual, filtroGestaoPlanoManual, obraDoPlanoAcessivel, podeConcluirItem, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { statusGeralPlano } from "@/lib/plano-acao/status";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, travarRnc } from "@/lib/rnc/servico";
@@ -225,27 +226,48 @@ function normalizarLinkEvidencia(link: string | null | undefined) {
     throw new ErroNegocio("Informe o link da evidência completo, começando com https://");
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") throw new ErroNegocio("O link da evidência deve começar com http:// ou https://");
+  // Usuário e senha dentro do endereço vazariam um segredo colado por engano e enganam quem clica.
+  if (url.username || url.password) throw new ErroNegocio("O link da evidência não pode conter usuário e senha.");
   return url.toString();
 }
 
 /**
  * Registra a conclusão de um item. Evidência = anexo(s), descrição e/ou link de pasta; nenhuma é obrigatória,
- * mas sem as três o item fica marcado "Sem evidência" e a qualidade é avisada. Pode concluir o responsável
- * do item ou a qualidade/administração (PLANO_GERENCIAR); `concluidoPorId` guarda quem registrou.
+ * mas sem as três o item fica marcado "Sem evidência" e a qualidade é avisada (a etiqueta é recalculada quando
+ * anexos entram ou saem, ver evidencia.ts). Pode concluir o responsável do item ou a qualidade/administração
+ * (PLANO_GERENCIAR); `concluidoPorId` guarda quem registrou. Data futura, ou retroativa registrada por outra
+ * pessoa que não o responsável, exige `justificativaData`.
  */
 export async function concluirItem(
   a: Ator,
   itemId: string,
-  d: { dataConclusao: string; evidencia?: string | null; linkEvidencia?: string | null; comArquivos?: boolean },
+  d: {
+    dataConclusao: string;
+    evidencia?: string | null;
+    linkEvidencia?: string | null;
+    comArquivos?: boolean;
+    justificativaData?: string | null;
+  },
 ) {
   const evidencia = d.evidencia?.trim() || null;
   if (evidencia && evidencia.length > 5000) throw new ErroNegocio("Evidência excede 5000 caracteres.");
   const linkEvidencia = normalizarLinkEvidencia(d.linkEvidencia);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.dataConclusao)) throw new ErroNegocio("Data de conclusão inválida.");
-  const semEvidencia = !evidencia && !linkEvidencia && !d.comArquivos;
+  const justificativaData = d.justificativaData?.trim() || null;
+  if (justificativaData && justificativaData.length > 1000) throw new ErroNegocio("A justificativa da data excede 1000 caracteres.");
+  const hoje = hojeNoFuso(await fusoDaEmpresa(a));
+  const semEvidencia = semEvidenciaCalculado({ evidencia, linkEvidencia, anexosAtivos: d.comArquivos ? 1 : 0 });
   await a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
     exigirConclusao(a, item);
+    const exigencia = exigenciaJustificativaData(d.dataConclusao, hoje, item.quemId !== a.usuarioId);
+    if (exigencia && (!justificativaData || justificativaData.length < 5)) {
+      throw new ErroNegocio(
+        exigencia === "futura"
+          ? "A data de conclusão é futura: informe a justificativa da data."
+          : "Conclusão com data anterior a hoje registrada por outra pessoa: informe a justificativa da data.",
+      );
+    }
     await travarOrigemDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
@@ -256,6 +278,7 @@ export async function concluirItem(
         linkEvidencia,
         semEvidencia,
         concluidoPorId: a.usuarioId,
+        justificativaDataConclusao: exigencia ? justificativaData : null,
       },
     });
     if (r.count === 0) throw new ErroNegocio("Item já finalizado.");

@@ -168,6 +168,7 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
               </p>
             )}
             {item.semEvidencia && <p className={styles.textoEvidencia}>Concluída sem anexo, descrição ou link de evidência.</p>}
+            {item.justificativaDataConclusao && <p className={styles.textoEvidencia}>Justificativa da data: {item.justificativaDataConclusao}</p>}
           </div>
         )}
       </section>

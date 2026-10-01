@@ -82,6 +82,11 @@ export function ItemAcoes({
           <FormAcao acao={concluirItemAcao} botao="Confirmar conclusão" tamanho="pequeno" className={styles.painel}>
             {ocultos}
             {campo(`${pfx}-conc`, "Data de conclusão", <input id={`${pfx}-conc`} type="date" name="dataConclusao" defaultValue={hoje} required className={styles.entrada} />)}
+            {campo(
+              `${pfx}-just`,
+              "Justificativa da data (se não for hoje)",
+              <input id={`${pfx}-just`} name="justificativaData" maxLength={1000} className={styles.entrada} placeholder="Motivo da data" />,
+            )}
             <CampoArquivos rotulo="Arquivos de evidência" ajuda="Fotos, PDF, DOCX, XLSX ou TXT — até 10 MB cada." />
             {campo(
               `${pfx}-evid`,
@@ -95,6 +100,9 @@ export function ItemAcoes({
             )}
             <p className={styles.avisoEvidencia}>
               Evidência é anexo, descrição ou link. Sem nenhuma delas a ação é concluída, mas fica marcada como “Sem evidência” e a qualidade é avisada.
+            </p>
+            <p className={styles.avisoEvidencia}>
+              A justificativa da data é obrigatória quando a data é futura, ou anterior a hoje e quem conclui não é o responsável pela ação.
             </p>
           </FormAcao>
         </details>

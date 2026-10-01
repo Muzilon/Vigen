@@ -4,6 +4,7 @@ import { getArmazenamento, montarChave } from "@/lib/armazenamento";
 import { ErroNegocio } from "@/lib/erros";
 import { STATUS_FINAIS } from "@/lib/rnc/estados";
 import { podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { recalcularSemEvidencia } from "@/lib/plano-acao/evidencia";
 import { moduloHiraAtivo, podeTratarHira } from "@/lib/hira/servico";
 import { moduloLaiaAtivo, podeTratarLaia } from "@/lib/laia/servico";
 import { podeLerVersao } from "@/lib/documentos/acesso";
@@ -303,6 +304,8 @@ export async function enviarAnexos(a: Ator, alvo: Alvo, arquivos: ArquivoEnviado
       throw e;
     }
   }
+  // Anexo novo em item de ação já concluído: a etiqueta "Sem evidência" deixa de valer.
+  if (alvo.tipo === "ITEM_ACAO") await recalcularSemEvidencia(a, alvo.entidadeId);
   return criados;
 }
 
@@ -397,4 +400,6 @@ export async function excluirAnexo(a: Ator, anexoId: string) {
       });
     }
   });
+  // Anexo excluído de item de ação concluído: se era a única evidência, volta a valer "Sem evidência".
+  if (anexo.entidadeTipo === "ITEM_ACAO") await recalcularSemEvidencia(a, anexo.entidadeId);
 }

@@ -8,6 +8,7 @@ import type { Ator } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import * as anexos from "@/lib/anexos/servico";
 import * as interacoes from "@/lib/interacoes/servico";
+import { recalcularSemEvidencia } from "@/lib/plano-acao/evidencia";
 import * as plano from "@/lib/plano-acao/servico";
 import * as rnc from "@/lib/rnc/servico";
 import { esquemaItem, executar, itensJson, obj, opcional, uuid, uuidOpcional, valoresDoForm, versao } from "../acoes-comuns";
@@ -248,6 +249,8 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
         // Evidência (anexo, descrição e/ou link) é opcional; sem nenhuma, o item fica "Sem evidência".
         evidencia: opcional,
         linkEvidencia: opcional,
+        // Obrigatória (validada no serviço) se a data for futura ou retroativa registrada por outra pessoa.
+        justificativaData: opcional,
       })
       .parse(obj(fd));
     const a = await getAtor();
@@ -255,8 +258,10 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
     await anexos.validarArquivos(a, arquivos);
     const r = await plano.concluirItem(a, d.itemId, { ...d, comArquivos: arquivos.length > 0 });
     const aviso = await anexarSemFalhar(a, { tipo: "ITEM_ACAO", entidadeId: d.itemId }, arquivos);
+    // Se o envio dos arquivos falhou, o item não tem evidência de fato: corrige a etiqueta e avisa a qualidade.
+    const semEvidencia = aviso ? (await recalcularSemEvidencia(a, d.itemId), true) : r.semEvidencia;
     return {
-      ok: r.semEvidencia ? "Item concluído sem evidência. A qualidade foi avisada." : "Item concluído.",
+      ok: semEvidencia ? "Item concluído sem evidência. A qualidade foi avisada." : "Item concluído.",
       aviso: aviso ?? undefined,
     };
   }, [`/rncs/${fd.get("rncId") ?? ""}`]);

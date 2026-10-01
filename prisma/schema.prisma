@@ -874,6 +874,8 @@ model ItemAcao {
   semEvidencia       Boolean        @default(false) @map("sem_evidencia")
   /// Quem registrou a conclusão (pode ser a qualidade/administração e não o responsável).
   concluidoPorId     String?        @map("concluido_por_id") @db.Uuid
+  /// Obrigatória quando a data de conclusão é futura, ou retroativa registrada por outra pessoa que não o responsável.
+  justificativaDataConclusao String? @map("justificativa_data_conclusao")
   dataConclusao      DateTime?      @map("data_conclusao")
   alertaEnviadoEm    DateTime?      @map("alerta_enviado_em")
   atrasoNotificadoEm DateTime?      @map("atraso_notificado_em")
