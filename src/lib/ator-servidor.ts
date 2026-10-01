@@ -10,5 +10,6 @@ export async function getAtor(): Promise<Ator> {
     usuarioId: ctx.usuario.id,
     permissoes: ctx.permissoes,
     obrasPermitidas: ctx.obrasPermitidas,
+    fuso: ctx.fuso,
   };
 }

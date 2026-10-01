@@ -32,7 +32,7 @@ function textoPrazo(dias: number) {
  * Visão reduzida do item (B4): o "quem" vê o próprio item e sua thread mesmo sem acesso à RNC,
  * sem descrição, causa raiz, outros itens ou dados sensíveis da RNC.
  */
-export default async function PlanoAcaoItem({ params }: PageProps<"/plano-acao/[id]">) {
+export default async function PlanoAcaoItem({ params }: { params: Promise<{ id: string }> }) {
   // `id`: o identificador do item de ação, tirado do endereço.
   const { id } = await params;
   // Id em formato inválido → página 404.

@@ -10,6 +10,8 @@ export { prismaAdmin } from "@/lib/prisma";
 export interface Contexto {
   usuario: { id: string; nome: string; email: string | null | undefined; papel: string; empresaNome: string };
   empresaId: string;
+  /** Fuso horário da empresa (já carregado com a sessão, evita uma consulta por página). */
+  fuso: string;
   permissoes: Permissao[];
   /** Módulos contratados (ligados) pela empresa. Ver src/lib/modulos.ts para o gating. */
   modulosAtivos: Modulo[];
@@ -35,6 +37,7 @@ export const getContexto = cache(async (): Promise<Contexto> => {
   return {
     usuario: { id: u.userId, nome: u.nome, email: u.email, papel: u.papel, empresaNome: u.empresaNome },
     empresaId: u.empresaId,
+    fuso: u.fuso,
     permissoes: u.permissoes,
     modulosAtivos: u.modulosAtivos,
     obrasPermitidas: todas ? null : (u.obrasIds ?? []),

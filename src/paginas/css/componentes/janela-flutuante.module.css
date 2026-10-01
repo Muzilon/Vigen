@@ -1,0 +1,67 @@
+/* ==========================================================
+   ÍNDICE
+   01. Janela flutuante — <dialog> centralizado com fundo escurecido
+   02. Botão de fechar
+   03. Conteúdo com rolagem interna
+   ========================================================== */
+
+/* ==========================================================
+   01. JANELA
+   ========================================================== */
+.janela {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(760px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: hidden;
+  color: inherit;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-cartao);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.janela::backdrop {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+/* ==========================================================
+   02. BOTÃO DE FECHAR
+   ========================================================== */
+.fechar {
+  position: absolute;
+  top: var(--espaco-3);
+  right: var(--espaco-3);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--cor-texto-secundario);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  cursor: pointer;
+}
+
+.fechar:hover {
+  background: var(--cor-fundo-sutil);
+}
+
+.fechar:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* ==========================================================
+   03. CONTEÚDO
+   ========================================================== */
+.conteudo {
+  max-height: calc(100dvh - 24px);
+  padding: var(--espaco-4);
+  padding-top: calc(var(--espaco-4) + 44px);
+  overflow-y: auto;
+}
