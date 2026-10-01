@@ -67,7 +67,7 @@ export default async function DocumentosMeus() {
                   </p>
                 </div>
                 <div className={styles.acoes}>
-                  {d.anexo && <a href={`/api/anexos/${d.anexo.id}`} className={styles.baixar}>Baixar</a>}
+                  {d.anexo && <a href={`/api/anexos/${d.anexo.id}`} target="_blank" rel="noopener noreferrer" className={styles.baixar}>Baixar</a>}
                   {d.exigirCiencia ? (
                     d.cienciaEm ? (
                       <span className={styles.ciente}>✓ Ciente em {formatarDataHora(d.cienciaEm, fuso)}</span>

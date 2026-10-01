@@ -5,7 +5,7 @@ import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, formatarDataHora, hojeNoFuso, paraDataDb } from "@/lib/datas";
 import { podeConcluirItem } from "@/lib/plano-acao/acesso";
-import { statusEfetivoItem, statusGeralPlano } from "@/lib/plano-acao/status";
+import { concluidoForaDoPrazo, statusEfetivoItem, statusGeralPlano } from "@/lib/plano-acao/status";
 import { avaliarTransicao, cicloAtual, STATUS_FINAIS } from "@/lib/rnc/estados";
 import {
   ROTULO_GRAVIDADE,
@@ -475,7 +475,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                         </p>
                                       )}
                                       {(anexosItens.get(i.id) ?? []).map((x) => (
-                                        <a key={x.id} href={`/api/anexos/${x.id}`} className={styles.linkAnexoItem}>
+                                        <a key={x.id} href={`/api/anexos/${x.id}`} target="_blank" rel="noopener noreferrer" className={styles.linkAnexoItem}>
                                           Anexo: {x.nomeArquivo}
                                         </a>
                                       ))}
@@ -486,7 +486,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                     <td data-rotulo="Quando" className={`${styles.tdMono} ${st === "ATRASADO" ? styles.dataAtrasada : ""}`}>{formatarData(i.quando)}</td>
                                     <td data-rotulo="Como" className={styles.tdSecundario}>{i.como ?? "—"}</td>
                                     <td data-rotulo="Quanto" className={`${styles.tdMono} ${styles.tdDireita}`}>{i.quanto ? moeda(Number(i.quanto)) : "—"}</td>
-                                    <td data-rotulo="Status"><BadgeStatusItem status={st} /> <BadgeSemEvidencia item={i} /></td>
+                                    <td data-rotulo="Status"><BadgeStatusItem status={st} foraDoPrazo={concluidoForaDoPrazo(i)} /> <BadgeSemEvidencia item={i} /></td>
                                   </tr>
                                   {comAcoes && (
                                     <tr className={styles.linhaAcoes}>
@@ -571,7 +571,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                 </span>
                               </div>
                               <div className={styles.linhaAcaoCiclo}>
-                                <BadgeStatusItem status={st} />
+                                <BadgeStatusItem status={st} foraDoPrazo={concluidoForaDoPrazo(i)} /> <BadgeSemEvidencia item={i} />
                                 {i.evidenciaConclusao && <span className={styles.evidencia}>{i.evidenciaConclusao}</span>}
                               </div>
                             </li>

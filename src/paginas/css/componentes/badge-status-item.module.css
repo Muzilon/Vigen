@@ -49,6 +49,11 @@
   background: var(--cor-atrasado-fundo);
   color: var(--cor-atrasado-texto);
 }
+/* Concluído depois do prazo: laranja (par de cores de gravidade alta), entre o verde de concluído e o vermelho de atrasado. */
+.concluidoForaPrazo {
+  background: var(--cor-gravidade-alta-fundo);
+  color: var(--cor-gravidade-alta-texto);
+}
 
 /* ==========================================================
    03. ORIGEM

@@ -4,14 +4,13 @@ import { auth } from "@/auth";
 import { abrirAnexo } from "@/lib/anexos/servico";
 import { contentDisposition } from "@/lib/anexos/validacao";
 import { getAtor } from "@/lib/ator-servidor";
+import { arquivoNaoEncontrado } from "@/lib/http/arquivo-nao-encontrado";
 import { podeLerVersao } from "@/lib/documentos/acesso";
 import { formatarDataHora } from "@/lib/datas";
 import { fusoDaEmpresa } from "@/lib/ator";
 import { getContexto } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
-
-const naoEncontrado = () => new Response("Não encontrado", { status: 404, headers: { "Cache-Control": "no-store" } });
 
 const CABECALHOS_SEGURANCA = {
   "X-Content-Type-Options": "nosniff",
@@ -27,6 +26,7 @@ const CABECALHOS_SEGURANCA = {
  * para a rota de anexos (sem alteração). Revalida sessão, empresa (DbTenant) e acesso à revisão.
  */
 export async function GET(req: Request, ctx: { params: Promise<{ versaoId: string }> }) {
+  const naoEncontrado = () => arquivoNaoEncontrado(req);
   const session = await auth();
   if (!session?.user?.userId) return new Response("Não autenticado", { status: 401 });
   const { versaoId } = await ctx.params;

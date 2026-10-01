@@ -9,7 +9,7 @@ import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, formatarDataHora } from "@/lib/datas";
 import { listarAnexos, podeEnviarAnexo } from "@/lib/anexos/servico";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
-import { statusEfetivoItem } from "@/lib/plano-acao/status";
+import { concluidoForaDoPrazo, statusEfetivoItem } from "@/lib/plano-acao/status";
 import { obterPlanoManual } from "@/lib/plano-acao/servico";
 import { BadgeOrigem, BadgeSemEvidencia, BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/badge-status-item";
 import { Cartao } from "@/paginas/html/componentes/cartao";
@@ -172,7 +172,7 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
                     <Td data-rotulo="Quem" className={styles.celulaTopo}>{i.quem.nome}</Td>
                     <Td data-rotulo="Quando" className={`${styles.celulaTopo} ${styles.numero}`}>{formatarData(i.quando)}</Td>
                     <Td data-rotulo="Status" className={styles.celulaTopo}>
-                      <BadgeStatusItem status={st} /> <BadgeSemEvidencia item={i} />
+                      <BadgeStatusItem status={st} foraDoPrazo={concluidoForaDoPrazo(i)} /> <BadgeSemEvidencia item={i} />
                     </Td>
                   </LinhaTabela>
                   {itemTemAcoes(i.status, podeExecutar, plano.podeGerenciar, podeConcluir) && (

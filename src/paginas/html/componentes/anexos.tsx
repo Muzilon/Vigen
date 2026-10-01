@@ -51,7 +51,7 @@ export function GaleriaAnexos({ anexos, fuso, vazio = "Nenhum anexo." }: { anexo
             <li key={x.id} className={styles.itemDocumento}>
               <span className={styles.iconeDocumento} aria-hidden="true">{x.nomeArquivo.split(".").pop()}</span>
               <div className={styles.textoDocumento}>
-                <a href={`/api/anexos/${x.id}`} className={styles.linkDocumento}>{x.nomeArquivo}</a>
+                <a href={`/api/anexos/${x.id}`} target="_blank" rel="noopener noreferrer" className={styles.linkDocumento}>{x.nomeArquivo}</a>
                 <span className={styles.metaDocumento}>{tamanho(x.tamanhoBytes)} · {x.enviadoPor.nome} · {formatarDataHora(x.criadoEm, fuso)}</span>
               </div>
               {excluir(x)}

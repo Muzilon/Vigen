@@ -32,12 +32,12 @@ import {
 } from "@/lib/incidentes/servico";
 import { exigirModulo } from "@/lib/modulos";
 import { linkPlano } from "@/lib/plano-acao/acesso";
-import { statusEfetivoItem } from "@/lib/plano-acao/status";
+import { concluidoForaDoPrazo, statusEfetivoItem } from "@/lib/plano-acao/status";
 import { ROTULO_METODO, SEIS_M } from "@/lib/rnc/rotulos";
 import { getContexto } from "@/lib/tenant";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { BadgeGravidadeIncidente, BadgeStatusIncidente } from "@/paginas/html/componentes/badge";
-import { BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
+import { BadgeSemEvidencia, BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
@@ -291,7 +291,7 @@ export default async function IncidenteDetalhe({ params }: PageProps<"/incidente
                     <li key={x.id} className={styles.itemPlano}>
                       <span>{x.oQue}</span>
                       <span className={styles.detalhe}>{x.quem.nome} · {formatarData(x.quando)}</span>
-                      <BadgeStatusItem status={statusEfetivoItem(x, hoje)} />
+                      <BadgeStatusItem status={statusEfetivoItem(x, hoje)} foraDoPrazo={concluidoForaDoPrazo(x)} /> <BadgeSemEvidencia item={x} />
                     </li>
                   ))}
                 </ul>

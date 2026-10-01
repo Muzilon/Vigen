@@ -123,7 +123,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
           </p>
         </div>
         {vigente?.anexo && !vigente.anexo.excluidoEm && (
-          <a href={`/api/documentos/versoes/${vigente.id}/pdf-controlado`} className={styles.botaoBaixar}>Baixar {rotuloRevisao(vigente.numero)}</a>
+          <a href={`/api/documentos/versoes/${vigente.id}/pdf-controlado`} target="_blank" rel="noopener noreferrer" className={styles.botaoBaixar}>Baixar {rotuloRevisao(vigente.numero)}</a>
         )}
       </header>
 
@@ -212,7 +212,7 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
               <p className={styles.texto}><strong>Motivo:</strong> {trabalho.motivo}</p>
               <p className={styles.texto}>
                 <strong>Arquivo:</strong>{" "}
-                {trabalho.anexo ? <a href={`/api/documentos/versoes/${trabalho.id}/pdf-controlado`}>{trabalho.anexo.nomeArquivo}</a> : "—"}
+                {trabalho.anexo ? <a href={`/api/documentos/versoes/${trabalho.id}/pdf-controlado`} target="_blank" rel="noopener noreferrer">{trabalho.anexo.nomeArquivo}</a> : "—"}
                 {trabalho.anexo && <span className={styles.suave}> · {tamanho(trabalho.anexo.tamanhoBytes)} · elaborado por {trabalho.elaborador.nome}</span>}
               </p>
 
@@ -349,9 +349,9 @@ export default async function DocumentoDetalhe({ params }: PageProps<"/documento
                         <td>{ROTULO_STATUS_VERSAO[v.status]}</td>
                         <td>
                           {v.anexo ? (
-                            <a href={`/api/documentos/versoes/${v.id}/pdf-controlado`}>{v.anexo.nomeArquivo}</a>
+                            <a href={`/api/documentos/versoes/${v.id}/pdf-controlado`} target="_blank" rel="noopener noreferrer">{v.anexo.nomeArquivo}</a>
                           ) : v.conteudo ? (
-                            <a href={`/documentos/${d.id}/versoes/${v.id}/conteudo`}>snapshot.json</a>
+                            <a href={`/documentos/${d.id}/versoes/${v.id}/conteudo`} target="_blank" rel="noopener noreferrer">snapshot.json</a>
                           ) : (
                             "—"
                           )}

@@ -9,7 +9,7 @@ import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso, paraDataDb } from "@/lib/datas";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { linkPlano, podeConcluirItem, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
-import { statusEfetivoItem } from "@/lib/plano-acao/status";
+import { concluidoForaDoPrazo, statusEfetivoItem } from "@/lib/plano-acao/status";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/rnc/servico";
 import { BadgeSemEvidencia, BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
@@ -121,7 +121,7 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
       {/* 1. Cartão do item (5W2H) */}
       <section aria-label="Item do plano" className={styles.cartaoItem}>
         <div className={styles.linhaSelos}>
-          <BadgeStatusItem status={st} />
+          <BadgeStatusItem status={st} foraDoPrazo={concluidoForaDoPrazo(item)} />
           <BadgeSemEvidencia item={item} />
           {aberto && (
             <span className={diasParaPrazo < 0 ? styles.chipPrazoAtrasado : diasParaPrazo <= 2 ? styles.chipPrazoProximo : styles.chipPrazo}>

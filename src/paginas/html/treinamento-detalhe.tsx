@@ -210,7 +210,7 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                                     <input name={`aproveitamento_${u.id}`} maxLength={60} defaultValue={p?.aproveitamento ?? ""} placeholder="Ex.: 9,0 / apto" aria-label={`Aproveitamento de ${u.nome}`} className={styles.entradaPequena} />
                                   </td>
                                   <td className={styles.certificado}>
-                                    {p?.certificado && <a href={`/api/anexos/${p.certificado.id}`} className={styles.link}>{p.certificado.nomeArquivo}</a>}
+                                    {p?.certificado && <a href={`/api/anexos/${p.certificado.id}`} target="_blank" rel="noopener noreferrer" className={styles.link}>{p.certificado.nomeArquivo}</a>}
                                     <input type="file" name={`certificado_${u.id}`} accept="application/pdf,image/png,image/jpeg" aria-label={`Certificado de ${u.nome}`} className={styles.arquivo} />
                                   </td>
                                 </tr>
@@ -226,7 +226,7 @@ export default async function TreinamentoDetalhe({ params }: PageProps<"/treinam
                       <p key={p.id} className={styles.infoSessao}>
                         Você: {p.presente ? "presente" : "ausente"}
                         {p.dataValidade ? ` · válido até ${formatarData(p.dataValidade)}` : ""}
-                        {p.certificado && <> · <a href={`/api/anexos/${p.certificado.id}`} className={styles.link}>certificado</a></>}
+                        {p.certificado && <> · <a href={`/api/anexos/${p.certificado.id}`} target="_blank" rel="noopener noreferrer" className={styles.link}>certificado</a></>}
                       </p>
                     ))
                   ) : (

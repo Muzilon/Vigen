@@ -12,6 +12,14 @@ export function statusEfetivoItem(item: { status: StatusItemAcao; quando: Date }
   return item.status;
 }
 
+/**
+ * Item concluído DEPOIS do prazo (data de conclusão > "quando"). Não vira um status novo: o item continua CONCLUIDO
+ * (contagens, filtros e indicadores seguem iguais); a tela só mostra a etiqueta "Concluído fora do prazo".
+ */
+export function concluidoForaDoPrazo(item: { status: StatusItemAcao; quando: Date; dataConclusao?: Date | null }): boolean {
+  return item.status === "CONCLUIDO" && !!item.dataConclusao && dataIso(item.dataConclusao) > dataIso(item.quando);
+}
+
 export function statusGeralPlano(itens: readonly { status: StatusItemAcao; quando: Date }[], hoje: string): StatusGeralPlano {
   const ativos = itens.filter((i) => i.status !== "CANCELADO");
   if (ativos.length === 0) return "SEM_ITENS";

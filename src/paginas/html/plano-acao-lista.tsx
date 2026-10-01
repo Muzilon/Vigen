@@ -7,7 +7,7 @@ import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso, paraDataDb, somarDias } from "@/lib/datas";
 import { enumUrl, uuidUrl } from "@/lib/filtros-url";
-import { statusEfetivoItem, type StatusEfetivoItem } from "@/lib/plano-acao/status";
+import { concluidoForaDoPrazo, statusEfetivoItem, type StatusEfetivoItem } from "@/lib/plano-acao/status";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { ROTULO_STATUS_ITEM } from "@/lib/rnc/rotulos";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/rnc/servico";
@@ -288,7 +288,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
                           )}
                         </Td>
                         <Td className={styles.celulaTopo}>
-                          <BadgeStatusItem status={st} /> <BadgeSemEvidencia item={i} />
+                          <BadgeStatusItem status={st} foraDoPrazo={concluidoForaDoPrazo(i)} /> <BadgeSemEvidencia item={i} />
                         </Td>
                         <Td className={styles.celulaTopo}>
                           {atual ? (

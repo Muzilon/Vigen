@@ -2,16 +2,16 @@ import { auth } from "@/auth";
 import { abrirAnexo } from "@/lib/anexos/servico";
 import { contentDisposition, MIMES_INLINE } from "@/lib/anexos/validacao";
 import { getAtor } from "@/lib/ator-servidor";
+import { arquivoNaoEncontrado } from "@/lib/http/arquivo-nao-encontrado";
 
 export const dynamic = "force-dynamic";
-
-const naoEncontrado = () => new Response("Não encontrado", { status: 404, headers: { "Cache-Control": "no-store" } });
 
 /**
  * Download de anexo: SEMPRE por aqui. Revalida sessão, empresa (DbTenant), acesso à entidade
  * e sensibilidade a cada requisição. ?inline=1 exibe no navegador apenas imagens seguras (PDF sempre como attachment — B5).
  */
 export async function GET(req: Request, ctx: RouteContext<"/api/anexos/[id]">) {
+  const naoEncontrado = () => arquivoNaoEncontrado(req);
   const session = await auth();
   if (!session?.user?.userId) return new Response("Não autenticado", { status: 401 });
   const { id } = await ctx.params;

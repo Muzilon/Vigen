@@ -20,12 +20,12 @@ import {
 import { infoAprovacaoLaia, listarHistoricoLaia, obterLaia, opcoesLaia, pendenciasLaia, podeGerenciarLaia, podeTratarLaia } from "@/lib/laia/servico";
 import { exigirModulo } from "@/lib/modulos";
 import { linkPlano } from "@/lib/plano-acao/acesso";
-import { statusEfetivoItem } from "@/lib/plano-acao/status";
+import { concluidoForaDoPrazo, statusEfetivoItem } from "@/lib/plano-acao/status";
 import { getContexto } from "@/lib/tenant";
 import { EnviarAnexos, GaleriaAnexos } from "@/paginas/html/componentes/anexos";
 import { AprovacoesDaEntidade } from "@/paginas/html/componentes/aprovacoes-da-entidade";
 import { BadgeFaixa } from "@/paginas/html/componentes/badge";
-import { BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
+import { BadgeSemEvidencia, BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
 import { Interacoes } from "@/paginas/html/componentes/interacoes";
@@ -245,7 +245,7 @@ export default async function LaiaDetalhe({ params }: PageProps<"/laia/[id]">) {
                     <li key={i.id} className={styles.itemPlano}>
                       <span>{i.oQue}</span>
                       <span className={styles.detalheAvaliacao}>{i.quem.nome} · {formatarData(i.quando)}</span>
-                      <BadgeStatusItem status={statusEfetivoItem(i, hoje)} />
+                      <BadgeStatusItem status={statusEfetivoItem(i, hoje)} foraDoPrazo={concluidoForaDoPrazo(i)} /> <BadgeSemEvidencia item={i} />
                     </li>
                   ))}
                 </ul>

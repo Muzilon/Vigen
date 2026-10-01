@@ -74,7 +74,7 @@ export default async function TreinamentosMeus() {
                   </span>
                 </div>
                 <div className={styles.direita}>
-                  {cert && <a href={`/api/anexos/${cert.id}`} className={styles.link}>Certificado</a>}
+                  {cert && <a href={`/api/anexos/${cert.id}`} target="_blank" rel="noopener noreferrer" className={styles.link}>Certificado</a>}
                   <BadgeStatusCompetencia status={c.status!} rotulo={ROTULO_STATUS_COMPETENCIA[c.status!]} />
                 </div>
               </li>

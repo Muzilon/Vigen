@@ -28,8 +28,14 @@ function Conteudo({ status, rotulo }: { status: StatusEfetivoItem | StatusGeralP
   );
 }
 
-/** Etiqueta com o status de UM item do plano 5W2H (Pendente, Em andamento, Concluído, Atrasado...). */
-export function BadgeStatusItem({ status }: { status: StatusEfetivoItem }) {
+/**
+ * Etiqueta com o status de UM item do plano 5W2H (Pendente, Em andamento, Concluído, Atrasado...).
+ * `foraDoPrazo` (de concluidoForaDoPrazo) troca "Concluído" por "Concluído fora do prazo", em laranja.
+ */
+export function BadgeStatusItem({ status, foraDoPrazo = false }: { status: StatusEfetivoItem; foraDoPrazo?: boolean }) {
+  if (status === "CONCLUIDO" && foraDoPrazo) {
+    return <span className={`${styles.badge} ${styles.concluidoForaPrazo}`}>Concluído fora do prazo</span>;
+  }
   return <Conteudo status={status} rotulo={ROTULO_STATUS_ITEM[status]} />;
 }
 

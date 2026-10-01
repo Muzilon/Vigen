@@ -149,7 +149,7 @@ export async function obterRisco(a: Ator, id: string) {
         select: {
           id: true,
           titulo: true,
-          itens: { orderBy: { ordem: "asc" }, select: { id: true, oQue: true, status: true, quando: true, quem: { select: { nome: true } } } },
+          itens: { orderBy: { ordem: "asc" }, select: { id: true, oQue: true, status: true, quando: true, dataConclusao: true, semEvidencia: true, quem: { select: { nome: true } } } },
         },
       },
       itensSwot: { select: { id: true, quadrante: true, descricao: true, ciclo: { select: { id: true, ano: true } } } },
