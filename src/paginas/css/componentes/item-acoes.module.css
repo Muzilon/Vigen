@@ -93,6 +93,13 @@ summary.resumo:focus-visible {
   font-size: 13px;
   color: var(--cor-texto);
 }
+.avisoEvidencia {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--cor-texto-secundario);
+}
+
 .entrada:focus {
   outline: 2px solid var(--cor-acento-claro);
   outline-offset: 1px;

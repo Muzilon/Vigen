@@ -245,15 +245,20 @@ export async function concluirItemAcao(_: ResultadoAcao, fd: FormData) {
       .object({
         itemId: uuid,
         dataConclusao: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data de conclusão."),
-        evidencia: z.string().trim().min(3, "Descreva a evidência."),
+        // Evidência (anexo, descrição e/ou link) é opcional; sem nenhuma, o item fica "Sem evidência".
+        evidencia: opcional,
+        linkEvidencia: opcional,
       })
       .parse(obj(fd));
     const a = await getAtor();
     const arquivos = await arquivosDe(a, fd, "arquivos", { tipo: "ITEM_ACAO", entidadeId: d.itemId });
     await anexos.validarArquivos(a, arquivos);
-    await plano.concluirItem(a, d.itemId, d);
+    const r = await plano.concluirItem(a, d.itemId, { ...d, comArquivos: arquivos.length > 0 });
     const aviso = await anexarSemFalhar(a, { tipo: "ITEM_ACAO", entidadeId: d.itemId }, arquivos);
-    return { ok: "Item concluído.", aviso: aviso ?? undefined };
+    return {
+      ok: r.semEvidencia ? "Item concluído sem evidência. A qualidade foi avisada." : "Item concluído.",
+      aviso: aviso ?? undefined,
+    };
   }, [`/rncs/${fd.get("rncId") ?? ""}`]);
 }
 

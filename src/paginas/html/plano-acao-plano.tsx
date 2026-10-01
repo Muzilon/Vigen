@@ -11,7 +11,7 @@ import { listarAnexos, podeEnviarAnexo } from "@/lib/anexos/servico";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
 import { statusEfetivoItem } from "@/lib/plano-acao/status";
 import { obterPlanoManual } from "@/lib/plano-acao/servico";
-import { BadgeOrigem, BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/badge-status-item";
+import { BadgeOrigem, BadgeSemEvidencia, BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/badge-status-item";
 import { Cartao } from "@/paginas/html/componentes/cartao";
 import { EnvoltorioTabela, LinhaCabecalhoTabela, LinhaTabela, Tabela, Td, Th } from "@/paginas/html/componentes/tabela";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
@@ -142,8 +142,9 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
             {plano.itens.map((i) => {
               // Status real do item (calculado: pendente com prazo vencido vira "atrasado").
               const st = statusEfetivoItem(i, plano.hoje);
-              // Só o responsável do item pode iniciar/concluir.
+              // Só o responsável do item inicia; o responsável e quem gerencia o plano (qualidade/administração) concluem.
               const podeExecutar = i.quemId === a.usuarioId;
+              const podeConcluir = podeExecutar || plano.podeGerenciar;
               return (
                 // Um <tbody> por item: linha de dados + (opcional) linha de ações abaixo
                 <tbody key={i.id} className={styles.grupoItem}>
@@ -155,9 +156,15 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
                           {[i.porQue && `Por quê: ${i.porQue}`, i.onde && `Onde: ${i.onde}`, i.como && `Como: ${i.como}`].filter(Boolean).join(" · ")}
                         </div>
                       )}
-                      {i.evidenciaConclusao && (
+                      {(i.evidenciaConclusao || i.linkEvidencia) && (
                         <div className={styles.evidenciaItem}>
-                          Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}
+                          Evidência ({formatarData(i.dataConclusao)}):{i.evidenciaConclusao ? ` ${i.evidenciaConclusao}` : ""}
+                          {i.linkEvidencia && (
+                            <>
+                              {" "}
+                              <a href={i.linkEvidencia} target="_blank" rel="noopener noreferrer">Abrir link da evidência</a>
+                            </>
+                          )}
                         </div>
                       )}
                       <Link href={`/plano-acao/${i.id}`} className={styles.linkThread}>Anexos e mensagens →</Link>
@@ -165,10 +172,10 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
                     <Td data-rotulo="Quem" className={styles.celulaTopo}>{i.quem.nome}</Td>
                     <Td data-rotulo="Quando" className={`${styles.celulaTopo} ${styles.numero}`}>{formatarData(i.quando)}</Td>
                     <Td data-rotulo="Status" className={styles.celulaTopo}>
-                      <BadgeStatusItem status={st} />
+                      <BadgeStatusItem status={st} /> <BadgeSemEvidencia item={i} />
                     </Td>
                   </LinhaTabela>
-                  {itemTemAcoes(i.status, podeExecutar, plano.podeGerenciar) && (
+                  {itemTemAcoes(i.status, podeExecutar, plano.podeGerenciar, podeConcluir) && (
                     <tr className={styles.linhaAcoes}>
                       <Td colSpan={4} className={styles.celulaAcoes}>
                         <ItemAcoes
@@ -176,6 +183,7 @@ export default async function PlanoAcaoPlano({ params }: PageProps<"/plano-acao/
                           hoje={plano.hoje}
                           usuarios={usuariosQuem.some((u) => u.id === i.quemId) ? usuariosQuem : [...usuariosQuem, { id: i.quemId, nome: i.quem.nome }]}
                           podeExecutar={podeExecutar}
+                          podeConcluir={podeConcluir}
                           podeGerenciar={plano.podeGerenciar}
                         />
                       </Td>

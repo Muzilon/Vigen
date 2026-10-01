@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { ItemAcoes } from "@/paginas/html/componentes/item-acoes";
-import { linkPlano, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { linkPlano, podeConcluirItem, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso, paraDataDb, somarDias } from "@/lib/datas";
@@ -14,7 +14,7 @@ import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/
 import { CabecalhoPagina } from "@/paginas/html/componentes/cabecalho-pagina";
 import { Botao, LinkBotao } from "@/paginas/html/componentes/botao";
 import { Rotulo, Selecao } from "@/paginas/html/componentes/campo-formulario";
-import { BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
+import { BadgeSemEvidencia, BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
 import { EnvoltorioTabela, LinhaCabecalhoTabela, LinhaTabela, Tabela, Td, Th } from "@/paginas/html/componentes/tabela";
 import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
 import styles from "@/paginas/css/plano-acao-lista.module.css";
@@ -288,7 +288,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
                           )}
                         </Td>
                         <Td className={styles.celulaTopo}>
-                          <BadgeStatusItem status={st} />
+                          <BadgeStatusItem status={st} /> <BadgeSemEvidencia item={i} />
                         </Td>
                         <Td className={styles.celulaTopo}>
                           {atual ? (
@@ -298,6 +298,7 @@ export default async function PlanoAcaoLista({ searchParams }: PageProps<"/plano
                               hoje={hoje}
                               usuarios={usuarios}
                               podeExecutar={i.quemId === a.usuarioId && (!rnc || rnc.status === "PLANO_EM_EXECUCAO")}
+                              podeConcluir={podeConcluirItem(a, i, rncVisivel) && (!rnc || rnc.status === "PLANO_EM_EXECUCAO")}
                               podeGerenciar={
                                 rnc
                                   ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")

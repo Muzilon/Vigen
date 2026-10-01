@@ -16,6 +16,21 @@ export function podeGerenciarPlanoManual(a: Pick<Ator, "permissoes" | "obrasPerm
   return atorTem(a, "PLANO_GERENCIAR") && obraDoPlanoAcessivel(a, plano);
 }
 
+/**
+ * Quem pode registrar a conclusão de um item: o responsável (quem) ou a qualidade/administração
+ * (PLANO_GERENCIAR) com acesso ao item. Em item de RNC, o acesso é o da RNC (`rncVisivel`); em plano
+ * avulso, o da obra do plano. A situação da RNC (plano em execução, ciclo atual) é checada à parte.
+ */
+export function podeConcluirItem(
+  a: Pick<Ator, "usuarioId" | "permissoes" | "obrasPermitidas">,
+  item: { quemId: string; planoAcao: { obraId: string | null; rnc: unknown } },
+  rncVisivel = true,
+) {
+  if (item.quemId === a.usuarioId) return true;
+  if (!atorTem(a, "PLANO_GERENCIAR")) return false;
+  return item.planoAcao.rnc ? rncVisivel : obraDoPlanoAcessivel(a, item.planoAcao);
+}
+
 /** Filtro de obra do plano (Prisma) equivalente a obraDoPlanoAcessivel. */
 function filtroObraPlano(a: Pick<Ator, "obrasPermitidas">): Prisma.PlanoAcaoWhereInput {
   if (a.obrasPermitidas === null) return {};

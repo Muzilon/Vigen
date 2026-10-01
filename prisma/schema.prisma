@@ -208,6 +208,7 @@ enum TipoNotificacao {
   INCIDENTE_ATRIBUIDO
   INDICADOR_SEM_LANCAMENTO
   TREINAMENTO_VENCENDO
+  ITEM_CONCLUIDO_SEM_EVIDENCIA
 }
 
 enum TipoEntidadeNotificacao {
@@ -588,6 +589,7 @@ model Usuario {
   cancelamentosDecididos    SolicitacaoCancelamento[]    @relation("CancelamentoAprovador")
   planosCriados             PlanoAcao[]                  @relation("PlanoCriadoPor")
   itensResponsavel          ItemAcao[]                   @relation("ItemQuem")
+  itensConcluidos           ItemAcao[]                   @relation("ItemConcluidoPor")
   anexosEnviados            Anexo[]                      @relation("AnexoEnviadoPor")
   anexosExcluidos           Anexo[]                      @relation("AnexoExcluidoPor")
   interacoesAutor           Interacao[]                  @relation("InteracaoAutor")
@@ -866,6 +868,12 @@ model ItemAcao {
   quanto             Decimal?       @db.Decimal(14, 2)
   status             StatusItemAcao @default(PENDENTE)
   evidenciaConclusao String?        @map("evidencia_conclusao")
+  /// Link (pasta/arquivo na nuvem) que comprova a conclusão, quando não há anexo.
+  linkEvidencia      String?        @map("link_evidencia")
+  /// Concluído sem anexo, descrição nem link: gera etiqueta "Sem evidência" e aviso à qualidade.
+  semEvidencia       Boolean        @default(false) @map("sem_evidencia")
+  /// Quem registrou a conclusão (pode ser a qualidade/administração e não o responsável).
+  concluidoPorId     String?        @map("concluido_por_id") @db.Uuid
   dataConclusao      DateTime?      @map("data_conclusao")
   alertaEnviadoEm    DateTime?      @map("alerta_enviado_em")
   atrasoNotificadoEm DateTime?      @map("atraso_notificado_em")
@@ -875,6 +883,7 @@ model ItemAcao {
   empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   planoAcao        PlanoAcao         @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
   quem             Usuario           @relation("ItemQuem", fields: [empresaId, quemId], references: [empresaId, id], onDelete: Restrict)
+  concluidoPor     Usuario?          @relation("ItemConcluidoPor", fields: [empresaId, concluidoPorId], references: [empresaId, id], onDelete: Restrict)
   respostaInspecao RespostaInspecao?
 
   @@unique([empresaId, id])

@@ -8,11 +8,11 @@ import { fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, hojeNoFuso, paraDataDb } from "@/lib/datas";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
-import { linkPlano, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { linkPlano, podeConcluirItem, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { statusEfetivoItem } from "@/lib/plano-acao/status";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc } from "@/lib/rnc/servico";
-import { BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
+import { BadgeSemEvidencia, BadgeStatusItem } from "@/paginas/html/componentes/badge-status-item";
 import styles from "@/paginas/css/plano-acao-item.module.css";
 
 // Quantos milissegundos tem um dia (usado para contar dias até o prazo).
@@ -44,6 +44,7 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
     where: { AND: [{ id }, filtroAcessoItem(a)] },
     include: {
       quem: { select: { nome: true } },
+      concluidoPor: { select: { nome: true } },
       planoAcao: {
         select: {
           id: true,
@@ -82,8 +83,10 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
     (rnc
       ? rncVisivel && podeGerenciarPlanoRnc(a, rnc) && (rnc.status === "EM_ANALISE" || rnc.status === "PLANO_EM_EXECUCAO")
       : podeGerenciarPlanoManual(a, item.planoAcao));
-  // Pode iniciar/concluir? Só o responsável do item (e, numa RNC, só com o plano em execução).
+  // Pode iniciar? Só o responsável do item (e, numa RNC, só com o plano em execução).
   const podeExecutar = atual && item.quemId === a.usuarioId && (!rnc || rnc.status === "PLANO_EM_EXECUCAO");
+  // Pode concluir? O responsável, a qualidade ou a administração (mesma condição de situação da RNC).
+  const podeConcluir = atual && podeConcluirItem(a, item, rncVisivel) && (!rnc || rnc.status === "PLANO_EM_EXECUCAO");
   // Alvo dos anexos (este item) e se o usuário pode enviar novos.
   const alvoAnexo = { tipo: "ITEM_ACAO" as const, entidadeId: item.id };
   const [anexos, podeAnexar] = await Promise.all([listarAnexos(a, alvoAnexo), podeEnviarAnexo(a, alvoAnexo)]);
@@ -119,6 +122,7 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
       <section aria-label="Item do plano" className={styles.cartaoItem}>
         <div className={styles.linhaSelos}>
           <BadgeStatusItem status={st} />
+          <BadgeSemEvidencia item={item} />
           {aberto && (
             <span className={diasParaPrazo < 0 ? styles.chipPrazoAtrasado : diasParaPrazo <= 2 ? styles.chipPrazoProximo : styles.chipPrazo}>
               <IconeRelogio />
@@ -151,10 +155,19 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
           </dd>
         </dl>
 
-        {item.evidenciaConclusao && (
+        {item.status === "CONCLUIDO" && (
           <div className={styles.evidencia}>
-            <div className={styles.rotuloEvidencia}>Evidência ({formatarData(item.dataConclusao)})</div>
-            <p className={styles.textoEvidencia}>{item.evidenciaConclusao}</p>
+            <div className={styles.rotuloEvidencia}>
+              Evidência ({formatarData(item.dataConclusao)})
+              {item.concluidoPor && item.concluidoPor.nome !== item.quem.nome && <> · concluída por {item.concluidoPor.nome}</>}
+            </div>
+            {item.evidenciaConclusao && <p className={styles.textoEvidencia}>{item.evidenciaConclusao}</p>}
+            {item.linkEvidencia && (
+              <p className={styles.textoEvidencia}>
+                <a href={item.linkEvidencia} target="_blank" rel="noopener noreferrer">Abrir link da evidência</a>
+              </p>
+            )}
+            {item.semEvidencia && <p className={styles.textoEvidencia}>Concluída sem anexo, descrição ou link de evidência.</p>}
           </div>
         )}
       </section>
@@ -167,6 +180,7 @@ export default async function PlanoAcaoItem({ params, emJanela = false }: { para
           hoje={hoje}
           usuarios={usuariosQuem}
           podeExecutar={podeExecutar}
+          podeConcluir={podeConcluir}
           podeGerenciar={podeGerenciar}
         />
       </section>

@@ -43,6 +43,19 @@ export function BadgeOrigem({ children }: { children: React.ReactNode }) {
   return <span className={`${styles.badge} ${styles.origem}`}>{children}</span>;
 }
 
+/**
+ * Etiqueta "Sem evidência": mostrada ao lado do status de um item concluído sem anexo, descrição nem link.
+ * Não aparece em item em aberto nem em item concluído com evidência.
+ */
+export function BadgeSemEvidencia({ item }: { item: { status: string; semEvidencia: boolean } }) {
+  if (item.status !== "CONCLUIDO" || !item.semEvidencia) return null;
+  return (
+    <span className={`${styles.badge} ${styles.semEvidencia}`} title="Concluída sem anexo, descrição ou link de evidência">
+      Sem evidência
+    </span>
+  );
+}
+
 /** Desenho (SVG) de um relógio, mostrado nos itens atrasados. */
 function IconeRelogio() {
   return (

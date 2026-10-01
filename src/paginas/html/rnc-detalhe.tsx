@@ -4,6 +4,7 @@ import type { StatusRnc } from "@prisma/client";
 import { atorTem, fusoDaEmpresa } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { formatarData, formatarDataHora, hojeNoFuso, paraDataDb } from "@/lib/datas";
+import { podeConcluirItem } from "@/lib/plano-acao/acesso";
 import { statusEfetivoItem, statusGeralPlano } from "@/lib/plano-acao/status";
 import { avaliarTransicao, cicloAtual, STATUS_FINAIS } from "@/lib/rnc/estados";
 import {
@@ -37,7 +38,7 @@ import { Cartao } from "@/paginas/html/componentes/cartao";
 import { Alerta } from "@/paginas/html/componentes/alerta";
 import { LinkBotao } from "@/paginas/html/componentes/botao";
 import { BadgeGravidade, BadgeStatusRnc, type GravidadeBadge, type StatusRncBadge } from "@/paginas/html/componentes/badge";
-import { BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/badge-status-item";
+import { BadgeSemEvidencia, BadgeStatusItem, BadgeStatusPlano } from "@/paginas/html/componentes/badge-status-item";
 import { CausaForm } from "@/paginas/html/rnc-detalhe-causa";
 import styles from "@/paginas/css/rnc-detalhe.module.css";
 
@@ -221,7 +222,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
       {/* ======================== 01. CABEÇALHO ======================== */}
       <header className={styles.cabecalho}>
         <div className={styles.blocoTitulo}>
-          <Link href="/rncs" className={styles.voltar}>← RNCs</Link>
+          <Link href="/rncs" className={styles.voltar} data-voltar-lista>← RNCs</Link>
           <div className={styles.linhaSelos}>
             <span className={styles.codigo}>{rnc.codigo}</span>
             <Etiqueta classe={styles.etiquetaNeutra}>{ROTULO_TIPO[rnc.tipo]}</Etiqueta>
@@ -453,15 +454,25 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                             {doCiclo.map((i) => {
                               const st = statusEfetivoItem(i, hoje);
                               const podeExecutar = i.quemId === a.usuarioId && rnc.status === "PLANO_EM_EXECUCAO";
-                              const comAcoes = atual && itemTemAcoes(i.status, podeExecutar, editavelPlano);
+                              // Concluir: o responsável, a qualidade ou a administração (quem vê a RNC já tem acesso a ela).
+                              const podeConcluir = rnc.status === "PLANO_EM_EXECUCAO" && podeConcluirItem(a, { quemId: i.quemId, planoAcao: { obraId: null, rnc } });
+                              const comAcoes = atual && itemTemAcoes(i.status, podeExecutar, editavelPlano, podeConcluir);
                               return (
                                 // Um <tbody> por item: linha de dados + (opcional) linha de ações abaixo, formando um bloco
                                 <tbody key={i.id} className={styles.grupoItem}>
                                   <tr>
                                     <td data-rotulo="O quê" className={styles.celulaOQue}>
                                       <Link href={`/plano-acao/${i.id}`} className={styles.linkItem}>{i.oQue}</Link>
-                                      {i.evidenciaConclusao && (
-                                        <p className={styles.evidencia}>Evidência ({formatarData(i.dataConclusao)}): {i.evidenciaConclusao}</p>
+                                      {(i.evidenciaConclusao || i.linkEvidencia) && (
+                                        <p className={styles.evidencia}>
+                                          Evidência ({formatarData(i.dataConclusao)}):{i.evidenciaConclusao ? ` ${i.evidenciaConclusao}` : ""}
+                                          {i.linkEvidencia && (
+                                            <>
+                                              {" "}
+                                              <a href={i.linkEvidencia} target="_blank" rel="noopener noreferrer">Abrir link da evidência</a>
+                                            </>
+                                          )}
+                                        </p>
                                       )}
                                       {(anexosItens.get(i.id) ?? []).map((x) => (
                                         <a key={x.id} href={`/api/anexos/${x.id}`} className={styles.linkAnexoItem}>
@@ -475,7 +486,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                     <td data-rotulo="Quando" className={`${styles.tdMono} ${st === "ATRASADO" ? styles.dataAtrasada : ""}`}>{formatarData(i.quando)}</td>
                                     <td data-rotulo="Como" className={styles.tdSecundario}>{i.como ?? "—"}</td>
                                     <td data-rotulo="Quanto" className={`${styles.tdMono} ${styles.tdDireita}`}>{i.quanto ? moeda(Number(i.quanto)) : "—"}</td>
-                                    <td data-rotulo="Status"><BadgeStatusItem status={st} /></td>
+                                    <td data-rotulo="Status"><BadgeStatusItem status={st} /> <BadgeSemEvidencia item={i} /></td>
                                   </tr>
                                   {comAcoes && (
                                     <tr className={styles.linhaAcoes}>
@@ -486,6 +497,7 @@ export default async function RncDetalhe({ params, searchParams }: PageProps<"/r
                                           hoje={hoje}
                                           usuarios={usuariosObra.some((u) => u.id === i.quemId) ? usuariosObra : [...usuariosObra, { id: i.quemId, nome: i.quem.nome }]}
                                           podeExecutar={podeExecutar}
+                                          podeConcluir={podeConcluir}
                                           podeGerenciar={editavelPlano}
                                         />
                                       </td>

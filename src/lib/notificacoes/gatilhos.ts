@@ -6,7 +6,7 @@
 import type { Ator } from "@/lib/ator";
 import { formatarData } from "@/lib/datas";
 import { linkPlano } from "@/lib/plano-acao/acesso";
-import { usuariosComPermissaoNaRnc } from "./destinatarios";
+import { usuarioAcessaRnc, usuariosAtivos, usuariosComPermissaoNaRnc } from "./destinatarios";
 import { comSeguranca, criarNotificacoes, type NovaNotificacao } from "./servico";
 
 /** RNC restrita ou com dados pessoais: nenhum texto livre (título, oQue, motivo) sai em notificação/e-mail (M2). */
@@ -94,6 +94,50 @@ export function notificarItensAtribuidos(a: Ator, itemIds: string[], marca: stri
           chave: `item-atribuido:${i.id}:${i.quemId}:${marca}`,
         } satisfies NovaNotificacao;
       }),
+    );
+  });
+}
+
+/**
+ * Item concluído sem evidência (sem anexo, descrição nem link) → a qualidade/administração (PLANO_GERENCIAR) com
+ * acesso ao item, exceto quem concluiu. Texto livre de RNC sensível não sai na notificação.
+ */
+export function notificarItemSemEvidencia(a: Ator, itemId: string) {
+  return comSeguranca("item-sem-evidencia", async () => {
+    const i = await a.db.itemAcao.findFirst({
+      where: { id: itemId },
+      select: {
+        id: true,
+        oQue: true,
+        planoAcao: { select: { id: true, titulo: true, obraId: true, rnc: { select: selRnc } } },
+      },
+    });
+    if (!i) return;
+    const rnc = i.planoAcao.rnc;
+    const obraPlano = i.planoAcao.obraId;
+    const dest = (await usuariosAtivos(a.db)).filter(
+      (u) =>
+        u.id !== a.usuarioId &&
+        u.permissoes.includes("PLANO_GERENCIAR") &&
+        (rnc ? usuarioAcessaRnc(u, rnc) : u.obras === null || !obraPlano || u.obras.includes(obraPlano)),
+    );
+    if (dest.length === 0) return;
+    const quem = await a.db.usuario.findFirst({ where: { id: a.usuarioId }, select: { nome: true } });
+    const manual = !rnc;
+    const descricao = manual ? `${i.oQue} (Plano: ${i.planoAcao.titulo})` : descricaoItem({ oQue: i.oQue, planoAcao: { rnc } });
+    await criarNotificacoes(
+      a.db,
+      a.empresaId,
+      dest.map((u) => ({
+        usuarioId: u.id,
+        tipo: "ITEM_CONCLUIDO_SEM_EVIDENCIA",
+        entidadeTipo: "ITEM_ACAO",
+        entidadeId: i.id,
+        titulo: "Ação concluída sem evidência",
+        corpo: `${descricao}\nConcluída por ${quem?.nome ?? "um usuário"} sem anexo, descrição ou link. Confira e solicite a evidência.`,
+        link: manual ? linkPlano(i.planoAcao.id) : linkItem(i.id),
+        chave: `item-sem-evidencia:${i.id}:${u.id}`,
+      })),
     );
   });
 }

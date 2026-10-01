@@ -18,21 +18,27 @@ interface ItemParaAcoes {
   quanto: { toString(): string } | null;
 }
 
-/** true quando o ItemAcoes renderiza algum botão (item em aberto e o usuário executa ou gerencia). */
-export function itemTemAcoes(status: string, podeExecutar: boolean, podeGerenciar: boolean) {
-  return (status === "PENDENTE" || status === "EM_ANDAMENTO") && (podeExecutar || podeGerenciar);
+/**
+ * true quando o ItemAcoes renderiza algum botão (item em aberto e o usuário executa, conclui ou gerencia).
+ * `podeConcluir` vale `podeExecutar` quando não informado.
+ */
+export function itemTemAcoes(status: string, podeExecutar: boolean, podeGerenciar: boolean, podeConcluir = podeExecutar) {
+  return (status === "PENDENTE" || status === "EM_ANDAMENTO") && (podeExecutar || podeConcluir || podeGerenciar);
 }
 
 /**
  * Botões de ação de um item do plano 5W2H:
- * - quem executa: "Iniciar" e "Concluir" (este pede data, evidência e arquivos);
+ * - responsável pelo item: "Iniciar";
+ * - responsável, qualidade e administração: "Concluir" (pede data; evidência por anexo, descrição ou link é
+ *   opcional, mas sem nenhuma o item fica "Sem evidência" e a qualidade é avisada);
  * - quem gerencia (responsável da RNC ou permissão PLANO_GERENCIAR): "Editar" e "Cancelar".
- * `podeExecutar`/`podeGerenciar` dizem o que o usuário atual pode fazer; `hoje` é a data padrão da conclusão.
+ * `podeExecutar`/`podeConcluir`/`podeGerenciar` dizem o que o usuário atual pode fazer; `hoje` é a data padrão da conclusão.
  */
 export function ItemAcoes({
   item,
   rncId,
   podeExecutar,
+  podeConcluir = podeExecutar,
   podeGerenciar,
   usuarios,
   hoje,
@@ -40,12 +46,13 @@ export function ItemAcoes({
   item: ItemParaAcoes;
   rncId?: string;
   podeExecutar: boolean;
+  podeConcluir?: boolean;
   podeGerenciar: boolean;
   usuarios: { id: string; nome: string }[];
   hoje: string;
 }) {
   // Sem nenhuma ação possível (item já concluído/cancelado ou usuário sem permissão): mostra só "—".
-  if (!itemTemAcoes(item.status, podeExecutar, podeGerenciar)) return <span className={styles.semAcao}>—</span>;
+  if (!itemTemAcoes(item.status, podeExecutar, podeGerenciar, podeConcluir)) return <span className={styles.semAcao}>—</span>;
   // Campos escondidos que todos os formulários abaixo enviam: qual item (e qual RNC) é o alvo da ação.
   const ocultos = (
     <>
@@ -69,18 +76,26 @@ export function ItemAcoes({
           {ocultos}
         </FormAcao>
       )}
-      {podeExecutar && (
+      {podeConcluir && (
         <details className={styles.painelDetalhes}>
           <summary className={`${botoes.botao} ${botoes.primario} ${styles.resumo}`}>Concluir</summary>
           <FormAcao acao={concluirItemAcao} botao="Confirmar conclusão" tamanho="pequeno" className={styles.painel}>
             {ocultos}
             {campo(`${pfx}-conc`, "Data de conclusão", <input id={`${pfx}-conc`} type="date" name="dataConclusao" defaultValue={hoje} required className={styles.entrada} />)}
+            <CampoArquivos rotulo="Arquivos de evidência" ajuda="Fotos, PDF, DOCX, XLSX ou TXT — até 10 MB cada." />
             {campo(
               `${pfx}-evid`,
-              "Evidência",
-              <textarea id={`${pfx}-evid`} name="evidencia" rows={3} required className={styles.entrada} placeholder="Descreva a evidência" />,
+              "Descrição da evidência",
+              <textarea id={`${pfx}-evid`} name="evidencia" rows={3} className={styles.entrada} placeholder="Descreva o que foi feito e onde está a prova" />,
             )}
-            <CampoArquivos rotulo="Arquivos de evidência (opcional)" ajuda="Fotos, PDF, DOCX, XLSX ou TXT — até 10 MB cada." />
+            {campo(
+              `${pfx}-link`,
+              "Link da pasta ou do arquivo",
+              <input id={`${pfx}-link`} type="url" name="linkEvidencia" className={styles.entrada} placeholder="https://… (pasta na nuvem, por exemplo)" />,
+            )}
+            <p className={styles.avisoEvidencia}>
+              Evidência é anexo, descrição ou link. Sem nenhuma delas a ação é concluída, mas fica marcada como “Sem evidência” e a qualidade é avisada.
+            </p>
           </FormAcao>
         </details>
       )}

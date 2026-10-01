@@ -4,8 +4,8 @@ import { hojeNoFuso, paraDataDb } from "@/lib/datas";
 import { ErroConflito, ErroNegocio } from "@/lib/erros";
 import { cicloAtual } from "@/lib/rnc/estados";
 import { usuariosAtivos } from "@/lib/notificacoes/destinatarios";
-import { notificarItensAtribuidos } from "@/lib/notificacoes/gatilhos";
-import { filtroAcessoPlanoManual, filtroGestaoPlanoManual, obraDoPlanoAcessivel, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
+import { notificarItemSemEvidencia, notificarItensAtribuidos } from "@/lib/notificacoes/gatilhos";
+import { filtroAcessoPlanoManual, filtroGestaoPlanoManual, obraDoPlanoAcessivel, podeConcluirItem, podeGerenciarPlanoManual } from "@/lib/plano-acao/acesso";
 import { statusGeralPlano } from "@/lib/plano-acao/status";
 import { filtroAcessoItem, filtroAcessoRnc, podeGerenciarPlanoRnc, travarRnc } from "@/lib/rnc/servico";
 
@@ -143,6 +143,18 @@ function exigirExecucao(a: Ator, item: ItemCarregado) {
   }
 }
 
+/** Concluir: o responsável, a qualidade ou a administração; item de RNC só com o plano em execução e no ciclo atual. */
+function exigirConclusao(a: Ator, item: ItemCarregado) {
+  if (!podeConcluirItem(a, item, item.rncVisivel)) {
+    throw new ErroNegocio("Somente o responsável pelo item, a qualidade ou a administração podem concluí-lo.");
+  }
+  const rnc = item.planoAcao.rnc;
+  if (rnc) {
+    if (rnc.status !== "PLANO_EM_EXECUCAO") throw new ErroNegocio("O plano da RNC não está em execução.");
+    if (item.ciclo !== cicloAtual(rnc.verificacoes)) throw new ErroNegocio("Item de ciclo anterior.");
+  }
+}
+
 /**
  * M1: toda escrita em item trava a origem: a RNC (versão + status lidos) ou, em plano sem RNC,
  * o próprio plano (versão lida).
@@ -201,20 +213,56 @@ export async function marcarEmAndamento(a: Ator, itemId: string) {
   });
 }
 
-export async function concluirItem(a: Ator, itemId: string, d: { dataConclusao: string; evidencia: string }) {
-  if (!d.evidencia.trim()) throw new ErroNegocio("Descreva a evidência de conclusão.");
-  if (d.evidencia.length > 5000) throw new ErroNegocio("Evidência excede 5000 caracteres.");
+/** Link de evidência: só endereços http(s) (pasta ou arquivo na nuvem). */
+function normalizarLinkEvidencia(link: string | null | undefined) {
+  const texto = link?.trim();
+  if (!texto) return null;
+  if (texto.length > 2000) throw new ErroNegocio("O link da evidência é longo demais.");
+  let url: URL;
+  try {
+    url = new URL(texto);
+  } catch {
+    throw new ErroNegocio("Informe o link da evidência completo, começando com https://");
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") throw new ErroNegocio("O link da evidência deve começar com http:// ou https://");
+  return url.toString();
+}
+
+/**
+ * Registra a conclusão de um item. Evidência = anexo(s), descrição e/ou link de pasta; nenhuma é obrigatória,
+ * mas sem as três o item fica marcado "Sem evidência" e a qualidade é avisada. Pode concluir o responsável
+ * do item ou a qualidade/administração (PLANO_GERENCIAR); `concluidoPorId` guarda quem registrou.
+ */
+export async function concluirItem(
+  a: Ator,
+  itemId: string,
+  d: { dataConclusao: string; evidencia?: string | null; linkEvidencia?: string | null; comArquivos?: boolean },
+) {
+  const evidencia = d.evidencia?.trim() || null;
+  if (evidencia && evidencia.length > 5000) throw new ErroNegocio("Evidência excede 5000 caracteres.");
+  const linkEvidencia = normalizarLinkEvidencia(d.linkEvidencia);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.dataConclusao)) throw new ErroNegocio("Data de conclusão inválida.");
-  return a.db.$transaction(async (tx) => {
+  const semEvidencia = !evidencia && !linkEvidencia && !d.comArquivos;
+  await a.db.$transaction(async (tx) => {
     const item = await carregarItem(tx, a, itemId);
-    exigirExecucao(a, item);
+    exigirConclusao(a, item);
     await travarOrigemDoItem(tx, item);
     const r = await tx.itemAcao.updateMany({
       where: { id: itemId, status: { in: ["PENDENTE", "EM_ANDAMENTO"] } },
-      data: { status: "CONCLUIDO", dataConclusao: paraDataDb(d.dataConclusao), evidenciaConclusao: d.evidencia.trim() },
+      data: {
+        status: "CONCLUIDO",
+        dataConclusao: paraDataDb(d.dataConclusao),
+        evidenciaConclusao: evidencia,
+        linkEvidencia,
+        semEvidencia,
+        concluidoPorId: a.usuarioId,
+      },
     });
     if (r.count === 0) throw new ErroNegocio("Item já finalizado.");
   });
+  // Depois do commit, sem propagar erro: avisa a qualidade da conclusão sem evidência.
+  if (semEvidencia) await notificarItemSemEvidencia(a, itemId);
+  return { semEvidencia };
 }
 
 // ---------------------------------------------------------------- planos avulsos (origem MANUAL)

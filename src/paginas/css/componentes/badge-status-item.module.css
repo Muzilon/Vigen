@@ -57,3 +57,13 @@
   background: var(--cor-contador-fundo);
   color: var(--cor-texto);
 }
+
+/* ==========================================================
+   04. SEM EVIDÊNCIA
+   Item concluído sem anexo, descrição nem link: chama a atenção da qualidade.
+   ========================================================== */
+.semEvidencia {
+  background: var(--cor-badge-alerta-fundo);
+  color: var(--cor-badge-alerta-texto);
+  border: 1px solid var(--cor-aviso-borda);
+}
