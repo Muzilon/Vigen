@@ -39,7 +39,7 @@ export default async function AprovacaoDetalhe({ params }: PageProps<"/aprovacoe
 
   return (
     <div className={`${styles.pagina} fonteBase`}>
-      <Link href="/aprovacoes" className={styles.voltar}>
+      <Link href="/aprovacoes" className={styles.voltar} data-voltar-lista>
         ← Aprovações
       </Link>
       <CabecalhoPagina titulo={f.resumo} contador={<BadgeStatusFluxo status={f.status} />} />

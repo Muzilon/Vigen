@@ -72,6 +72,7 @@
 }
 
 /* A trilha "← Voltar para a lista" das páginas de detalhe leva para fora da janela; aqui ela é escondida. */
-.conteudo :global(nav[aria-label="Trilha da página"]) {
+.conteudo :global(nav[aria-label="Trilha da página"]),
+.conteudo :global([data-voltar-lista]) {
   display: none;
 }
