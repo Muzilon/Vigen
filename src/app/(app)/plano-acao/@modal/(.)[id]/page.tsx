@@ -9,5 +9,5 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   // Rotas fixas irmãs (ex.: /plano-acao/novo) também casam com [id]; elas não abrem janela.
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
-  return <PlanoAcaoItem params={params} />;
+  return <PlanoAcaoItem params={params} emJanela />;
 }

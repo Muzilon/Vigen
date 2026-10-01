@@ -32,7 +32,7 @@ function textoPrazo(dias: number) {
  * Visão reduzida do item (B4): o "quem" vê o próprio item e sua thread mesmo sem acesso à RNC,
  * sem descrição, causa raiz, outros itens ou dados sensíveis da RNC.
  */
-export default async function PlanoAcaoItem({ params }: { params: Promise<{ id: string }> }) {
+export default async function PlanoAcaoItem({ params, emJanela = false }: { params: Promise<{ id: string }>; emJanela?: boolean }) {
   // `id`: o identificador do item de ação, tirado do endereço.
   const { id } = await params;
   // Id em formato inválido → página 404.
@@ -95,22 +95,25 @@ export default async function PlanoAcaoItem({ params }: { params: Promise<{ id: 
 
   return (
     <div className={`${styles.pagina} fonteBase`}>
-      <nav aria-label="Trilha da página" className={styles.trilha}>
-        <Link href="/plano-acao" className={styles.linkVoltar}>
-          <IconeVoltar />
-          Plano de Ação
-        </Link>
-        <span aria-hidden="true">/</span>
-        {rnc ? (
-          rncVisivel ? (
-            <Link href={`/rncs/${rnc.id}?aba=plano`} className={styles.linkCodigo}>{rnc.codigo}</Link>
+      {/* Trilha de navegação: só na página inteira; na janela flutuante os links tirariam o usuário da janela. */}
+      {!emJanela && (
+        <nav aria-label="Trilha da página" className={styles.trilha}>
+          <Link href="/plano-acao" className={styles.linkVoltar}>
+            <IconeVoltar />
+            Plano de Ação
+          </Link>
+          <span aria-hidden="true">/</span>
+          {rnc ? (
+            rncVisivel ? (
+              <Link href={`/rncs/${rnc.id}?aba=plano`} className={styles.linkCodigo}>{rnc.codigo}</Link>
+            ) : (
+              <span className={styles.codigoOculto}>{rnc.codigo}</span>
+            )
           ) : (
-            <span className={styles.codigoOculto}>{rnc.codigo}</span>
-          )
-        ) : (
-          <Link href={linkPlano(item.planoAcao.id)} className={styles.linkPlano}>Plano manual: {item.planoAcao.titulo}</Link>
-        )}
-      </nav>
+            <Link href={linkPlano(item.planoAcao.id)} className={styles.linkPlano}>Plano manual: {item.planoAcao.titulo}</Link>
+          )}
+        </nav>
+      )}
 
       {/* 1. Cartão do item (5W2H) */}
       <section aria-label="Item do plano" className={styles.cartaoItem}>
