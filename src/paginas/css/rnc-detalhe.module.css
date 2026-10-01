@@ -527,6 +527,7 @@ a.botaoCompacto {
 }
 
 .rolagemTabela {
+  min-width: 0; /* deixa encolher dentro da grade; a rolagem fica aqui dentro */
   overflow-x: auto;
 }
 
@@ -1348,5 +1349,67 @@ button.botaoRegistrar {
   .selecao,
   .entradaComentario {
     font-size: 16px; /* evita zoom automático do iOS ao focar */
+  }
+}
+
+/* Dentro da janela flutuante (contêiner "detalhe", 760/1100px) o @media
+   acima não percebe a largura real: estes blocos repetem as mesmas regras
+   olhando a largura do contêiner. Fora da janela não têm efeito. */
+@container detalhe (max-width: 1000px) {
+  /* Painel lateral desce para baixo da coluna principal */
+  .corpo,
+  .gradeVerificacao {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container detalhe (max-width: 700px) {
+  /* 5W2H em cartões empilhados (mesma regra do @media 640px) */
+  .tabelaPlano,
+  .tabelaPlano tbody,
+  .tabelaPlano tr,
+  .tabelaPlano td {
+    display: block;
+  }
+  .tabelaPlano colgroup,
+  .tabelaPlano thead {
+    display: none;
+  }
+  .tabelaPlano .grupoItem {
+    padding: var(--espaco-3) 14px;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .tabelaPlano .grupoItem tr:first-child {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espaco-2) var(--espaco-3);
+  }
+  .tabelaPlano td,
+  .tabelaPlano td:first-child,
+  .tabelaPlano td:last-child {
+    padding: 0;
+    border-bottom: 0;
+  }
+  .tabelaPlano td[data-rotulo]::before {
+    content: attr(data-rotulo);
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--fonte-ui);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+  }
+  .tabelaPlano .celulaOQue {
+    grid-column: 1 / -1;
+    font-size: 14px;
+  }
+  .tabelaPlano td.celulaOQue::before {
+    display: none;
+  }
+  .tabelaPlano .tdDireita {
+    text-align: left;
+  }
+  .tabelaPlano .linhaAcoes td {
+    padding: var(--espaco-3) 0 0;
   }
 }

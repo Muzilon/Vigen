@@ -52,6 +52,28 @@
   height: 36px;
 }
 
+/* Aviso de erro / item não encontrado dentro da janela flutuante. */
+.aviso {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  padding: var(--espaco-6) var(--espaco-2);
+}
+
+.tituloAviso {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.textoAviso {
+  margin: 0;
+  font-size: 14px;
+  color: var(--cor-texto-secundario);
+}
+
 @keyframes pulsar {
   0%,
   100% {

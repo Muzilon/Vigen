@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { JanelaFlutuante } from "@/paginas/html/componentes/janela-flutuante";
 import styles from "@/paginas/css/carregando.module.css";
 
+/** UUID completo (8-4-4-4-12): só ele abre janela; rotas fixas irmãs de [id] (ex.: "novo") não. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Propriedades que as páginas de detalhe recebem do Next (as mesmas de PageProps<"/modulo/[id]">). */
 export type PropsJanela = {
   params: Promise<{ id: string }>;
@@ -34,10 +37,10 @@ export function SemJanela() {
  * Rotas fixas irmãs de [id] (ex.: /documentos/novo) também casam com a rota interceptada; para elas
  * não abre janela nenhuma.
  */
-export async function MolduraJanela({ titulo, children, params }: PropsMoldura & { titulo: string }) {
+export async function MolduraJanela({ titulo, ampla = true, children, params }: PropsMoldura & { titulo: string; ampla?: boolean }) {
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
-  return <JanelaFlutuante titulo={titulo} ampla>{children}</JanelaFlutuante>;
+  if (!UUID.test(id)) return null;
+  return <JanelaFlutuante titulo={titulo} ampla={ampla}>{children}</JanelaFlutuante>;
 }
 
 /** Esboço dentro da janela enquanto os dados do detalhe chegam. */

@@ -87,6 +87,10 @@
 @media (max-width: 1000px) {
   .grade { grid-template-columns: minmax(0, 1fr); }
 }
+/* Mesma regra dentro da janela flutuante (contêiner "detalhe") */
+@container detalhe (max-width: 820px) {
+  .grade { grid-template-columns: minmax(0, 1fr); }
+}
 .coluna {
   display: flex;
   flex-direction: column;

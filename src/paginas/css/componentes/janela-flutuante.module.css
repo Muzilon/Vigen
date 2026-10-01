@@ -1,8 +1,9 @@
 /* ==========================================================
    ÍNDICE
    01. Janela flutuante — <dialog> centralizado com fundo escurecido
-   02. Botão de fechar
-   03. Conteúdo com rolagem interna
+   02. Barra superior fixa com o botão de fechar
+   03. Conteúdo com rolagem interna (e contêiner "detalhe" para container queries)
+   04. Celular — a janela ocupa a tela inteira
    ========================================================== */
 
 /* ==========================================================
@@ -13,7 +14,7 @@
   inset: 0;
   margin: auto;
   width: min(760px, calc(100vw - 24px));
-  max-height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   padding: 0;
   overflow: hidden;
   color: inherit;
@@ -21,6 +22,12 @@
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-cartao);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+/* O <dialog> só aparece com [open]; aberto, vira uma coluna para o conteúdo rolar dentro dele. */
+.janela[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Detalhes com duas colunas ou tabelas pedem mais largura. */
@@ -33,13 +40,20 @@
 }
 
 /* ==========================================================
-   02. BOTÃO DE FECHAR
+   02. BARRA SUPERIOR
+   Fica grudada no topo da área que rola: o botão de fechar nunca some nem cobre o conteúdo.
    ========================================================== */
-.fechar {
-  position: absolute;
-  top: var(--espaco-3);
-  right: var(--espaco-3);
+.barra {
+  position: sticky;
+  top: 0;
   z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--espaco-2) 0;
+  background: var(--cor-superficie);
+}
+
+.fechar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -63,16 +77,36 @@
 
 /* ==========================================================
    03. CONTEÚDO
+   container-type: as telas de detalhe usam @container detalhe (e não @media) para escolher o layout
+   pela largura da JANELA, e não pela da tela do navegador.
    ========================================================== */
 .conteudo {
-  max-height: calc(100dvh - 24px);
-  padding: var(--espaco-4);
-  padding-top: calc(var(--espaco-4) + 44px);
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--espaco-4) calc(var(--espaco-4) + env(safe-area-inset-bottom));
   overflow-y: auto;
+  overscroll-behavior: contain;
+  container-type: inline-size;
+  container-name: detalhe;
 }
 
 /* A trilha "← Voltar para a lista" das páginas de detalhe leva para fora da janela; aqui ela é escondida. */
 .conteudo :global(nav[aria-label="Trilha da página"]),
 .conteudo :global([data-voltar-lista]) {
   display: none;
+}
+
+/* ==========================================================
+   04. CELULAR
+   ========================================================== */
+@media (max-width: 640px) {
+  .janela,
+  .ampla {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
 }

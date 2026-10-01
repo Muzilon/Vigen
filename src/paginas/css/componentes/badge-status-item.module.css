@@ -66,4 +66,11 @@
   background: var(--cor-badge-alerta-fundo);
   color: var(--cor-badge-alerta-texto);
   border: 1px solid var(--cor-aviso-borda);
+  /* Texto longo: quebra linha em coluna estreita em vez de vazar */
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 20px;
+  line-height: 1.2;
+  text-align: center;
 }
