@@ -1,7 +1,7 @@
 # Inventário de telas, fluxo de design e lote do ClickUp
 
 **Criado em:** 01/10/2026 (rodada 2) · Plano: [01-plano-mestre.md](01-plano-mestre.md) · Decisões: [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md)
-**Situação do ClickUp: NADA FOI CRIADO.** O Eric precisa criar o espaço "Vigen" à mão (ver seção 5). Este documento deixa tudo pronto para o PMO executar na chamada seguinte.
+**Situação do ClickUp (rodada 3, 01/10/2026): NADA FOI CRIADO, criação bloqueada.** O PMO tentou criar a pasta "Projeto Vigen 2026" no espaço "Vigen" e a ferramenta respondeu "Space Vigen not found"; a hierarquia do workspace só mostra "Indicadores do SGI" e "Sharepoint SGI". Por regra, nada foi criado fora de "Vigen". Ver seção 5. O lote abaixo está atualizado com as decisões da rodada 3 e pronto para executar assim que o espaço ficar visível.
 
 ## 1. Fluxo de design (regra do Eric, 01/10/2026)
 O Eric revisa o design **no sistema, tela por tela**, e anota o que precisa mudar. Se precisar alterar, mexe no Figma, exporta e pede a implantação da tela. Pode haver **funções novas** junto com o visual; tudo fica registrado na tarefa.
@@ -71,22 +71,24 @@ Agentes por módulo: os do plano mestre (seção 7.2), sempre com `agente-ux-ui`
 | TR-002 a TR-004 | Testes 1.1 a 1.11, 2.1 a 2.5, 3.1 a 3.12 | Urgente | Pronto para fazer |
 | TR-005 | Corrigir defeitos (tarefa-mãe; filhas TR-013, TR-014 e BE-013) | Urgente | Em andamento |
 | TR-013 | Falha: etiqueta "Sem evidência" e aviso à qualidade não funcionaram ao concluir ação sem evidência | Urgente | Em revisão (correção em curso pelo agente principal; depende de reteste do Eric) |
-| TR-014 | **Função nova:** status "Concluído fora do prazo" (cor laranja) além da justificativa de data, que funcionou | Alta | Em revisão (idem) |
+| TR-014 | **Função nova:** etiqueta laranja "Concluído fora do prazo" além da justificativa de data, que funcionou (decisão D-17 em 01/10: conta como concluída; status do item segue CONCLUIDO; fora do prazo = data de conclusão maior que o prazo; sem notificação, mas catalogado) | Alta | Em revisão (idem) |
 | TR-006, TR-008, TR-009, TR-010 | Confirmação ao fechar janela (D-07); eslint; tokens novos; créditos de ícones | Normal | Backlog / Pronto para fazer |
 | TR-016 | Eric: trocar `vigen123` dos usuários de teste direto no banco do Neon (só rastreio; D-02) | Normal | Pronto para fazer, responsável Eric |
 
 Critérios de aceite:
 - **TR-013:** (1) concluir ação pela qualidade sem evidência grava a etiqueta "Sem evidência" visível na ação e na lista; (2) a pessoa da qualidade recebe o aviso (notificação) no mesmo momento; (3) `semEvidencia` coberto em script de integração (BE-003); (4) Eric repete os testes 3.x correspondentes e marca ok. Nunca "Concluído" antes do item 4.
-- **TR-014:** (1) existe o status "Concluído fora do prazo", em laranja, nos tokens (sem cor solta) e legível (contraste AA); (2) ao concluir com data vencida e justificativa, a ação assume esse status; (3) lista, detalhe, kanban/filtros e indicadores tratam o novo status; (4) regra decidida pelo Eric: conta como concluída para indicadores? (pergunta aberta, ver D-17); (5) testes unitários e de integração; (6) Eric verifica no navegador.
+- **TR-014 (atualizado pela D-17):** (1) existe a etiqueta "Concluído fora do prazo", em laranja, nos tokens (sem cor solta) e legível (contraste AA); (2) ao concluir com data de conclusão maior que o prazo, a ação mostra a etiqueta e o status continua CONCLUIDO; (3) lista, detalhe, kanban/filtros tratam a etiqueta; (4) **resolvido (D-17):** conta como concluída; **não gera notificação**; fica catalogada (registrada e consultável); (5) testes unitários e de integração; (6) Eric verifica no navegador; (7) a medição agregada é a tarefa BE-014.
+- **BE-014 (nova, D-17):** indicador de **atendimento ao prazo** (percentual de ações concluídas no prazo × fora do prazo), ligado ao módulo Indicadores/Dashboard. Critério: (1) agente principal confirma se a medição já existe; se existir, a tarefa vira só verificação; (2) cálculo = concluídas com conclusão menor ou igual ao prazo ÷ total de concluídas, por período; (3) aparece no Dashboard/Indicadores com tokens e textos em português; (4) coberto por teste unitário; (5) Eric verifica. Agente: `agente-indicadores-sgi` + `agente-nao-conformidades`. Depende de TR-014. Lista 02, prioridade Normal, Backlog, tag `indicadores`.
 - A terceira falha é **BE-013** (lista 02, seção 4.2).
 
 ### 4.2 Lista 02 Back-end e produção
 | ID | Tarefa | Prioridade | Situação |
 |---|---|---|---|
-| BE-001 | Armazenamento Blob em produção | Urgente | Pronto para fazer (Eric configura) |
+| BE-001 | **ATIVIDADE PRIORITÁRIA (01/10):** armazenamento Blob em produção. Dono: Eric; o projeto segue em paralelo. Passo a passo: (1) na Vercel, abrir o projeto e a aba Storage; criar um Blob store; (2) ligar o store ao projeto Vigen (a Vercel cria o `BLOB_READ_WRITE_TOKEN`); (3) em Environment Variables, conferir `BLOB_READ_WRITE_TOKEN` e definir `ARMAZENAMENTO=blob` para Production; (4) fazer novo deploy (redeploy); (5) em produção, enviar um documento e baixar a revisão (testes 1.6 e 1.7), conferindo que abre sem "Não encontrado". Nunca colar o token em documento ou comentário. | Urgente | Pronto para fazer, dono Eric |
+| BE-014 | Indicador de atendimento ao prazo (concluídas no prazo × fora do prazo), ver critério na seção 4.1 | Normal | Backlog (depende de TR-014) |
 | BE-002 | Segurança operacional (senha do banco **já trocada** em D-02; resta conferir a variável na Vercel e TR-016) | Normal | Em revisão |
 | BE-003, BE-004 | Scripts de integração; Documentos com envio real | Alta | Backlog |
-| BE-013 (= falha 3) | **Falha:** na janela flutuante de Documento, baixar a revisão leva a tela toda preta (texto do servidor) e, ao voltar, retorna ao detalhe. Critério: (1) baixar revisão a partir da janela não sai da janela (download em nova aba ou fetch com `download`); (2) voltar não leva ao detalhe; (3) erro de arquivo ausente mostra aviso amigável, nunca texto cru; (4) teste 1.6 e 1.7 ok em 390/768/1440; (5) depende de BE-001 para o arquivo existir em produção | Urgente | Em revisão (correção em curso) |
+| BE-013 (= falha 3) | **Falha:** na janela flutuante de Documento, baixar a revisão leva a tela toda preta (texto do servidor) e, ao voltar, retorna ao detalhe. Critério: (1) baixar revisão a partir da janela não sai da janela (download em nova aba ou fetch com `download`); (2) voltar não leva ao detalhe; (3) erro de arquivo ausente mostra aviso amigável, nunca texto cru; (4) teste 1.6 e 1.7 ok em 390/768/1440; (5) **depende de BE-001** (dependência a registrar no ClickUp: BE-013 aguarda BE-001) para o arquivo existir em produção | Urgente | Em revisão (correção em curso) |
 | BE-005 a BE-012 | Backlog de produção (e-mail, backup, expurgo, cron, rate limit, observabilidade, checklist, criptografia) | Normal | Backlog |
 
 ### 4.3 Lista 01 Front-end (novo design)
@@ -96,17 +98,23 @@ Ordem: **FE-014 Sidebar** (Alta, Pronto para fazer, 1ª tarefa; reabre P4 do doc
 Itens de D-13 (exportar CSV, filtro "somente atrasadas", saudação, seletor de período, evoluções do doc. 06) e ideias de `docs/ideias/`: criar só como lembrete, sem prioridade.
 
 ### 4.5 Lista Decisões do Eric (tag `decisao-do-eric`, prioridade Alta)
-Abertas: D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-13 e as novas D-16 (desenho do sidebar, ligada a FE-014) e D-17 (regra do novo status "Concluído fora do prazo" nos indicadores). As respondidas (D-01, D-02, D-03, D-11, D-12, D-14, D-15) ficam só no documento 04.
+Abertas: D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-13 e D-16 (desenho do sidebar, ligada a FE-014). As respondidas (D-01, D-02, D-03, D-11, D-12, D-14, D-15 e **D-17**, esta em 01/10 rodada 3) ficam só no documento 04.
 
-## 5. Ação do Eric para destravar o ClickUp
-As ferramentas do PMO não têm operador para criar Espaço (`clickup_get_operators` retornou "Enabled operators: none"; só há criação de pasta, lista e tarefa). Estado em 01/10/2026: existem só "Indicadores do SGI" (pasta Projetos) e "Sharepoint SGI". Para seguir:
-1. O Eric cria, no ClickUp, o espaço **Vigen** (vazio; pode manter os status padrão, o PMO tenta ajustá-los depois).
-2. Avisa o PMO. Na chamada seguinte o PMO cria a pasta, as listas, as tags e as tarefas acima, e grava a tabela de mapeamento (seção 6).
-O PMO não improvisou em outro espaço.
+### 4.6 Observações de criação (para quando o espaço estiver visível)
+- Status: tentar ajustar para Backlog, Pronto para fazer, Em andamento, Em revisão, Bloqueado, Concluído. Se a ferramenta não permitir (as ferramentas do PMO só definem status ao criar lista; operadores avançados estão desativados), usar os padrões da lista e registrar aqui o mapeamento nome sugerido para nome existente. Também depende de as tags existirem no espaço (as ferramentas só aplicam tag já existente; se não for possível criá-las, registrar a limitação e usar prefixo no nome ou na descrição).
+- Datas: só nas mães e marcos (seção 3); subtarefas de tela sem data; nenhuma tarefa nasce Concluída; TR-013, TR-014 e BE-013 nascem Em revisão.
+- Dependências a registrar: BE-013 aguarda BE-001; BE-014 aguarda TR-014; FE-002 aguarda TR-009; FE-003 aguarda FE-002; FE-004 aguarda TR-005 e FE-003; BE-004 e BE-008 aguardam BE-001; TR-002 aguarda TR-001 e BE-001 (testes 1.6 e 1.7).
+
+## 5. Ação do Eric para destravar o ClickUp (rodada 3, 01/10/2026: ainda bloqueado)
+Resultado da tentativa: a hierarquia do workspace (id terminando em 4367) lista apenas "Indicadores do SGI" e "Sharepoint SGI"; `create_folder` com o espaço "Vigen" respondeu "Space Vigen not found". Nada foi criado. Para seguir, o Eric confere:
+1. O espaço se chama exatamente **Vigen** e está no mesmo workspace (o PMO só enxerga este).
+2. O espaço está **compartilhado** com a conta do ClickUp conectada ao PMO (espaço privado não aparece). Se o conector estiver em outra conta, reconectar.
+3. Avisa o PMO. Na chamada seguinte o PMO cria pasta, listas, tags e tarefas (seção 4) e grava o mapeamento (seção 6).
+O PMO não improvisou em outro espaço (regra do Eric).
 
 ## 6. Mapeamento ID do plano para tarefa do ClickUp
-Preenchido após a criação.
+Preenchido após a criação (ainda não criado; ver seção 5).
 
 | ID | Tarefa no ClickUp |
 |---|---|
-| (vazio) | Nenhuma tarefa criada ainda |
+| (vazio) | Nenhuma tarefa criada ainda (espaço "Vigen" não encontrado em 01/10/2026, rodada 3) |

@@ -23,7 +23,7 @@ Matriz: Alta × Alta = Crítico; Alta × Média ou Média × Alta = Alto; Média
 | R-15 | Licença dos ícones UIcons (plano gratuito exige crédito) | Média | Baixa | Baixo | Evitar: decidir crédito ou plano pago antes de publicar | Eric | TR-010 |
 | R-16 | Cota do Figma e arquivos de design fora do git (55 MB): perda ou desatualização da referência | Baixa | Média | Baixo | Aceitar/reduzir: manter a exportação em local seguro; evitar novas chamadas ao Figma | Eric | PR-1 |
 | R-17 | Plano e ClickUp divergem ou ClickUp é criado em área errada | Baixa | Baixa | Baixo | Evitar: criar só depois da aprovação, em área nova; relatório confere ambos | PMO | M0 |
-| R-19 | ClickUp: as ferramentas do PMO não criam Espaço; plano e ClickUp divergem até o Eric criar o espaço "Vigen" (aberto 01/10) | Alta | Baixa | Médio | Evitar: Eric cria o espaço; PMO mantém o lote pronto em 06 | Eric, PMO | 06 seção 5 |
+| R-19 | ClickUp: plano e ClickUp divergem. **Rodada 3 (01/10): o espaço "Vigen" não está visível para o PMO** (a hierarquia só mostra "Indicadores do SGI" e "Sharepoint SGI"; criar pasta em "Vigen" retornou "Space not found"). Possíveis causas: criado em outro workspace, sem acesso para a conta conectada ao PMO, ou ainda não sincronizado | Alta | Baixa | Médio | Evitar: Eric confere o nome exato, o workspace e o compartilhamento do espaço com a conta do ClickUp usada pelo PMO; PMO repete a criação assim que aparecer; lote pronto em 06 | Eric, PMO | 06 seção 5 |
 | R-20 | Função nova junto com visual (fluxo de design por tela) vira escopo escondido e quebra regra de negócio | Média | Alta | Alto | Reduzir: função nova vira subtarefa com solicitação de mudança, teste e QA; "só apresentação" vale até o Eric aprovar a função | PMO, `agente-qa-revisao` | FE-020 a FE-035 |
 | R-18 | Escopo cresce (ideias de `docs/ideias/`, mockups sem lastro) durante o redesign | Média | Média | Médio | Reduzir: backlog separado, solicitação de mudança, regra "o que sai?" | PMO, Eric | D-13 |
 
@@ -63,9 +63,17 @@ Sugestão do PMO em cada linha. "Bloqueia" indica o que não anda sem a resposta
 | ID | Decisão | Sugestão do PMO | Bloqueia | Prioridade |
 |---|---|---|---|---|
 | D-16 | Novo desenho do sidebar/navegação (Figma e exportação): quando e com quais categorias | Eric informa quando exportar; até lá FE-014 aguarda | FE-014, FE-001 | **Alta** |
-| D-17 | Novo status "Concluído fora do prazo" (laranja): conta como concluída nos indicadores e relatórios? Quem recebe aviso? | Conta como concluída, com marca laranja e filtro próprio | TR-014 | Alta |
+| ~~D-17~~ | **Respondida em 01/10/2026 (rodada 3)**, ver 2.3 | | | |
 
-Abertas das originais: D-04 a D-10 e D-13.
+Abertas das originais: D-04 a D-10 e D-13. Abertas no total: D-04 a D-10, D-13 e D-16.
+
+### 2.3 Respostas do Eric (rodada 3, 01/10/2026)
+| ID | Situação | Resposta registrada |
+|---|---|---|
+| D-17 | **Respondida** 01/10/2026 | "Concluído fora do prazo" **conta como ação concluída**. É uma segunda informação (dentro ou fora do prazo) que mede o **atendimento ao prazo**. Não precisa gerar notificação, mas precisa estar **catalogado** (registrado e consultável/medível). Implementação do agente principal: etiqueta laranja "Concluído fora do prazo"; o status do item continua CONCLUIDO; fora do prazo = data de conclusão maior que o prazo. Efeitos no plano: TR-014 atualizado (critério 4 resolvido, sem notificação) e nova tarefa BE-014 (indicador de atendimento ao prazo). |
+| BE-001 | **Priorizada** 01/10/2026 | Armazenamento de arquivos (ARMAZENAMENTO=blob + BLOB_READ_WRITE_TOKEN na Vercel) vira atividade **prioritária (Urgente)**, dono Eric, "Pronto para fazer". O Eric faz quando tiver tempo; **o projeto segue em paralelo**. BE-013 passa a depender de BE-001. Passo a passo na descrição da tarefa (ver 06, seção 4.2). |
+
+Observação do PMO: o Eric será o único a executar BE-001; enquanto não for feito, R-02 continua Crítico e os testes 1.6 e 1.7 e BE-013 (critério 5) não fecham.
 
 ## 2.2 Falhas da rodada de testes de 01/10/2026 (informadas pelo Eric)
 1. Etiqueta/aviso "concluído sem evidência" não funcionou: TR-013.

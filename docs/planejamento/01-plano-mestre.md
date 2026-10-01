@@ -10,6 +10,11 @@
 > - **Falhas de 01/10:** três tarefas de correção (TR-013, TR-014, BE-013), nunca concluídas antes do reteste do Eric.
 > - **Itens do design que faltam (cabeçalho, avisos, Configurações) (D-15):** tratados junto com todas as telas, na verificação do Eric, que também testa as funcionalidades.
 > - **ClickUp:** Opção A aprovada, mas o espaço "Vigen" precisa ser criado pelo Eric (sem ferramenta para isso); nada criado ainda.
+>
+> **Atualizações da rodada 3 (01/10/2026):**
+> - **D-17 respondida:** "Concluído fora do prazo" conta como ação concluída e mede o atendimento ao prazo; sem notificação, mas catalogado. TR-014 atualizado; nova tarefa **BE-014** (indicador de atendimento ao prazo no Dashboard/Indicadores, depende de TR-014).
+> - **BE-001 vira prioritária** (Urgente, dono Eric, "Pronto para fazer"); o projeto segue em paralelo. **BE-013 depende de BE-001.** Passo a passo em 06, seção 4.2.
+> - **ClickUp ainda bloqueado:** o espaço "Vigen" não aparece para o PMO (06, seção 5). Nenhuma estrutura nem tarefa criada.
 Detalhamento virá em [02-plano-frontend.md] e [03-plano-backend.md] (próxima rodada). Riscos e decisões: [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md). Método: [00-base-de-conhecimento-pmo.md](00-base-de-conhecimento-pmo.md).
 
 ## 1. Objetivo
@@ -124,6 +129,7 @@ O plano 03 detalhará: schema e migrações, serviços e permissões, isolamento
 | BE-009 | Limite de tentativas por IP confiável | Teste de isolamento e de login ok | nenhuma | M | `agente-autenticacao-acesso` |
 | BE-010 | Observabilidade mínima | Erros de produção visíveis (logs da Vercel) e roteiro de diagnóstico | nenhuma | P | `agente-arquitetura-dados` |
 | BE-011 | Checklist de deploy (`migrate deploy`, variáveis, rollback) | Documento usado no próximo deploy | nenhuma | P | PMO (`engineering:deploy-checklist`) |
+| BE-014 | Indicador de atendimento ao prazo (% de ações concluídas no prazo × fora do prazo; D-17), ligado a Indicadores/Dashboard | Cálculo definido, exibido com tokens, teste unitário, Eric verifica; se a medição já existir, vira só verificação | TR-014 | M | `agente-indicadores-sgi` + `agente-nao-conformidades` |
 | BE-012 | Criptografia em nível de campo | **Só se aprovada** (D-09); schema já preparado | D-09 | G | `agente-arquitetura-dados` + `agente-integridade-dados` |
 
 ## 8. Critérios de aceite do projeto
@@ -197,11 +203,11 @@ Os demais itens entram em `Backlog` no segundo lote, após o plano 02 e 03.
 - TR-001: falhas de 01/10 já parcialmente registradas (TR-013, TR-014, BE-013); o relatório de testes ainda precisa ser preenchido.
 
 ## 11c. Mapeamento ID do plano para tarefa do ClickUp
-Ainda vazio (nada criado). Será preenchido aqui e em [06](06-inventario-telas-e-lote-clickup.md), seção 6, com links markdown.
+Ainda vazio. Rodada 3 (01/10/2026): o PMO tentou criar a estrutura, mas o espaço "Vigen" não é encontrado pela conta conectada (ver [06](06-inventario-telas-e-lote-clickup.md), seção 5). Será preenchido aqui e em 06, seção 6, com links markdown.
 
 | ID | Tarefa no ClickUp |
 |---|---|
-| (vazio) | Aguardando criação do espaço "Vigen" pelo Eric |
+| (vazio) | Bloqueado: espaço "Vigen" não visível ao PMO |
 
 ## 12. Decisões pendentes
-Lista completa e acompanhamento em [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md), seção 2. D-01, D-02, D-03, D-11, D-12, D-14 (exceto sidebar) e D-15 estão **respondidas** em 01/10/2026. Abertas: D-04 a D-10, D-13, D-16 e D-17.
+Lista completa e acompanhamento em [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md), seção 2. D-01, D-02, D-03, D-11, D-12, D-14 (exceto sidebar) e D-15 estão **respondidas** em 01/10/2026. Abertas: D-04 a D-10, D-13 e D-16. **D-17 respondida na rodada 3** (concluído fora do prazo conta como concluída; etiqueta laranja; catalogado, sem notificação).
