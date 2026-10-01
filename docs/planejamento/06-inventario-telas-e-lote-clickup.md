@@ -1,7 +1,7 @@
 # Inventário de telas, fluxo de design e lote do ClickUp
 
 **Criado em:** 01/10/2026 (rodada 2) · Plano: [01-plano-mestre.md](01-plano-mestre.md) · Decisões: [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md)
-**Situação do ClickUp (rodada 3, 01/10/2026): NADA FOI CRIADO, criação bloqueada.** O PMO tentou criar a pasta "Projeto Vigen 2026" no espaço "Vigen" e a ferramenta respondeu "Space Vigen not found"; a hierarquia do workspace só mostra "Indicadores do SGI" e "Sharepoint SGI". Por regra, nada foi criado fora de "Vigen". Ver seção 5. O lote abaixo está atualizado com as decisões da rodada 3 e pronto para executar assim que o espaço ficar visível.
+**Situação do ClickUp (rodada 4, 01/10/2026): DESBLOQUEADO, criação PARCIAL.** Espaço "Vigen" (id 901314639679, workspace 9013448793) visível. Pasta, listas, decisões, TR, BE, FE-014, casca e 4 das 16 mães de módulo foram criados. O conector tem **limite de 100 chamadas por dia** e esgotou; o que falta e como continuar sem duplicar está na seção 4.7. Mapeamento de IDs na seção 6.
 
 ## 1. Fluxo de design (regra do Eric, 01/10/2026)
 O Eric revisa o design **no sistema, tela por tela**, e anota o que precisa mudar. Se precisar alterar, mexe no Figma, exporta e pede a implantação da tela. Pode haver **funções novas** junto com o visual; tudo fica registrado na tarefa.
@@ -105,16 +105,80 @@ Abertas: D-04, D-05, D-06, D-07, D-08, D-09, D-10, D-13 e D-16 (desenho do sideb
 - Datas: só nas mães e marcos (seção 3); subtarefas de tela sem data; nenhuma tarefa nasce Concluída; TR-013, TR-014 e BE-013 nascem Em revisão.
 - Dependências a registrar: BE-013 aguarda BE-001; BE-014 aguarda TR-014; FE-002 aguarda TR-009; FE-003 aguarda FE-002; FE-004 aguarda TR-005 e FE-003; BE-004 e BE-008 aguardam BE-001; TR-002 aguarda TR-001 e BE-001 (testes 1.6 e 1.7).
 
-## 5. Ação do Eric para destravar o ClickUp (rodada 3, 01/10/2026: ainda bloqueado)
-Resultado da tentativa: a hierarquia do workspace (id terminando em 4367) lista apenas "Indicadores do SGI" e "Sharepoint SGI"; `create_folder` com o espaço "Vigen" respondeu "Space Vigen not found". Nada foi criado. Para seguir, o Eric confere:
-1. O espaço se chama exatamente **Vigen** e está no mesmo workspace (o PMO só enxerga este).
-2. O espaço está **compartilhado** com a conta do ClickUp conectada ao PMO (espaço privado não aparece). Se o conector estiver em outra conta, reconectar.
-3. Avisa o PMO. Na chamada seguinte o PMO cria pasta, listas, tags e tarefas (seção 4) e grava o mapeamento (seção 6).
-O PMO não improvisou em outro espaço (regra do Eric).
+## 4.7 Execução da rodada 4 (01/10/2026): o que foi criado, mapeamentos e o que falta
+**Estrutura criada** (espaço Vigen, id 901314639679): pasta "Projeto Vigen 2026" (id 901319555693) com as listas 01 Front-end (novo design) id 901329199268, 02 Back-end e produção id 901329199269, 03 Transversal e testes id 901329199270, 04 Backlog de ideias id 901329199271; lista solta "Decisões do Eric" id 901329199272. O espaço já tinha uma lista vazia chamada "List" (id 901329199190), criada pelo ClickUp; não foi tocada. O espaço "Team Space" (pasta "Projeto Recipe") não é do Vigen e não foi tocado.
+
+**Status (limitação registrada):** as listas herdam os status do espaço e as ferramentas do PMO não os personalizam (operadores avançados desativados). Status existentes: to do, planning, in progress, at risk, update required, on hold, complete, cancelled. **Mapeamento adotado:**
+
+| Nome sugerido | Status usado no ClickUp |
+|---|---|
+| Backlog | planning |
+| Pronto para fazer | to do |
+| Em andamento | in progress |
+| Em revisão | update required |
+| Bloqueado | on hold (ou at risk, se houver risco sem bloqueio) |
+| Concluído | complete |
+
+**Tags:** a ferramenta cria a tag automaticamente ao criar a tarefa com `tags` (testado e confirmado). Sem limitação. Já existem: frontend, backend, transversal, teste-manual, sem-evidencia, decisao-do-eric, design, funcao-nova, provisoria, m1, m2, m5, m6 e tags de módulo (base, rnc, plano-acao, processos, riscos, swot, hira, laia, inspecoes, auditorias, documentos, incidentes, indicadores, treinamentos, configuracoes, publico) conforme cada tarefa for criada. Ainda não aplicadas: `bloqueado`, `m3`, `m4`.
+
+**Datas e responsável:** datas só nas mães e marcos (seção 3), todas descritas como provisórias. BE-001 tem o Eric como responsável; TR-016 também deveria ter (falta atribuir, ver abaixo). Nenhuma tarefa foi criada como concluída; TR-013, TR-014, BE-013 e BE-002 estão em "update required" (Em revisão).
+
+**Dependências já registradas (10):** BE-013 aguarda BE-001; BE-014 aguarda TR-014; FE-002 aguarda TR-009; FE-003 aguarda FE-002; FE-004 aguarda TR-005 e FE-003; BE-004 aguarda BE-001; BE-005 a BE-012 (agregada, vale para BE-008) aguarda BE-001; TR-002 aguarda TR-001 e BE-001.
+
+### O que FALTA criar (continuar na próxima chamada, após o limite diário do conector zerar; conferir antes pela busca por nome para não duplicar)
+1. **Mães de módulo** (lista 01, status planning, tags `frontend`, `design`, `provisoria` + tag do módulo, data da seção 3, mesmo modelo de descrição das mães já criadas): FE-024, FE-025, FE-026, FE-027, FE-028, FE-029, FE-030, FE-031, FE-032, FE-033, FE-034, FE-035. Houve 12 tentativas de criação na hora do limite; todas falharam com erro de limite e **nenhuma foi criada**.
+2. **58 subtarefas de tela** (parent = mãe; nome `[FE-0xx.n] Tela: Nome`; sem data; descrição com o checklist de 4 etapas, a rota, os documentos 06, 07 e 05 e o agente; tags `frontend`, `design`, tag do módulo), conforme seção 2. Incluem as das mães já criadas (FE-020 a FE-023).
+3. **Dependências que faltam:** FE-001 aguarda FE-014; mães FE-020 a FE-035 aguardam FE-014 (opcional; já escrito na descrição); FE-022 aguarda TR-013 e TR-014 (opcional).
+4. **Ajustes:** atribuir TR-016 ao Eric; avaliar abrir BE-005 a BE-012 como tarefas filhas da agregada (hoje é uma só, ver mapeamento); lista 04 Backlog de ideias (itens de D-13 e de `docs/ideias/`, sem prioridade); comentários de "criada em 01/10/2026" nas tarefas, se o Eric quiser.
+5. Aviso: TR-007 e TR-011 do plano mestre não estavam no lote do doc. 06 e não foram criados; decidir com o Eric se entram.
+
+## 5. Destravamento do ClickUp (RESOLVIDO em 01/10/2026, rodada 4)
+O Eric reautorizou o conector; o espaço "Vigen" ficou visível no workspace 9013448793. R-19 encerrado em [04](04-riscos-e-decisoes.md). Novo risco R-21: limite diário de 100 chamadas do conector (a criação do lote precisa de pelo menos mais um dia).
 
 ## 6. Mapeamento ID do plano para tarefa do ClickUp
-Preenchido após a criação (ainda não criado; ver seção 5).
+Atualizado em 01/10/2026 (rodada 4). Parcial; ver seção 4.7 para o que falta.
 
-| ID | Tarefa no ClickUp |
-|---|---|
-| (vazio) | Nenhuma tarefa criada ainda (espaço "Vigen" não encontrado em 01/10/2026, rodada 3) |
+| ID | Tarefa no ClickUp | Lista | Status |
+|---|---|---|---|
+| D-04 | [D-04 Tokens novos do base.css](https://app.clickup.com/t/86akrnxnb) | Decisões | to do |
+| D-05 | [D-05 Ícones Flaticon](https://app.clickup.com/t/86akrnxnm) | Decisões | to do |
+| D-06 | [D-06 Documentos: envio](https://app.clickup.com/t/86akrnxnr) | Decisões | to do |
+| D-07 | [D-07 Confirmar ao fechar janela](https://app.clickup.com/t/86akrnxpd) | Decisões | to do |
+| D-08 | [D-08 E-mail real](https://app.clickup.com/t/86akrnxpw) | Decisões | to do |
+| D-09 | [D-09 LGPD, backup e criptografia](https://app.clickup.com/t/86akrnxq4) | Decisões | to do |
+| D-10 | [D-10 Extras opcionais](https://app.clickup.com/t/86akrnxqd) | Decisões | to do |
+| D-13 | [D-13 Itens sem lastro e evoluções](https://app.clickup.com/t/86akrnxqm) | Decisões | to do |
+| D-16 | [D-16 Novo desenho do sidebar](https://app.clickup.com/t/86akrnxgt) | Decisões | to do |
+| TR-001 | [TR-001 Registrar falhas de 01/10](https://app.clickup.com/t/86akrnxvz) | 03 | in progress |
+| TR-002 | [TR-002 Testes 1.1 a 1.11](https://app.clickup.com/t/86akrnxw2) | 03 | to do |
+| TR-003 | [TR-003 Testes 2.1 a 2.5](https://app.clickup.com/t/86akrnxw7) | 03 | to do |
+| TR-004 | [TR-004 Testes 3.1 a 3.12](https://app.clickup.com/t/86akrnxwj) | 03 | to do |
+| TR-005 | [TR-005 Corrigir defeitos](https://app.clickup.com/t/86akrnxx2) | 03 | in progress |
+| TR-013 | [TR-013 Sem evidência e aviso à qualidade](https://app.clickup.com/t/86akrnxx8) | 03 | update required (Em revisão) |
+| TR-014 | [TR-014 Concluído fora do prazo](https://app.clickup.com/t/86akrnxxc) | 03 | update required (Em revisão) |
+| TR-006 | [TR-006 Confirmação ao fechar janela](https://app.clickup.com/t/86akrnxzg) | 03 | planning |
+| TR-008 | [TR-008 eslint](https://app.clickup.com/t/86akrnxzv) | 03 | to do |
+| TR-009 | [TR-009 Tokens novos](https://app.clickup.com/t/86akrny06) | 03 | planning |
+| TR-010 | [TR-010 Créditos dos ícones](https://app.clickup.com/t/86akrny0r) | 03 | planning |
+| TR-016 | [TR-016 Trocar senha dos usuários de teste](https://app.clickup.com/t/86akrny10) | 03 | to do |
+| BE-001 | [BE-001 Blob em produção (prioritário)](https://app.clickup.com/t/86akrny4g) | 02 | to do, Urgente, dono Eric |
+| BE-013 | [BE-013 Download na janela de Documento](https://app.clickup.com/t/86akrny4r) | 02 | update required (Em revisão) |
+| BE-014 | [BE-014 Indicador de atendimento ao prazo](https://app.clickup.com/t/86akrny55) | 02 | planning |
+| BE-002 | [BE-002 Segurança operacional](https://app.clickup.com/t/86akrny5b) | 02 | update required (Em revisão) |
+| BE-003 | [BE-003 Scripts de integração](https://app.clickup.com/t/86akrny5p) | 02 | planning |
+| BE-004 | [BE-004 Documentos com envio real](https://app.clickup.com/t/86akrny5r) | 02 | planning |
+| BE-005 a BE-012 | [BE-005 a BE-012 Backlog de produção (agregada)](https://app.clickup.com/t/86akrny61) | 02 | planning |
+| FE-014 | [FE-014 Sidebar/navegação](https://app.clickup.com/t/86akrnyc4) | 01 | to do, Alta, 31/01/2027 provisória |
+| FE-001 | [FE-001 Cabeçalho](https://app.clickup.com/t/86akrnyd4) | 01 | planning |
+| FE-002 | [FE-002 Componentes compartilhados](https://app.clickup.com/t/86akrnydd) | 01 | planning |
+| FE-003 | [FE-003 Padrões de aviso e estados](https://app.clickup.com/t/86akrnydj) | 01 | planning |
+| FE-004 | [FE-004 Janela flutuante](https://app.clickup.com/t/86akrnydq) | 01 | planning |
+| FE-005 | [FE-005 Textos e renomes](https://app.clickup.com/t/86akrnyef) | 01 | planning |
+| FE-012 | [FE-012 Varredura final](https://app.clickup.com/t/86akrnyet) | 01 | planning |
+| FE-013 | [FE-013 Busca global e trilho (opcional)](https://app.clickup.com/t/86akrnyey) | 01 | planning |
+| FE-020 | [FE-020 Design: Base](https://app.clickup.com/t/86akrnyw6) | 01 | planning, 30/04/2027 provisória |
+| FE-021 | [FE-021 Design: RNC](https://app.clickup.com/t/86akrnywd) | 01 | planning, 30/04/2027 provisória |
+| FE-022 | [FE-022 Design: Plano de Ação](https://app.clickup.com/t/86akrnywm) | 01 | planning, 30/04/2027 provisória |
+| FE-023 | [FE-023 Design: Mapa de Processos](https://app.clickup.com/t/86akrnyx0) | 01 | planning, 31/07/2027 provisória |
+| FE-024 a FE-035 | **NÃO CRIADAS** (limite diário do conector) | 01 | ver seção 4.7 |
+| Subtarefas de tela (58) | **NÃO CRIADAS** | 01 | ver seção 4.7 |

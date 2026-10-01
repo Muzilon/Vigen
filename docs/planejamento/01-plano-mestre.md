@@ -9,12 +9,12 @@
 > - **Prazos (D-12):** datas provisórias e com muita folga, ajustadas pelo Eric; o PMO só verifica (06, seção 3).
 > - **Falhas de 01/10:** três tarefas de correção (TR-013, TR-014, BE-013), nunca concluídas antes do reteste do Eric.
 > - **Itens do design que faltam (cabeçalho, avisos, Configurações) (D-15):** tratados junto com todas as telas, na verificação do Eric, que também testa as funcionalidades.
-> - **ClickUp:** Opção A aprovada, mas o espaço "Vigen" precisa ser criado pelo Eric (sem ferramenta para isso); nada criado ainda.
+> - **ClickUp:** Opção A aprovada e implantada na rodada 4 (ver atualização abaixo).
 >
 > **Atualizações da rodada 3 (01/10/2026):**
 > - **D-17 respondida:** "Concluído fora do prazo" conta como ação concluída e mede o atendimento ao prazo; sem notificação, mas catalogado. TR-014 atualizado; nova tarefa **BE-014** (indicador de atendimento ao prazo no Dashboard/Indicadores, depende de TR-014).
 > - **BE-001 vira prioritária** (Urgente, dono Eric, "Pronto para fazer"); o projeto segue em paralelo. **BE-013 depende de BE-001.** Passo a passo em 06, seção 4.2.
-> - **ClickUp ainda bloqueado:** o espaço "Vigen" não aparece para o PMO (06, seção 5). Nenhuma estrutura nem tarefa criada.
+> - **ClickUp desbloqueado (rodada 4, 01/10/2026):** espaço "Vigen" visível; estrutura e a maior parte do lote criados; o conector tem limite de 100 chamadas por dia, então o restante continua na próxima chamada (06, seção 4.7). R-19 resolvido; R-21 novo.
 Detalhamento virá em [02-plano-frontend.md] e [03-plano-backend.md] (próxima rodada). Riscos e decisões: [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md). Método: [00-base-de-conhecimento-pmo.md](00-base-de-conhecimento-pmo.md).
 
 ## 1. Objetivo
@@ -197,17 +197,20 @@ Riscos ficam no documento 04 (não viram tarefa, salvo ação de mitigação).
 Os demais itens entram em `Backlog` no segundo lote, após o plano 02 e 03.
 
 ## 11b. Atualização da seção 11 (rodada 2)
-- Opção A **aprovada**; criação autorizada, **bloqueada** porque o espaço "Vigen" não pode ser criado pelas ferramentas do PMO (ação do Eric, 06 seção 5).
+- Opção A **aprovada e criada** na rodada 4 (01/10/2026), parcialmente (limite diário do conector); ver 11c e 06, seção 4.7.
 - Lote inicial ampliado: TR-013, TR-014, TR-016, BE-013, FE-014, mães FE-020 a FE-035 e 58 subtarefas de tela; D-16 e D-17 novas. Lista completa em [06](06-inventario-telas-e-lote-clickup.md), seção 4.
 - BE-002 muda: senha do banco já trocada; resta TR-016 (Eric troca `vigen123` no Neon).
 - TR-001: falhas de 01/10 já parcialmente registradas (TR-013, TR-014, BE-013); o relatório de testes ainda precisa ser preenchido.
 
 ## 11c. Mapeamento ID do plano para tarefa do ClickUp
-Ainda vazio. Rodada 3 (01/10/2026): o PMO tentou criar a estrutura, mas o espaço "Vigen" não é encontrado pela conta conectada (ver [06](06-inventario-telas-e-lote-clickup.md), seção 5). Será preenchido aqui e em 06, seção 6, com links markdown.
+**Rodada 4 (01/10/2026): ClickUp desbloqueado, criação PARCIAL.** Espaço "Vigen" visível (workspace 9013448793). Criados: pasta, 5 listas, 9 decisões, 7+5 tarefas de TR, 7 de BE, FE-014, FE-001 a FE-005, FE-012, FE-013 e as mães FE-020 a FE-023. O conector atingiu o limite diário de 100 chamadas; o restante (mães FE-024 a FE-035, 58 subtarefas de tela, TR-007 se existir, itens BE-005 a BE-012 em separado e backlog de ideias) continua na próxima chamada, sem duplicar. Tabela completa, mapeamento de status e pendências em [06](06-inventario-telas-e-lote-clickup.md), seções 4.7 e 6.
 
 | ID | Tarefa no ClickUp |
 |---|---|
-| (vazio) | Bloqueado: espaço "Vigen" não visível ao PMO |
+| FE-014 | [FE-014 Sidebar/navegação](https://app.clickup.com/t/86akrnyc4) |
+| BE-001 | [BE-001 Blob em produção](https://app.clickup.com/t/86akrny4g) |
+| TR-013, TR-014, BE-013 | [TR-013](https://app.clickup.com/t/86akrnxx8), [TR-014](https://app.clickup.com/t/86akrnxxc), [BE-013](https://app.clickup.com/t/86akrny4r) |
+| Demais | ver 06, seção 6 |
 
 ## 12. Decisões pendentes
 Lista completa e acompanhamento em [04-riscos-e-decisoes.md](04-riscos-e-decisoes.md), seção 2. D-01, D-02, D-03, D-11, D-12, D-14 (exceto sidebar) e D-15 estão **respondidas** em 01/10/2026. Abertas: D-04 a D-10, D-13 e D-16. **D-17 respondida na rodada 3** (concluído fora do prazo conta como concluída; etiqueta laranja; catalogado, sem notificação).
