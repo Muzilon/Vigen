@@ -38,18 +38,23 @@ export function calcularEficaciaPrimeiraVerificacao(verificacoes: readonly { efi
 
 /**
  * % de itens atrasados entre os itens com prazo no período (cancelados fora): atrasado = concluído depois do prazo
- * ou ainda aberto (pendente/em andamento) com prazo anterior a hoje.
+ * ou ainda aberto (pendente/em andamento) com prazo anterior a hoje. O complemento (100 − valor) é o atendimento ao prazo.
+ *
+ * A data de conclusão é gravada como o DIA escolhido à meia-noite UTC (como as colunas de data); por isso o dia é lido em UTC,
+ * igual à tela e à etiqueta "Concluído fora do prazo". Convertê-la para o fuso da empresa a empurraria para o dia anterior e
+ * contaria como "no prazo" uma ação concluída com 1 dia de atraso. O parâmetro `fuso` fica por compatibilidade com quem chama.
  */
 export function calcularItensAtrasados(
   itens: readonly { status: StatusItemAcao; quando: Date; dataConclusao: Date | null }[],
   periodo: { inicio: string; fim: string },
   hoje: string,
-  fuso: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- mantido por compatibilidade com quem chama (ver comentário acima)
+  _fuso?: string,
 ): number | null {
   const considerados = itens.filter((i) => i.status !== "CANCELADO" && dentro(dataIso(i.quando), periodo));
   const atrasados = considerados.filter((i) => {
     const prazo = dataIso(i.quando);
-    if (i.status === "CONCLUIDO") return !!i.dataConclusao && diaNoFuso(i.dataConclusao, fuso) > prazo;
+    if (i.status === "CONCLUIDO") return !!i.dataConclusao && dataIso(i.dataConclusao) > prazo;
     return prazo < hoje;
   });
   return pct(atrasados.length, considerados.length);

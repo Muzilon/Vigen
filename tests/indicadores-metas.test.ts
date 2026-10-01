@@ -118,4 +118,13 @@ describe("indicadores automáticos — cálculo puro", () => {
     ];
     expect(calcularItensAtrasados(itens, periodo, "2026-08-25", "America/Sao_Paulo")).toBe(50);
   });
+
+  it("itens atrasados: conclusão gravada como dia à meia-noite UTC, com 1 dia de atraso, conta como atrasada", () => {
+    // É assim que o sistema grava a data de conclusão (paraDataDb): o fuso não pode empurrá-la para o dia anterior.
+    const itens = [
+      { status: "CONCLUIDO" as const, quando: d("2026-08-10"), dataConclusao: d("2026-08-10") }, // no dia do prazo: no prazo
+      { status: "CONCLUIDO" as const, quando: d("2026-08-10"), dataConclusao: d("2026-08-11") }, // 1 dia depois: atrasada
+    ];
+    expect(calcularItensAtrasados(itens, periodo, "2026-08-25", "America/Sao_Paulo")).toBe(50);
+  });
 });
