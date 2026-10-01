@@ -26,7 +26,7 @@ describe("LAIA — pontuação e significância", () => {
     const base = { obraId: "o", atividade: "Lavagem", aspecto: "Efluente", impacto: "Solo", situacao: "NORMAL" as const, temporalidade: "ATUAL" as const, incidencia: "DIRETA" as const, ...v };
     const l = calcularLinhaLaia(PADRAO_ASPECTO_IMPACTO, { ...base, requisitoLegal: true });
     expect(l).toMatchObject({ score: 4, faixa: "CRITICO", significativo: true, periodicidadeMeses: 12 });
-    expect(() => calcularLinhaLaia(PADRAO_ASPECTO_IMPACTO, { ...base, obraId: "" })).toThrow(/obra/);
+    expect(() => calcularLinhaLaia(PADRAO_ASPECTO_IMPACTO, { ...base, obraId: "" })).toThrow(/unidade/);
     expect(() => calcularLinhaLaia(PADRAO_ASPECTO_IMPACTO, { ...base, aspecto: "" })).toThrow(/aspecto/);
     expect(() => calcularLinhaLaia(PADRAO_ASPECTO_IMPACTO, { ...base, temporalidade: "X" as never })).toThrow(/Temporalidade/);
   });

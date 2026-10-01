@@ -67,6 +67,6 @@ describe("criarPlanoManual — regras antes do banco", () => {
     const a = ator(["PLANO_GERENCIAR"], [beta]);
     await expect(criarPlanoManual(a, { titulo: " ab ", itens: [item] })).rejects.toBeInstanceOf(ErroNegocio);
     await expect(criarPlanoManual(a, { titulo: "Plano", itens: [{ ...item, quando: "01/10/2026" }] })).rejects.toThrow(/Prazo/);
-    await expect(criarPlanoManual(a, { titulo: "Plano", obraId: alfa, itens: [item] })).rejects.toThrow(/Obra/);
+    await expect(criarPlanoManual(a, { titulo: "Plano", obraId: alfa, itens: [item] })).rejects.toThrow(/Unidade/);
   });
 });

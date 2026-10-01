@@ -33,7 +33,7 @@ describe("HIRA — cálculo", () => {
     expect(l.setor).toBe("Fachada");
     expect(l.score).toBe(15);
     expect(l.scoreResidual).toBe(5);
-    expect(() => calcularLinhaHira(PADRAO_HIRA, { ...base, obraId: "" })).toThrow(/obra/);
+    expect(() => calcularLinhaHira(PADRAO_HIRA, { ...base, obraId: "" })).toThrow(/unidade/);
     expect(() => calcularLinhaHira(PADRAO_HIRA, { ...base, perigo: " " })).toThrow(/perigo/);
     expect(() => calcularLinhaHira(PADRAO_HIRA, { ...base, condicao: "X" as never })).toThrow(/Condição/);
   });
