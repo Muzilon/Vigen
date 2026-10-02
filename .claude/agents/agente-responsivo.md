@@ -1,7 +1,7 @@
 ---
 name: agente-responsivo
 description: Garante que uma tela do Vigen funcione do celular (campo) ao desktop sem rolagem horizontal da página — tabelas densas com rolagem interna, formulários curtos, alvos de toque de 44px e menu lateral adaptável.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

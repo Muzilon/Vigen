@@ -1,7 +1,7 @@
 ---
 name: agente-ux-ui
 description: Telas e componentes do Vigen (src/paginas) — tokens de design, CSS Modules, estados visuais, acessibilidade WCAG 2.1 AA, badges de status e tradução do design do Figma para o código. Acione também para revisar uma tela antes do QA.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

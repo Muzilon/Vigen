@@ -1,7 +1,7 @@
 ---
 name: agente-busca-global
 description: FUTURO (ideia, só com ordem do Eric) — busca global Ctrl+K: janela sobreposta, resultados por tipo (RNC, documentos, riscos, processos…), tolerância a acentos, buscas recentes, filtrada por permissão, módulo contratado e unidade.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
