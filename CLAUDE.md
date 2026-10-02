@@ -3,7 +3,8 @@
 ## Diretrizes de Execução e Delegação (definidas pelo Eric)
 
 ### Execução
-- Nunca execute o trabalho por conta própria. Sempre delegue a tarefa a um subagente.
+- Delegue a um subagente o trabalho pesado: ler muitos arquivos, revisar código, implementar tela ou módulo. Cada subagente começa do zero e custa dezenas de milhares de tokens só para carregar o contexto.
+- Faça direto, sem subagente, o trabalho pequeno: commit, push, conferir `git status`, editar poucas linhas.
 - Geração de Markdown: o Claude também deve criar um documento em Markdown (MD) com o relatório final ou a consolidação do trabalho.
 - Diversifique os modelos: não use sempre o Fable. Especifique o modelo em cada chamada de agente de acordo com a complexidade da tarefa.
 
