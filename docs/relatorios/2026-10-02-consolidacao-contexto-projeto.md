@@ -18,31 +18,31 @@ Estrutura: página fina em `src/app/(app)/` → componente em `src/paginas/html/
 
 ## 3. Os 21 agentes de `.claude/agents/`
 
-Modelo indicado conforme relatado pelo B (confirmar no frontmatter antes de depender dele).
+Todos os agentes passaram a `model: sonnet` em 02/10 (commit `ccc8524`). Antes: 5 fable, 15 opus, 1 haiku.
 
 | Agente | Modelo | Papel | Observação-chave |
 |---|---|---|---|
-| arquitetura-dados | Fable | Schema, migrações, actions, permissões, anexos, e-mail, cron | Acionar antes de criar entidade/permissão/rota |
-| integridade-dados | Fable | Trava otimista, histórico append-only, CHECKs, transações | Corrige; o QA só revisa |
-| autenticacao-acesso | Fable | Login, perfis, permissões, `tokenVersao`, escopo por unidade | Sem SSO/MFA sem ordem do Eric |
-| qa-revisao | Fable | Revisão ao fim da fatia | Não implementa |
-| pmo | Fable | Plano e ClickUp | Só grava em `docs/planejamento/` e `docs/relatorios/`; sem commit/push |
-| nao-conformidades | Opus | RNC e Plano de Ação 5W2H | Máquina de estados em `lib/rnc/estados.ts` |
-| riscos-hira-laia | Opus | Riscos, SWOT, HIRA, LAIA | Score recalculado no servidor |
-| documentos | Opus | Documentos ISO 9001 7.5 | Validade calculada, nunca gravada |
-| treinamentos | Opus | Treinamentos e competências | Status calculado; ASO é futuro |
-| auditorias-processos | Opus | Auditorias e Mapa de Processos | Hub que vincula módulos |
-| inspecoes-incidentes | Opus | Campo/celular, incidentes | Incidente com pessoa envolvida é restrito (LGPD) |
-| indicadores-sgi | Opus | Indicadores | Lançamento append-only |
-| notificacoes | Opus | Sino, e-mail, cron, idempotência | Nunca texto livre de registro restrito |
-| minha-fila | Opus | Início, Minhas ações, Aprovações | Não duplica regra de negócio |
-| ux-ui | Opus | Telas, tokens, WCAG 2.1 AA | Só tokens do `base.css` |
-| responsivo | Opus | 360px a desktop | Valida 390/768/1440 |
-| feedback-acessibilidade | Opus | Feedback de envio, validação, a11y | Transversal |
-| visao-minimalista | Opus | O que fica na tela principal | Nunca remove evidência de auditoria |
-| pesquisa | Haiku | Pesquisa sem alterar código | Sem Write/Bash |
-| busca-global | Opus | Ctrl+K | **FUTURO**, só com ordem do Eric |
-| painel-auditoria | Opus | Prontidão para certificação | **FUTURO**, só com ordem do Eric |
+| arquitetura-dados | Sonnet | Schema, migrações, actions, permissões, anexos, e-mail, cron | Acionar antes de criar entidade/permissão/rota |
+| integridade-dados | Sonnet | Trava otimista, histórico append-only, CHECKs, transações | Corrige; o QA só revisa |
+| autenticacao-acesso | Sonnet | Login, perfis, permissões, `tokenVersao`, escopo por unidade | Sem SSO/MFA sem ordem do Eric |
+| qa-revisao | Sonnet | Revisão ao fim da fatia | Não implementa |
+| pmo | Sonnet | Plano e ClickUp | Só grava em `docs/planejamento/` e `docs/relatorios/`; sem commit/push |
+| nao-conformidades | Sonnet | RNC e Plano de Ação 5W2H | Máquina de estados em `lib/rnc/estados.ts` |
+| riscos-hira-laia | Sonnet | Riscos, SWOT, HIRA, LAIA | Score recalculado no servidor |
+| documentos | Sonnet | Documentos ISO 9001 7.5 | Validade calculada, nunca gravada |
+| treinamentos | Sonnet | Treinamentos e competências | Status calculado; ASO é futuro |
+| auditorias-processos | Sonnet | Auditorias e Mapa de Processos | Hub que vincula módulos |
+| inspecoes-incidentes | Sonnet | Campo/celular, incidentes | Incidente com pessoa envolvida é restrito (LGPD) |
+| indicadores-sgi | Sonnet | Indicadores | Lançamento append-only |
+| notificacoes | Sonnet | Sino, e-mail, cron, idempotência | Nunca texto livre de registro restrito |
+| minha-fila | Sonnet | Início, Minhas ações, Aprovações | Não duplica regra de negócio |
+| ux-ui | Sonnet | Telas, tokens, WCAG 2.1 AA | Só tokens do `base.css` |
+| responsivo | Sonnet | 360px a desktop | Valida 390/768/1440 |
+| feedback-acessibilidade | Sonnet | Feedback de envio, validação, a11y | Transversal |
+| visao-minimalista | Sonnet | O que fica na tela principal | Nunca remove evidência de auditoria |
+| pesquisa | Sonnet | Pesquisa sem alterar código | Sem Write/Bash |
+| busca-global | Sonnet | Ctrl+K | **FUTURO**, só com ordem do Eric |
+| painel-auditoria | Sonnet | Prontidão para certificação | **FUTURO**, só com ordem do Eric |
 
 ### Regras que valem para todos
 
