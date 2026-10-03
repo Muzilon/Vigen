@@ -15,10 +15,20 @@ import {
   salvarPreferenciasAcao,
   salvarSetorAcao,
   salvarFuncaoAcao,
+  criarFeriadoAcao,
+  editarFeriadoAcao,
+  inativarFeriadoAcao,
+  reativarFeriadoAcao,
 } from "@/app/(app)/configuracoes/actions";
 import { salvarTipoDocumentoAcao } from "@/app/(app)/documentos/actions";
 import { listarTipos } from "@/lib/documentos/servico";
 import { FormAcao } from "@/paginas/html/componentes/form-acao";
+import { Alerta } from "@/paginas/html/componentes/alerta";
+import { EstadoVazio } from "@/paginas/html/componentes/estado-vazio";
+import { FormularioFeriado } from "@/paginas/html/feriados-formulario";
+import { formatarData } from "@/lib/datas";
+import { ErroNegocio } from "@/lib/erros";
+import { faltaFeriadoNoAnoCorrente, listarFeriados } from "@/lib/feriados/servico";
 import { dadosAdministracao, dadosEscalas, dadosModulos, MIN_SENHA, PAPEIS } from "@/lib/admin/servico";
 import { lerConfigAprovacao, type ModuloAprovavel } from "@/lib/aprovacao/config-modulo";
 import { getAtor } from "@/lib/ator-servidor";
@@ -43,6 +53,7 @@ const ABAS = [
   ["escalas", "Escalas"],
   ["aprovacoes", "Aprovações"],
   ["tipos-documento", "Tipos de documento"],
+  ["feriados", "Feriados"],
   ["preferencias", "Notificações"],
 ] as const;
 // Tipo que só aceita as chaves acima, para o TypeScript avisar se escrevermos uma aba que não existe.
@@ -635,6 +646,99 @@ async function AbaTiposDocumento({ ativo }: { ativo: boolean }) {
   );
 }
 
+/**
+ * Aba "Feriados": calendário de feriados da empresa, usado na contagem de prazos em dias úteis.
+ * Mostra aviso se o ano corrente não tem nenhum feriado ativo, o formulário de cadastro e a lista
+ * (cada feriado pode ser editado, inativado ou, se inativo, reativado).
+ */
+async function AbaFeriados() {
+  const a = await getAtor();
+  // Busca a lista (com inativos) e o aviso do ano corrente; sem permissão, mostra o estado de "sem permissão".
+  let feriados: Awaited<ReturnType<typeof listarFeriados>>;
+  let semFeriadoNoAno: boolean;
+  try {
+    [feriados, semFeriadoNoAno] = await Promise.all([listarFeriados(a, { incluirInativos: true }), faltaFeriadoNoAnoCorrente(a)]);
+  } catch (e) {
+    if (e instanceof ErroNegocio) return <Alerta variante="erro" role="alert">{e.message}</Alerta>;
+    throw e;
+  }
+  return (
+    <div className={styles.secoesAba}>
+      <p className={styles.explicacao}>
+        Sábados e domingos nunca contam como dia útil e não precisam ser cadastrados. Os feriados abaixo também não contam nos prazos
+        em dias úteis. Cadastrar, alterar ou inativar um feriado não muda prazos que já foram calculados.
+      </p>
+      {semFeriadoNoAno && (
+        <Alerta variante="aviso" role="status">
+          <strong>Nenhum feriado cadastrado para este ano.</strong> Sem feriados cadastrados, o prazo em dias úteis fica mais curto do
+          que o real, porque só sábados e domingos são descontados. Cadastre os feriados do ano abaixo.
+        </Alerta>
+      )}
+      <Cartao titulo="Novo feriado">
+        <FormularioFeriado acao={criarFeriadoAcao} botao="Cadastrar feriado" limpar />
+      </Cartao>
+      <Cartao titulo={`Feriados (${feriados.length})`}>
+        {feriados.length === 0 ? (
+          <EstadoVazio>
+            Nenhum feriado cadastrado ainda. Para cadastrar o primeiro, preencha a data e a descrição em “Novo feriado” e use
+            “Cadastrar feriado”.
+          </EstadoVazio>
+        ) : (
+          <ul className={styles.listaFeriados}>
+            {feriados.map((f) => (
+              <li key={f.id} className={styles.itemFeriado}>
+                <div className={styles.resumoFeriado}>
+                  <span className={styles.dataFeriado}>{formatarData(f.data)}</span>
+                  <span className={styles.descricaoFeriado}>{f.descricao}</span>
+                  <span className={`${styles.etiqueta} ${f.ativo ? styles.etiquetaVoce : styles.etiquetaInativo}`}>
+                    {f.ativo ? "Ativo" : "Inativo"}
+                  </span>
+                </div>
+                <div className={styles.acoesFeriado}>
+                  {f.ativo ? (
+                    <>
+                      <details className={styles.edicaoFeriado}>
+                        <summary className={`${styles.resumoEditar} ${styles.alvoToque}`}>Editar</summary>
+                        <FormularioFeriado
+                          acao={editarFeriadoAcao}
+                          botao="Salvar alterações"
+                          id={f.id}
+                          versao={f.versao}
+                          inicial={{ data: f.data, descricao: f.descricao }}
+                        />
+                      </details>
+                      <FormAcao
+                        acao={inativarFeriadoAcao}
+                        botao="Inativar"
+                        textoPendente="Inativando…"
+                        classeBotao={`${styles.botaoPerigo} ${styles.alvoToque}`}
+                        confirmar={`Inativar o feriado “${f.descricao}” (${formatarData(f.data)})? Prazos já calculados não mudam.`}
+                      >
+                        <input type="hidden" name="id" value={f.id} />
+                        <input type="hidden" name="versao" value={f.versao} />
+                      </FormAcao>
+                    </>
+                  ) : (
+                    <FormAcao
+                      acao={reativarFeriadoAcao}
+                      botao="Reativar"
+                      textoPendente="Reativando…"
+                      classeBotao={`${styles.botaoSecundario} ${styles.alvoToque}`}
+                    >
+                      <input type="hidden" name="data" value={f.data} />
+                      <input type="hidden" name="descricao" value={f.descricao} />
+                    </FormAcao>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Cartao>
+    </div>
+  );
+}
+
 /** Aba "Notificações": dias de antecedência do alerta de prazo, resumo semanal e envio por e-mail. */
 async function AbaPreferencias({ empresaId }: { empresaId: string }) {
   // Busca as preferências de notificação atuais da empresa.
@@ -692,7 +796,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
   // Aba ativa: a da URL, se for válida; senão, "usuarios".
   const aba: Aba = (ABAS.find(([k]) => k === sp.aba)?.[0] ?? "usuarios") as Aba;
   // Só busca os dados gerais de administração nas abas que precisam deles (as outras buscam os seus).
-  const d = aba === "preferencias" || aba === "modulos" || aba === "escalas" || aba === "aprovacoes" || aba === "tipos-documento" ? null : await dadosAdministracao(await getAtor());
+  const d = aba === "preferencias" || aba === "feriados" || aba === "modulos" || aba === "escalas" || aba === "aprovacoes" || aba === "tipos-documento" ? null : await dadosAdministracao(await getAtor());
   // Só busca as escalas quando a aba Escalas está aberta.
   const escalas = aba === "escalas" ? await dadosEscalas(await getAtor()) : null;
 
@@ -720,6 +824,7 @@ export default async function Configuracoes({ searchParams }: PageProps<"/config
       {aba === "escalas" && escalas && <AbaEscalas d={escalas} />}
       {aba === "aprovacoes" && <AbaAprovacoes />}
       {aba === "tipos-documento" && <AbaTiposDocumento ativo={ctx.modulosAtivos.includes("DOCUMENTOS")} />}
+      {aba === "feriados" && <AbaFeriados />}
       {aba === "preferencias" && <AbaPreferencias empresaId={ctx.empresaId} />}
     </div>
   );
