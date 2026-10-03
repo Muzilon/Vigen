@@ -2,7 +2,7 @@
 
 Status: especificação (nada implementado). Data: 2026-10-03. Usada primeiro pelo fluxo do Mapa de Processos ([05-mapa-de-processos-fluxo.md](05-mapa-de-processos-fluxo.md)); pensada para qualquer módulo.
 
-Decisões do Eric em 03/10/2026: (1) hierarquia Empresa -> Unidades -> Áreas, com um mapa de processos por área; (2) o mapa em elaboração/revisão fica separado do vigente e é acessado por tramitação ou pela aba «Mapas em revisão» (detalhes no 05). Para esta regra comum, o efeito é só o escopo: atividade ligada a um mapa herda a unidade da área, e `permissaoAlvo` respeita o escopo por unidade do usuário (`obrasPermitidas`, `src/lib/escopo-obras.ts`). A Qualidade com `VER_TODAS_OBRAS` vê todas.
+Decisões do Eric em 03/10/2026: (1) hierarquia Empresa -> Unidades -> Áreas, com um mapa de processos por área; (2) o mapa em elaboração/revisão fica separado do vigente e é acessado por tramitação ou pela aba «Mapas em revisão» (detalhes no 05). Em 03/10/2026 o Eric confirmou também que `Setor` é a «Área» (na interface passa a se chamar «Área»; no código e no schema continua `Setor`/`setorId`). Para esta regra comum, o efeito é só o escopo: atividade ligada a um mapa herda a unidade da área, e `permissaoAlvo` respeita o escopo por unidade do usuário (`obrasPermitidas`, `src/lib/escopo-obras.ts`). A Qualidade com `VER_TODAS_OBRAS` vê todas.
 
 ## Objetivo
 

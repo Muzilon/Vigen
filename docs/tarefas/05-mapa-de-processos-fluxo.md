@@ -5,6 +5,10 @@ Status: especificação (nada implementado). Data: 2026-10-03. Fluxo validado pe
 Decisões do Eric em 03/10/2026 (respondem as duas perguntas bloqueantes anteriores):
 1. Hierarquia Empresa -> Unidades -> Áreas; **cada área tem o seu mapa** (um mapa por área, não por empresa).
 2. **Separar rascunho e vigente: SIM.** O mapa em elaboração/revisão não aparece na visão normal do módulo; é acessado pela tramitação ou pela aba «Mapas em revisão» dentro do módulo (padrão de abas do módulo Treinamentos).
+3. `Setor` é a «Área». Na interface (textos, rótulos, títulos de aba e telas) diz-se sempre «Área»; no código e no schema continuam o modelo `Setor` e os campos `setorId` (mesma convenção de «Unidade» na interface e `obra` no código).
+4. Os `Processo` já cadastrados vão para uma Área provisória «Geral» (ver «Migração dos processos já cadastrados»); o Eric gerará dados de exemplo depois, com agentes novos.
+
+Decisão opcional do Eric (não decidida): NÃO propomos renomear o modelo `Setor` para `Area` no banco. O modelo é usado em cerca de 39 arquivos de `src/` e em várias tabelas (RNC, Documento, Inspeção, Incidente, Usuário) e a renomeação exigiria migração e testes em todos os módulos, com risco de quebra silenciosa e nenhum ganho para o usuário, já que a interface é o que muda.
 
 ## Objetivo
 
@@ -46,7 +50,7 @@ Não existe, é novo:
 Migração aditiva: só `CREATE TABLE`, `ADD COLUMN` anulável, `ADD VALUE` em enums; nada é apagado nem reescrito. Tudo com `empresaId`, `@@unique([empresaId, id])`, FKs compostas `(empresaId, xId) -> (empresaId, id)`, `onDelete: Restrict`, exclusão lógica (`ativo`), `criarDbTenant`; em `create`, nunca `empresa: { connect }`.
 
 **Hierarquia e escopo:**
-- `Setor` (= Área, pergunta 1) ganha `obraId?` (FK composta para `ObraUnidade`, anulável na migração, `onDelete: Restrict`), cadastrado em Configurações. Área sem unidade não pode ter mapa (validação no serviço). Troca de unidade de uma área com mapa é bloqueada (ou exige decisão separada).
+- `Setor` (= Área, confirmado) ganha `obraId?` (FK composta para `ObraUnidade`, anulável na migração, `onDelete: Restrict`), cadastrado em Configurações. Área sem unidade não pode ter mapa (validação no serviço). Troca de unidade de uma área com mapa é bloqueada (ou exige decisão separada).
 - `MapaProcesso.obraId` é **copiado** da área ao criar o mapa (e mantido por serviço), para filtrar com `filtroObras` como RNC/HIRA/LAIA; CHECK/validação de que `obraId` = `setor.obraId`.
 - Permissões respeitam o escopo: ler/editar/aprovar/assumir exige a permissão E `obraNoEscopo(ator, mapa.obraId)`; quem tem `VER_TODAS_OBRAS` enxerga todas as unidades. Destinatários de avisos são filtrados pelo mesmo escopo; a Qualidade «de toda a empresa» é quem tem `VER_TODAS_OBRAS` ou a unidade no escopo.
 
@@ -62,7 +66,7 @@ Migração aditiva: só `CREATE TABLE`, `ADD COLUMN` anulável, `ADD VALUE` em e
 
 **`MapaProcesso`:** `id`, `empresaId`, `setorId` (a área), `obraId` (unidade, derivada da área), `codigo` (único por empresa), `nome`, `estado`, `versaoVigente` (Int, 0 = nunca publicado; espelho do `VersaoMapa` mais recente), `cicloAtual` (Int, +1 a cada envio para aprovação), `reprovadoPorId?` (para «Reprovado por [nome]»), `ultimaPublicacaoEm?` (base dos 12 meses), `proximaVerificacaoEm?` (Date, = publicação + 12 meses), `versao` (trava otimista), `ativo`, `criadoEm`, `atualizadoEm`. **`@@unique([empresaId, setorId])`: um mapa por área** (a tela de criação oferece só áreas sem mapa); `@@index([empresaId, obraId, estado])`. Etiqueta «em revisão» não é coluna: é derivada (`versaoVigente > 0` e existe `RevisaoMapa` aberta).
 
-**`Processo` (coluna nova):** `mapaId?` (FK composta; anulável por causa dos processos já cadastrados, que hoje não têm área). Carga inicial: os `Processo` existentes ficam sem mapa até o administrador/Qualidade atribuí-los a mapas de área por uma tela única de «Atribuir processos existentes» (a distribuição é decisão de negócio; pergunta 2). Após a carga, `mapaId` passa a ser obrigatório por regra de serviço.
+**`Processo` (coluna nova):** `mapaId?` (FK composta; anulável por causa dos processos já cadastrados, que hoje não têm área). Carga inicial: os `Processo` existentes ficam sem mapa até o administrador/Qualidade atribuí-los a mapas de área por uma tela única de «Atribuir processos existentes» (pergunta 2). Após a carga, `mapaId` passa a ser obrigatório por regra de serviço.
 
 **`SolicitacaoMapa`:** `id`, `empresaId`, `setorId` (área), `mapaId?` (nulo se mapa novo ainda não criado), `obraId`, `tipo` (ELABORACAO, REVISAO), `origem` (AREA_SISTEMA, AREA_EMAIL, AREA_PRESENCIAL, QUALIDADE), `solicitanteId?` (a área, se pediu pelo sistema), `registradaPorId`, `descricao` (texto livre curto; sem dados pessoais), `status` (REGISTRADA, EM_ANDAMENTO, ATENDIDA, CANCELADA), `versao`, `criadoEm`. Regra: origem AREA_SISTEMA é registrada pela própria área; as demais, pela Qualidade (CHECK: `origem = 'AREA_SISTEMA'` implica `solicitanteId = registradaPorId`).
 
@@ -77,6 +81,24 @@ Migração aditiva: só `CREATE TABLE`, `ADD COLUMN` anulável, `ADD VALUE` em e
 **Enums existentes a estender:** `TipoEntidadeAprovacao` (+MAPA_PROCESSO), `TipoEntidadeNotificacao` (+MAPA_PROCESSO), `TipoAtividade`/`TipoEntidadeAtividade` (04), `ModuloAnexo`/regra de anexo só se Excel for guardado (não será: lê e descarta).
 
 **Excel:** biblioteca nova (sugestão `exceljs`; é dependência nova, registrar no relatório). Modelo de planilha de importação com as colunas do SIPOC. Importar substitui o `conteudo` da `RevisaoMapa` (arquiva o anterior em `RevisaoMapaArquivada`, origem IMPORTACAO_EXCEL); validar tamanho, linhas, tipos e código duplicado no servidor.
+
+## Migração dos processos já cadastrados
+
+A Área «Geral» é **provisória**: serve só para dar um mapa aos `Processo` existentes e pode ser reatribuída depois (o Eric vai gerar dados de exemplo com agentes novos). Script idempotente `scripts/migrar-processos-mapa.ts` (ou SQL na migração), usando `prismaAdmin` (só seed/cron/testes/migração), aditivo, sem apagar nem alterar linhas existentes além de preencher `Processo.mapaId` nulo.
+
+Colunas auxiliares: `Setor.padrao Boolean @default(false)` (marca a Área padrão; índice único parcial: no máximo uma padrão por `empresaId` + `obraId`, tratando `obraId` nulo como um grupo próprio).
+
+Ordem das etapas, por empresa:
+1. Contagens antes: nº de `Processo` (total e com `mapaId` nulo), de `Setor`, de `MapaProcesso`, de `VersaoProcesso`; gravar no relatório.
+2. Criar as colunas/tabelas novas (migração aditiva normal).
+3. Área padrão: para cada unidade (`ObraUnidade`) da empresa, achar ou criar `Setor` «Geral» (`padrao = true`, `obraId` = unidade). Enquanto as Áreas antigas tiverem `obraId` nulo, criar uma única «Geral» por empresa com `obraId` nulo; ela só pode ter mapa depois de ligada a uma unidade, então, nesse caso, usar a primeira unidade da empresa (ou a única) para a «Geral» e registrar a escolha no relatório. Empresa sem nenhuma unidade: pular e listar no relatório.
+4. Para cada Área «Geral», achar ou criar o `MapaProcesso` (`@@unique([empresaId, setorId])` garante um só), estado `VIGENTE`, `versaoVigente` = 1 se já houver `VersaoProcesso` publicada (senão `ELABORACAO_JUNTO_AREA` e `versaoVigente` 0), `ultimaPublicacaoEm` = maior `publicado_em` do `VersaoProcesso` da empresa (se houver), `proximaVerificacaoEm` = +12 meses dessa data. Quando houver publicação anterior, criar também um `VersaoMapa` 1 com o snapshot atual (idempotente por `[empresaId, mapaId, versao]`).
+5. `UPDATE processo SET mapa_id = <mapa Geral> WHERE mapa_id IS NULL` (a empresa inteira vai para esse mapa; com várias unidades, usar o mapa da «Geral» escolhida na etapa 3).
+6. Contagens depois e conferência.
+
+Idempotência: cada etapa é «achar ou criar»; rodar de novo não duplica nem muda nada (o `UPDATE` só atinge `mapa_id` nulo).
+
+Como conferir (por empresa, antes e depois): `Processo` total igual; `Processo` com `mapaId` nulo = 0; `MapaProcesso` = nº de Áreas «Geral» criadas; `VersaoProcesso` e `Setor` antigos inalterados (mesmas contagens, mais as «Geral»); nenhum `Processo` ligado a mapa de outra empresa (FK composta já impede, conferir por consulta). Teste em `scripts/teste-mapa-fluxo.ts`: rodar a migração duas vezes numa empresa de teste e comparar as contagens.
 
 ## Regras de negócio e estados
 
@@ -165,7 +187,8 @@ Nenhum texto livre de registro restrito em título/corpo (só códigos e nomes d
 5. Gatilhos e cron (12 meses, documento, LAIA, HIRA) e notificações: agente-notificacoes, com agente-documentos e agente-riscos-hira-laia nos pontos de publicação.
 6. Telas: agente-ux-ui, depois agente-responsivo.
 7. Revisão de isolamento, log e migração: agente-qa-revisao.
-8. Relatório e documentação (guia §8.4, `docs/06-desenho-modulos.md`).
+8. Trocar o rótulo «Setor» por «Área» na interface de todos os módulos: agente-ux-ui. Levantamento em `src/` (sem alterar o modelo): cerca de 39 arquivos mencionam setor, dos quais 12 arquivos `.tsx` têm o rótulo visível (`src/paginas/html/`: `configuracoes.tsx` (6 ocorrências), `hira-lista.tsx` (2), `documento-detalhe.tsx` (2), `treinamento-formulario.tsx` (2), `rnc-detalhe.tsx`, `rnc-nova-formulario.tsx`, `incidente-detalhe.tsx`, `incidentes-novo-formulario.tsx`, `hira-formulario.tsx`, `dashboard.tsx`, `treinamentos-lista.tsx`, `documento-novo-formulario.tsx`) e 7 arquivos `.ts` têm mensagens de erro com a palavra (`src/lib/admin/servico.ts`, `src/lib/documentos/servico.ts`, `src/lib/incidentes/servico.ts`, `src/lib/inspecoes/servico.ts`, `src/lib/treinamentos/servico.ts`, `src/app/(app)/treinamentos/actions.ts`, `src/app/(app)/configuracoes/actions.ts`). Só texto visível; não renomear identificadores, rotas ou colunas. Refazer o Grep na hora da execução. Cobrir também ajuda, e-mails e testes que comparem texto.
+9. Relatório e documentação (guia §8.4, `docs/06-desenho-modulos.md`).
 
 ## Riscos
 
@@ -182,6 +205,4 @@ Nenhum texto livre de registro restrito em título/corpo (só códigos e nomes d
 
 ## Perguntas bloqueantes ao Eric
 
-Resolvidas em 03/10/2026 (unidade do mapa = área; rascunho separado do vigente). Novas:
-1. `Setor` é a «Área»? Hoje `Setor` não tem unidade; a spec propõe `Setor.obraId` (aditivo). Confirmar que é o mesmo conceito (senão cria-se uma entidade `Area` nova). Bloqueia a fatia 2.
-2. Como distribuir os `Processo` já cadastrados entre as áreas (cada processo e sua área)? Recomendação: tela de atribuição manual pela Qualidade, sem automatismo. Bloqueia só a carga inicial, não o início das fatias 1 e 2.
+Nenhuma. (Resolvidas em 03/10/2026: unidade do mapa = Área; rascunho separado do vigente; `Setor` é a Área; processos existentes vão para a Área provisória «Geral».) A decisão opcional de renomear o modelo no banco está registrada no topo e não bloqueia nada.
