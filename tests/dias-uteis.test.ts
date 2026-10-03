@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diasUteisEntre, somarDiasUteis } from "@/lib/datas";
+import { diasUteisEntre, ehDiaUtil, somarDiasUteis } from "@/lib/datas";
 
 // 2026-10-02 é sexta; 03 sábado; 04 domingo; 05 segunda.
 describe("somarDiasUteis", () => {
@@ -36,5 +36,27 @@ describe("diasUteisEntre", () => {
   it("é coerente com somarDiasUteis", () => {
     const f = new Set(["2026-11-02"]);
     expect(somarDiasUteis("2026-10-28", diasUteisEntre("2026-10-28", "2026-11-10", f), f)).toBe("2026-11-10");
+  });
+});
+
+describe("entradas inválidas e casos de borda", () => {
+  it("somarDiasUteis rejeita data inválida e n não inteiro", () => {
+    expect(() => somarDiasUteis("abc", 1)).toThrow(RangeError);
+    expect(() => somarDiasUteis("2026-02-30", 1)).toThrow(RangeError);
+    expect(() => somarDiasUteis("2026-10-05", 1.5)).toThrow(RangeError);
+  });
+  it("diasUteisEntre rejeita data inválida em vez de ficar em laço", () => {
+    expect(() => diasUteisEntre("2026-10-05", "abc")).toThrow(RangeError);
+    expect(() => diasUteisEntre("", "2026-10-05")).toThrow(RangeError);
+  });
+  it("feriado em domingo não desconta nada", () => {
+    // 2026-10-04 é domingo
+    expect(somarDiasUteis("2026-10-02", 1, new Set(["2026-10-04"]))).toBe("2026-10-05");
+  });
+  it("ehDiaUtil: semana, fim de semana e feriado", () => {
+    expect(ehDiaUtil("2026-10-05")).toBe(true);
+    expect(ehDiaUtil("2026-10-03")).toBe(false);
+    expect(ehDiaUtil("2026-10-04")).toBe(false);
+    expect(ehDiaUtil("2026-10-05", new Set(["2026-10-05"]))).toBe(false);
   });
 });

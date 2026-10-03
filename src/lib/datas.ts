@@ -55,6 +55,12 @@ function diaDaSemana(iso: string): number {
   return paraDataDb(iso).getUTCDay();
 }
 
+/** Garante que `iso` é uma data civil real YYYY-MM-DD; sem isso os laços de dias úteis poderiam não terminar. */
+function exigirDataCivil(iso: string, nome: string): void {
+  const valida = /^\d{4}-\d{2}-\d{2}$/.test(iso) && dataIso(paraDataDb(iso)) === iso;
+  if (!valida) throw new RangeError(`${nome} deve ser uma data válida no formato YYYY-MM-DD`);
+}
+
 /** Dia útil = não é sábado nem domingo e não consta em `feriados` (conjunto de YYYY-MM-DD). */
 export function ehDiaUtil(iso: string, feriados: ReadonlySet<string> = new Set()): boolean {
   const d = diaDaSemana(iso);
@@ -71,6 +77,7 @@ export function ehDiaUtil(iso: string, feriados: ReadonlySet<string> = new Set()
  * `inicio` deve vir de `hojeNoFuso(fusoDaEmpresa)` ou `dataIso`, nunca de `toISOString().slice(0,10)`.
  */
 export function somarDiasUteis(inicio: string, n: number, feriados: ReadonlySet<string> = new Set()): string {
+  exigirDataCivil(inicio, "inicio");
   if (!Number.isInteger(n) || n < 0) throw new RangeError("n deve ser um inteiro >= 0");
   let atual = inicio;
   let restam = n;
@@ -87,6 +94,8 @@ export function somarDiasUteis(inicio: string, n: number, feriados: ReadonlySet<
  * Se `b <= a` devolve 0. Mesma regra: fim de semana e feriados não contam; sem feriados só o fim de semana.
  */
 export function diasUteisEntre(a: string, b: string, feriados: ReadonlySet<string> = new Set()): number {
+  exigirDataCivil(a, "a");
+  exigirDataCivil(b, "b");
   let total = 0;
   let atual = a;
   while (atual < b) {
