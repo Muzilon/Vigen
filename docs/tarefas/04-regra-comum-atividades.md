@@ -4,6 +4,8 @@ Status: especificação (nada implementado). Data: 2026-10-03. Usada primeiro pe
 
 Decisões do Eric em 03/10/2026: (1) hierarquia Empresa -> Unidades -> Áreas, com um mapa de processos por área; (2) o mapa em elaboração/revisão fica separado do vigente e é acessado por tramitação ou pela aba «Mapas em revisão» (detalhes no 05). Em 03/10/2026 o Eric confirmou também que `Setor` é a «Área» (na interface passa a se chamar «Área»; no código e no schema continua `Setor`/`setorId`). Para esta regra comum, o efeito é só o escopo: atividade ligada a um mapa herda a unidade da área, e `permissaoAlvo` respeita o escopo por unidade do usuário (`obrasPermitidas`, `src/lib/escopo-obras.ts`). A Qualidade com `VER_TODAS_OBRAS` vê todas.
 
+Decisões do Eric em 03/10/2026 que afetam esta regra: área «Geral» uma por unidade; aprovador que sai durante o ciclo é tratado por substituição e cancelamento (ver 05); notificação de reprovação com justificativa no sino (interpretação a confirmar, ver 05). Correção da revisão de QA aplicada (`docs/relatorios/2026-10-03-revisao-qa-mapa-processos.md`). **Este arquivo é o dono único** da migração que torna `HistoricoAprovacao.fluxoId` opcional; o [05](05-mapa-de-processos-fluxo.md) só a referencia e soma suas colunas à mesma migração.
+
 ## Objetivo
 
 Uma «atividade» é uma tarefa criada **pelo sistema** para um grupo de pessoas que têm uma permissão. Uma delas «assume»; as demais veem «em execução por [responsável]». Quem assumiu pode devolver a outra pessoa, que confirma ou recusa. Tem prazo em dias úteis; vencido o prazo, a Qualidade é avisada e o item vai à máxima urgência. Tudo fica registrado no log de aprovações.
@@ -38,9 +40,9 @@ Migração aditiva (sem `migrate dev`, sem apagar dados; guia §7 passo 2).
 - FKs compostas `(empresaId, responsavelId) -> Usuario(empresaId, id)` e idem `devolvidoParaId`; `onDelete: Restrict`; sem exclusão (cancelar = status). Em `create`, nunca `empresa: { connect }`.
 - CHECKs na seção «Regras SQL» da migração: `status = 'ASSUMIDA'` exige `responsavelId`; `status = 'DEVOLUCAO_PENDENTE'` exige `responsavelId` e `devolvidoParaId`; `devolvidoParaId <> responsavelId`; `prazoDiasUteis > 0`.
 
-**`FeriadoEmpresa`** (`feriado_empresa`): `id`, `empresaId`, `data` (Date), `descricao`, `criadoPorId`, `criadoEm`; `@@unique([empresaId, data])`. Decisão: tabela e não JSON em `Empresa.config`, para ter unicidade e histórico por linha. Sábado e domingo nunca são dia útil (sem cadastro).
+**`FeriadoEmpresa`** (`feriado_empresa`): `id`, `empresaId`, `data` (Date), `descricao`, `criadoPorId`, `criadoEm`; `@@unique([empresaId, data])`. Decisão: tabela e não JSON em `Empresa.config`, para ter unicidade e histórico por linha. Sábado e domingo nunca são dia útil (sem cadastro). Sem nenhum feriado cadastrado, o cálculo usa só sábado e domingo. **Feriado cadastrado depois não recalcula `prazoEm` já gravado** (o prazo é fixado na criação); isso vale também para uma exclusão de feriado.
 
-**Log:** alterar `HistoricoAprovacao` (aditivo): `fluxoId` passa a opcional, nova coluna `atividadeId?` com FK composta, e CHECK `num_nonnulls(fluxo_id, atividade_id) = 1`. Valores novos em `AcaoHistoricoAprovacao` (`ALTER TYPE ... ADD VALUE`): ATIVIDADE_CRIADA, ATIVIDADE_ASSUMIDA, ATIVIDADE_DEVOLVIDA, ATIVIDADE_ACEITA, ATIVIDADE_RECUSADA, ATIVIDADE_CONCLUIDA, ATIVIDADE_VENCIDA, ATIVIDADE_CANCELADA. `metadados` guarda de/para (ids), nunca texto sensível. O trigger append-only continua valendo; conferir se a relação `fluxo` e as consultas existentes (`obterFluxo`) toleram `fluxoId` nulo.
+**Log:** alterar `HistoricoAprovacao` (aditivo): `fluxoId` passa a opcional, nova coluna `atividadeId?` com FK composta, e CHECK `num_nonnulls(fluxo_id, atividade_id) = 1`. **Migração única:** uma só migração aditiva altera `historico_aprovacao` (este arquivo: `fluxoId` opcional, `atividadeId`, CHECK, ações novas; 05: `ciclo`, `versaoEntidade`, CHECK de justificativa `NOT VALID`). Antes dela, rodar `npm run test:aprovacao` e acrescentar teste de regressão do motor que cubra `solicitarAprovacao`, `decidir`, `cancelar`, `obterFluxo`, `listarAguardandoMim` e o trigger append-only (a mudança afeta cerca de 60 pontos em 7 arquivos que leem `fluxoId`). Registro: cada linha aponta para `fluxoId` OU `atividadeId`; atividade ligada a um fluxo (`PUBLICAR_MAPA`) registra com `atividadeId` e guarda o `fluxoId` nos `metadados`; atividade sem fluxo (`VERIFICAR_REVISAO_MAPA`) registra só com `atividadeId`. Valores novos em `AcaoHistoricoAprovacao` (`ALTER TYPE ... ADD VALUE`): ATIVIDADE_CRIADA, ATIVIDADE_ASSUMIDA, ATIVIDADE_DEVOLVIDA, ATIVIDADE_ACEITA, ATIVIDADE_RECUSADA, ATIVIDADE_CONCLUIDA, ATIVIDADE_VENCIDA, ATIVIDADE_CANCELADA. `metadados` guarda de/para (ids), nunca texto sensível. O trigger append-only continua valendo; conferir se a relação `fluxo` e as consultas existentes (`obterFluxo`) toleram `fluxoId` nulo.
 
 ## Regras de negócio e estados
 
@@ -60,8 +62,10 @@ Demais regras:
 - Enquanto ASSUMIDA, os demais veem «em execução por [nome]» e não podem assumir. Em DEVOLUCAO_PENDENTE o item mostra «devolvida para [nome], aguardando confirmação»; o responsável original segue dono até a confirmação.
 - Assumir usa trava otimista: `updateMany({ where: { id, versao, status: 'ABERTA' } })`; `count === 0` => `ErroConflito` (dois cliques simultâneos: um vence).
 - Toda transição grava um `HistoricoAprovacao` na mesma `$transaction`.
+- Concorrência com a entidade: `assumir` e `concluir` conferem, na mesma transação, o estado da entidade de origem (ex.: mapa ainda `PARA_PUBLICAR`, `versao` igual) além do estado da atividade; divergência => `ErroConflito`. O módulo de origem fornece essa checagem (callback `conferirEntidade(tx, atividade)`).
+- Entidade inativada ou revisão cancelada: o módulo chama `cancelarAtividadesDaEntidade(tx, entidadeTipo, entidadeId)`, que põe as abertas em CANCELADA e registra no log.
 - Vencimento: no cron diário, atividade ABERTA/ASSUMIDA/DEVOLUCAO_PENDENTE com `prazoEm < hoje` e `vencidaEm` nulo recebe `vencidaEm`, `urgenciaMaxima = true`, log ATIVIDADE_VENCIDA e aviso a todos os usuários da Qualidade (quem tem `ATIVIDADE_ACOMPANHAR`). O vencimento não muda o estado nem o responsável.
-- Escopo por unidade: com `obraId` na atividade, só vê/assume quem tem a permissão E `obraNoEscopo(ator, obraId)`; destinatários de `ATIVIDADE_NOVA` são filtrados do mesmo modo. O aviso de vencida vai à Qualidade (`ATIVIDADE_ACOMPANHAR`) que enxerga a unidade.
+- Escopo por unidade: com `obraId` na atividade, só vê/assume quem tem a permissão E `obraNoEscopo(ator, obraId)`; destinatários de `ATIVIDADE_NOVA` são filtrados do mesmo modo. O aviso de vencida vai a quem tem `ATIVIDADE_ACOMPANHAR` **e** `obraNoEscopo(usuario, obraId)` (mesma regra no 05).
 - Serviços recebem `Ator`, exigem módulo e permissão, revalidam a entrada (a ação não é confiável) e não usam `getContexto()`.
 
 ## Permissões novas
@@ -97,7 +101,9 @@ Título e corpo só com texto gerado pelo sistema (tipo da atividade + código d
 ## Testes e critérios de aceite
 
 - vitest: `somarDiasUteis` (fim de semana, feriado, virada de mês, 0 feriados, feriado em sábado); transições da máquina de estados.
-- `scripts/teste-atividades.ts` (nomes com sufixo aleatório, roda de novo sem quebrar): criar duas vezes com a mesma `chaveOrigem` gera uma só; dois assumirem ao mesmo tempo, um recebe `ErroConflito`; quem não tem a permissão não assume; só o responsável devolve; só o destinatário confirma/recusa; recusa volta ao anterior; cada transição gera um log; UPDATE/DELETE no log é bloqueado pelo trigger; cron marca vencida uma vez só e avisa a Qualidade (e só ela).
+- `scripts/teste-atividades.ts` (nomes com sufixo aleatório, roda de novo sem quebrar): criar duas vezes com a mesma `chaveOrigem` gera uma só; dois assumirem ao mesmo tempo, um recebe `ErroConflito`; quem não tem a permissão não assume; só o responsável devolve; só o destinatário confirma/recusa; recusa volta ao anterior; cada transição gera um log; UPDATE/DELETE no log é bloqueado pelo trigger; cron marca vencida uma vez só e avisa só quem tem `ATIVIDADE_ACOMPANHAR` e a unidade no escopo.
+- Funções testadas: `criarAtividade`, `assumirAtividade`, `devolverAtividade`, `aceitarDevolucao`, `recusarDevolucao`, `concluirAtividade`, `cancelarAtividadesDaEntidade`, `venceAtividades` (cron), `somarDiasUteis`, `diasUteisEntre`. Usuários do guia §11 (senha `vigen123`): `qualidade@monto.com.br` e `admin@monto.com.br` assumem/devolvem entre si; `colaborador@monto.com.br` não tem a permissão e é recusado; `admin@demo.com.br` verifica o isolamento.
+- Regressão do motor: `npm run test:aprovacao` verde antes e depois da migração.
 - Isolamento: empresa Demo não vê atividade, feriado nem log de outra empresa (`npm run test:isolamento` estendido); FK composta impede responsável de outra empresa.
 - Critério: com feriado cadastrado, o prazo pula o dia; a migração não altera linhas existentes de `historico_aprovacao`.
 - Antes de entregar: `npx tsc --noEmit -p .`, `npm run lint`, `npm test`, `npm run test:atividades`, `npm run test:isolamento`.
@@ -105,7 +111,7 @@ Título e corpo só com texto gerado pelo sistema (tipo da atividade + código d
 ## Fatias de implementação (em ordem)
 
 1. Feriados + dias úteis (modelo, tela em Configurações, funções puras e vitest): agente-arquitetura-dados (modelo/serviço), agente-ux-ui (tela).
-2. Modelo `Atividade`, ajuste do `HistoricoAprovacao`, permissão `ATIVIDADE_ACOMPANHAR`, serviço e testes: agente-arquitetura-dados.
+2. Teste de regressão do motor (`npm run test:aprovacao`), depois a migração única de `HistoricoAprovacao` (com as colunas do 05), modelo `Atividade` (FK composta; `VerificacaoMapa.atividadeId` do 05 aponta para ela), permissão `ATIVIDADE_ACOMPANHAR`, serviço e testes: agente-arquitetura-dados.
 3. Notificações e cron de vencimento: agente-notificacoes.
 4. Telas na aba Aprovações e cartão da atividade: agente-ux-ui, depois agente-responsivo.
 5. Revisão de isolamento e do log: agente-qa-revisao.
