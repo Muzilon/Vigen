@@ -2,6 +2,8 @@
 
 Status: especificação (nada implementado). Data: 2026-10-03. Usada primeiro pelo fluxo do Mapa de Processos ([05-mapa-de-processos-fluxo.md](05-mapa-de-processos-fluxo.md)); pensada para qualquer módulo.
 
+Decisões do Eric em 03/10/2026: (1) hierarquia Empresa -> Unidades -> Áreas, com um mapa de processos por área; (2) o mapa em elaboração/revisão fica separado do vigente e é acessado por tramitação ou pela aba «Mapas em revisão» (detalhes no 05). Para esta regra comum, o efeito é só o escopo: atividade ligada a um mapa herda a unidade da área, e `permissaoAlvo` respeita o escopo por unidade do usuário (`obrasPermitidas`, `src/lib/escopo-obras.ts`). A Qualidade com `VER_TODAS_OBRAS` vê todas.
+
 ## Objetivo
 
 Uma «atividade» é uma tarefa criada **pelo sistema** para um grupo de pessoas que têm uma permissão. Uma delas «assume»; as demais veem «em execução por [responsável]». Quem assumiu pode devolver a outra pessoa, que confirma ou recusa. Tem prazo em dias úteis; vencido o prazo, a Qualidade é avisada e o item vai à máxima urgência. Tudo fica registrado no log de aprovações.
@@ -31,7 +33,7 @@ Migração aditiva (sem `migrate dev`, sem apagar dados; guia §7 passo 2).
 
 **Enums novos:** `StatusAtividade` (ABERTA, ASSUMIDA, DEVOLUCAO_PENDENTE, CONCLUIDA, CANCELADA); `TipoAtividade` (um valor por uso; no 05: PUBLICAR_MAPA, VERIFICAR_REVISAO_MAPA); `TipoEntidadeAtividade` (começa com MAPA_PROCESSO).
 
-**`Atividade`** (`atividade`): `id`, `empresaId`, `tipo`, `entidadeTipo`, `entidadeId`, `titulo` (texto gerado pelo sistema, nunca texto livre de registro restrito), `permissaoAlvo` (`Permissao`: quem pode assumir), `status`, `responsavelId?`, `devolvidoParaId?`, `prazoDiasUteis`, `prazoEm` (Date), `vencidaEm?`, `urgenciaMaxima` (bool, padrão false), `chaveOrigem` (idempotência de criação), `resultado` (Json?), `versao` (trava otimista), `criadoEm`, `assumidaEm?`, `concluidaEm?`.
+**`Atividade`** (`atividade`): `id`, `empresaId`, `tipo`, `entidadeTipo`, `entidadeId`, `obraId?` (unidade de origem, copiada da entidade; base do escopo por unidade; FK composta), `titulo` (texto gerado pelo sistema, nunca texto livre de registro restrito), `permissaoAlvo` (`Permissao`: quem pode assumir), `status`, `responsavelId?`, `devolvidoParaId?`, `prazoDiasUteis`, `prazoEm` (Date), `vencidaEm?`, `urgenciaMaxima` (bool, padrão false), `chaveOrigem` (idempotência de criação), `resultado` (Json?), `versao` (trava otimista), `criadoEm`, `assumidaEm?`, `concluidaEm?`.
 - `@@unique([empresaId, id])`, `@@unique([empresaId, chaveOrigem])`, índices `[empresaId, status, prazoEm]` e `[empresaId, responsavelId, status]`.
 - FKs compostas `(empresaId, responsavelId) -> Usuario(empresaId, id)` e idem `devolvidoParaId`; `onDelete: Restrict`; sem exclusão (cancelar = status). Em `create`, nunca `empresa: { connect }`.
 - CHECKs na seção «Regras SQL» da migração: `status = 'ASSUMIDA'` exige `responsavelId`; `status = 'DEVOLUCAO_PENDENTE'` exige `responsavelId` e `devolvidoParaId`; `devolvidoParaId <> responsavelId`; `prazoDiasUteis > 0`.
@@ -59,6 +61,7 @@ Demais regras:
 - Assumir usa trava otimista: `updateMany({ where: { id, versao, status: 'ABERTA' } })`; `count === 0` => `ErroConflito` (dois cliques simultâneos: um vence).
 - Toda transição grava um `HistoricoAprovacao` na mesma `$transaction`.
 - Vencimento: no cron diário, atividade ABERTA/ASSUMIDA/DEVOLUCAO_PENDENTE com `prazoEm < hoje` e `vencidaEm` nulo recebe `vencidaEm`, `urgenciaMaxima = true`, log ATIVIDADE_VENCIDA e aviso a todos os usuários da Qualidade (quem tem `ATIVIDADE_ACOMPANHAR`). O vencimento não muda o estado nem o responsável.
+- Escopo por unidade: com `obraId` na atividade, só vê/assume quem tem a permissão E `obraNoEscopo(ator, obraId)`; destinatários de `ATIVIDADE_NOVA` são filtrados do mesmo modo. O aviso de vencida vai à Qualidade (`ATIVIDADE_ACOMPANHAR`) que enxerga a unidade.
 - Serviços recebem `Ator`, exigem módulo e permissão, revalidam a entrada (a ação não é confiável) e não usam `getContexto()`.
 
 ## Permissões novas
