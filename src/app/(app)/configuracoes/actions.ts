@@ -8,6 +8,7 @@ import { salvarConfigAprovacao } from "@/lib/aprovacao/config-modulo";
 import type { Ator } from "@/lib/ator";
 import { getAtor } from "@/lib/ator-servidor";
 import { ErroNegocio } from "@/lib/erros";
+import { criarFeriado, editarFeriado, inativarFeriado } from "@/lib/feriados/servico";
 import { MAX_DIAS_ALERTA } from "@/lib/notificacoes/preferencias";
 import { salvarPreferencias } from "@/lib/notificacoes/preferencias-servico";
 import { ErroPermissao, exigirPermissao } from "@/lib/tenant";
@@ -195,5 +196,46 @@ export async function salvarConfigAprovacaoAcao(_: ResultadoAcao, fd: FormData) 
     const modo = txt(fd, "modo") === "PARALELO" ? "PARALELO" : "SEQUENCIAL";
     await salvarConfigAprovacao(a, modulo, { exigir: fd.get("exigir") === "on", aprovadorIds: fd.getAll("aprovadorIds").map(String), modo, usarTramitacao: fd.get("usarTramitacao") === "on" });
     return "Fluxo de aprovação atualizado.";
+  });
+}
+
+// ---------------------------------------------------------------- feriados da empresa
+
+/** Lê a versão (trava de edição) enviada escondida no formulário. */
+const versaoDe = (fd: FormData) => {
+  const v = Number(fd.get("versao"));
+  if (!Number.isInteger(v) || v < 1) throw new ErroNegocio("Registro inválido.");
+  return v;
+};
+
+/** Cadastra um feriado (data + descrição). O serviço valida e reativa a data se ela estava inativa. */
+export async function criarFeriadoAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await criarFeriado(a, { data: txt(fd, "data"), descricao: txt(fd, "descricao") });
+    return "Feriado salvo.";
+  });
+}
+
+/** Edita data e descrição de um feriado ativo (com a versão que a tela mostrou). */
+export async function editarFeriadoAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await editarFeriado(a, idDe(fd), versaoDe(fd), { data: txt(fd, "data"), descricao: txt(fd, "descricao") });
+    return "Feriado atualizado.";
+  });
+}
+
+/** Inativa um feriado (exclusão lógica). */
+export async function inativarFeriadoAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await inativarFeriado(a, idDe(fd), versaoDe(fd));
+    return "Feriado inativado.";
+  });
+}
+
+/** Reativa um feriado inativo: o serviço reativa ao "cadastrar" de novo a mesma data. */
+export async function reativarFeriadoAcao(_: ResultadoAcao, fd: FormData) {
+  return admin(async (a) => {
+    await criarFeriado(a, { data: txt(fd, "data"), descricao: txt(fd, "descricao") });
+    return "Feriado reativado.";
   });
 }

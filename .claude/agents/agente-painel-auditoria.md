@@ -1,7 +1,7 @@
 ---
 name: agente-painel-auditoria
 description: FUTURO (ideia, só com ordem do Eric) — painel de prontidão para auditoria de certificação por norma, cláusula e unidade, consolidando Documentos, Treinamentos, RNC, Indicadores e Auditorias internas. Relatório pré-auditoria.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

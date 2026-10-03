@@ -1,7 +1,7 @@
 ---
 name: agente-pesquisa
 description: Pesquisa rápida sem alterar código — documentação de bibliotecas (Next.js 16, Prisma, Auth.js, zod), normas e legislação (ISO 9001/14001/45001, NRs, LGPD, eSocial), versões de pacotes, comparação de opções e levantamentos no repositório.
-model: haiku
+model: sonnet
 tools: Read, Glob, Grep, WebFetch, WebSearch
 ---
 

@@ -561,6 +561,17 @@ Com o motor de aprovação (commit anterior) e este módulo, o **P1 está comple
 
 ---
 
+## Fluxo do Mapa de Processos — fatia 1 (feriados e dias úteis) entregue (2026-10-03)
+
+Primeira fatia do novo fluxo do Mapa de Processos (especificações em `docs/tarefas/04-regra-comum-atividades.md` e `05-mapa-de-processos-fluxo.md`; fluxo validado pelo Eric em 03/10/2026).
+
+- **Dados:** `FeriadoEmpresa` (empresa, data civil única por empresa, descrição, ativo, `versao`), migração aditiva `20261003000000_feriado_empresa`. **Ainda não aplicada no banco de produção:** exige `prisma migrate deploy` pelo Eric.
+- **Regras:** `somarDiasUteis`, `diasUteisEntre` e `ehDiaUtil` em `src/lib/datas.ts` (datas civis, sem feriados valem só sábado e domingo; feriado cadastrado depois não recalcula prazo já gravado); serviço em `src/lib/feriados/servico.ts` (permissão `ADMIN_CONFIG`, trava otimista por `versao`, recadastrar data inativa reativa a linha).
+- **Tela:** aba «Feriados» em Configurações (cadastro, edição, inativação, reativação e aviso quando o ano corrente não tem feriado).
+- **Testes:** `tests/dias-uteis.test.ts` (16), `npm run test:feriados` (9 casos) e +1 caso em `npm run test:isolamento` (12 casos); vitest completo com 247 testes.
+- **Revisões:** `agente-qa-revisao` aprovou com ressalvas as duas partes (relatórios em `docs/relatorios/2026-10-03-fatia1a-feriados-dias-uteis.md` e `2026-10-03-fatia1b-tela-feriados.md`). Pontos aceitos de propósito: reativar feriado reaproveita o cadastro da mesma data (um `reativarFeriado(id, versao)` no serviço fica como melhoria para a fatia 2) e não há mensagem escrita de sucesso ao inativar/reativar.
+- **Não verificado no navegador pelo Eric:** o fluxo completo da tela (a verificação foi feita por agente, em ambiente local).
+
 ## TODOS OS PACOTES P1-P7 ENTREGUES
 
 | Módulo (`Modulo`) | Resumo |

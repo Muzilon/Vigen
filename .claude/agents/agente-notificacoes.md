@@ -1,7 +1,7 @@
 ---
 name: agente-notificacoes
 description: Notificações do Vigen — sino in-app e e-mail, idempotência por chave, preferências, resumo semanal, cron diário/semanal e fontes de reavaliação (alertas de vencimento).
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
