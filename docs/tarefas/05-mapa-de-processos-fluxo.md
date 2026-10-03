@@ -1,0 +1,154 @@
+# 05 - Mapa de Processos: fluxo de demanda, elaboração, aprovação, publicação e verificação
+
+Status: especificação (nada implementado). Data: 2026-10-03. Fluxo validado pelo Eric em 03/10/2026. Depende da regra comum [04-regra-comum-atividades.md](04-regra-comum-atividades.md) (atividade, assumir, devolver, dias úteis, vencimento).
+
+## Objetivo
+
+Substituir a edição/publicação livre do mapa por um fluxo controlado, com três raias (Área, Qualidade, Aprovadores): demanda registrada, elaboração/revisão com a área, aprovação de todos os aprovadores, publicação por atividade assumida, e verificação periódica ou por gatilho (12 meses desde a publicação, ou revisão de documento/LAIA/Perigos e Riscos vinculado).
+
+## Situação atual no código
+
+Existe:
+- Cadastro do mapa: `Processo` (linha do mapa: código, nome, tipo GESTAO/FINALISTICO/APOIO, dono, SIPOC; `versao` = última versão publicada; `revisao` = trava otimista de edição), `IndicadorProcesso`, `InteracaoProcesso`, `VersaoProcesso` (snapshot Json append-only, único por `[empresaId, processoId, versao]`) em `prisma/schema.prisma`.
+- Serviço: `src/lib/processos/servico.ts` (`criarProcesso`, `editarProcesso`, `publicarNaTransacao` que congela `VersaoProcesso` e incrementa `versao`, `publicarVersao` direta, `solicitarPublicacao` via motor), `src/lib/processos/regras.ts` (`montarSnapshot` etc.), handler `src/lib/processos/aprovacao.ts` (tipo `PROCESSO`, alteração PUBLICACAO), registrado em `src/lib/aprovacao/handlers.ts` e `TIPOS_COM_HANDLER`.
+- Motor de aprovação com modo `PARALELO` (todos recebem juntos, todos precisam aprovar): `src/lib/aprovacao/servico.ts` (`solicitarAprovacao`, `decidir`, `cancelar`), handler com `aoAprovar`/`aoRejeitar`/`aoCancelar`. Configuração por módulo em `Empresa.config.aprovacao.<modulo>` (`config-modulo.ts`).
+- Tabela de decisões: `EtapaAprovacao` (aprovador, status, `decididoEm`, `comentario`; mutável; único por fluxo+aprovador) e `HistoricoAprovacao` (append-only por trigger: usuário, ação APROVADO/REJEITADO, `comentario`, `metadados`, `criadoEm`).
+- Vínculos com o mapa: `processoId` em `Documento`, `LinhaHira`, `LinhaLaia`, `RiscoOportunidade` (FK composta com `Processo`). Publicação de documento em `src/lib/documentos/servico.ts` (hoje dispara `DOCUMENTO_PUBLICADO`/`CIENCIA_PENDENTE`).
+- Notificações, cron e tipos: ver 04. Telas: `src/app/(app)/processos/`.
+- Permissões atuais: `PROCESSO_GERENCIAR`, `ADMIN_CONFIG`, `HIRA_GERENCIAR`, `LAIA_GERENCIAR`, `DOCUMENTO_ELABORAR`.
+
+Não existe, é novo:
+- Uma entidade «mapa» (hoje só existem linhas `Processo` soltas; "o mapa" é o conjunto delas). Estado do mapa, solicitação/demanda, ciclos de aprovação, estado «Para publicar», etiqueta «em revisão», rascunho versus vigente.
+- Separar o que é publicado do que está em edição: hoje `editarProcesso` altera as linhas ao vivo, então a versão vigente seria sobrescrita durante a revisão.
+- Importação de Excel: não há biblioteca de planilha em `package.json`.
+- Verificação periódica, gatilho por publicação de documento/HIRA/LAIA, decisão «Precisa revisar o mapa?», «revisão complementar».
+- Feriados, atividades (04).
+
+## O que é novo
+
+1. `MapaProcesso`, `SolicitacaoMapa`, `RevisaoMapaArquivada`, `VersaoMapa`, colunas novas em `Processo` e `HistoricoAprovacao`.
+2. Tipo de aprovação `MAPA_PROCESSO` com handler próprio; aprovação não publica, leva a «Para publicar».
+3. Duas atividades (`PUBLICAR_MAPA`, `VERIFICAR_REVISAO_MAPA`) usando a regra do 04.
+4. Importação de Excel, aviso no painel de edição, etiqueta «em revisão».
+5. Cron de 12 meses e gatilhos de documento/LAIA/Perigos e Riscos.
+
+## Dados
+
+Migração aditiva: só `CREATE TABLE`, `ADD COLUMN` anulável, `ADD VALUE` em enums; nada é apagado nem reescrito. Backfill: cada empresa existente recebe um mapa em estado `VIGENTE` agrupando seus `Processo` atuais (se a resposta à pergunta 1 for «um mapa por empresa»), com `ultimaPublicacaoEm` = maior `publicado_em` de `versao_processo` (ou `criado_em` se nunca publicou, estado `ELABORACAO_JUNTO_AREA`). Tudo com `empresaId`, `@@unique([empresaId, id])`, FKs compostas `(empresaId, xId) -> (empresaId, id)`, `onDelete: Restrict`, exclusão lógica (`ativo`), `criarDbTenant`.
+
+**Enum `EstadoMapa`:** ELABORACAO_JUNTO_AREA, REVISAO_JUNTO_AREA, EM_APROVACAO, REPROVADO, PARA_PUBLICAR, VIGENTE.
+
+**`MapaProcesso`:** `id`, `empresaId`, `codigo` (único por empresa), `nome`, `setorId?` (ver pergunta 1), `estado`, `versaoVigente` (Int, 0 = nunca publicado; espelho do `VersaoMapa` mais recente), `cicloAtual` (Int, +1 a cada envio para aprovação), `numeroRevisaoRascunho` (Int, +1 a cada gravação que arquiva a anterior), `reprovadoPorId?` (para exibir «Reprovado por [nome]»), `ultimaPublicacaoEm?` (base dos 12 meses), `proximaVerificacaoEm?` (Date, = publicação + 12 meses), `versao` (trava otimista), `ativo`, `criadoEm`, `atualizadoEm`. Etiqueta «em revisão» não é coluna: é derivada (`versaoVigente > 0` e `estado <> VIGENTE`).
+
+**`Processo` (colunas novas):** `mapaId?` (FK composta; anulável para a migração, obrigatório por regra depois do backfill). Editar `Processo` passa a ser editar o **rascunho**; quem não é da Qualidade/administrador lê o `VersaoMapa` vigente.
+
+**`SolicitacaoMapa`:** `id`, `empresaId`, `mapaId?` (nulo se mapa novo ainda não criado), `tipo` (ELABORACAO, REVISAO), `origem` (AREA_SISTEMA, AREA_EMAIL, AREA_PRESENCIAL, QUALIDADE), `solicitanteId?` (a área, se pediu pelo sistema), `registradaPorId`, `descricao` (texto livre curto; sem dados pessoais), `status` (REGISTRADA, EM_ANDAMENTO, ATENDIDA, CANCELADA), `versao`, `criadoEm`. Regra: origem AREA_SISTEMA é registrada pela própria área; as demais, pela Qualidade (CHECK: `origem = 'AREA_SISTEMA'` implica `solicitanteId = registradaPorId`).
+
+**`RevisaoMapaArquivada`** (append-only por trigger): `id`, `empresaId`, `mapaId`, `numero`, `snapshot` (Json do rascunho anterior), `origem` (MANUAL, IMPORTACAO_EXCEL), `arquivadoPorId`, `arquivadoEm`; `@@unique([empresaId, mapaId, numero])`.
+
+**`VersaoMapa`** (append-only por trigger): `id`, `empresaId`, `mapaId`, `versao`, `snapshot` (todos os processos, indicadores e interações), `publicadoPorId`, `publicadoEm`, `fluxoAprovacaoId?`; `@@unique([empresaId, mapaId, versao])`. A publicação também chama `publicarNaTransacao` para cada `Processo` do mapa na mesma transação, mantendo `VersaoProcesso` como está.
+
+**Tabela de decisões (aprovação e reprovação): reaproveitar `HistoricoAprovacao`** em vez de criar outra. Já tem: aprovador (`usuarioId`), data (`criadoEm`), decisão (`acao` APROVADO/REJEITADO), observação (`comentario`), append-only por trigger, tipo de entidade pelo fluxo. Falta: (a) número do ciclo: `ciclo Int?`; (b) versão do mapa: `versaoEntidade Int?` (número do rascunho no momento da decisão); (c) obrigatoriedade da justificativa na reprovação: CHECK `acao <> 'REJEITADO' OR comentario IS NOT NULL` criado `NOT VALID` (não valida linhas antigas) mais validação no serviço; (d) o nome do valor é REJEITADO, e a tela mostra «Reprovado»/«REPROVADO». Cada envio cria um novo `FluxoAprovacao` (modo PARALELO), então o ciclo é a contagem de fluxos do mapa; gravar `ciclo` e `versaoEntidade` ao decidir. `EtapaAprovacao` continua sendo o estado operacional (quem ainda falta). Verificar em `decidir` se `comentario` já é exigido na rejeição; se não, exigir.
+
+**Verificação:** nova tabela `VerificacaoMapa` (append-only): `id`, `empresaId`, `mapaId`, `atividadeId`, `origem` (PERIODICA_12_MESES, DOCUMENTO_PUBLICADO, LAIA_PUBLICADA, HIRA_PUBLICADA), `origemEntidadeId?`, `precisaRevisar` (bool), `tipoRegistro` (REVISAO_INICIADA ou REVISAO_COMPLEMENTAR), `observacao?`, `verificadaPorId`, `verificadaEm`. Revisão complementar NÃO altera `ultimaPublicacaoEm` nem `proximaVerificacaoEm`.
+
+**Enums existentes a estender:** `TipoEntidadeAprovacao` (+MAPA_PROCESSO), `TipoEntidadeNotificacao` (+MAPA_PROCESSO), `TipoAtividade`/`TipoEntidadeAtividade` (04), `ModuloAnexo`/regra de anexo só se Excel for guardado (não será: lê e descarta).
+
+**Excel:** biblioteca nova (sugestão `exceljs`; é dependência nova, registrar no relatório). Modelo de planilha de importação com as colunas do SIPOC. Importar substitui o rascunho (arquiva o anterior em `RevisaoMapaArquivada`, origem IMPORTACAO_EXCEL); validar tamanho, linhas, tipos e código duplicado no servidor.
+
+## Regras de negócio e estados
+
+Estados do mapa (atuam sobre o rascunho; a versão vigente segue valendo até a publicação):
+
+| Estado | Quem pode | Ação | Próximo estado |
+|---|---|---|---|
+| (sem mapa) | área (`MAPA_SOLICITAR`) ou Qualidade | registra `SolicitacaoMapa` | solicitação REGISTRADA |
+| solicitação REGISTRADA | Qualidade (`MAPA_ELABORAR`) | iniciar elaboração (mapa novo) | ELABORACAO_JUNTO_AREA |
+| VIGENTE | Qualidade (`MAPA_ELABORAR`) | iniciar revisão (solicitação ou decisão «Precisa revisar» = SIM) | REVISAO_JUNTO_AREA (vigente ganha «em revisão») |
+| ELABORACAO_ ou REVISAO_JUNTO_AREA | Qualidade | editar no site ou importar Excel (cada gravação arquiva a anterior) | mesmo estado |
+| ELABORACAO_ ou REVISAO_JUNTO_AREA | Qualidade | enviar para aprovação, definindo os aprovadores | EM_APROVACAO |
+| EM_APROVACAO | cada aprovador | aprovar | EM_APROVACAO até o último |
+| EM_APROVACAO | último aprovador | aprovar (todos aprovaram) | PARA_PUBLICAR + cria atividade PUBLICAR_MAPA |
+| EM_APROVACAO | qualquer aprovador | reprovar com justificativa obrigatória | REPROVADO (mostra «Reprovado por [nome]»); aviso à Qualidade |
+| REPROVADO | Qualidade | retomar edição (passo 2.2) | ELABORACAO_ ou REVISAO_JUNTO_AREA (conforme houver versão vigente) |
+| EM_APROVACAO | Qualidade | cancelar o envio | volta ao estado de edição |
+| PARA_PUBLICAR | quem assumiu a atividade (`PROCESSO_PUBLICAR`) | publicar (congela `VersaoMapa` e `VersaoProcesso`) | VIGENTE; `ultimaPublicacaoEm` = hoje; `proximaVerificacaoEm` = +12 meses |
+| VIGENTE | sistema | 12 meses ou publicação vinculada | atividade VERIFICAR_REVISAO_MAPA (estado do mapa não muda) |
+| VIGENTE | quem assumiu a verificação | «Precisa revisar o mapa?» SIM | REVISAO_JUNTO_AREA |
+| VIGENTE | quem assumiu a verificação | NÃO | segue VIGENTE; registra «revisão complementar» |
+
+Regras:
+- Aprovação em PARALELO, todos precisam aprovar; o solicitante nunca aprova a si mesmo (regra do motor). A Qualidade define os aprovadores por mapa a cada envio (`aprovadorIds` do `solicitarAprovacao`; opcionalmente guardar a última lista como sugestão em `Empresa.config.aprovacao`).
+- Handler `MAPA_PROCESSO`: `aoAprovar` (última assinatura) muda para PARA_PUBLICAR e cria a atividade na mesma transação; `aoRejeitar` muda para REPROVADO e grava `reprovadoPorId`; `aoCancelar` volta à edição. Os handlers conferem `versao` (conflito se o mapa mudou).
+- Prazos (04): publicação 2 dias úteis; verificação 7 dias úteis. Vencido: aviso a toda a Qualidade e urgência máxima.
+- O rascunho não pode ser editado nos estados EM_APROVACAO, PARA_PUBLICAR e VIGENTE (sem revisão aberta).
+- Editar `Processo` valida que o mapa está em estado de edição; trava otimista por `versao` do mapa e `revisao` do processo.
+- Painel de edição mostra o aviso: «Considere a revisão dos seguintes documentos: LAIA, Perigos e Riscos, caso mude algum processo ou atividade».
+- Revisão complementar não é revisão periódica e não reinicia os 12 meses.
+- O caminho atual `publicarVersao`/`solicitarPublicacao` por `Processo` isolado fica desativado na interface quando o mapa tem fluxo (ver Riscos).
+
+## Permissões novas
+
+Seguem o padrão `MODULO_ACAO`: `MAPA_SOLICITAR` (área registra demanda), `MAPA_ELABORAR` (Qualidade: iniciar elaboração/revisão, editar, importar, enviar, ver rascunho e etiqueta «em revisão»), `PROCESSO_PUBLICAR` (assumir e executar a publicação), `PROCESSO_VERIFICAR_REVISAO` (assumir a verificação). Aprovar reutiliza a condição de aprovador do motor. `PROCESSO_GERENCIAR` e `ADMIN_CONFIG` continuam. Cada uma: enum `Permissao` (`ALTER TYPE ... ADD VALUE`), `TODAS_PERMISSOES`, perfis no seed (Qualidade recebe todas menos `MAPA_SOLICITAR`; perfis de área recebem `MAPA_SOLICITAR`) e rótulo em Configurações. Perfis e permissões são configuráveis no sistema.
+
+## Notificações
+
+Tipos novos em `TipoNotificacao`: `MAPA_SOLICITADO` (à Qualidade quando a área registra), `MAPA_REPROVADO` (à Qualidade, com o nome do reprovador e a justificativa; mapa não é registro restrito, mas só a justificativa entra como texto livre), `MAPA_PARA_PUBLICAR` (via `ATIVIDADE_NOVA`), mais os de atividade (04). `APROVACAO_PENDENTE` existente cobre os aprovadores. Chaves determinísticas:
+- `mapa-solicitado:{solicitacaoId}:{usuarioId}`
+- `mapa-reprovado:{mapaId}:{ciclo}:{usuarioId}`
+- `verificar-mapa:{mapaId}:periodica:{versaoVigente}` (chave de origem da atividade, 12 meses)
+- `verificar-mapa:{mapaId}:{origem}:{origemEntidadeId}` (gatilho de documento/HIRA/LAIA)
+- `publicar-mapa:{mapaId}:{ciclo}` (chave de origem da atividade de publicação)
+Nenhum texto livre de registro restrito em título/corpo (só códigos e nomes de mapa).
+
+## Gatilhos e cron
+
+- Gatilho (b): em `src/lib/documentos/servico.ts` (publicação de versão de documento de qualquer tipo), no handler/serviço de LAIA e de HIRA (publicação de revisão vinculada ao mapa via `processoId` -> `Processo.mapaId`), chamar `criarAtividadeVerificacaoMapa` após o commit com `comSeguranca`. Se já existir verificação aberta para o mapa, não duplica: grava o evento no log dela. Só considerar publicação, não rascunho.
+- Gatilho (a): em `src/lib/atividades/cron.ts` (ou `src/lib/processos/cron.ts`), com import em `src/lib/notificacoes/cron.ts`: mapas VIGENTE com `proximaVerificacaoEm <= hoje` (fuso da empresa) e sem verificação aberta geram a atividade. Idempotente pela `chaveOrigem`.
+- Handler novo: import em `src/lib/aprovacao/handlers.ts` e `TIPOS_COM_HANDLER`.
+- Vencimento de atividades: cron do 04.
+
+## Telas (apenas listar; desenho com o agente-ux-ui)
+
+- Registrar solicitação (área e Qualidade); lista de solicitações.
+- Mapa com estado e etiquetas («em revisão», «Reprovado por [nome]», «Para publicar», «Mapa vigente»); leitores veem a versão vigente.
+- Painel de edição (rascunho) com o aviso LAIA/Perigos e Riscos, importar Excel, histórico de revisões arquivadas.
+- Enviar para aprovação (escolher aprovadores); tela de aprovação com justificativa na reprovação; histórico de decisões por ciclo.
+- Atividades «Publicar mapa» e «Verificar possível revisão de mapa» (cartões do 04); diálogo «Precisa revisar o mapa?» (Sim/Não e observação).
+- Configurações: feriados (04) e rótulos das novas permissões.
+
+## Testes e critérios de aceite
+
+- vitest: transições de estado; cálculo de `proximaVerificacaoEm` (12 meses, fim de mês); revisão complementar não muda a data; escolha de ciclo.
+- `scripts/teste-mapa-fluxo.ts` (sufixo aleatório, reexecutável): demanda por área vs Qualidade grava origem correta; elaboração -> aprovação com 3 aprovadores: 2 aprovam e 1 reprova gera REPROVADO com nome e justificativa, e avisa a Qualidade; reprovação sem justificativa é recusada; retorno ao 2.2 e novo ciclo com `ciclo` 2 no `HistoricoAprovacao`; UPDATE/DELETE em `historico_aprovacao`, `revisao_mapa_arquivada` e `versao_mapa` bloqueados por trigger; todos aprovam => PARA_PUBLICAR e uma atividade criada (duas chamadas, uma atividade); só quem tem `PROCESSO_PUBLICAR` assume; publicar gera `VersaoMapa` + `VersaoProcesso` e estado VIGENTE; durante revisão o leitor vê a versão anterior e a Qualidade vê «em revisão»; importação de Excel arquiva o rascunho anterior; verificação NÃO e SIM; revisão complementar não reinicia os 12 meses; gatilhos 12 meses e publicação de documento/LAIA/HIRA vinculado criam exatamente uma atividade; prazos de 2 e 7 dias úteis respeitam feriados; vencimento avisa toda a Qualidade e marca urgência máxima.
+- Isolamento: a empresa Demo não vê mapas, solicitações, decisões, versões nem atividades de outra empresa; gatilho de documento de uma empresa não cria atividade na outra; FKs compostas rejeitam `mapaId` de outra empresa.
+- Gating: sem o módulo `MAPA_PROCESSOS` nada funciona.
+- Handler registrado: teste confere `MAPA_PROCESSO` em `TIPOS_COM_HANDLER`.
+- Antes de entregar: `npx tsc --noEmit -p .`, `npm run lint`, `npm test`, `npm run test:mapa-fluxo` (script a criar), `npm run test:isolamento`; guia §7 passo 2 para a migração (sem `migrate dev`, sem reset).
+
+## Fatias de implementação (em ordem)
+
+1. Regra comum de atividades e feriados (04, fatias 1 e 2): agente-arquitetura-dados.
+2. Dados do mapa: `MapaProcesso`, `Processo.mapaId` e backfill, `SolicitacaoMapa`, `RevisaoMapaArquivada`, `VersaoMapa`, `VerificacaoMapa`, colunas do `HistoricoAprovacao`, permissões e seed: agente-arquitetura-dados.
+3. Serviço do fluxo (estados, handler `MAPA_PROCESSO`, publicação, separação rascunho/vigente, verificação): agente-auditorias-processos (dono do módulo Processos), com arquitetura-dados para o motor.
+4. Importação de Excel e aviso no painel: agente-auditorias-processos.
+5. Gatilhos e cron (12 meses, documento, LAIA, HIRA) e notificações: agente-notificacoes, com agente-documentos e agente-riscos-hira-laia nos pontos de publicação.
+6. Telas: agente-ux-ui, depois agente-responsivo.
+7. Revisão de isolamento, log e migração: agente-qa-revisao.
+8. Relatório e documentação (guia §8.4, `docs/06-desenho-modulos.md`).
+
+## Riscos
+
+- Separar rascunho de vigente muda o modelo de uma entidade existente (`Processo`): é decisão do Eric (pergunta 2) e exige leitura do vigente em todas as telas e hubs que hoje leem `Processo` ao vivo (riscos, HIRA, LAIA, documentos, auditorias).
+- Tornar `HistoricoAprovacao.fluxoId` opcional (04) pode quebrar consultas do motor.
+- Backfill e agrupamento dos `Processo` existentes em mapa: erro silenciosamente deixa linhas sem `mapaId`.
+- Biblioteca de Excel é dependência nova (segurança, tamanho de arquivo, fórmulas/macros); ler só dados, limites de tamanho e linhas.
+- Gatilhos de documento/LAIA/HIRA podem gerar muitas verificações; a regra «não duplicar se já aberta» mitiga.
+- Ciclo e versão do mapa gravados no log precisam ser lidos na mesma transação da decisão.
+- Esquecer os imports (`handlers.ts`, `cron.ts`) deixa o fluxo morto em silêncio.
+- Perfil Qualidade sem nenhum usuário com `PROCESSO_PUBLICAR` ou `PROCESSO_VERIFICAR_REVISAO`: a atividade fica sem quem assuma; avisar na criação.
+
+## Perguntas bloqueantes ao Eric
+
+1. Qual é a unidade de um «mapa»? Opções: (A) um mapa por empresa (o conjunto atual de processos); (B) um mapa por área/setor (cada área pede o seu). A spec prevê `setorId` opcional e o backfill supõe A; B muda o backfill, a tela inicial e quem lê o quê. Recomendação: A agora, com `setorId` reservado.
+2. Aprova separar, no `Processo`, o rascunho do vigente (a leitura geral passa a vir do `VersaoMapa` publicado, a Qualidade edita o rascunho)? É mudança do modelo de dados de uma entidade existente; sem o «sim» a regra «versão anterior continua vigente durante a revisão» não é possível.
