@@ -700,6 +700,7 @@ async function AbaFeriados() {
                       <details className={styles.edicaoFeriado}>
                         <summary className={`${styles.resumoEditar} ${styles.alvoToque}`}>Editar</summary>
                         <FormularioFeriado
+                          key={f.versao}
                           acao={editarFeriadoAcao}
                           botao="Salvar alterações"
                           id={f.id}
@@ -783,7 +784,7 @@ async function AbaPreferencias({ empresaId }: { empresaId: string }) {
 
 /**
  * Página "Administração" (só para quem tem a permissão ADMIN_CONFIG): mostra uma das abas — usuários, perfis, unidades,
- * setores, funções, módulos, escalas, aprovações, tipos de documento ou notificações. `?aba=` escolhe a aba.
+ * setores, funções, módulos, escalas, aprovações, tipos de documento, feriados ou notificações. `?aba=` escolhe a aba.
  */
 /** Administração (usuários, perfis, obras, setores, funções e preferências de notificação). Exige ADMIN_CONFIG. */
 export default async function Configuracoes({ searchParams }: PageProps<"/configuracoes">) {
