@@ -49,3 +49,49 @@ export function somarDias(iso: string, dias: number): string {
   d.setUTCDate(d.getUTCDate() + dias);
   return dataIso(d);
 }
+
+/** Dia da semana de uma data civil YYYY-MM-DD (0 = domingo ... 6 = sábado), sem depender do fuso. */
+function diaDaSemana(iso: string): number {
+  return paraDataDb(iso).getUTCDay();
+}
+
+/** Dia útil = não é sábado nem domingo e não consta em `feriados` (conjunto de YYYY-MM-DD). */
+export function ehDiaUtil(iso: string, feriados: ReadonlySet<string> = new Set()): boolean {
+  const d = diaDaSemana(iso);
+  return d !== 0 && d !== 6 && !feriados.has(iso);
+}
+
+/**
+ * Soma `n` dias úteis a uma data civil (YYYY-MM-DD). O dia de `inicio` não conta, mesmo que seja útil;
+ * `n = 0` devolve `inicio`. Sábado, domingo e os `feriados` informados são pulados. Sem feriados
+ * cadastrados vale só o fim de semana.
+ *
+ * O resultado é FIXADO por quem chama (ex.: `prazoEm` gravado na criação da atividade): cadastrar,
+ * editar ou inativar um feriado depois NÃO recalcula prazos já gravados.
+ * `inicio` deve vir de `hojeNoFuso(fusoDaEmpresa)` ou `dataIso`, nunca de `toISOString().slice(0,10)`.
+ */
+export function somarDiasUteis(inicio: string, n: number, feriados: ReadonlySet<string> = new Set()): string {
+  if (!Number.isInteger(n) || n < 0) throw new RangeError("n deve ser um inteiro >= 0");
+  let atual = inicio;
+  let restam = n;
+  while (restam > 0) {
+    atual = somarDias(atual, 1);
+    if (ehDiaUtil(atual, feriados)) restam--;
+  }
+  return atual;
+}
+
+/**
+ * Quantidade de dias úteis a contar de `a` (exclusivo) até `b` (inclusivo), coerente com
+ * `somarDiasUteis`: `somarDiasUteis(a, diasUteisEntre(a, b, f), f)` cai no último dia útil <= b.
+ * Se `b <= a` devolve 0. Mesma regra: fim de semana e feriados não contam; sem feriados só o fim de semana.
+ */
+export function diasUteisEntre(a: string, b: string, feriados: ReadonlySet<string> = new Set()): number {
+  let total = 0;
+  let atual = a;
+  while (atual < b) {
+    atual = somarDias(atual, 1);
+    if (ehDiaUtil(atual, feriados)) total++;
+  }
+  return total;
+}

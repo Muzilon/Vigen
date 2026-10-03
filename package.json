@@ -26,7 +26,8 @@
     "test:auditorias": "tsx scripts/teste-auditorias.ts",
     "test:incidentes": "tsx scripts/teste-incidentes.ts",
     "test:indicadores": "tsx scripts/teste-indicadores.ts",
-    "test:treinamentos": "tsx scripts/teste-treinamentos.ts"
+    "test:treinamentos": "tsx scripts/teste-treinamentos.ts",
+    "test:feriados": "tsx scripts/teste-feriados.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
