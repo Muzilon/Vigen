@@ -56,6 +56,12 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 | 05/10/2026 | MFA obrigatório para todos, por **código enviado por e-mail** (não por aplicativo). Riscos e proteções na seção 5 |
 | 05/10/2026 | Ordem da primeira versão: base comum, Plano de Ação, RNC e depois Documentos |
 | 05/10/2026 | Metas de desempenho da premissa 8 aceitas; será preciso um painel de desempenho do sistema |
+| 05/10/2026 | O pacote Documentos, RNC e Plano de Ação chama-se **Fase 1**; será mostrado ao cliente quando estiver completo. Meta: fevereiro de 2027, com revisão após as 6 primeiras semanas |
+| 05/10/2026 | Método **híbrido**: agentes escrevem a maior parte do código; o Eric revisa, entende e escreve as partes centrais, guiado; toda entrega vem com explicação |
+| 05/10/2026 | Segurança mais forte para Qualidade e administrador: aplicativo autenticador (TOTP) na Fase 1; chave de acesso (passkey) depois |
+| 05/10/2026 | Dois painéis: técnico (só nós) e de adoção (o administrador do cliente também vê) |
+| 05/10/2026 | OWASP ASVS: meta no nível 2; nível 1 como mínimo antes do primeiro uso real |
+| 05/10/2026 | Configurável na Fase 1: listas (tipos de documento, origens e classes de RNC, unidades, áreas) e glossário de termos. Fluxos e aprovadores ficam fixos |
 | 05/10/2026 | O projeto começa pelo backend; o design vem depois, do Figma |
 | 05/10/2026 | O Eric aprende TypeScript construindo, com Claude como guia (fases em «plano de aprendizado») |
 
@@ -112,14 +118,32 @@ Dentro da primeira versão **[Proposta]**:
 
 Para as etapas seguintes: auditoria, inspeção ou incidente grave abre RNC; indicador fora da meta sugere ação; treinamento vencido altera a aptidão; calibração vencida bloqueia o uso do equipamento; fornecedor reprovado abre RNC; mudança pede reavaliação de riscos, treinamentos e documentos ligados.
 
-## 9. Perguntas em aberto
+## 9. Perguntas
 
-1. Painel de desempenho: que indicadores e quem vê (a medição entra desde o primeiro dia).
-2. Quando exigir um fator mais forte que o e-mail (administrador e Qualidade, ou antes da primeira venda).
-3. Nível do OWASP ASVS a seguir.
-4. Ao fim do Plano de Ação: antecipar a tramitação de documentos?
-5. Quais campos e listas de Documentos, RNC e Plano de Ação a empresa pode configurar já na primeira versão (depende das conversas do apêndice A).
-6. Ponto de partida dos indicadores da seção 1.
+**Respondidas em 05/10/2026:** painéis de desempenho (dois), fator forte para Qualidade e administrador (TOTP, passkey depois), nível do ASVS (meta 2, mínimo 1), tramitação (ponto de reavaliação ao fim do Plano de Ação), o que é configurável na Fase 1 (listas e glossário).
+
+**Em aberto:**
+1. **Ponto de partida dos indicadores** (seção 1): o Eric levanta na Monto os cinco números (planilhas usadas; RNC por mês; tempo médio para fechar uma RNC; percentual de ações no prazo nos últimos 6 meses; documentos vigentes e quantos com revisão vencida).
+2. **Data exata de fevereiro** (início, meio ou fim do mês).
+3. Campos extras configuráveis: dependem das conversas do apêndice A.
+
+## 10. Fase 1: meta e plano das primeiras 6 semanas
+
+**Meta:** Documentos, RNC e Plano de Ação em fevereiro de 2027, mostrados ao cliente quando estiverem completos.
+**Aritmética [Proposta]:** a estimativa híbrida é de 260 a 350 horas de trabalho do Eric. Entre 5/10/2026 e fevereiro há de 17 a 21 semanas corridas, menos as festas de fim de ano. Cabe em fevereiro com cerca de 12 a 21 horas por semana. Com 10 horas por semana, não cabe.
+**Revisão em 15/11/2026:** com as horas reais medidas nas 6 primeiras semanas, refazemos a conta e decidimos o que entra em fevereiro: o essencial de cada módulo, ou o completo de alguns.
+
+**Plano das 6 primeiras semanas [Proposta]:**
+| Semana | O que o Eric aprende | O que fica funcionando |
+|---|---|---|
+| 1 | Terminal, git, VS Code, primeiro programa | Repositório novo; programa que imprime a data de hoje |
+| 2 | JavaScript: funções, listas, objetos, módulos | Cálculo de dias úteis com feriados, em JavaScript |
+| 3 | TypeScript: tipos e testes (vitest) | O mesmo cálculo em TypeScript, com testes verdes |
+| 4 | Banco de dados: PostgreSQL local e Prisma | Tabelas de empresa, unidade e área; consultas |
+| 5 | API: rotas, validação, erros | Cadastro de áreas e feriados pela API, com testes |
+| 6 | Usuários e permissões; login com código por e-mail | Primeiro login; medição das horas e revisão da meta |
+
+**Como cada entrega vem explicada:** (1) o que foi feito e para quê, em linguagem simples; (2) cada termo novo no glossário do projeto; (3) como rodar e como testar; (4) um exercício curto de verificação que o Eric faz sozinho antes de seguir.
 
 ## Apêndice A. Roteiro de conversa com pessoas de qualidade de outras empresas (30 min)
 
