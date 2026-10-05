@@ -17,7 +17,7 @@ Uma pessoa pode ter mais de um papel. O administrador atribui os papéis. Papéi
 | Usuário | Todos | Executa as próprias ações, consulta documentos, dá ciência e faz o micro-quiz |
 
 **Regras dos papéis:**
-- **Diretoria [Decidido]:** nas matrizes do §3, tem as permissões da coluna Qualidade e a visão de todas as áreas. **[Proposta do Claude]** Não vê o nível Confidencial, salvo se nomeada no registro: uma denúncia que envolve um diretor não pode ficar visível a ele.
+- **Diretoria [Decidido]:** nas matrizes do §3, tem as permissões da coluna Qualidade e a visão de todas as áreas. **[Decidido]** Não vê o nível Confidencial, salvo se nomeada no registro: uma denúncia que envolve um diretor não pode ficar visível a ele.
 - A empresa precisa ter pelo menos um Gestor da Qualidade. O sistema bloqueia remover o último.
 - Gestor de área vale para a área (ou áreas) que o administrador indicar, não para a empresa toda.
 - **Permissão extra «Pode registrar RNC»:** o administrador liga por pessoa. Vem ligada para Qualidade, Gestor da Qualidade e Gestor de área.
@@ -130,7 +130,7 @@ Regra: a versão em revisão nunca substitui a vigente antes da aprovação fina
    - Na confirmação, o sistema avisa que as ações pendentes passam para o gestor da área dela.
    - Se a pessoa é o próprio gestor da área, o sistema não reatribui: só inativa o login, e a Qualidade é avisada para redistribuir.
    - As aprovações pendentes dela vão para outro Gestor da Qualidade (ou o administrador reatribui, se não houver).
-   - **[Proposta do Claude] Usuário nunca é apagado do banco:** «excluir» na tela significa inativar. Apagar quebraria o histórico, que é só de inclusão e é evidência de auditoria. Pedido de exclusão pela LGPD é atendido anonimizando nome e e-mail, sem apagar os registros.
+   - **[Decidido] Usuário nunca é apagado do banco:** «excluir» na tela significa inativar. Apagar quebraria o histórico, que é só de inclusão e é evidência de auditoria. Pedido de exclusão pela LGPD é atendido anonimizando nome e e-mail, sem apagar os registros.
 2. **Gestor da Qualidade único pede reprogramação [Decidido]:** aprova o próprio pedido; o sistema registra «sem segregação».
 3. **Gestor de área do documento não existe** (área sem gestor): o último nível fica só com o Gestor da Qualidade, e o histórico registra o motivo.
 4. **Mudança de área de uma pessoa:** as ações abertas continuam com ela; a visão «área» do novo gestor passa a incluí-las.
