@@ -145,6 +145,21 @@ Para as etapas seguintes: auditoria, inspeção ou incidente grave abre RNC; ind
 
 **Como cada entrega vem explicada:** (1) o que foi feito e para quê, em linguagem simples; (2) cada termo novo no glossário do projeto; (3) como rodar e como testar; (4) um exercício curto de verificação que o Eric faz sozinho antes de seguir.
 
+## 11. Propriedade, exclusividade e confidencialidade (a esclarecer por escrito)
+
+**Contexto [Decidido pelo Eric em 05/10/2026]:** o produto será vendido a outras empresas; a Monto será o primeiro cliente de teste e receberá o sistema com outro nome.
+**Isto não é parecer jurídico.** É a lista de perguntas a levar à diretoria da Monto e, se o Eric achar necessário, a um advogado trabalhista e de propriedade intelectual.
+
+| # | Pergunta | Estado |
+|---|---|---|
+| 1 | Quem é dono do código e do produto, considerando uso de equipamento e horário da Monto? | [Em aberto] |
+| 2 | Em que condições a Monto usa o sistema como cliente (licença, prazo, continuidade)? | [Em aberto] |
+| 3 | O contrato do Eric tem exclusividade ou não concorrência que impeça vender software de gestão da qualidade? | [Em aberto] |
+| 4 | Procedimentos, fluxogramas e documentos internos da Monto podem inspirar o produto? Até onde? | [Em aberto] |
+| 5 | LGPD: com dados reais de funcionários da Monto, qual contrato de tratamento de dados vale? | [Em aberto] |
+
+**Regras de trabalho até a resposta [Proposta]:** código novo no computador pessoal, ou no da empresa com ciência de quem decide; repositório privado na conta pessoal do Eric; nenhum dado, documento, nome ou logotipo reais da Monto no projeto novo; dados de exemplo gerados; fluxos modelados a partir das regras gerais da ISO e das ideias do Eric, sem copiar procedimentos internos da Monto passo a passo.
+
 ## Apêndice A. Roteiro de conversa com pessoas de qualidade de outras empresas (30 min)
 
 Pedir só **processo e opinião**; nunca pedir documentos, dados de pessoas ou registros reais da empresa.
