@@ -31,11 +31,24 @@
 | 9 | **Tipos pré-cadastrados** (termos gerais; a empresa edita e acrescenta): MSG Manual do sistema de gestão, POL Política, PG Procedimento gerencial, PO Procedimento operacional, IT Instrução de trabalho, FOR Formulário, PL Plano ou programa, DE Documento externo |
 | 10 | **Nota técnica para o código:** código único por empresa garantido no banco; o sequencial é gerado dentro da mesma transação, com trava na linha do contador, para dois documentos criados ao mesmo tempo não pegarem o mesmo número |
 
-## 3. Perguntas ao Eric
+## 3. Respostas do Eric (05/10/2026) [Decidido]
 
-1. O código nasce quando o documento é criado («Em elaboração») ou só na primeira publicação? Proposta: na criação, para quem elabora já usar o código no cabeçalho; número de documento cancelado fica queimado e aparece como cancelado para a Qualidade.
-2. A revisão aparece como `Rev. 02` ou como sufixo `-02`? (Pode ser configurável, mas um padrão precisa existir.)
-3. A UNIDADE entra no padrão de fábrica ou só quando a empresa tem mais de uma unidade?
+1. **Quem codifica é a Qualidade.** O solicitante não sabe codificar: no cadastro dele o campo de código não aparece. O sistema olha as categorias cadastradas (tipo, área e, se a máscara usar, unidade) e **recomenda** um código, desde que todas as partes estejam preenchidas.
+2. **Revisão:** configurável; padrão de fábrica com sublinhado: `PG-QUA-001_02`.
+3. **Unidade:** configurável; fora do padrão de fábrica.
+
+**Como isso funciona [Proposta do Claude]:**
+- O código é definido quando a Qualidade aceita a solicitação e cadastra o documento. Solicitação recusada não gasta número.
+- A recomendação é só uma prévia. O número é reservado no momento em que a Qualidade confirma, dentro da transação; se outra pessoa pegou o mesmo número nesse meio tempo, o sistema usa o seguinte e avisa.
+- A Qualidade pode aceitar a recomendação ou digitar outro código (por exemplo, para seguir um padrão antigo). O sistema confere que não repete, registra no histórico «código definido manualmente» e continua o sequencial depois do maior número.
+- Depois de confirmado, o código não muda (regra 5). Documento cancelado depois da confirmação mantém o número queimado.
+- A primeira revisão é `_00`, como no padrão de mercado encontrado (`PG.SGQ.001-00`).
+- No e-mail de aviso, o código fica fora do texto do link: o sublinhado do link esconde o `_` e `PG-QUA-001_02` parece `PG-QUA-001 02`.
+
+## 4. Perguntas ao Eric
+
+1. Quem pode solicitar documento novo ou revisão: todos ou só o gestor de área? (Ver doc 11, §3.3.)
+2. A Qualidade pode digitar um código diferente do recomendado?
 
 ## Fontes
 

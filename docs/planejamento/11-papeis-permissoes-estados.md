@@ -74,6 +74,8 @@ Legenda: ✓ pode; **área** = só da própria área; **próprio** = só o que �
 |---|---|---|---|---|---|
 | Ver lista mestra (só ativos e externos) | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Ver «Em elaboração» e «Em tramitação» | — | ✓ | ✓ | — | — |
+| Solicitar documento novo ou revisão **[Proposta]** | — | ✓ | ✓ | ✓ | ✓ |
+| Analisar a solicitação (aceitar, definindo o código, ou recusar com motivo) **[Proposta]** | — | ✓ | ✓ | — | — |
 | Criar documento e iniciar revisão | — | ✓ | ✓ | — | — |
 | Escolher revisores e aprovadores (até 4 níveis) | — | ✓ | ✓ | — | — |
 | Aprovar (nível escolhido) | — | se escolhido | se escolhido | se escolhido | se escolhido |
@@ -113,6 +115,7 @@ Marcadores que não são estado: «Vencida» (calculado), «Reprogramação em a
 
 | Estado | Quem vê | Sai para |
 |---|---|---|
+| Solicitado **[Proposta]** | Quem pediu, Qualidade e Gestor da Qualidade | Em elaboração (aceito, com código); Recusado (com motivo, quem pediu é avisado) |
 | Em elaboração (documento novo) | Qualidade e Gestor da Qualidade | Em tramitação, Cancelado |
 | Em tramitação | Qualidade e Gestor da Qualidade | Ativo (aprovado e publicado); Em elaboração (reprovado, volta com motivo) |
 | Ativo | Todos | Obsoleto (pela tramitação) |
