@@ -66,6 +66,7 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 | 05/10/2026 | O projeto começa pelo backend; o design vem depois, do Figma |
 | 05/10/2026 | O Eric aprende TypeScript construindo, com Claude como guia (fases em «plano de aprendizado») |
 | 05/10/2026 | Aprovador da reprogramação de prazo: papel «Gestor da Qualidade», atribuído pelo administrador (é permissão, não fluxo configurável). Pedido sempre passa por aprovação, inclusive o do próprio gestor |
+| 05/10/2026 | Público-alvo: gestão do SGI (corporativo), não controle operacional de campo; o campo entra só se a empresa configurar. Regras dos três módulos no doc 10 |
 | 05/10/2026 | **Ideia, fora da Fase 1:** acesso de «Cliente» (parte externa) com visão básica e restrita, opcional por empresa e não recomendado por padrão. Motivo: evitar que a empresa empreste o login de um funcionário. Pré-requisitos: confidencialidade por registro, isolamento por parte externa, termo de uso e revisão de segurança |
 
 ## 5. Segurança: princípios desde o início
