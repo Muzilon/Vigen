@@ -55,6 +55,7 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 | 05/10/2026 | Login por e-mail da empresa; SSO Microsoft é recomendado, não obrigatório |
 | 05/10/2026 | MFA obrigatório para todos, por **código enviado por e-mail** (não por aplicativo). Riscos e proteções na seção 5 |
 | 05/10/2026 | Ordem da primeira versão: base comum, Plano de Ação, RNC e depois Documentos |
+| 05/10/2026 | Modelo comercial pretendido: contrato de uso (assinatura) para empresas que atendem ISO 9001, 14001 e 45001. A confirmar: assinatura ou licença; preço a pesquisar |
 | 05/10/2026 | Metas de desempenho da premissa 8 aceitas; será preciso um painel de desempenho do sistema |
 | 05/10/2026 | O pacote Documentos, RNC e Plano de Ação chama-se **Fase 1**; será mostrado ao cliente quando estiver completo. Meta: fevereiro de 2027, com revisão após as 6 primeiras semanas |
 | 05/10/2026 | Método **híbrido**: agentes escrevem a maior parte do código; o Eric revisa, entende e escreve as partes centrais, guiado; toda entrega vem com explicação |
