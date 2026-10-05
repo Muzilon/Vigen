@@ -45,10 +45,11 @@
 - A primeira revisão é `_00`, como no padrão de mercado encontrado (`PG.SGQ.001-00`).
 - No e-mail de aviso, o código fica fora do texto do link: o sublinhado do link esconde o `_` e `PG-QUA-001_02` parece `PG-QUA-001 02`.
 
-## 4. Perguntas ao Eric
+## 4. Respostas finais (05/10/2026) [Decidido]
 
-1. Quem pode solicitar documento novo ou revisão: todos ou só o gestor de área? (Ver doc 11, §3.3.)
-2. A Qualidade pode digitar um código diferente do recomendado?
+1. Todos podem solicitar documento novo ou revisão.
+2. A Qualidade pode digitar código diferente do recomendado, com registro no histórico.
+3. As propostas da seção 3 ficam validadas.
 
 ## Fontes
 

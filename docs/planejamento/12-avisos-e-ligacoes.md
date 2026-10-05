@@ -42,8 +42,8 @@
 
 | Quando | Quem recebe | Canal |
 |---|---|---|
-| Solicitação de documento recebida **[Proposta]** | Qualidade | S+E |
-| Solicitação aceita ou recusada **[Proposta]** | Quem pediu | S+E |
+| Solicitação de documento recebida | Qualidade | S+E |
+| Solicitação aceita ou recusada | Quem pediu | S+E |
 | Enviado para revisão ou aprovação | Revisor ou aprovador do nível | S+E |
 | Reprovado | Quem elaborou | S+E |
 | Etapa da tramitação atrasada | Responsável da etapa e Qualidade | S+E |
