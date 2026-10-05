@@ -68,10 +68,32 @@ Hoje há as duas contagens: Mapa de Processos e atividades em **dias úteis** (j
 
 [Provável] Faz sentido só se a empresa tem gestão de compliance (ética, anticorrupção, ISO 37301 ou 37001). O descumprimento de lei ambiental ou de segurança já é Meio Ambiente ou Segurança nas normas 14001 e 45001, e com «Compliance» como tipo vai haver dúvida em qual classificar. Proposta: manter Qualidade, Segurança e Meio Ambiente; marcar à parte «envolve requisito legal» (sim/não); «Compliance» como tipo extra que a empresa liga se quiser (é lista configurável).
 
-## 5. Perguntas em aberto
+## 5. Fechamento (05/10/2026) [Decidido]
 
-1. Regra de prazos (§0.1): dias úteis para etapas curtas e corridos para longos, ou tudo corrido?
-2. Visão do Plano de Ação: aceita a herança de confidencialidade da origem?
-3. Documentos, item 1: o último nível de aprovação é fixo (dono da área ou Qualidade)?
-4. Compliance: tipo ou marcação «requisito legal»?
-5. Origens extras da RNC (Fornecedor, Incidente, Análise crítica pela direção)?
+O Eric validou todas as propostas deste documento, com estas definições:
+
+- **Prazos:** dias úteis para etapas curtas; dias corridos para prazos longos (reprogramação, eficácia, revisão periódica, intervalos). Cada tela mostra a contagem.
+- **Plano de Ação:** abre em «Minhas ações»; «Todas» respeita a permissão; a ação herda a confidencialidade da origem. Kanban com «Vencida» como etiqueta e conclusão com a mesma confirmação de evidência.
+- **Documentos:**
+  - O último nível de aprovação é fixo: gestor da Qualidade e gestor da área.
+  - Documento externo é controlado: origem, versão ou data, data da próxima verificação.
+  - **O micro-quiz entra na Fase 1.**
+  - GRD depois da Fase 1; na Fase 1, impressão com marca «cópia não controlada» e registro de quem imprimiu.
+- **RNC:**
+  - Tipos: Qualidade, Segurança, Meio Ambiente, mais a marcação «envolve requisito legal»; «Compliance» é tipo opcional que a empresa liga.
+  - Causa raiz: só 5 Porquês, Ishikawa e texto livre; outra ferramenta vai como anexo e resumo no texto livre.
+  - Origens: as seis do Eric mais **Fornecedor** e **Incidente**. «Análise crítica pela direção» não entrou.
+  - Gravidade com critério escrito (proposta abaixo).
+
+**Risco do micro-quiz na Fase 1 [Chutando]:** acrescenta cadastro de perguntas, tentativas, resultado e relatório, algo como 20 a 30 h no método híbrido, no último módulo da fila. Se a revisão de 15/11 mostrar atraso, é o primeiro item a sair, ficando só a ciência «Li e entendi».
+
+## 6. Critério de gravidade da RNC [Proposta, a validar pelo Eric]
+
+| Nível | Critério (basta um) |
+|---|---|
+| Baixa | Desvio pontual, sem efeito no cliente, na segurança, no meio ambiente ou em requisito legal; corrigido no próprio processo |
+| Média | Desvio repetido, ou que afeta produto ou serviço internamente sem chegar ao cliente; sem lesão nem dano ambiental |
+| Alta | Chega ao cliente; ou descumpre requisito legal; ou tem potencial de lesão ou de dano ambiental; ou é constatação de auditoria externa |
+| Crítica | Lesão grave ou fatalidade (real ou potencial); dano ambiental significativo; risco de multa, interdição ou perda da certificação; produto inseguro no cliente |
+
+A empresa pode reescrever os critérios (é texto configurável); estes são o padrão.
