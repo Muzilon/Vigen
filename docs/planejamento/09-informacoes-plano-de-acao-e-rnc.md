@@ -13,13 +13,13 @@ Colunas da planilha usada hoje: Origem; Área/Departamento; O que deve ser feito
 | O que deve ser feito | Existe («o quê») | Mantém | Lista |
 | Quem | Existe (uma pessoa) | Mantém | Lista |
 | Quando (previsto) | Existe | Mantém | Lista |
-| Quando (reprogramado) | Não existe como campo; há justificativa em alguns casos de data | **Novo**: nova data com justificativa obrigatória; o prazo original fica guardado | Lista (mostra o reprogramado e marca que houve) e detalhe |
+| Quando (reprogramado) | Não existe como campo; há justificativa em alguns casos de data | **[Decidido] Novo**: nova data com justificativa obrigatória, sujeita a aprovação (ver regra abaixo); o prazo original fica guardado | Lista (mostra o reprogramado e marca que houve) e detalhe |
 | Status | Existe (pendente, em andamento, concluído, cancelado; «atrasado» é calculado) | Mantém; mostra «Vencido» em texto | Lista |
 | Por quê | Existe | Mantém | Detalhe |
-| Como | Existe (texto) | **Proposta:** lista de passos, para a ação poder ter itens numerados | Detalhe |
-| Item | Não existe | **Novo, opcional:** número do passo dentro da ação | Detalhe |
+| Como | Existe (texto) | **Proposta:** texto livre (o «Item» passou a ser o ID da ação, não um passo) | Detalhe |
+| Item | Não existe | **[Decidido] Novo:** código único da ação (ID), gerado pelo sistema, sem digitação | Lista e detalhe |
 | Local («onde») | Existe | Mantém | Detalhe |
-| Partes envolvidas | Não existe (só «quem») | **Novo, opcional:** outras pessoas ou áreas envolvidas | Detalhe |
+| Partes envolvidas | Não existe (só «quem») | **[Decidido] Novo, opcional:** áreas da empresa e partes externas (cliente, órgão público, fornecedor etc.) | Detalhe |
 | Área/Departamento | A conferir no código | **Proposta:** vem da origem ou do responsável, sem digitar de novo | Detalhe e filtro |
 | Quanto | Existe | **Opcional** (a planilha usada hoje não tem) | Detalhe |
 | Ano | Não existe | Calculado a partir do prazo; serve de filtro | Filtro |
@@ -28,7 +28,22 @@ Colunas da planilha usada hoje: Origem; Área/Departamento; O que deve ser feito
 | Data de conclusão | A conferir | Preenchida automaticamente ao concluir | Detalhe |
 
 **Lista principal [Proposta]:** Origem, O que deve ser feito, Quem, Quando e Status. Tudo o mais fica no detalhe.
-**Perguntas ao Eric:** (1) «Partes envolvidas» são pessoas, áreas ou os dois? (2) «Item» numera passos dentro de uma ação, ou ações dentro de uma origem? (3) A reprogramação precisa de aprovação de alguém, ou só da justificativa? (4) Quem pode reprogramar?
+**Respostas do Eric (05/10/2026) [Decidido]:**
+1. Partes envolvidas: áreas, mas também partes externas (cliente, órgão público, fornecedor etc.).
+2. Item: é o ID da ação.
+3. Reprogramação: passa por aprovação; se quem pede é o próprio aprovador, não precisa de aprovação.
+4. Quem pode pedir: o responsável pela ação e quem gerencia o plano.
+
+**Regra da reprogramação [Decidido]:**
+- O pedido leva nova data e justificativa obrigatória.
+- Se quem pede é o aprovador, a aprovação é automática e fica registrada no histórico (quem, quando, motivo «autoaprovação»).
+- Nos demais casos, o aprovador aprova ou recusa. Recusa mantém o prazo original e avisa quem pediu.
+- Enquanto o pedido está em aprovação, vale o prazo original (a ação pode ficar vencida nesse meio tempo).
+- O prazo original nunca é apagado; cada reprogramação fica no histórico.
+
+**Atenção:** a autoaprovação contraria a regra do motor de aprovação atual («quem solicita nunca aprova o próprio pedido»). Precisa ser uma exceção explícita, só para reprogramação, e visível em auditoria.
+
+**Perguntas em aberto:** (a) Quem é o aprovador: o gestor do plano, o gestor da área ou a Qualidade? (b) Partes externas viram um cadastro próprio ou texto livre? (c) Existe limite de reprogramações por ação?
 
 ## 2. RNC: análise crítica (passo anterior à causa raiz)
 
