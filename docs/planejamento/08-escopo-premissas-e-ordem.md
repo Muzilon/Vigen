@@ -29,7 +29,7 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 | 5 | Facilmente modificável para o cliente | Três níveis de configuração (seção 6) | [Proposta] |
 | 6 | Termos configuráveis por empresa | Glossário por empresa (ex.: HIRA vira «Perigos e Riscos» na Monto) | [Decidido] |
 | 7 | Reduzir planilhas; visão em tabela como Excel | Visão em tabela como recurso único da plataforma: filtros, ordenação, colunas escolhidas, visões salvas, exportação | [Decidido] a premissa |
-| 8 | Rápido | **[Proposta]** 95% das páginas em até 1,5 s e gravações em até 1 s, em conexão comum | [Em aberto] os números |
+| 8 | Rápido | 95% das páginas em até 1,5 s e gravações em até 1 s, em conexão comum. Medir desde o primeiro dia e ter um painel de desempenho (tempo de resposta, erros, disponibilidade) | [Decidido] as metas; painel a desenhar |
 | 9 | Seguro | Padrão OWASP ASVS como checklist (seção 5) | [Proposta] |
 
 **Premissas que faltavam [Proposta]:** integração com o que a empresa já usa (a Monto usa MS Lists e SharePoint); LGPD, retenção e backup; uso em campo pelo celular; pacote comercial por módulo contratado; importação dos dados que hoje estão em planilhas.
@@ -45,14 +45,17 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 
 **Base comum que os três módulos precisam [Proposta]:** empresa, unidade e área; usuários, papéis e permissões; classificação de confidencialidade; atividades (assumir, devolver, prazo em dias úteis, vencimento); notificações; anexos; log de auditoria só de inclusão; glossário por empresa; visão em tabela.
 
-**Ordem de construção dentro da primeira versão [Proposta]:** base comum, depois Plano de Ação (é o destino das ações de todos os outros módulos), depois RNC, depois Documentos (o de fluxo mais pesado: revisões, aprovação, publicação, cópia controlada).
+**Ordem de construção dentro da primeira versão [Decidido em 05/10/2026]:** base comum, depois Plano de Ação (é o destino das ações de todos os outros módulos), depois RNC, depois Documentos (o de fluxo mais pesado: revisões, aprovação, publicação, cópia controlada). **Atenção:** a maior dor da Monto é a tramitação de documentos, que fica por último. **[Proposta]** ao fim do Plano de Ação reavaliar se antecipamos a tramitação, e mostrar cedo um protótipo de baixa fidelidade dela (Figma) para manter o patrocinador engajado.
 
 ## 4. Decisões registradas
 
 | Data | Decisão |
 |---|---|
 | 05/10/2026 | Módulos da primeira versão: Documentos, RNC e Plano de Ação |
-| 05/10/2026 | Login por e-mail da empresa com MFA próprio; SSO Microsoft é recomendado, não obrigatório |
+| 05/10/2026 | Login por e-mail da empresa; SSO Microsoft é recomendado, não obrigatório |
+| 05/10/2026 | MFA obrigatório para todos, por **código enviado por e-mail** (não por aplicativo). Riscos e proteções na seção 5 |
+| 05/10/2026 | Ordem da primeira versão: base comum, Plano de Ação, RNC e depois Documentos |
+| 05/10/2026 | Metas de desempenho da premissa 8 aceitas; será preciso um painel de desempenho do sistema |
 | 05/10/2026 | O projeto começa pelo backend; o design vem depois, do Figma |
 | 05/10/2026 | O Eric aprende TypeScript construindo, com Claude como guia (fases em «plano de aprendizado») |
 
@@ -60,7 +63,10 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 
 Segurança não é uma etapa no fim; molda as tabelas. **[Proposta]** princípios, a validar na etapa de arquitetura de segurança:
 - **Isolamento entre empresas** na aplicação e também no banco (segurança por linha do PostgreSQL como segunda barreira).
-- **Login por e-mail da empresa com MFA próprio** (aplicativo autenticador e códigos de recuperação). **[Em aberto]** se o MFA é obrigatório para todos ou só para administrador e qualidade, configurável por empresa. SSO Microsoft em uma fase seguinte.
+- **Login por e-mail da empresa e MFA obrigatório para todos [Decidido]**, com código enviado por e-mail. SSO Microsoft em uma fase seguinte.
+  - **Limite conhecido:** se o código vai para o mesmo e-mail que é o login, quem tomar a caixa de e-mail (phishing, por exemplo) recebe o link de recuperação e o código. Na prática é um fator só. Diretrizes de autenticação (NIST SP 800-63B) desaconselham e-mail como segundo fator. A segurança real depende de a caixa de e-mail da empresa ter a própria proteção (por exemplo MFA do Microsoft 365).
+  - **Proteções mínimas [Proposta]:** código de 6 a 8 dígitos, validade curta (10 minutos), uso único, no máximo 5 tentativas, limite de reenvios, ligado à tentativa de login; aviso por e-mail ao entrar de um dispositivo novo; recuperação de conta de administrador e Qualidade só com confirmação adicional; recusar e-mails genéricos ou compartilhados; fallback quando o e-mail atrasar ou falhar.
+  - **Desenho [Proposta]:** o segundo fator é um componente trocável (e-mail hoje; aplicativo autenticador, chave de acesso e SSO depois), sem reescrever o login.
 - **Autorização** por papel, unidade, área e classificação da informação.
 - **Dados:** criptografia em trânsito e em repouso; campos sensíveis protegidos; backup testado.
 - **Log de auditoria** só de inclusão: quem fez o quê e quando.
@@ -108,10 +114,10 @@ Para as etapas seguintes: auditoria, inspeção ou incidente grave abre RNC; ind
 
 ## 9. Perguntas em aberto
 
-1. Números definitivos de desempenho (premissa 8).
-2. MFA obrigatório para quem? Configurável por empresa?
+1. Painel de desempenho: que indicadores e quem vê (a medição entra desde o primeiro dia).
+2. Quando exigir um fator mais forte que o e-mail (administrador e Qualidade, ou antes da primeira venda).
 3. Nível do OWASP ASVS a seguir.
-4. Prioridade dentro da primeira versão: confirmar a ordem Plano de Ação, RNC, Documentos.
+4. Ao fim do Plano de Ação: antecipar a tramitação de documentos?
 5. Quais campos e listas de Documentos, RNC e Plano de Ação a empresa pode configurar já na primeira versão (depende das conversas do apêndice A).
 6. Ponto de partida dos indicadores da seção 1.
 
