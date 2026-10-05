@@ -162,6 +162,8 @@ Para as etapas seguintes: auditoria, inspeção ou incidente grave abre RNC; ind
 
 **Regras de trabalho até a resposta [Proposta]:** código novo no computador pessoal, ou no da empresa com ciência de quem decide; repositório privado na conta pessoal do Eric; nenhum dado, documento, nome ou logotipo reais da Monto no projeto novo; dados de exemplo gerados; fluxos modelados a partir das regras gerais da ISO e das ideias do Eric, sem copiar procedimentos internos da Monto passo a passo.
 
+**Atualização de 05/10/2026 (após a apresentação à Monto):** o slide «O que precisamos combinar» **não foi apresentado**. O Eric comentou, em conversa, com a sua gerente sobre usar o notebook da empresa e adiantar parte do trabalho; ela respondeu que não há problema, **sem nada por escrito**, e que a conversa continuará. Ela sugeriu que, se for vender, o Eric avalie um valor com base no mercado. **Pendências:** (1) formalizar por escrito; (2) esclarecer quem seria o comprador e o que seria vendido (licença, assinatura, propriedade) antes de precificar; (3) o Plano de Ação atual da Monto foi criado pelo Eric e pela gerente quando trabalhavam juntos em outra empresa: confirmar de quem é o modelo antes de reutilizá-lo; o método 5W2H em si é público.
+
 ## Apêndice A. Roteiro de conversa com pessoas de qualidade de outras empresas (30 min)
 
 Pedir só **processo e opinião**; nunca pedir documentos, dados de pessoas ou registros reais da empresa.
