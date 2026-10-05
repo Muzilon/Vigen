@@ -53,7 +53,14 @@ Colunas da planilha usada hoje: Origem; Área/Departamento; O que deve ser feito
 - Intervalo mínimo: fica para a fase seguinte. Como o padrão é «sem limite», nada se perde em fevereiro.
 - Cadastro de partes externas: lista mantida pela Qualidade ou pelo administrador (nível 2 de configurabilidade). Só nome da organização e tipo; nenhum dado pessoal de contato na Fase 1 (LGPD).
 
-**Perguntas em aberto:** (d) Quando o próprio gestor da Qualidade é o responsável pela ação, a reprogramação dele sai autoaprovada: isso é aceitável, ou deve ir para outro aprovador (por exemplo, o administrador)? (e) O intervalo de X dias conta dias úteis ou corridos, e quem pode furar o bloqueio em caso justificado? (f) Quem mantém o cadastro de partes externas?
+**Respostas do Eric (05/10/2026, terceira rodada) [Decidido]:**
+- (d) Sem autoaprovação: o pedido sempre sobe para aprovação, mesmo quando quem pede é o próprio gestor da Qualidade; o clique dele vira evidência. Isso substitui a «aprovação automática» anterior.
+- (e) Intervalo mínimo em dias corridos; o gestor da Qualidade pode liberar o bloqueio, com justificativa. Fica para a fase seguinte.
+- (f) Partes externas: só nome e tipo; o sistema já vem com registros pré-cadastrados.
+
+**[Proposta do Claude]** Se mais de uma pessoa tiver o papel «Gestor da Qualidade», o pedido de uma vai para a outra; a aprovação pela mesma pessoa fica só para quando ela é a única, e o histórico marca «sem segregação». Aprovar o próprio pedido registra quem decidiu, mas não prova uma segunda opinião.
+
+**Em aberto:** «pré-cadastrados» quer dizer só os tipos (cliente, órgão público, fornecedor) ou também organizações (por exemplo, órgãos ambientais)? Órgãos mudam por estado.
 
 ## 2. RNC: análise crítica (passo anterior à causa raiz)
 
@@ -75,6 +82,6 @@ Base: a ISO 9001, item 10.2, pede reagir à não conformidade, corrigi-la e aval
 | Efeito em riscos e oportunidades | Opcional |
 | Ata ou anexo da reunião | Opcional |
 
-**Participantes da análise [Decidido 05/10]:** a Qualidade e a área afetada; quem preenche a RNC pode incluir outras pessoas. **Em aberto:** os incluídos só ficam registrados como participantes ou também podem editar e precisam confirmar a análise? Podem ser pessoas sem acesso ao sistema (por exemplo, do cliente)?
+**Participantes da análise [Decidido 05/10]:** a Qualidade e a área afetada; quem preenche a RNC pode incluir outras pessoas. **[Decidido 05/10]** Os incluídos só ficam registrados e podem visualizar; quem elabora e edita a análise é a Qualidade.
 
 **Nota:** a decisão tem três saídas, e não duas: nem toda não conformidade precisa de causa raiz. Quem pode ser avisado e o que é registrado em cada saída são perguntas em aberto no artefato «Fluxos do Vigen».
