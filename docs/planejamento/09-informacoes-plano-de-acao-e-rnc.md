@@ -43,7 +43,17 @@ Colunas da planilha usada hoje: Origem; Área/Departamento; O que deve ser feito
 
 **Atenção:** a autoaprovação contraria a regra do motor de aprovação atual («quem solicita nunca aprova o próprio pedido»). Precisa ser uma exceção explícita, só para reprogramação, e visível em auditoria.
 
-**Perguntas em aberto:** (a) Quem é o aprovador: o gestor do plano, o gestor da área ou a Qualidade? (b) Partes externas viram um cadastro próprio ou texto livre? (c) Existe limite de reprogramações por ação?
+**Respostas do Eric (05/10/2026, segunda rodada) [Decidido]:**
+- (a) Aprovador: o gestor da Qualidade, definido pelo administrador de cada empresa.
+- (b) Partes externas: cadastro próprio, escolhido em lista suspensa.
+- (c) Limite: sem limite por padrão. Limite possível: intervalo mínimo de X dias desde a última reprogramação, configurável por empresa.
+
+**Como entra na Fase 1 [Proposta do Claude]:**
+- Aprovador: um papel «Gestor da Qualidade», que o administrador atribui a uma ou mais pessoas. É configuração de permissão (já prevista), e não de fluxo. O fluxo continua fixo, como diz o registro de decisões do doc 08.
+- Intervalo mínimo: fica para a fase seguinte. Como o padrão é «sem limite», nada se perde em fevereiro.
+- Cadastro de partes externas: lista mantida pela Qualidade ou pelo administrador (nível 2 de configurabilidade). Só nome da organização e tipo; nenhum dado pessoal de contato na Fase 1 (LGPD).
+
+**Perguntas em aberto:** (d) Quando o próprio gestor da Qualidade é o responsável pela ação, a reprogramação dele sai autoaprovada: isso é aceitável, ou deve ir para outro aprovador (por exemplo, o administrador)? (e) O intervalo de X dias conta dias úteis ou corridos, e quem pode furar o bloqueio em caso justificado? (f) Quem mantém o cadastro de partes externas?
 
 ## 2. RNC: análise crítica (passo anterior à causa raiz)
 
@@ -64,5 +74,7 @@ Base: a ISO 9001, item 10.2, pede reagir à não conformidade, corrigi-la e aval
 | Impacto (cliente, segurança, meio ambiente, legal) | Opcional |
 | Efeito em riscos e oportunidades | Opcional |
 | Ata ou anexo da reunião | Opcional |
+
+**Participantes da análise [Decidido 05/10]:** a Qualidade e a área afetada; quem preenche a RNC pode incluir outras pessoas. **Em aberto:** os incluídos só ficam registrados como participantes ou também podem editar e precisam confirmar a análise? Podem ser pessoas sem acesso ao sistema (por exemplo, do cliente)?
 
 **Nota:** a decisão tem três saídas, e não duas: nem toda não conformidade precisa de causa raiz. Quem pode ser avisado e o que é registrado em cada saída são perguntas em aberto no artefato «Fluxos do Vigen».
