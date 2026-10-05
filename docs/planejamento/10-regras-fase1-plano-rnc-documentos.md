@@ -87,7 +87,7 @@ O Eric validou todas as propostas deste documento, com estas definições:
 
 **Risco do micro-quiz na Fase 1 [Chutando]:** acrescenta cadastro de perguntas, tentativas, resultado e relatório, algo como 20 a 30 h no método híbrido, no último módulo da fila. Se a revisão de 15/11 mostrar atraso, é o primeiro item a sair, ficando só a ciência «Li e entendi».
 
-## 6. Critério de gravidade da RNC [Proposta, a validar pelo Eric]
+## 6. Critério de gravidade da RNC [Decidido 05/10/2026]
 
 | Nível | Critério (basta um) |
 |---|---|
