@@ -1,11 +1,11 @@
 # Avisos e ligações entre módulos da Fase 1
 
-**Estado:** rascunho de 05/10/2026. Tudo é **[Proposta]** do Claude até o Eric validar. Base: docs 09, 10 e 11.
+**Estado:** validado pelo Eric em 05/10/2026. Base: docs 09, 10 e 11.
 
 ## 1. Regras gerais dos avisos
 
 - **Canais:** S = sino no sistema; E = e-mail. Tudo vai para o sino; e-mail só quando pede ação ou tem prazo.
-- **E-mail sem conteúdo:** traz só tipo, código, prazo e link. Nunca a descrição (protege confidencial e dados pessoais).
+- **E-mail sem conteúdo:** traz só tipo, código, prazo e link. Nunca a descrição (protege confidencial e dados pessoais). **Etapa futura:** desenhar o modelo visual do e-mail informativo (junto com o design do Figma).
 - **Preferências:** a pessoa pode desligar avisos só de sino; os de e-mail com prazo não podem ser desligados.
 - **Sem repetição diária:** atraso avisa no dia; depois entra num resumo semanal por e-mail.
 - **Confidencialidade:** quem não vê o registro não recebe aviso dele, nem como contagem.
@@ -18,7 +18,7 @@
 |---|---|---|
 | Ação atribuída | Responsável | S+E |
 | Responsável trocado | Anterior e novo | S+E |
-| Faltam 3 dias úteis para o prazo | Responsável | S+E |
+| Faltam 5 dias úteis para o prazo | Responsável | S+E |
 | Ação vencida | Responsável, Qualidade, gestor da área | S+E |
 | Pedido de reprogramação | Aprovador | S+E |
 | Reprogramação aprovada ou recusada | Quem pediu | S+E |
@@ -64,15 +64,15 @@
 |---|---|---|
 | 1 | RNC cria uma ação | A ação herda origem, área e confidencialidade; as duas ficam ligadas, com link nos dois sentidos |
 | 2 | Todas as ações da RNC encerradas (concluídas ou canceladas) | Avisa o tratador para programar a eficácia. Se todas foram canceladas, o tratador justifica antes de programar |
-| 3 | RNC cancelada com ações abertas | A confirmação lista as ações; as abertas são canceladas junto, com a mesma justificativa; as concluídas ficam |
+| 3 | RNC cancelada com ações abertas | A confirmação lista as ações; as abertas são canceladas junto, com o motivo «RNC vinculada cancelada» e o link para a RNC (onde está a justificativa); as concluídas ficam |
 | 4 | RNC não eficaz | Abre novo ciclo; as ações do ciclo anterior continuam ligadas a ele, no histórico |
 | 5 | Confidencialidade da RNC sobe | As ações dela sobem junto |
 | 6 | RNC ou ação aponta um documento afetado | Só o link na Fase 1, sem automação. Quando a nova versão desse documento é publicada, o responsável da ação ligada é avisado para concluir |
 | 7 | Documento ligado a ação aberta vira obsoleto | Avisa a Qualidade |
 | 8 | Origens Auditoria, Inspeção e Indicador | Na Fase 1 são só valores de lista na RNC, sem ligação, porque esses módulos não existem ainda |
 
-## 4. Perguntas ao Eric
+## 4. Respostas do Eric (05/10/2026) [Decidido]
 
-1. Aviso de prazo: 3 dias úteis antes está bom?
-2. E-mail sem descrição, só código e link: aceita? (Mais seguro, um clique a mais.)
-3. Ligação 3: cancelar a RNC cancela as ações abertas junto, ou elas viram ações manuais e continuam?
+1. Aviso de prazo: 5 dias úteis antes.
+2. E-mail sem descrição, por enquanto; o design do e-mail informativo entra como etapa.
+3. Cancelar a RNC cancela as ações abertas, com o motivo «RNC vinculada cancelada».
