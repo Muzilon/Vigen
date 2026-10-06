@@ -5,7 +5,7 @@
 | Conceito | Termo padrão | Observação |
 |---|---|---|
 | Módulo de não conformidades | **TNC** (Tratamento de Não Conformidade) | A empresa de teste chama de RNC; renomeia se quiser |
-| Cada registro do módulo TNC | **NC** (ex.: NC-0001) | [Proposta] O módulo é o tratamento; o registro é a não conformidade |
+| Cada registro do módulo TNC | **NC** (ex.: NC-0001) | O módulo é o tratamento; o registro é a não conformidade |
 | Plano de ações | **Plano de Ação** (geral) | Recebe ações de todos os módulos |
 | Unidade organizacional | **Área** | |
 | Quem trata a NC | **Responsável pelo tratamento** | Substitui «tratador» nos docs anteriores |
