@@ -11,27 +11,27 @@ Uma pessoa pode ter mais de um papel. O administrador atribui os papéis. Papéi
 |---|---|---|
 | Administrador | TI ou responsável pelo sistema na empresa | Configura: usuários, papéis, áreas, unidades, listas, feriados, parâmetros, glossário. **Não vê conteúdo confidencial só por ser administrador** |
 | Diretoria | CEO, COO, CFO e demais diretores | Vê todas as áreas; edita com as mesmas permissões da Qualidade; não configura o sistema |
-| Gestor da Qualidade | Coordenação ou gerência do SGI | Aprova, define tratador, vê tudo do SGI, inclusive confidencial |
+| Gestor do SGI | Coordenação ou gerência do SGI | Aprova, define tratador, vê tudo do SGI, inclusive confidencial |
 | Qualidade | Analistas do SGI | Elabora documentos, trata RNC, acompanha ações |
 | Gestor de área | Gestores das áreas | Aprova o que é da sua área, recebe avisos da área, vê as ações da área |
 | Usuário | Todos | Executa as próprias ações, consulta documentos, dá ciência e faz o micro-quiz |
 
 **Regras dos papéis:**
 - **Diretoria [Decidido]:** nas matrizes do §3, tem as permissões da coluna Qualidade e a visão de todas as áreas. **[Decidido]** Não vê o nível Confidencial, salvo se nomeada no registro: uma denúncia que envolve um diretor não pode ficar visível a ele.
-- A empresa precisa ter pelo menos um Gestor da Qualidade. O sistema bloqueia remover o último.
+- A empresa precisa ter pelo menos um Gestor do SGI. O sistema bloqueia remover o último.
 - Gestor de área vale para a área (ou áreas) que o administrador indicar, não para a empresa toda.
-- **Permissão extra «Pode registrar RNC»:** o administrador liga por pessoa. Vem ligada para Qualidade, Gestor da Qualidade e Gestor de área.
+- **Permissão extra «Pode registrar RNC»:** o administrador liga por pessoa. Vem ligada para Qualidade, Gestor do SGI e Gestor de área.
 
 ## 2. Confidencialidade
 
 | Nível | Quem vê | Exemplo |
 |---|---|---|
 | Interno (padrão) | Todos da empresa | Ação de melhoria comum |
-| Restrito | Envolvidos (responsável, participantes, gestor da área), Qualidade e Gestor da Qualidade | RNC de reclamação de cliente |
-| Confidencial | Só as pessoas nomeadas no registro e o Gestor da Qualidade | Compliance, assédio, incidente com dado de saúde |
+| Restrito | Envolvidos (responsável, participantes, gestor da área), Qualidade e Gestor do SGI | RNC de reclamação de cliente |
+| Confidencial | Só as pessoas nomeadas no registro e o Gestor do SGI | Compliance, assédio, incidente com dado de saúde |
 
 - Ações herdam o nível da origem. O nível só pode subir na ação, nunca baixar.
-- Quem pode mudar o nível: Gestor da Qualidade. Fica no histórico.
+- Quem pode mudar o nível: Gestor do SGI. Fica no histórico.
 - Busca, listas, contadores, notificações e exportações respeitam o nível. Um registro confidencial não aparece nem como contagem para quem não pode vê-lo.
 
 ## 3. Matriz de permissões
@@ -40,7 +40,7 @@ Legenda: ✓ pode; **área** = só da própria área; **próprio** = só o que �
 
 ### 3.1 Plano de Ação
 
-| Ação | Adm. | Gestor Qual. | Qualidade | Gestor área | Usuário |
+| Ação | Adm. | Gestor SGI | Qualidade | Gestor área | Usuário |
 |---|---|---|---|---|---|
 | Ver «Minhas ações» | próprio | ✓ | ✓ | ✓ | ✓ |
 | Ver «Todas» (respeitando confidencialidade) | — | ✓ | ✓ | área | — |
@@ -55,7 +55,7 @@ Legenda: ✓ pode; **área** = só da própria área; **próprio** = só o que �
 
 ### 3.2 RNC
 
-| Ação | Adm. | Gestor Qual. | Qualidade | Gestor área | Usuário |
+| Ação | Adm. | Gestor SGI | Qualidade | Gestor área | Usuário |
 |---|---|---|---|---|---|
 | Registrar | — | ✓ | ✓ | ✓ | se tiver a permissão extra |
 | Ver | — | ✓ | ✓ | env. ou área | env. |
@@ -70,7 +70,7 @@ Legenda: ✓ pode; **área** = só da própria área; **próprio** = só o que �
 
 ### 3.3 Documentos
 
-| Ação | Adm. | Gestor Qual. | Qualidade | Gestor área | Usuário |
+| Ação | Adm. | Gestor SGI | Qualidade | Gestor área | Usuário |
 |---|---|---|---|---|---|
 | Ver lista mestra (só ativos e externos) | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Ver «Em elaboração» e «Em tramitação» | — | ✓ | ✓ | — | — |
@@ -115,9 +115,9 @@ Marcadores que não são estado: «Vencida» (calculado), «Reprogramação em a
 
 | Estado | Quem vê | Sai para |
 |---|---|---|
-| Solicitado | Quem pediu, Qualidade e Gestor da Qualidade | Em elaboração (aceito, com código); Recusado (com motivo, quem pediu é avisado) |
-| Em elaboração (documento novo) | Qualidade e Gestor da Qualidade | Em tramitação, Cancelado |
-| Em tramitação | Qualidade e Gestor da Qualidade | Ativo (aprovado e publicado); Em elaboração (reprovado, volta com motivo) |
+| Solicitado | Quem pediu, Qualidade e Gestor do SGI | Em elaboração (aceito, com código); Recusado (com motivo, quem pediu é avisado) |
+| Em elaboração (documento novo) | Qualidade e Gestor do SGI | Em tramitação, Cancelado |
+| Em tramitação | Qualidade e Gestor do SGI | Ativo (aprovado e publicado); Em elaboração (reprovado, volta com motivo) |
 | Ativo | Todos | Obsoleto (pela tramitação) |
 | Ativo + revisão em tramitação | Todos veem «Ativo» e a versão vigente; Qualidade vê também a revisão | A revisão aprovada vira a nova versão ativa; a anterior vira Obsoleta |
 | Obsoleto | Qualidade (padrão); a empresa pode liberar a consulta para todos | (fim) |
@@ -132,12 +132,12 @@ Regra: a versão em revisão nunca substitui a vigente antes da aprovação fina
    - Ao inativar, o sistema avisa se ela tem ações pendentes e mostra um link para a lista dessas ações, já filtrada.
    - Na confirmação, o sistema avisa que as ações pendentes passam para o gestor da área dela.
    - Se a pessoa é o próprio gestor da área, o sistema não reatribui: só inativa o login, e a Qualidade é avisada para redistribuir.
-   - As aprovações pendentes dela vão para outro Gestor da Qualidade (ou o administrador reatribui, se não houver).
+   - As aprovações pendentes dela vão para outro Gestor do SGI (ou o administrador reatribui, se não houver).
    - **[Decidido] Usuário nunca é apagado do banco:** «excluir» na tela significa inativar. Apagar quebraria o histórico, que é só de inclusão e é evidência de auditoria. Pedido de exclusão pela LGPD é atendido anonimizando nome e e-mail, sem apagar os registros.
-2. **Gestor da Qualidade único pede reprogramação [Decidido]:** aprova o próprio pedido; o sistema registra «sem segregação».
-3. **Gestor de área do documento não existe** (área sem gestor): o último nível fica só com o Gestor da Qualidade, e o histórico registra o motivo.
+2. **Gestor do SGI único pede reprogramação [Decidido]:** aprova o próprio pedido; o sistema registra «sem segregação».
+3. **Gestor de área do documento não existe** (área sem gestor): o último nível fica só com o Gestor do SGI, e o histórico registra o motivo.
 4. **Mudança de área de uma pessoa:** as ações abertas continuam com ela; a visão «área» do novo gestor passa a incluí-las.
-5. **Administrador também é Gestor da Qualidade:** vale a soma dos papéis; o bloqueio de confidencial do §1 é só para quem é apenas administrador.
+5. **Administrador também é Gestor do SGI:** vale a soma dos papéis; o bloqueio de confidencial do §1 é só para quem é apenas administrador.
 
 ## 6. Respostas do Eric (05/10/2026) [Decidido]
 

@@ -44,21 +44,21 @@ Colunas da planilha usada hoje: Origem; Área/Departamento; O que deve ser feito
 **Atenção:** a autoaprovação contraria a regra do motor de aprovação atual («quem solicita nunca aprova o próprio pedido»). Precisa ser uma exceção explícita, só para reprogramação, e visível em auditoria.
 
 **Respostas do Eric (05/10/2026, segunda rodada) [Decidido]:**
-- (a) Aprovador: o gestor da Qualidade, definido pelo administrador de cada empresa.
+- (a) Aprovador: o gestor do SGI, definido pelo administrador de cada empresa.
 - (b) Partes externas: cadastro próprio, escolhido em lista suspensa.
 - (c) Limite: sem limite por padrão. Limite possível: intervalo mínimo de X dias desde a última reprogramação, configurável por empresa.
 
 **Como entra na Fase 1 [Proposta do Claude]:**
-- Aprovador: um papel «Gestor da Qualidade», que o administrador atribui a uma ou mais pessoas. É configuração de permissão (já prevista), e não de fluxo. O fluxo continua fixo, como diz o registro de decisões do doc 08.
+- Aprovador: um papel «Gestor do SGI», que o administrador atribui a uma ou mais pessoas. É configuração de permissão (já prevista), e não de fluxo. O fluxo continua fixo, como diz o registro de decisões do doc 08.
 - Intervalo mínimo: fica para a fase seguinte. Como o padrão é «sem limite», nada se perde em fevereiro.
 - Cadastro de partes externas: lista mantida pela Qualidade ou pelo administrador (nível 2 de configurabilidade). Só nome da organização e tipo; nenhum dado pessoal de contato na Fase 1 (LGPD).
 
 **Respostas do Eric (05/10/2026, terceira rodada) [Decidido]:**
-- (d) Sem autoaprovação: o pedido sempre sobe para aprovação, mesmo quando quem pede é o próprio gestor da Qualidade; o clique dele vira evidência. Isso substitui a «aprovação automática» anterior.
-- (e) Intervalo mínimo em dias corridos; o gestor da Qualidade pode liberar o bloqueio, com justificativa. Fica para a fase seguinte.
+- (d) Sem autoaprovação: o pedido sempre sobe para aprovação, mesmo quando quem pede é o próprio gestor do SGI; o clique dele vira evidência. Isso substitui a «aprovação automática» anterior.
+- (e) Intervalo mínimo em dias corridos; o gestor do SGI pode liberar o bloqueio, com justificativa. Fica para a fase seguinte.
 - (f) Partes externas: só nome e tipo; o sistema já vem com registros pré-cadastrados.
 
-**[Proposta do Claude]** Se mais de uma pessoa tiver o papel «Gestor da Qualidade», o pedido de uma vai para a outra; a aprovação pela mesma pessoa fica só para quando ela é a única, e o histórico marca «sem segregação». Aprovar o próprio pedido registra quem decidiu, mas não prova uma segunda opinião.
+**[Proposta do Claude]** Se mais de uma pessoa tiver o papel «Gestor do SGI», o pedido de uma vai para a outra; a aprovação pela mesma pessoa fica só para quando ela é a única, e o histórico marca «sem segregação». Aprovar o próprio pedido registra quem decidiu, mas não prova uma segunda opinião.
 
 **Em aberto:** «pré-cadastrados» quer dizer só os tipos (cliente, órgão público, fornecedor) ou também organizações (por exemplo, órgãos ambientais)? Órgãos mudam por estado.
 

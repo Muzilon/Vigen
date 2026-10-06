@@ -14,7 +14,7 @@ Hoje há as duas contagens: Mapa de Processos e atividades em **dias úteis** (j
 
 | # | Regra [Decidido] |
 |---|---|
-| 1 | Reprogramação: com mais de um gestor da Qualidade, o pedido de um vai para outro; sendo o único, aprova o próprio pedido e o histórico registra |
+| 1 | Reprogramação: com mais de um gestor do SGI, o pedido de um vai para outro; sendo o único, aprova o próprio pedido e o histórico registra |
 | 2 | Partes externas: termos gerais pré-cadastrados (cliente, órgão público, fornecedor); a empresa cadastra os demais |
 | 3 | Troca de responsável: a Qualidade pode trocar; avisa o anterior e o novo; fica no histórico |
 | 4 | Vencimento: avisa a Qualidade, o responsável e o gestor da área |
@@ -30,7 +30,7 @@ Hoje há as duas contagens: Mapa de Processos e atividades em **dias úteis** (j
 |---|---|
 | 1 | Participantes incluídos na análise crítica só ficam registrados e visualizam; quem elabora é a Qualidade |
 | 2 | Abrir RNC: só quem tem permissão |
-| 3 | Tratador: o gestor da Qualidade define; quem da Qualidade tem permissão de tratar pode assumir proativamente |
+| 3 | Tratador: o gestor do SGI define; quem da Qualidade tem permissão de tratar pode assumir proativamente |
 | 4 | Causa raiz: 5 Porquês, Ishikawa, texto livre |
 | 5 | Eficácia da RNC: obrigatória, mesmo que as ações não tenham verificação própria. Ao concluir a última ação, o tratador usa «Programar avaliação de eficácia»: data mínima 30 dias após a última ação; máximo configurável, padrão 1 ano |
 | 6 | Origem: Auditoria interna, Auditoria externa, Reclamação de cliente, Inspeção, Indicador, Autoidentificada. Gravidade: Baixa, Média, Alta, Crítica. Tipo: Qualidade, Segurança, Meio Ambiente, Compliance |
@@ -75,7 +75,7 @@ O Eric validou todas as propostas deste documento, com estas definições:
 - **Prazos:** dias úteis para etapas curtas; dias corridos para prazos longos (reprogramação, eficácia, revisão periódica, intervalos). Cada tela mostra a contagem.
 - **Plano de Ação:** abre em «Minhas ações»; «Todas» respeita a permissão; a ação herda a confidencialidade da origem. Kanban com «Vencida» como etiqueta e conclusão com a mesma confirmação de evidência.
 - **Documentos:**
-  - O último nível de aprovação é fixo: gestor da Qualidade e gestor da área.
+  - O último nível de aprovação é fixo: gestor do SGI e gestor da área.
   - Documento externo é controlado: origem, versão ou data, data da próxima verificação.
   - **O micro-quiz entra na Fase 1.**
   - GRD depois da Fase 1; na Fase 1, impressão com marca «cópia não controlada» e registro de quem imprimiu.

@@ -29,13 +29,13 @@
 
 | Quando | Quem recebe | Canal |
 |---|---|---|
-| RNC registrada | Gestor da Qualidade | S+E |
-| Tratador definido ou assumido | Tratador (e Gestor da Qualidade, se assumida) | S+E |
+| RNC registrada | Gestor do SGI | S+E |
+| Tratador definido ou assumido | Tratador (e Gestor do SGI, se assumida) | S+E |
 | Incluído como participante | Participante | S |
 | Decidida improcedente | Quem registrou | S+E |
 | Última ação encerrada | Tratador: programar eficácia | S+E |
 | Faltam 7 dias para a avaliação de eficácia | Tratador | S+E |
-| Avaliação de eficácia vencida | Tratador e Gestor da Qualidade | S+E |
+| Avaliação de eficácia vencida | Tratador e Gestor do SGI | S+E |
 | RNC encerrada | Quem registrou e gestor da área | S |
 
 ### Documentos
