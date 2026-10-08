@@ -65,6 +65,7 @@ Sem medida, objetivo vira slogan. **[Proposta]** indicadores, com o ponto de par
 | 05/10/2026 | Configurável na Fase 1: listas (tipos de documento, origens e classes de RNC, unidades, áreas) e glossário de termos. Fluxos e aprovadores ficam fixos |
 | 05/10/2026 | O projeto começa pelo backend; o design vem depois, do Figma |
 | 05/10/2026 | O Eric aprende TypeScript construindo, com Claude como guia (fases em «plano de aprendizado») |
+| 08/10/2026 | Método ajustado: o Claude escreve o código em etapas pequenas, explicando cada escolha; o Eric valida cada etapa respondendo 1 ou 2 perguntas de verificação antes da próxima. O curso de JavaScript (Origamid) segue em paralelo, de manhã. Testes automáticos comprovam o comportamento; as perguntas comprovam o entendimento |
 | 05/10/2026 | Aprovador da reprogramação de prazo: papel «Gestor da Qualidade», atribuído pelo administrador (é permissão, não fluxo configurável). Pedido sempre passa por aprovação, inclusive o do próprio gestor |
 | 05/10/2026 | Público-alvo: gestão do SGI (corporativo), não controle operacional de campo; o campo entra só se a empresa configurar. Regras dos três módulos no doc 10 |
 | 05/10/2026 | **Ideia, fora da Fase 1:** acesso de «Cliente» (parte externa) com visão básica e restrita, opcional por empresa e não recomendado por padrão. Motivo: evitar que a empresa empreste o login de um funcionário. Pré-requisitos: confidencialidade por registro, isolamento por parte externa, termo de uso e revisão de segurança |
