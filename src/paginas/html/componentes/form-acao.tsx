@@ -38,6 +38,7 @@ export function FormAcao({
   confirmar,
   variante,
   tamanho = "normal",
+  textoPendente = "Aguarde...",
 }: {
   acao: AcaoServidor;
   children?: ReactNode;
@@ -47,6 +48,8 @@ export function FormAcao({
   confirmar?: string;
   variante?: VarianteBotao;
   tamanho?: "normal" | "pequeno";
+  /** Texto do botão enquanto o servidor trabalha (padrão "Aguarde..."). */
+  textoPendente?: string;
 }) {
   // useActionState liga o formulário à server action: `executar` é o que o formulário chama ao enviar,
   // `res` guarda a resposta (erro/ok/aviso) e `pendente` fica verdadeiro enquanto o servidor trabalha.
@@ -68,7 +71,7 @@ export function FormAcao({
     >
       {children}
       <button type="submit" disabled={pendente} className={classe}>
-        {pendente ? "Aguarde..." : botao}
+        {pendente ? textoPendente : botao}
       </button>
       {res?.erro && <p role="alert" className={`${styles.retorno} ${styles.erro}`}>{res.erro}</p>}
       {res?.aviso && <p className={`${styles.retorno} ${styles.aviso}`}>{res.aviso}</p>}

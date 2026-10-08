@@ -1,7 +1,7 @@
 ---
 name: agente-auditorias-processos
 description: Auditorias internas e Mapa de Processos — programa anual, constatações com evidência que abrem RNC e o mapa SIPOC (hub que vincula os demais módulos).
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

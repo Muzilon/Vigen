@@ -1,7 +1,7 @@
 ---
 name: agente-documentos
 description: Módulo Documentos (ISO 9001 7.5) — tipos, elaboração de revisões, envio para aprovação, publicação com público e ciência (micro-quiz), cópia controlada com QR (/validar-doc), lista mestra, revisão periódica e obsolescência.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
