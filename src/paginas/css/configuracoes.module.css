@@ -11,6 +11,7 @@
    09. Perfis — título do cartão e botão de exclusão
    10. Obras e setores — lista de registros editáveis
    11. Módulos e escalas — área de texto para JSON (eixos/faixas)
+   12. Feriados — formulário, lista, edição e foco
    ========================================================== */
 
 /* ==========================================================
@@ -371,4 +372,117 @@ textarea.areaTexto {
   display: flex;
   flex-direction: column;
   gap: var(--espaco-3);
+}
+
+/* ==========================================================
+   12. FERIADOS
+   ========================================================== */
+/* Alvo de toque de 44px (botões, campos e "Editar") */
+.alvoToque {
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.formFeriado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+}
+.campoFeriadoData {
+  flex: 0 1 180px;
+  min-width: 150px;
+}
+.campoFeriadoDescricao {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+/* Retorno (erro/sucesso) ocupa a linha inteira, abaixo dos campos */
+.retornoFeriado {
+  composes: retorno from "./componentes/form-acao.module.css";
+  flex-basis: 100%;
+}
+.retornoErro {
+  composes: erro from "./componentes/form-acao.module.css";
+}
+.retornoSucesso {
+  composes: sucesso from "./componentes/form-acao.module.css";
+}
+
+.listaFeriados {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.itemFeriado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  padding: var(--espaco-3) 0;
+  border-top: 1px solid var(--cor-borda);
+}
+.itemFeriado:first-child {
+  border-top: 0;
+}
+.resumoFeriado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2) var(--espaco-3);
+}
+.dataFeriado {
+  font-family: var(--fonte-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+.descricaoFeriado {
+  flex: 1 1 200px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+.acoesFeriado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+}
+/* Fechado, "Editar" fica ao lado de "Inativar"; aberto, o formulário ocupa a linha inteira abaixo */
+.edicaoFeriado {
+  flex: 0 0 auto;
+  order: 1;
+}
+.edicaoFeriado[open] {
+  flex: 1 1 100%;
+  order: 3;
+}
+.resumoEditar {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--espaco-3);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+.edicaoFeriado[open] > .resumoEditar {
+  margin-bottom: var(--espaco-3);
+}
+
+/* Foco visível por teclado */
+.resumoEditar:focus-visible,
+.aba:focus-visible,
+.botaoPrimario:focus-visible,
+.botaoSecundario:focus-visible,
+.botaoPerigo:focus-visible {
+  outline: 2px solid var(--cor-acento);
+  outline-offset: 2px;
 }

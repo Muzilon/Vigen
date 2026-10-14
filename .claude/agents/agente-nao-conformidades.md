@@ -1,7 +1,7 @@
 ---
 name: agente-nao-conformidades
 description: RNC (ISO 9001 10.2) e Plano de Ação 5W2H — máquina de estados, causa raiz (5 Porquês/Ishikawa/livre), ciclos de verificação de eficácia, cancelamento aprovado, itens com evidência e visão unificada do plano.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

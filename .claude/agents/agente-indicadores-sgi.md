@@ -1,7 +1,7 @@
 ---
 name: agente-indicadores-sgi
 description: Módulo Indicadores — cadastro com meta e direção, lançamento por período (append-only), indicadores automáticos, situação no último período fechado, alerta de falta de lançamento e painel no Dashboard.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

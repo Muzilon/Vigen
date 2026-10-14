@@ -1,7 +1,7 @@
 ---
 name: agente-autenticacao-acesso
 description: Login (Auth.js v5, Credentials + JWT), sessão, papéis, perfis, permissões, escopo por unidade, tokenVersao e a aba Usuários/Perfis de Configurações. Acione ao mexer em quem pode o quê.
-model: fable
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

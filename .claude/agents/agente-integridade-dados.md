@@ -1,7 +1,7 @@
 ---
 name: agente-integridade-dados
 description: Integridade dos dados do Vigen — trava otimista (versao), histórico append-only, triggers e CHECKs, transações, idempotência e isolamento entre empresas. Acione ao revisar ou endurecer a consistência de um módulo.
-model: fable
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

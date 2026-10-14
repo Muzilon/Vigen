@@ -1,7 +1,7 @@
 ---
 name: agente-arquitetura-dados
 description: Schema Prisma, migrações, server actions, serviços, permissões, multi-tenant, anexos/armazenamento, e-mail, cron e segredos do Vigen. Acione antes de criar uma entidade, uma permissão, uma rota de API ou de mudar o formato de um registro existente.
-model: fable
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

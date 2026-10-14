@@ -1,7 +1,7 @@
 ---
 name: agente-qa-revisao
 description: Revisão ao fim de cada fatia (antes de ir ao Eric) e antes de remover código antigo — critérios de aceite, isolamento entre empresas, LGPD, regressões e nada apagado sem validação. Não implementa.
-model: fable
+model: sonnet
 tools: Read, Glob, Grep, Bash
 ---
 

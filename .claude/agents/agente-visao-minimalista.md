@@ -1,7 +1,7 @@
 ---
 name: agente-visao-minimalista
 description: Visão enxuta das telas do Vigen — decidir o que fica na tela principal (tabelas, cartões, resumos, dashboard) e o que vai para o detalhe; reduzir ruído e densidade sem perder evidência de auditoria.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

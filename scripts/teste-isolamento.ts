@@ -49,6 +49,17 @@ async function main() {
     const intacta = await admin.obraUnidade.findUniqueOrThrow({ where: { id: obraMonto.id } });
     assert.notEqual(intacta.endereco, "hack");
   });
+  await caso("feriado_empresa: Demo nao ve feriado da Monto", async () => {
+    const f = await admin.feriadoEmpresa.create({
+      data: { empresaId: monto.id, data: new Date(Date.UTC(2999, 0, 1 + Math.floor(Math.random() * 300))), descricao: "isolamento" },
+    });
+    try {
+      assert.equal(await db.feriadoEmpresa.count({ where: { id: f.id } }), 0);
+      assert.equal((await db.feriadoEmpresa.updateMany({ where: { id: f.id }, data: { ativo: false } })).count, 0);
+    } finally {
+      await admin.feriadoEmpresa.delete({ where: { id: f.id } });
+    }
+  });
   await caso("create forca empresaId da Demo", async () => {
     const s = await db.setor.create({ data: { nome: `Teste ${Date.now()}` } as never });
     assert.equal(s.empresaId, demo.id);
