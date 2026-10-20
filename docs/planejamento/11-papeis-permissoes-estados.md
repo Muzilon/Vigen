@@ -43,7 +43,7 @@ Legenda: ✓ pode; **área** = só da própria área; **próprio** = só o que �
 | Ação | Adm. | Gestor SGI | Qualidade | Gestor área | Usuário |
 |---|---|---|---|---|---|
 | Ver «Minhas ações» | próprio | ✓ | ✓ | ✓ | ✓ |
-| Ver «Todas» (respeitando confidencialidade) | — | ✓ | ✓ | área | — |
+| Ver «Todas» (respeitando confidencialidade) | — | ✓ | ✓ | ✓ | ✓ |
 | Criar ação manual | — | ✓ | ✓ | — | — |
 | Trocar responsável | — | ✓ | ✓ | — | — |
 | Atualizar andamento e anexar evidência | — | ✓ | ✓ | próprio | próprio |
@@ -144,3 +144,8 @@ Regra: a versão em revisão nunca substitui a vigente antes da aprovação fina
 1. O administrador não vê conteúdo confidencial.
 2. Só a Qualidade cria ação manual (e a Diretoria, que edita como a Qualidade).
 3. Documentos obsoletos: só a Qualidade consulta por padrão; a empresa pode liberar.
+
+## 7. Decisões de 20/10/2026 [Decidido]
+
+1. **Diretoria vê todas as ações e NCs Restritas** (não as Confidenciais, salvo se nomeada).
+2. **Transparência do SGI: todos veem a aba «Todas»**, com tudo o que é Interno, de todas as áreas — as NCs e ações ajudam outras áreas a resolver casos parecidos. Restrito continua só para envolvidos, gestor da área, Qualidade, Gestor do SGI e Diretoria; Confidencial só para envolvidos e Gestor do SGI. O padrão de cada registro é Interno.
