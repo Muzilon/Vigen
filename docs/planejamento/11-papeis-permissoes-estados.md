@@ -149,3 +149,14 @@ Regra: a versão em revisão nunca substitui a vigente antes da aprovação fina
 
 1. **Diretoria vê todas as ações e NCs Restritas** (não as Confidenciais, salvo se nomeada).
 2. **Transparência do SGI: todos veem a aba «Todas»**, com tudo o que é Interno, de todas as áreas — as NCs e ações ajudam outras áreas a resolver casos parecidos. Restrito continua só para envolvidos, gestor da área, Qualidade, Gestor do SGI e Diretoria; Confidencial só para envolvidos e Gestor do SGI. O padrão de cada registro é Interno.
+
+## 8. Decisões de 18/11/2026 sobre a RNC [Decidido]
+
+1. «Registrada → Em análise crítica»: Gestor do SGI ou o tratador; não exige tratador definido antes.
+2. Causa raiz não é obrigatória antes de criar ações (contenção imediata pode vir antes).
+3. Cancelar a RNC vale em qualquer estado aberto, sempre com justificativa (prevalece sobre o §4.2).
+4. «Encerrada com correção» exige descrever a correção feita.
+5. A Diretoria pode assumir o tratamento (edita como a Qualidade).
+6. O responsável de uma ação ligada a uma RNC vira participante dela automaticamente (senão executaria sem saber o porquê, sobretudo em Confidencial).
+7. O Gestor de área registra RNC de qualquer área.
+8. O Administrador puro não vê RNC, nem de nível Interno (prevalece sobre o §2 para a RNC); ele configura, não trata.
