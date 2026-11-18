@@ -1,7 +1,7 @@
 ---
 name: agente-treinamentos
 description: Módulo Treinamentos e Competências (ISO 9001 7.2/7.3, ISO 45001 7.2) — catálogo, sessões, presença em lote, certificados, eficácia, gatilhos de reciclagem, aptidão, conscientização por documento, matriz e modo auditoria (NR-1).
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

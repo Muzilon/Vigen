@@ -413,6 +413,7 @@ model Empresa {
 
   obras                    ObraUnidade[]
   setores                  Setor[]
+  feriados                 FeriadoEmpresa[]
   perfis                   Perfil[]
   usuarios                 Usuario[]
   acessosObra              UsuarioAcessoObra[]
@@ -638,6 +639,7 @@ model Usuario {
   eficaciasAvaliadas        ParticipacaoTreinamento[]    @relation("ParticipacaoAvaliadorEficacia")
   gatilhosReciclagem        GatilhoReciclagem[]          @relation("GatilhoUsuario")
   gatilhosRegistrados       GatilhoReciclagem[]          @relation("GatilhoRegistradoPor")
+  feriadosCriados           FeriadoEmpresa[]             @relation("FeriadoCriadoPor")
 
   @@unique([empresaId, id])
   @@index([empresaId, ativo])
@@ -854,33 +856,33 @@ model PlanoAcao {
 }
 
 model ItemAcao {
-  id                 String         @id @default(uuid()) @db.Uuid
-  empresaId          String         @map("empresa_id") @db.Uuid
-  planoAcaoId        String         @map("plano_acao_id") @db.Uuid
-  ordem              Int            @default(0)
-  ciclo              Int            @default(1)
-  oQue               String         @map("o_que")
-  porQue             String?        @map("por_que")
-  onde               String?
-  quemId             String         @map("quem_id") @db.Uuid
-  quando             DateTime       @db.Date
-  como               String?
-  quanto             Decimal?       @db.Decimal(14, 2)
-  status             StatusItemAcao @default(PENDENTE)
-  evidenciaConclusao String?        @map("evidencia_conclusao")
+  id                         String         @id @default(uuid()) @db.Uuid
+  empresaId                  String         @map("empresa_id") @db.Uuid
+  planoAcaoId                String         @map("plano_acao_id") @db.Uuid
+  ordem                      Int            @default(0)
+  ciclo                      Int            @default(1)
+  oQue                       String         @map("o_que")
+  porQue                     String?        @map("por_que")
+  onde                       String?
+  quemId                     String         @map("quem_id") @db.Uuid
+  quando                     DateTime       @db.Date
+  como                       String?
+  quanto                     Decimal?       @db.Decimal(14, 2)
+  status                     StatusItemAcao @default(PENDENTE)
+  evidenciaConclusao         String?        @map("evidencia_conclusao")
   /// Link (pasta/arquivo na nuvem) que comprova a conclusão, quando não há anexo.
-  linkEvidencia      String?        @map("link_evidencia")
+  linkEvidencia              String?        @map("link_evidencia")
   /// Concluído sem anexo, descrição nem link: gera etiqueta "Sem evidência" e aviso à qualidade.
-  semEvidencia       Boolean        @default(false) @map("sem_evidencia")
+  semEvidencia               Boolean        @default(false) @map("sem_evidencia")
   /// Quem registrou a conclusão (pode ser a qualidade/administração e não o responsável).
-  concluidoPorId     String?        @map("concluido_por_id") @db.Uuid
+  concluidoPorId             String?        @map("concluido_por_id") @db.Uuid
   /// Obrigatória quando a data de conclusão é futura, ou retroativa registrada por outra pessoa que não o responsável.
-  justificativaDataConclusao String? @map("justificativa_data_conclusao")
-  dataConclusao      DateTime?      @map("data_conclusao")
-  alertaEnviadoEm    DateTime?      @map("alerta_enviado_em")
-  atrasoNotificadoEm DateTime?      @map("atraso_notificado_em")
-  criadoEm           DateTime       @default(now()) @map("criado_em")
-  atualizadoEm       DateTime       @updatedAt @map("atualizado_em")
+  justificativaDataConclusao String?        @map("justificativa_data_conclusao")
+  dataConclusao              DateTime?      @map("data_conclusao")
+  alertaEnviadoEm            DateTime?      @map("alerta_enviado_em")
+  atrasoNotificadoEm         DateTime?      @map("atraso_notificado_em")
+  criadoEm                   DateTime       @default(now()) @map("criado_em")
+  atualizadoEm               DateTime       @updatedAt @map("atualizado_em")
 
   empresa          Empresa           @relation(fields: [empresaId], references: [id], onDelete: Restrict)
   planoAcao        PlanoAcao         @relation(fields: [empresaId, planoAcaoId], references: [empresaId, id], onDelete: Restrict)
@@ -2363,4 +2365,25 @@ model GatilhoReciclagem {
   @@unique([empresaId, id])
   @@index([empresaId, usuarioId, treinamentoId])
   @@map("gatilho_reciclagem")
+}
+
+/// Feriado da empresa (data civil). Entra no cálculo de dias úteis; sábado e domingo nunca precisam de cadastro.
+/// Inativar não apaga (exclusão lógica); cadastrar/inativar NÃO recalcula prazos já gravados.
+model FeriadoEmpresa {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  data         DateTime @db.Date
+  descricao    String
+  ativo        Boolean  @default(true)
+  versao       Int      @default(1)
+  criadoPorId  String?  @map("criado_por_id") @db.Uuid
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Restrict)
+  criadoPor Usuario? @relation("FeriadoCriadoPor", fields: [empresaId, criadoPorId], references: [empresaId, id], onDelete: Restrict)
+
+  @@unique([empresaId, id])
+  @@unique([empresaId, data])
+  @@map("feriado_empresa")
 }

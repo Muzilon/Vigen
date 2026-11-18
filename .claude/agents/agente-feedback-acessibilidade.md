@@ -1,7 +1,7 @@
 ---
 name: agente-feedback-acessibilidade
 description: Feedback de envio (estado do botão, erros inline, mensagem de sucesso), validação visível e acessibilidade (contraste, foco, teclado) nos formulários e ações do Vigen — FormAcao, useActionState e componentes de campo.
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

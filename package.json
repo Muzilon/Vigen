@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "prisma db seed",
@@ -26,7 +26,8 @@
     "test:auditorias": "tsx scripts/teste-auditorias.ts",
     "test:incidentes": "tsx scripts/teste-incidentes.ts",
     "test:indicadores": "tsx scripts/teste-indicadores.ts",
-    "test:treinamentos": "tsx scripts/teste-treinamentos.ts"
+    "test:treinamentos": "tsx scripts/teste-treinamentos.ts",
+    "test:feriados": "tsx scripts/teste-feriados.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -1,7 +1,7 @@
 ---
 name: agente-minha-fila
 description: Telas de entrada do usuário — Início, Minhas ações (Plano de Ação), fila de Aprovações, Notificações e Mensagens — para responder "o que eu preciso fazer agora?".
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 

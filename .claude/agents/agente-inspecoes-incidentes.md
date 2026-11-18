@@ -1,7 +1,7 @@
 ---
 name: agente-inspecoes-incidentes
 description: Inspeções/Checklists e Incidentes e Acidentes (ISO 45001 10.2) — trabalho de campo no celular: modelos, resposta C/NC/NA, fotos, abrir RNC a partir da NC, registro de incidente por qualquer pessoa, investigação com causa raiz e dados sensíveis (LGPD).
-model: opus
+model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
