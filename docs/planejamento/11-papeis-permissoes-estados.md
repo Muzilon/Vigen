@@ -160,3 +160,10 @@ Regra: a versão em revisão nunca substitui a vigente antes da aprovação fina
 6. O responsável de uma ação ligada a uma RNC vira participante dela automaticamente (senão executaria sem saber o porquê, sobretudo em Confidencial).
 7. O Gestor de área registra RNC de qualquer área.
 8. O Administrador puro não vê RNC, nem de nível Interno (prevalece sobre o §2 para a RNC); ele configura, não trata.
+
+## 9. Decisões de 18/11/2026 sobre a eficácia [Decidido]
+
+1. Quem é **autorizado** (Gestor do SGI, o tratador e o gestor da área da RNC) pode avaliar a eficácia antes da data programada.
+2. Quem pode avaliar mas **não é autorizado** e quer avaliar antes da data precisa pedir aprovação. O pedido vai para os autorizados daquela área (gestor da área ou qualquer outro autorizado); qualquer um deles aprova ou recusa, nunca o próprio solicitante. Aprovado, a pessoa pode avaliar antes; recusado, espera a data.
+3. Os demais itens propostos em 18/11 ficam como recomendado: sem tratador, o aviso de «última ação encerrada» vai aos Gestores do SGI; a data da eficácia pode ser remarcada com justificativa; limites de 30 a 365 dias fixos; aviso «RNC encerrada» a quem registrou e ao gestor da área, só no sino; no novo ciclo, a causa raiz anterior continua como ponto de partida.
+4. **[Proposta do Claude]** O sistema ainda não tem «unidade»; por ora «unidade» = área da RNC. Quando o cadastro de unidades existir, a regra passa a valer por unidade.
